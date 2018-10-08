@@ -30,7 +30,7 @@ It implements the following architecture:
 ## Linux/macOs
 
 ```sh
-git clone https://github.com/robotology/walking-controllers.git
+git clone https://github.com/robotology/walking-teleoperation.git
 cd walking-controllers
 mkdir build && cd build
 cmake ../
