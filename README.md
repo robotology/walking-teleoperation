@@ -5,7 +5,7 @@ The suite includes:
 
 * **Oculus_module**: this is the module that implements retargeting of the upper body end_effectors.
 * **Virtualizer_module**: this module allows using the cyberith virtualizer as a joypad interface for walking commands.
-* **Utils_module**: an module that can be useful implement some common functionality
+* **Utils_module**: an module that can be useful to implement some common functionality
 
 # Overview
  - [:orange_book: The general idea](#orange_book-some-theory-behind-the-code)
