@@ -18,6 +18,7 @@
 #include <yarp/os/RFModule.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/IEncodersTimed.h>
 #include <yarp/dev/IControlMode2.h>
@@ -29,9 +30,9 @@
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/PreciselyTimed.h>
 
-#include "HeadRetargeting.hpp"
-#include "HandRetargeting.hpp"
-#include "FingersRetargeting.hpp"
+#include <HeadRetargeting.hpp>
+#include <HandRetargeting.hpp>
+#include <FingersRetargeting.hpp>
 
 /**
 * Class usefull to manage the retargeting of one hand
