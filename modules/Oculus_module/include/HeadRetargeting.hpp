@@ -25,15 +25,13 @@
 class HeadRetargeting
 {
 private:
-
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
 
     double m_playerOrientation;
     yarp::sig::Vector m_desiredHeadOrientation;
 
 public:
-
-    bool configure(const yarp::os::Searchable &config);
+    bool configure(const yarp::os::Searchable& config);
 
     void setPlayerOrientation(const double& playerOrientation);
 
@@ -42,7 +40,6 @@ public:
     void evaluateHeadOrientationCorrected();
 
     yarp::sig::Vector getHeadOrientation();
-
 };
 
 #endif

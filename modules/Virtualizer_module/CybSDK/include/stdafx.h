@@ -12,9 +12,7 @@
 #include <stdio.h>
 #include <tchar.h>
 
-
-
 // TODO: reference additional headers your program requires here
+#include <cstdio> // std::getchar
 #include <iostream>
 #include <string>
-#include <cstdio>		// std::getchar

@@ -10,20 +10,19 @@
 #include "FingersRetargeting.hpp"
 #include "Utils.hpp"
 
-
-bool FingersRetargeting::configure(const yarp::os::Searchable &config)
+bool FingersRetargeting::configure(const yarp::os::Searchable& config)
 {
     // TODO do it in a better way
     m_fingersJoints = 7;
     double samplingTime;
-    if(!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
+    if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
     {
         yError() << "[configure] Unable to find the head smoothing time";
         return false;
     }
 
     m_fingerVelocity.resize(m_fingersJoints);
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "fingersVelocity", m_fingerVelocity))
+    if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersVelocity", m_fingerVelocity))
     {
         yError() << "[configure] Initialization failed while reading fingersVelocity vector.";
         return false;
@@ -37,7 +36,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable &config)
 
 bool FingersRetargeting::closeHand()
 {
-    if(m_fingerIntegrator == nullptr)
+    if (m_fingerIntegrator == nullptr)
     {
         yError() << "[closeHand] the integrator is not initialized please call configure() method";
         return false;
@@ -50,14 +49,14 @@ bool FingersRetargeting::closeHand()
 
 bool FingersRetargeting::openHand()
 {
-    if(m_fingerIntegrator == nullptr)
+    if (m_fingerIntegrator == nullptr)
     {
         yError() << "[closeHand] the integrator is not initialized please call configure() method";
         return false;
     }
 
     // TODO check the limits.
-    m_desiredPosition = m_fingerIntegrator->integrate(-1*m_fingerVelocity);
+    m_desiredPosition = m_fingerIntegrator->integrate(-1 * m_fingerVelocity);
     return true;
 }
 

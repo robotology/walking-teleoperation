@@ -11,10 +11,10 @@
 #define RETARGETING_VIRTUALIZER_MODULE_HPP
 
 // YARP
+#include <yarp/os/Bottle.h>
+#include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/RpcClient.h>
-#include <yarp/os/BufferedPort.h>
-#include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 
 #include "CVirt.h"
@@ -29,16 +29,16 @@ private:
     double m_dT; /**< RFModule period. */
     double m_deadzone; /**< Value of the deadzone. */
     double m_robotYaw;
-	double velocity_factor;
-	double oldPlayerYaw;
+    double velocity_factor;
+    double oldPlayerYaw;
 
     yarp::os::RpcClient m_rpcPort; /**< RPC port. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Used to send the player
                                                                           orientation [-pi +pi]. */
-    yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;  /**< Used to get the robot
-                                                                          orientation. */
+    yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort; /**< Used to get the robot
+                                                                         orientation. */
 
-    CVirtDevice *m_cvirtDeviceID = nullptr;
+    CVirtDevice* m_cvirtDeviceID = nullptr;
     /**
      * Establish the connection with the virtualizer.
      * @return true in case of success and false otherwise.
@@ -50,10 +50,9 @@ private:
      * @param input input
      * @return 0 if the abs(input) < abs(deadzone) otherwise return the input.
      */
-    double threshold(const double &input);
+    double threshold(const double& input);
 
 public:
-
     /**
      * Get the period of the RFModule.
      * @return the period of the module.
@@ -71,7 +70,7 @@ public:
      * @param rf is the reference to a resource finder object.
      * @return true in case of success and false otherwise.
      */
-    bool configure(yarp::os::ResourceFinder &rf) override;
+    bool configure(yarp::os::ResourceFinder& rf) override;
 
     /**
      * Close the RFModule.

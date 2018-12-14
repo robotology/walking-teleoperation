@@ -14,8 +14,8 @@
 #include <memory>
 
 // YARP
-#include <yarp/os/Bottle.h>
 #include <yarp/math/Math.h>
+#include <yarp/os/Bottle.h>
 
 // iCub-ctrl
 #include <iCub/ctrl/pids.h>
@@ -28,7 +28,6 @@ using namespace yarp::math;
 class FingersRetargeting
 {
 private:
-
     double m_fingersJoints; /**< Contain the number of fingers. */
     yarp::sig::Vector m_fingerVelocity; /**< It contains the desired finger velocity. */
     std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr};
@@ -36,13 +35,12 @@ private:
     yarp::sig::Vector m_desiredPosition;
 
 public:
-
     /**
      * Configure the object.
      * @param rf is the reference to a resource finder object.
      * @return true in case of success and false otherwise.
      */
-    bool configure(const yarp::os::Searchable &config);
+    bool configure(const yarp::os::Searchable& config);
 
     /**
      * Close the hand
