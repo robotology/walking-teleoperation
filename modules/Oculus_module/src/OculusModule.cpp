@@ -81,7 +81,8 @@ bool OculusModule::setControlledJoints(const yarp::os::Searchable& rf)
     }
     if (!YarpHelper::yarpListToStringVector(axesListYarp, m_axesList))
     {
-        yError() << "[setControlledJoints] Unable to convert yarp list into a vector of strings.";
+        yError() << "[setControlledJoints] Unable to convert yarp list into a "
+                    "vector of strings.";
         return false;
     }
     return true;
@@ -98,12 +99,14 @@ bool OculusModule::configureRobot(const yarp::os::Searchable& config)
     yarp::os::Value* iCubPartsYarp;
     if (!config.check("remote_control_boards", iCubPartsYarp))
     {
-        yError() << "[configureRobot] Unable to find remote_control_boards into config file.";
+        yError() << "[configureRobot] Unable to find remote_control_boards into "
+                    "config file.";
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(iCubPartsYarp, iCubParts))
     {
-        yError() << "[configureRobot] Unable to convert yarp list into a vector of strings.";
+        yError() << "[configureRobot] Unable to convert yarp list into a vector of "
+                    "strings.";
         return false;
     }
 
@@ -566,13 +569,15 @@ bool OculusModule::getFeedbacks()
 
     if (!m_transformClient->getTransform("loculus", "mobile_base_body_link", m_loculus_T_rootFixed))
     {
-        yError() << "Unable to evaluate the loculus to mobile_base_body_link transformation";
+        yError() << "Unable to evaluate the loculus to mobile_base_body_link "
+                    "transformation";
         return false;
     }
 
     if (!m_transformClient->getTransform("roculus", "mobile_base_body_link", m_roculus_T_rootFixed))
     {
-        yError() << "Unable to evaluate the roculus to mobile_base_body_link transformation";
+        yError() << "Unable to evaluate the roculus to mobile_base_body_link "
+                    "transformation";
         return false;
     }
 
@@ -589,14 +594,16 @@ bool OculusModule::setDirectPositionReferences(const yarp::sig::Vector& desiredP
 
     if (desiredPositions.size() != m_actuatedDOFs)
     {
-        yError() << "[setDirectPositionReferences] Dimension mismatch between desired position "
+        yError() << "[setDirectPositionReferences] Dimension mismatch between "
+                    "desired position "
                  << "vector and the number of controlled joints.";
         return false;
     }
 
     if (!m_positionDirectInterface->setPositions(desiredPositions.data()))
     {
-        yError() << "[setDirectPositionReferences] Error while setting the desired position.";
+        yError() << "[setDirectPositionReferences] Error while setting the desired "
+                    "position.";
         return false;
     }
 

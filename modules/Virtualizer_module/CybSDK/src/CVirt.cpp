@@ -53,8 +53,8 @@ IntPtr CVirt::GetDLLHandle()
     // std::cout << "[CYBERITH] GET DLL" << std::endl;
     if (DLLHandle == NULL)
     {
-        // std::cout << "[CYBERITH] TRY GET DLL" << std::endl;
-        // string > LPCWSTR
+// std::cout << "[CYBERITH] TRY GET DLL" << std::endl;
+// string > LPCWSTR
 #if WIN64
         std::string CybSDKLib = "CybSDK.dll";
 #else
@@ -104,7 +104,8 @@ IntPtr CVirt::CybSDK_VirtDevice_FindDevice()
 
     if (CVirt::DLLHandle != nullptr)
     {
-        // std::cout << "[CYBERITH] CybSDK_VirtDevice_FindDevice > try > got it" << std::endl;
+        // std::cout << "[CYBERITH] CybSDK_VirtDevice_FindDevice > try > got it" <<
+        // std::endl;
         if (DLLCybSDK_VirtDevice_FindDevice == NULL)
         {
             std::string procName
@@ -132,9 +133,9 @@ IntPtr CVirt::CybSDK_VirtDevice_CreateDeviceMockupXInput()
     {
         if (DLLCybSDK_VirtDevice_CreateDeviceMockupXInput == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_CreateDeviceMockupXInput"; // The exact name of the DLL
-                                                                // function.
+            std::string procName = "CybSDK_VirtDevice_CreateDeviceMockupXInput"; // The exact name
+                                                                                 // of the DLL
+                                                                                 // function.
             DLLCybSDK_VirtDevice_CreateDeviceMockupXInput
                 = (_CybSDK_VirtDevice_CreateDeviceMockupXInput)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -162,7 +163,8 @@ bool CVirt::CybSDK_VirtDevice_Open(IntPtr device)
         // std::cout << "[CYBERITH] CybSDK_VirtDevice_Open > try" << std::endl;
         if (DLLCybSDK_VirtDevice_Open == NULL)
         {
-            // std::cout << "[CYBERITH] CybSDK_VirtDevice_Open > try > got it" << std::endl;
+            // std::cout << "[CYBERITH] CybSDK_VirtDevice_Open > try > got it" <<
+            // std::endl;
             std::string procName = "CybSDK_VirtDevice_Open"; // The exact name of the DLL function.
             DLLCybSDK_VirtDevice_Open = (_CybSDK_VirtDevice_Open)CVirt::GetDLLProcHandle(
                 procName); // Export the DLL function.
@@ -235,8 +237,8 @@ float CVirt::CybSDK_VirtDevice_GetPlayerHeight(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_GetPlayerHeight == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_GetPlayerHeight"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_GetPlayerHeight"; // The exact name of the DLL
+                                                                        // function.
             DLLCybSDK_VirtDevice_GetPlayerHeight
                 = (_CybSDK_VirtDevice_GetPlayerHeight)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -260,8 +262,8 @@ void CVirt::CybSDK_VirtDevice_ResetPlayerHeight(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_ResetPlayerHeight == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_ResetPlayerHeight"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_ResetPlayerHeight"; // The exact name of the
+                                                                          // DLL function.
             DLLCybSDK_VirtDevice_ResetPlayerHeight
                 = (_CybSDK_VirtDevice_ResetPlayerHeight)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -285,8 +287,8 @@ float CVirt::CybSDK_VirtDevice_GetPlayerOrientation(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_GetPlayerOrientation == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_GetPlayerOrientation"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_GetPlayerOrientation"; // The exact name of
+                                                                             // the DLL function.
             DLLCybSDK_VirtDevice_GetPlayerOrientation
                 = (_CybSDK_VirtDevice_GetPlayerOrientation)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -310,8 +312,8 @@ float CVirt::CybSDK_VirtDevice_GetMovementSpeed(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_GetMovementSpeed == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_GetMovementSpeed"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_GetMovementSpeed"; // The exact name of the
+                                                                         // DLL function.
             DLLCybSDK_VirtDevice_GetMovementSpeed
                 = (_CybSDK_VirtDevice_GetMovementSpeed)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -335,8 +337,8 @@ float CVirt::CybSDK_VirtDevice_GetMovementDirection(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_GetMovementDirection == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_GetMovementDirection"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_GetMovementDirection"; // The exact name of
+                                                                             // the DLL function.
             DLLCybSDK_VirtDevice_GetMovementDirection
                 = (_CybSDK_VirtDevice_GetMovementDirection)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.
@@ -360,8 +362,8 @@ void CVirt::CybSDK_VirtDevice_ResetPlayerOrientation(IntPtr device)
     {
         if (DLLCybSDK_VirtDevice_ResetPlayerOrientation == NULL)
         {
-            std::string procName
-                = "CybSDK_VirtDevice_ResetPlayerOrientation"; // The exact name of the DLL function.
+            std::string procName = "CybSDK_VirtDevice_ResetPlayerOrientation"; // The exact name of
+                                                                               // the DLL function.
             DLLCybSDK_VirtDevice_ResetPlayerOrientation
                 = (_CybSDK_VirtDevice_ResetPlayerOrientation)CVirt::GetDLLProcHandle(
                     procName); // Export the DLL function.

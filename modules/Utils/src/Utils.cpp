@@ -123,7 +123,8 @@ bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,
 
     if (inputPtr->size() != output.size())
     {
-        yError() << "[getYarpVectorFromSearchable] The size of the YARP vector and the size of "
+        yError() << "[getYarpVectorFromSearchable] The size of the YARP vector and "
+                    "the size of "
                  << "the YARP list are not coherent.";
         return false;
     }
@@ -132,8 +133,8 @@ bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,
     {
         if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
         {
-            yError()
-                << "[getYarpVectorFromSearchable] The input is expected to be a double or a int";
+            yError() << "[getYarpVectorFromSearchable] The input is expected to be a "
+                        "double or a int";
             return false;
         }
         output(i) = inputPtr->get(i).asDouble();

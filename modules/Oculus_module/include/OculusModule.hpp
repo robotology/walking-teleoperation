@@ -71,11 +71,13 @@ private:
     yarp::dev::IPositionDirect* m_positionDirectInterface{
         nullptr}; /**< Direct position control interface. */
     yarp::dev::IPositionControl* m_positionInterface{nullptr}; /**< Position control interface. */
-    // yarp::dev::IVelocityControl *m_velocityInterface{nullptr}; /**< Position control interface.
+    // yarp::dev::IVelocityControl *m_velocityInterface{nullptr}; /**< Position
+    // control interface.
     // */
     yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
     yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */
-    yarp::os::Bottle m_remoteControlBoards; /**< Contain all the name of the controlled joints. */
+    yarp::os::Bottle m_remoteControlBoards; /**< Contain all the name of the
+                                               controlled joints. */
 
     yarp::sig::Vector m_qDesired; /**< Vector containing desired joint position [deg]. */
     yarp::sig::Vector m_positionFeedbackInDegrees;
@@ -88,7 +90,8 @@ private:
     std::unique_ptr<FingersRetargeting>
         m_leftHandFingers; /**< Pointer to the left finger retargeting object. */
     std::unique_ptr<FingersRetargeting>
-        m_rightHandFingers; /**< Pointer to the right finger retargeting object. */
+        m_rightHandFingers; /**< Pointer to the right finger retargeting object.
+                             */
     std::unique_ptr<HandRetargeting>
         m_rightHand; /**< Pointer to the right hand retargeting object. */
     std::unique_ptr<HandRetargeting>
@@ -104,20 +107,22 @@ private:
         m_playerOrientationPort; /**< Player orientation port. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_imagesOrientationPort;
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;
-    yarp::os::BufferedPort<yarp::sig::Vector>
-        m_joypadAxisPort; /**< Port for axis data of oculus joypad for decoupling */
+    yarp::os::BufferedPort<yarp::sig::Vector> m_joypadAxisPort; /**< Port for axis data of oculus
+                                                                   joypad for decoupling */
     yarp::os::RpcClient m_Joyrpc;
 
     double m_robotYaw;
 
-    yarp::sig::Vector m_desiredHeadOrientation; /**< Vector containing the desire head orientation
+    yarp::sig::Vector m_desiredHeadOrientation; /**< Vector containing the desire
+                                                head orientation
                                                 read by the oculus. */
     yarp::sig::Matrix m_loculus_T_rootFixed; /**< Transformation matrix between the left hand
                                              and the oculus fixed link. */
     yarp::sig::Matrix m_roculus_T_rootFixed; /**< Transformation matrix between the right hand
                                              and the oculus fixed link. */
     yarp::sig::Vector m_fingerCommands; /**< Vector containing the Joypad button values. */
-    double m_playerOrientation; /**< Player orientation (read by the Virtualizer) only yaw. */
+    double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
+                                   only yaw. */
 
     /**
      * Get the name of the controlled joints from the resource finder

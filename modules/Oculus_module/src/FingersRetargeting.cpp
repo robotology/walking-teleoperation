@@ -24,7 +24,8 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config)
     m_fingerVelocity.resize(m_fingersJoints);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersVelocity", m_fingerVelocity))
     {
-        yError() << "[configure] Initialization failed while reading fingersVelocity vector.";
+        yError() << "[configure] Initialization failed while reading "
+                    "fingersVelocity vector.";
         return false;
     }
 
@@ -38,7 +39,8 @@ bool FingersRetargeting::closeHand()
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[closeHand] the integrator is not initialized please call configure() method";
+        yError() << "[closeHand] the integrator is not initialized please call "
+                    "configure() method";
         return false;
     }
 
@@ -51,7 +53,8 @@ bool FingersRetargeting::openHand()
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[closeHand] the integrator is not initialized please call configure() method";
+        yError() << "[closeHand] the integrator is not initialized please call "
+                    "configure() method";
         return false;
     }
 
