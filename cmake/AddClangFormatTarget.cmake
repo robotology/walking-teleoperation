@@ -10,7 +10,7 @@
 # Inspired from https://gitlab.cern.ch/unige-fei4tel/proteus/commit/8d906a45801c03832531e243f41f5f5a83177de0
 
 # Adding clang-format check and formatter if found
-find_program(CLANG_FORMAT "clang-format-6.0")
+find_program(CLANG_FORMAT NAMES "clang-format-6.0" "clang-format")
 
 if(CLANG_FORMAT)
   file(GLOB_RECURSE
