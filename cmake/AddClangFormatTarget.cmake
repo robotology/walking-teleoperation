@@ -15,11 +15,11 @@ find_program(CLANG_FORMAT NAMES "clang-format-6.0" "clang-format")
 if(CLANG_FORMAT)
   file(GLOB_RECURSE
        CHECK_CXX_SOURCE_FILES
-       ${PROJECT_SOURCE_DIR}/*.h
-       ${PROJECT_SOURCE_DIR}/*.cpp
-       ${PROJECT_SOURCE_DIR}/*.hh
-       ${PROJECT_SOURCE_DIR}/*.hpp
-       ${PROJECT_SOURCE_DIR}/*.cc)
+       ${PROJECT_SOURCE_DIR}/modules/*.h
+       ${PROJECT_SOURCE_DIR}/modules/*.cpp
+       ${PROJECT_SOURCE_DIR}/modules/*.hh
+       ${PROJECT_SOURCE_DIR}/modules/*.hpp
+       ${PROJECT_SOURCE_DIR}/modules/*.cc)
   add_custom_target(
       clang-format
       COMMAND
