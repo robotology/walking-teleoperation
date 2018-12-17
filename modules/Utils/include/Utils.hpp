@@ -14,6 +14,7 @@
 #include <vector>
 
 // YARP
+#include <yarp/os/BufferedPort.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Value.h>
 #include <yarp/sig/Vector.h>
