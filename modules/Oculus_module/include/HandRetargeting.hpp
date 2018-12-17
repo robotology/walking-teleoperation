@@ -30,15 +30,13 @@ private:
     double m_scalingFactor;
 
 public:
-
-    bool configure(const yarp::os::Searchable &config);
+    bool configure(const yarp::os::Searchable& config);
 
     void setPlayerOrientation(const double& playerOrientation);
 
     void setHandTransform(const yarp::sig::Matrix& handTransformation);
 
     void evaluateHandToRootLinkTransform(yarp::sig::Vector& handPose);
-
 };
 
 #endif

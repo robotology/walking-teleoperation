@@ -13,13 +13,13 @@
 
 #include "OculusModule.hpp"
 
-int main(int argc, char * argv[])
+int main(int argc, char* argv[])
 {
     // initialise yarp network
     yarp::os::Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError()<<"[main] Unable to find YARP network";
+        yError() << "[main] Unable to find YARP network";
         return EXIT_FAILURE;
     }
 

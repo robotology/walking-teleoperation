@@ -7,31 +7,30 @@
  * @date 2018
  */
 
-
 // iDynTree
-#include <iDynTree/yarp/YARPConversions.h>
 #include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/yarp/YARPConversions.h>
 
-#include "Utils.hpp"
 #include "HandRetargeting.hpp"
+#include "Utils.hpp"
 
-
-bool HandRetargeting::configure(const yarp::os::Searchable &config)
+bool HandRetargeting::configure(const yarp::os::Searchable& config)
 {
     // check if the configuration file is empty
-    if(config.isNull())
+    if (config.isNull())
     {
         yError() << "[configure] Empty configuration for hand retargeting.";
         return false;
     }
 
-    if(!YarpHelper::getDoubleFromSearchable(config, "scalingFactor", m_scalingFactor))
+    if (!YarpHelper::getDoubleFromSearchable(config, "scalingFactor", m_scalingFactor))
     {
         yError() << "[configure] Unable to find the hands smoothing time";
         return false;
     }
 
-    m_rootFixedRotated_T_rootFixed.setRotation(iDynTree::Rotation::RPY(0,0,iDynTree::deg2rad(180)));
+    m_rootFixedRotated_T_rootFixed.setRotation(
+        iDynTree::Rotation::RPY(0, 0, iDynTree::deg2rad(180)));
     m_rootFixedRotated_T_rootFixed.setPosition(iDynTree::Position::Zero());
 
     return true;
@@ -51,8 +50,8 @@ void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformati
 void HandRetargeting::evaluateHandToRootLinkTransform(yarp::sig::Vector& handPose)
 {
     iDynTree::Transform root_T_hand;
-    root_T_hand = m_root_T_rootFixedRotated * m_rootFixedRotated_T_rootFixed *
-        m_rootFixed_T_handOculus;
+    root_T_hand
+        = m_root_T_rootFixedRotated * m_rootFixedRotated_T_rootFixed * m_rootFixed_T_handOculus;
 
     iDynTree::Vector3 handOrientation, handPosition;
     handOrientation = root_T_hand.getRotation().asRPY();

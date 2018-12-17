@@ -8,9 +8,11 @@ set(CMAKE_CXX_STANDARD 14)
 project(retargeting)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-#include_directories("${CMAKE_CURRENT_SOURCE_DIR}/robotology-superbuild/build/install/include")
 
 find_package(YARP REQUIRED)
 
 add_subdirectory(modules)
 add_subdirectory(app)
+
+ # Include clang-format target
+include(AddClangFormatTarget)
