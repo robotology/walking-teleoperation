@@ -7,15 +7,27 @@
  * @date 2018
  */
 
-#include "HeadRetargeting.hpp"
-#include "Utils.hpp"
+// iDynTree
+#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/yarp/YARPConversions.h>
+#include <iDynTree/yarp/YARPEigenConversions.h>
 
-bool HeadRetargeting::configure(const yarp::os::Searchable& config)
+#include <HeadRetargeting.hpp>
+#include <Utils.hpp>
+
+bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
     // check if the configuration file is empty
     if (config.isNull())
     {
         yError() << "[configure] Empty configuration for head retargeting.";
+        return false;
+    }
+
+    m_controlHelper == std::make_unique<RobotControlHelper>();
+    if (!m_controlHelper->configure(config, name))
+    {
+        yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
         return false;
     }
 
@@ -44,24 +56,25 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config)
 
 void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
 {
-    m_playerOrientation = playerOrientation;
+    // notice in this case the real transformation is rotx(-pi) * rotz(playerOrientation) * rotx(pi)
+    // which is equal to rotz(-playerOrietation);
+    m_playerOrientation = iDynTree::Rotation::RotZ(-playerOrientation);
 }
 
-void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation)
+void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& desiredHeadTransform)
 {
-    m_desiredHeadOrientation = desiredHeadOrientation;
+    iDynTree::toEigen(m_desiredHeadOrientation)
+        = iDynTree::toEigen(desiredHeadTransform).block(0, 0, 3, 3);
 }
 
 void HeadRetargeting::evaluateHeadOrientationCorrected()
 {
-    yarp::sig::Vector desiredHeadOrientation;
-    desiredHeadOrientation = m_desiredHeadOrientation;
-    desiredHeadOrientation(2) = desiredHeadOrientation(2) + m_playerOrientation;
+    iDynTree::Rotation desiredHeadOrientation;
+    desiredHeadOrientation = m_playerOrientation.inverse() * m_desiredHeadOrientation;
 
-    m_headTrajectorySmoother->computeNextValues(desiredHeadOrientation);
-}
+    yarp::sig::Vector tmp(3);
+    iDynTree::toYarp(desiredHeadOrientation.asRPY(), tmp);
 
-yarp::sig::Vector HeadRetargeting::getHeadOrientation()
-{
-    return m_headTrajectorySmoother->getPos();
+    m_headTrajectorySmoother->computeNextValues(tmp);
+    m_desiredJointPosition = m_headTrajectorySmoother->getPos();
 }

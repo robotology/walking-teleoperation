@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
 #          Giulio Romualdi <giulio.romualdi@iit.it>
-#          
+#
 # set target name
 
 find_package(CybSDK REQUIRED)
@@ -51,9 +51,3 @@ target_link_libraries(${EXE_TARGET_NAME}
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
 install(FILES ${CybSDK_LIBRARIES} DESTINATION bin)
-
-#add_custom_command(
-#       TARGET  ${EXE_TARGET_NAME} PRE_BUILD
-#		COMMAND ${CMAKE_COMMAND} -E copy "${CybSDK_DIR}/Plugins/x64/CybSDK.dll"
-#		bin
-#		)
