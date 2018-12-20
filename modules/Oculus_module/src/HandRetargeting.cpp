@@ -11,8 +11,8 @@
 #include <iDynTree/Core/EigenHelpers.h>
 #include <iDynTree/yarp/YARPConversions.h>
 
-#include "HandRetargeting.hpp"
-#include "Utils.hpp"
+#include <HandRetargeting.hpp>
+#include <Utils.hpp>
 
 bool HandRetargeting::configure(const yarp::os::Searchable& config)
 {

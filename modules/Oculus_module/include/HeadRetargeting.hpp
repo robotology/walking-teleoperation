@@ -19,27 +19,35 @@
 // iCub-ctrl
 #include <iCub/ctrl/minJerkCtrl.h>
 
+// iDynTree
+#include <iDynTree/Core/Rotation.h>
+
+#include <RetargetingHelper.hpp>
+
 /**
  * Class useful to manage the head retargeting.
  */
-class HeadRetargeting
+class HeadRetargeting : public RetargetingHelper
 {
 private:
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
 
-    double m_playerOrientation;
-    yarp::sig::Vector m_desiredHeadOrientation;
+    iDynTree::Rotation m_playerOrientation;
+    iDynTree::Rotation m_desiredHeadOrientation;
 
 public:
-    bool configure(const yarp::os::Searchable& config);
+    /**
+     * Configure the object.
+     * @param rf is the reference to a resource finder object.
+     * @return true in case of success and false otherwise.
+     */
+    bool configure(const yarp::os::Searchable& config, const std::string& name) override;
 
     void setPlayerOrientation(const double& playerOrientation);
 
-    void setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation);
+    void setDesiredHeadOrientation(const yarp::sig::Matrix& desiredHeadOrientation);
 
     void evaluateHeadOrientationCorrected();
-
-    yarp::sig::Vector getHeadOrientation();
 };
 
 #endif
