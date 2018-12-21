@@ -230,6 +230,8 @@ void RobotControlHelper::updateTimeStamp()
     if (!m_isActive)
         return;
 
+    yInfo() << "ciao";
+    
     if (m_timedInterface)
         m_timeStamp = m_timedInterface->getLastInputStamp();
     else
@@ -241,6 +243,8 @@ bool RobotControlHelper::getFeedback()
     if (!m_isActive)
         return true;
 
+    yInfo() << "ciao";
+    
     if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()))
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get joint position";

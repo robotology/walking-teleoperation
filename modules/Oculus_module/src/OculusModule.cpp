@@ -496,10 +496,16 @@ bool OculusModule::updateModule()
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
     imagesOrientation.clear();
 
+    m_head->controlHelper()->getFeedback();
+    m_head->controlHelper()->updateTimeStamp();
     yarp::sig::Vector neckEncoders = m_head->controlHelper()->jointEncoders();
-    iDynTree::Rotation root_R_head
-        = iDynTree::Rotation::RPY(neckEncoders(0), neckEncoders(1), neckEncoders(2));
+    // notice this is due to the neck joints 
+    iDynTree::Rotation root_R_head = iDynTree::Rotation::RotY(-neckEncoders(1))
+      * iDynTree::Rotation::RotX(neckEncoders(0))
+      * iDynTree::Rotation::RotZ(neckEncoders(2));
 
+    yInfo() << root_R_head.toString();
+    
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(m_robotYaw);
     iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
@@ -516,7 +522,19 @@ bool OculusModule::updateModule()
 
     // check if it is time to prepare or start walking
     std::vector<float> buttonMapping(2);
+    unsigned int nb;
+    m_joypadControllerInterface->getButtonCount(nb);
+    float button;
+    for(int i = 0; i < nb; i++)
+      {
+	m_joypadControllerInterface->getButton(i, button);
+	std::cerr<< button << " ";
+      }
 
+    std::cerr<<"\n";
+    
+    m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping[0]);
+    
     // prepare robot (A button)
     m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping[0]);
 
@@ -526,6 +544,7 @@ bool OculusModule::updateModule()
     yarp::os::Bottle cmd, outcome;
     if(buttonMapping[0] > 0)
     {
+        std::cerr << "ciaoo\n";
         cmd.addString("prepareRobot");
         m_Joyrpc.write(cmd, outcome);
     }
