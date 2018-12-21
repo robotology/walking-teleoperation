@@ -15,6 +15,40 @@
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
 
+iDynTree::Vector3 asYXZ(const iDynTree::Rotation& matrix)
+{
+  iDynTree::Vector3 YXZ;
+  double thetaX, thetaY, thetaZ;
+  if (matrix(1, 2) <+1)
+    {
+      if(matrix(1, 2) > -1)
+	{
+	  thetaX = std::asin(-matrix(1, 2));
+	  thetaY = std::atan2(matrix(0,2) , matrix(2,2)) ;
+	  thetaZ = std::atan2(matrix(1,0) , matrix(1,1)) ;
+	}
+      else	
+	{
+	  thetaX = M_PI/2;
+	  thetaY = -std::atan2(-matrix(0,1) , matrix(0,0)) ;
+	  thetaZ = 0 ;	  
+	}
+    }
+  else
+    {
+      thetaX = -M_PI/2;
+      thetaY = std::atan2(-matrix(0,1) , matrix(0,0)) ;
+      thetaZ = 0 ;	  
+    }
+  
+  YXZ(0) = thetaY;
+  YXZ(1) = thetaX;
+  YXZ(2) = thetaZ;
+
+  return YXZ;
+}
+
+
 bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
     // check if the configuration file is empty
@@ -24,7 +58,7 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
         return false;
     }
 
-    m_controlHelper == std::make_unique<RobotControlHelper>();
+    m_controlHelper = std::make_unique<RobotControlHelper>();
     if (!m_controlHelper->configure(config, name))
     {
         yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
@@ -51,6 +85,12 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
     yarp::sig::Vector buff(3, 0.0);
     m_headTrajectorySmoother->init(buff);
 
+    if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
+    {
+      yError() << "unable to switch the control mode";
+      return false;
+    }
+    
     return true;
 }
 
@@ -59,7 +99,13 @@ void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
     // notice in this case the real transformation is rotx(-pi) * rotz(playerOrientation) * rotx(pi)
     // which is equal to rotz(-playerOrietation);
     m_playerOrientation = iDynTree::Rotation::RotZ(-playerOrientation);
+    //  m_playerOrientation = playerOrientation;
 }
+
+// void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation)
+// {
+//     m_desiredHeadOrientation = desiredHeadOrientation;
+// }
 
 void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& desiredHeadTransform)
 {
@@ -71,10 +117,23 @@ void HeadRetargeting::evaluateHeadOrientationCorrected()
 {
     iDynTree::Rotation desiredHeadOrientation;
     desiredHeadOrientation = m_playerOrientation.inverse() * m_desiredHeadOrientation;
-
+    
     yarp::sig::Vector tmp(3);
-    iDynTree::toYarp(desiredHeadOrientation.asRPY(), tmp);
+    iDynTree::toYarp(asYXZ(desiredHeadOrientation), tmp);
 
+    yInfo() << " desiredHeadOrientation "<< asYXZ(desiredHeadOrientation).toString();
+    yInfo() << " desiredHeadOrientation "<< desiredHeadOrientation.toString();
+    
     m_headTrajectorySmoother->computeNextValues(tmp);
     m_desiredJointPosition = m_headTrajectorySmoother->getPos();
+    double tmpAngle = m_desiredJointPosition(0);
+    m_desiredJointPosition(0) = m_desiredJointPosition(1);
+    m_desiredJointPosition(1) = -tmpAngle;
+
+  // yarp::sig::Vector desiredHeadOrientation;
+  // desiredHeadOrientation = m_desiredHeadOrientation;
+  // desiredHeadOrientation(2) = desiredHeadOrientation(2) + m_playerOrientation;
+  
+  // m_headTrajectorySmoother->computeNextValues(desiredHeadOrientation);
+  // m_desiredJointPosition = m_headTrajectorySmoother->getPos();
 }

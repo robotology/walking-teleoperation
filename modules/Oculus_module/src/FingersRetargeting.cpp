@@ -12,7 +12,7 @@
 
 bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
-    m_controlHelper == std::make_unique<RobotControlHelper>();
+    m_controlHelper = std::make_unique<RobotControlHelper>();
     if (!m_controlHelper->configure(config, name))
     {
         yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
@@ -38,7 +38,16 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 
     m_desiredJointPosition.resize(fingersJoints);
     yarp::sig::Vector buff(fingersJoints, 0.0);
-    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff);
+    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff,
+								  m_controlHelper->getLimits());
+
+    if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
+    {
+      yError() << "unable to switch the control mode";
+      return false;
+    }
+
+    
     return true;
 }
 

@@ -201,7 +201,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
                     "desired position vector and the number of controlled joints.";
         return false;
     }
-
+    
     double threshold = 5;
     for (int i = 0; i < m_actuatedDOFs; i++)
     {
@@ -214,6 +214,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
             m_desiredPositionInDegrees(i) = m_maxJointsPosition(i) - threshold;
     }
 
+    // set position diret mode    
     if (!m_positionDirectInterface->setPositions(m_desiredPositionInDegrees.data()))
     {
         yError() << "[RobotControlHelper::setDirectPositionReferences] Error while setting the "
@@ -281,4 +282,15 @@ void RobotControlHelper::close()
 int RobotControlHelper::getDoFs()
 {
     return m_actuatedDOFs;
+}
+
+yarp::sig::Matrix RobotControlHelper::getLimits()
+{
+  yarp::sig::Matrix limits(m_minJointsPosition.size(), 2);
+  for(int i = 0; i < m_minJointsPosition.size(); i++)
+    {
+      limits(i,0) = iDynTree::deg2rad(m_minJointsPosition(i));
+      limits(i,1) = iDynTree::deg2rad(m_maxJointsPosition(i));
+    }
+  return limits;
 }

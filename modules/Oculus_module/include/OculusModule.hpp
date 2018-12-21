@@ -87,7 +87,10 @@ private:
                                                                           orientation port. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_imagesOrientationPort;
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;
-    yarp::os::RpcClient m_Joyrpc;
+    // remove me
+    yarp::os::BufferedPort<yarp::os::Bottle>  m_oculusOrientationPort;
+  
+  yarp::os::RpcClient m_Joyrpc;
 
     double m_robotYaw;
 

@@ -17,6 +17,12 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
 
+
+#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/yarp/YARPConversions.h>
+#include <iDynTree/yarp/YARPEigenConversions.h>
+
+
 #include <OculusModule.hpp>
 #include <Utils.hpp>
 
@@ -91,10 +97,9 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     }
 
     yarp::os::Bottle& axisOptions = config.findGroup("AXIS");
+    m_useVirtualizer = true;
     // get the period
-    if (axisOptions.isNull())
-        m_useVirtualizer = true;
-    else
+    if (!axisOptions.isNull())
     {
         m_useVirtualizer = false;
         if (!YarpHelper::getDoubleFromSearchable(axisOptions, "deadzone", m_deadzone))
@@ -175,6 +180,19 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     setName(name.c_str());
 
+    // todo remove from here
+    std::string portName;
+    if (!YarpHelper::getStringFromSearchable(rf, "oculusOrientationPort", portName))
+    {
+        yError() << "[configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_oculusOrientationPort.open("/" + getName() + portName))
+    {
+        yError() << "[configure] Unable to open the port " << portName;
+        return false;
+    }
+    
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
     {
@@ -199,7 +217,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
     {
         yError() << "[OculusModule::configure] Unable to initialize the left fingers retargeting.";
-        return false;
+        //return false;
     }
 
     m_rightHandFingers = std::make_unique<FingersRetargeting>();
@@ -208,7 +226,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
     {
         yError() << "[OculusModule::configure] Unable to initialize the right fingers retargeting.";
-        return false;
+	// return false;
     }
 
     // configure hands retargeting
@@ -231,7 +249,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     // open ports
-    std::string portName;
     if (!YarpHelper::getStringFromSearchable(rf, "leftHandPosePort", portName))
     {
         yError() << "[OculusModule::configure] Unable to get a string from a searchable";
@@ -394,6 +411,8 @@ bool OculusModule::updateModule()
         return false;
     }
 
+    yInfo() << "head trans " << m_oculusRoot_T_headOculus.toString();
+    
     if (m_useVirtualizer)
     {
         // in the future the transform server will be used
@@ -407,8 +426,19 @@ bool OculusModule::updateModule()
     }
 
     // head
+    yarp::os::Bottle* desiredHeadOrientation = NULL;
+    yarp::sig::Vector desiredHeadOrientationVector(3, 0.0);
+    desiredHeadOrientation = m_oculusOrientationPort.read(false);
+    if (desiredHeadOrientation != NULL)
+    {
+        for (int i = 0; i < desiredHeadOrientation->size(); i++)
+	  desiredHeadOrientationVector(i) = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());	
+    }
+    yInfo() << " m_playerOrientaion "<< m_playerOrientation;   
+    
     m_head->setPlayerOrientation(m_playerOrientation);
     m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
+    // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector);
     m_head->evaluateHeadOrientationCorrected();
     if (!m_head->move())
     {

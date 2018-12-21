@@ -35,6 +35,10 @@ private:
     iDynTree::Rotation m_playerOrientation;
     iDynTree::Rotation m_desiredHeadOrientation;
 
+    // double m_playerOrientation;
+    // yarp::sig::Vector m_desiredHeadOrientation;
+
+  
 public:
     /**
      * Configure the object.
@@ -47,6 +51,8 @@ public:
 
     void setDesiredHeadOrientation(const yarp::sig::Matrix& desiredHeadOrientation);
 
+    void setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation);
+  
     void evaluateHeadOrientationCorrected();
 };
 
