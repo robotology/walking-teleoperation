@@ -18,7 +18,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(iDynTree REQUIRED)
-find_package(OpenCV REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include(FindPackageHandleStandardArgs)
 
@@ -29,7 +28,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/HandRetargeting.cpp
   src/HeadRetargeting.cpp
   src/RobotControlHelper.cpp
-  src/RetargetingHelper.cpp
+  src/RetargetingController.cpp
   src/OculusModule.cpp)
 
 # set hpp files
@@ -38,7 +37,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/HandRetargeting.hpp
   include/HeadRetargeting.hpp
   include/RobotControlHelper.hpp
-  include/RetargetingHelper.hpp
+  include/RetargetingController.hpp
   include/OculusModule.hpp)
 
 # add include directories to the build.
@@ -52,7 +51,6 @@ add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}
 target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
   ${YARP_LIBRARIES}
   ${iDynTree_LIBRARIES}
-  ${OpenCV_LIBS}
   ctrlLib
   UtilityLibrary)
 

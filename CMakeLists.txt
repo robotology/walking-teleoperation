@@ -17,3 +17,5 @@ add_subdirectory(app)
 
  # Include clang-format target
 include(AddClangFormatTarget)
+
+include(AddUninstallTarget)

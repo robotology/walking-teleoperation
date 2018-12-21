@@ -33,3 +33,10 @@
 
 # Temporary Files
 *~
+
+# build folder
+build/
+
+# emacs
+\#*\#
+.\#*\#
