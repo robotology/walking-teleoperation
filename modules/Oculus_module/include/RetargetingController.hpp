@@ -1,14 +1,13 @@
 /**
- * @file RetargetingHelper.hpp
+ * @file RetargetingController.hpp
  * @authors Giulio Romualdi <giulio.romualdi@iit.it>
- *          Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
  * @copyright 2018 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2018
  */
 
-#ifndef RETARGETING_HELPER_HPP
-#define RETARGETING_HELPER_HPP
+#ifndef RETARGETING_CONTROLLER_HPP
+#define RETARGETING_CONTROLLER_HPP
 
 // std
 #include <memory>
@@ -21,13 +20,14 @@
 using namespace yarp::math;
 
 /**
- * Class useful to manage the retargeting
+ * RetargetingController is a virtual class for retargeting one part of the robot (i.e. head or
+ * fingers)
  */
-class RetargetingHelper
+class RetargetingController
 {
 protected:
-    std::unique_ptr<RobotControlHelper> m_controlHelper;
-    yarp::sig::Vector m_desiredJointPosition;
+    std::unique_ptr<RobotControlHelper> m_controlHelper; /**< Controller helper */
+    yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
 
 public:
     /**
@@ -38,10 +38,10 @@ public:
     virtual bool configure(const yarp::os::Searchable& config, const std::string& name) = 0;
 
     /**
-     * Move the part
+     * Move the robot part
      * @return true in case of success and false otherwise.
      */
-    bool move();
+    virtual bool move();
 
     /**
      * Expose the contolHelper interface (const)
@@ -50,7 +50,7 @@ public:
     const std::unique_ptr<RobotControlHelper>& controlHelper() const;
 
     /**
-     * Expose the contolHelper interface (const)
+     * Expose the contolHelper interface
      * @return control helper interface
      */
     std::unique_ptr<RobotControlHelper>& controlHelper();

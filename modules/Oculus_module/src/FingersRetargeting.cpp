@@ -12,10 +12,10 @@
 
 bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
-    m_controlHelper == std::make_unique<RobotControlHelper>();
-    if (!m_controlHelper->configure(config, name))
+    m_controlHelper = std::make_unique<RobotControlHelper>();
+    if (!m_controlHelper->configure(config, name, false))
     {
-        yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
+        yError() << "[FingersRetargeting::configure] Unable to configure the control helper";
         return false;
     }
 
@@ -24,21 +24,27 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
     {
-        yError() << "[configure] Unable to find the head smoothing time";
+        yError() << "[FingersRetargeting::configure] Unable to find the sampling time";
         return false;
     }
 
     m_fingersScaling.resize(fingersJoints);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersScaling", m_fingersScaling))
     {
-        yError() << "[configure] Initialization failed while reading "
-                    "fingersVelocity vector.";
+        yError() << "[FingersRetargeting::configure] Initialization failed while reading fingersScaling vector.";
         return false;
     }
 
-    m_desiredJointPosition.resize(fingersJoints);
+    m_desiredJointValue.resize(fingersJoints);
     yarp::sig::Vector buff(fingersJoints, 0.0);
-    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff);
+    yarp::sig::Matrix limits(fingersJoints, 2);
+    if (!m_controlHelper->getLimits(limits))
+    {
+        yError() << "[FingersRetargeting::configure] Unable to get the joint limits.";
+        return false;
+    }
+    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
+
     return true;
 }
 
@@ -46,11 +52,13 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] the integrator is not initialize "
-                    "please call configure() method";
+        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize please call configure() method";
         return false;
     }
 
-    m_desiredJointPosition = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
+    if(m_controlHelper->isVelocityControlUsed())
+        m_desiredJointValue = fingersVelocity * m_fingersScaling;
+    else
+        m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
     return true;
 }
