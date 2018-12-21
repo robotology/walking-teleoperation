@@ -135,6 +135,9 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     m_releaseLeftIndex = 2;
     m_releaseRightIndex = 3;
 
+    m_startWalkingIndex = 4;
+    m_prepareWalkingIndex = 0;
+
     return true;
 }
 
@@ -192,7 +195,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         yError() << "[configure] Unable to open the port " << portName;
         return false;
     }
-    
+
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
     {
@@ -411,8 +414,6 @@ bool OculusModule::updateModule()
         return false;
     }
 
-    yInfo() << "head trans " << m_oculusRoot_T_headOculus.toString();
-    
     if (m_useVirtualizer)
     {
         // in the future the transform server will be used
@@ -432,10 +433,10 @@ bool OculusModule::updateModule()
     if (desiredHeadOrientation != NULL)
     {
         for (int i = 0; i < desiredHeadOrientation->size(); i++)
-	  desiredHeadOrientationVector(i) = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());	
+	  desiredHeadOrientationVector(i) = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
     }
-    yInfo() << " m_playerOrientaion "<< m_playerOrientation;   
-    
+    yInfo() << " m_playerOrientaion "<< m_playerOrientation;
+
     m_head->setPlayerOrientation(m_playerOrientation);
     m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
     // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector);
@@ -513,8 +514,28 @@ bool OculusModule::updateModule()
     m_imagesOrientationPort.setEnvelope(m_head->controlHelper()->timeStamp());
     m_imagesOrientationPort.write();
 
+    // check if it is time to prepare or start walking
+    std::vector<float> buttonMapping(2);
+
+    // prepare robot (A button)
+    m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping[0]);
+
+    // start walking (X button)
+    m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping[1]);
+
+    yarp::os::Bottle cmd, outcome;
+    if(buttonMapping[0] > 0)
+    {
+        cmd.addString("prepareRobot");
+        m_Joyrpc.write(cmd, outcome);
+    }
+    else if(buttonMapping[1] > 0)
+    {
+        cmd.addString("startWalking");
+        m_Joyrpc.write(cmd, outcome);
+    }
     // use joypad
-    if (!m_useVirtualizer)
+    else if (!m_useVirtualizer)
     {
         double x, y;
         m_joypadControllerInterface->getAxis(m_xJoypadIndex, x);
@@ -522,10 +543,8 @@ bool OculusModule::updateModule()
 
         x = -m_scaleX * deadzone(x);
         y = m_scaleY * deadzone(y);
-
         std::swap(x, y);
 
-        yarp::os::Bottle cmd, outcome;
         cmd.addString("setGoal");
         cmd.addDouble(x);
         cmd.addDouble(y);
