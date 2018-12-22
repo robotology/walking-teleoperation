@@ -1,7 +1,6 @@
 /**
  * @file RetargetingHelper.hpp
  * @authors Giulio Romualdi <giulio.romualdi@iit.it>
- *          Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
  * @copyright 2018 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2018
@@ -41,7 +40,7 @@ public:
      * Move the part
      * @return true in case of success and false otherwise.
      */
-    bool move();
+    virtual bool move();
 
     /**
      * Expose the contolHelper interface (const)

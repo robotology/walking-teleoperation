@@ -38,16 +38,15 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 
     m_desiredJointPosition.resize(fingersJoints);
     yarp::sig::Vector buff(fingersJoints, 0.0);
-    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff,
-								  m_controlHelper->getLimits());
+    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(
+        samplingTime, buff, m_controlHelper->getLimits());
 
     if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
     {
-      yError() << "unable to switch the control mode";
-      return false;
+        yError() << "unable to switch the control mode";
+        return false;
     }
 
-    
     return true;
 }
 

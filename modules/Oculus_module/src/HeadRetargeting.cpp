@@ -15,39 +15,47 @@
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
 
-iDynTree::Vector3 asYXZ(const iDynTree::Rotation& matrix)
+iDynTree::Vector3 HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix)
 {
-  iDynTree::Vector3 YXZ;
-  double thetaX, thetaY, thetaZ;
-  if (matrix(1, 2) <+1)
+    // YXZ decomposition
+    iDynTree::Vector3 YXZ;
+    double thetaX, thetaY, thetaZ;
+    if (matrix(1, 2) < 1)
     {
-      if(matrix(1, 2) > -1)
-	{
-	  thetaX = std::asin(-matrix(1, 2));
-	  thetaY = std::atan2(matrix(0,2) , matrix(2,2)) ;
-	  thetaZ = std::atan2(matrix(1,0) , matrix(1,1)) ;
-	}
-      else	
-	{
-	  thetaX = M_PI/2;
-	  thetaY = -std::atan2(-matrix(0,1) , matrix(0,0)) ;
-	  thetaZ = 0 ;	  
-	}
-    }
-  else
+        if (matrix(1, 2) > -1)
+        {
+            thetaX = std::asin(-matrix(1, 2));
+            thetaY = std::atan2(matrix(0, 2), matrix(2, 2));
+            thetaZ = std::atan2(matrix(1, 0), matrix(1, 1));
+        } else
+        {
+            thetaX = M_PI / 2;
+            thetaY = -std::atan2(-matrix(0, 1), matrix(0, 0));
+            thetaZ = 0;
+        }
+    } else
     {
-      thetaX = -M_PI/2;
-      thetaY = std::atan2(-matrix(0,1) , matrix(0,0)) ;
-      thetaZ = 0 ;	  
+        thetaX = -M_PI / 2;
+        thetaY = std::atan2(-matrix(0, 1), matrix(0, 0));
+        thetaZ = 0;
     }
-  
-  YXZ(0) = thetaY;
-  YXZ(1) = thetaX;
-  YXZ(2) = thetaZ;
 
-  return YXZ;
+    // minus due to the joints structure of the iCub neck
+    YXZ(0) = -thetaY;
+    YXZ(1) = thetaX;
+    YXZ(2) = thetaZ;
+
+    return YXZ;
 }
 
+iDynTree::Rotation HeadRetargeting::forwardKinematics(const yarp::sig::Vector& YXZ)
+{
+    iDynTree::Rotation root_R_head;
+    root_R_head = iDynTree::Rotation::RotY(-YXZ(0)) * iDynTree::Rotation::RotX(YXZ(1))
+                  * iDynTree::Rotation::RotZ(YXZ(2));
+
+    return root_R_head;
+}
 
 bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
@@ -87,10 +95,10 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
 
     if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
     {
-      yError() << "unable to switch the control mode";
-      return false;
+        yError() << "unable to switch the control mode";
+        return false;
     }
-    
+
     return true;
 }
 
@@ -99,41 +107,23 @@ void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
     // notice in this case the real transformation is rotx(-pi) * rotz(playerOrientation) * rotx(pi)
     // which is equal to rotz(-playerOrietation);
     m_playerOrientation = iDynTree::Rotation::RotZ(-playerOrientation);
-    //  m_playerOrientation = playerOrientation;
 }
 
-// void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation)
-// {
-//     m_desiredHeadOrientation = desiredHeadOrientation;
-// }
-
-void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& desiredHeadTransform)
+void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusRoot_T_oculusHeadset)
 {
-    iDynTree::toEigen(m_desiredHeadOrientation)
-        = iDynTree::toEigen(desiredHeadTransform).block(0, 0, 3, 3);
+    iDynTree::toEigen(m_oculusRoot_T_oculusHeadset)
+        = iDynTree::toEigen(oculusRoot_T_oculusHeadset).block(0, 0, 3, 3);
 }
 
-void HeadRetargeting::evaluateHeadOrientationCorrected()
+bool HeadRetargeting::move()
 {
-    iDynTree::Rotation desiredHeadOrientation;
-    desiredHeadOrientation = m_playerOrientation.inverse() * m_desiredHeadOrientation;
-    
+    m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
+
     yarp::sig::Vector tmp(3);
-    iDynTree::toYarp(asYXZ(desiredHeadOrientation), tmp);
+    iDynTree::toYarp(inverseKinematics(m_desiredHeadOrientation), tmp);
 
-    yInfo() << " desiredHeadOrientation "<< asYXZ(desiredHeadOrientation).toString();
-    yInfo() << " desiredHeadOrientation "<< desiredHeadOrientation.toString();
-    
     m_headTrajectorySmoother->computeNextValues(tmp);
     m_desiredJointPosition = m_headTrajectorySmoother->getPos();
-    double tmpAngle = m_desiredJointPosition(0);
-    m_desiredJointPosition(0) = m_desiredJointPosition(1);
-    m_desiredJointPosition(1) = -tmpAngle;
 
-  // yarp::sig::Vector desiredHeadOrientation;
-  // desiredHeadOrientation = m_desiredHeadOrientation;
-  // desiredHeadOrientation(2) = desiredHeadOrientation(2) + m_playerOrientation;
-  
-  // m_headTrajectorySmoother->computeNextValues(desiredHeadOrientation);
-  // m_desiredJointPosition = m_headTrajectorySmoother->getPos();
+    return RetargetingHelper::move();
 }

@@ -52,11 +52,10 @@ class RobotControlHelper
     bool m_isActive;
 
 public:
-
     yarp::sig::Matrix getLimits();
-  
+
     bool switchToControlMode(const int& controlMode);
-  
+
     bool configure(const yarp::os::Searchable& config, const std::string& name);
 
     bool setDirectPositionReferences(const yarp::sig::Vector& desiredPositions);

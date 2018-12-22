@@ -55,7 +55,6 @@ private:
     unsigned int m_startWalkingIndex;
     unsigned int m_prepareWalkingIndex;
 
-
     bool m_useLeftHand; /**< If True the left hand is controlled */
     bool m_useRightHand; /**< If True the right hand is controlled */
     bool m_useVirtualizer; /*using virtualizer*/
@@ -92,9 +91,9 @@ private:
     yarp::os::BufferedPort<yarp::os::Bottle> m_imagesOrientationPort;
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;
     // remove me
-    yarp::os::BufferedPort<yarp::os::Bottle>  m_oculusOrientationPort;
+    yarp::os::BufferedPort<yarp::os::Bottle> m_oculusOrientationPort;
 
-  yarp::os::RpcClient m_Joyrpc;
+    yarp::os::RpcClient m_Joyrpc;
 
     double m_robotYaw;
 
