@@ -62,12 +62,12 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
     // check if the configuration file is empty
     if (config.isNull())
     {
-        yError() << "[configure] Empty configuration for head retargeting.";
+        yError() << "[HeadRetargeting::configure] Empty configuration for head retargeting.";
         return false;
     }
 
     m_controlHelper = std::make_unique<RobotControlHelper>();
-    if (!m_controlHelper->configure(config, name))
+    if (!m_controlHelper->configure(config, name, true))
     {
         yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
         return false;
@@ -77,14 +77,14 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
     {
-        yError() << "[configure] Unable to find the head sampling time";
+        yError() << "[HeadRetargeting::configure] Unable to find the head sampling time";
         return false;
     }
 
     double smoothingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "smoothingTime", smoothingTime))
     {
-        yError() << "[configure] Unable to find the head smoothing time";
+        yError() << "[HeadRetargeting::configure] Unable to find the head smoothing time";
         return false;
     }
 
@@ -95,7 +95,7 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
 
     if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
     {
-        yError() << "unable to switch the control mode";
+        yError() << "[HeadRetargeting::configure] Unable to switch the control mode";
         return false;
     }
 

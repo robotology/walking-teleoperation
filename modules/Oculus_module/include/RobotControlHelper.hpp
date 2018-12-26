@@ -49,14 +49,18 @@ class RobotControlHelper
     yarp::sig::Vector m_maxJointsPosition;
     yarp::os::Stamp m_timeStamp;
 
-    bool m_isActive;
+    bool m_isMandatory;
 
 public:
     yarp::sig::Matrix getLimits();
 
+    /**
+     * @param controlMode
+     */
     bool switchToControlMode(const int& controlMode);
 
-    bool configure(const yarp::os::Searchable& config, const std::string& name);
+    bool configure(const yarp::os::Searchable& config, const std::string& name,
+                   bool isMandatory);
 
     bool setDirectPositionReferences(const yarp::sig::Vector& desiredPositions);
 

@@ -13,7 +13,7 @@
 bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
     m_controlHelper = std::make_unique<RobotControlHelper>();
-    if (!m_controlHelper->configure(config, name))
+    if (!m_controlHelper->configure(config, name, false))
     {
         yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
         return false;

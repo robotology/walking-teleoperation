@@ -12,9 +12,10 @@
 #include <RobotControlHelper.hpp>
 #include <Utils.hpp>
 
-bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std::string& name)
+bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std::string& name,
+                                   bool isMandatory)
 {
-    m_isActive = true;
+    m_isMandatory = isMandatory;
 
     // robot name: used to connect to the robot
     std::string robot;
@@ -27,14 +28,12 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     {
         yError() << "[RobotControlHelper::configure] Unable to find remote_control_boards into "
                     "config file.";
-        m_isActive = false;
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(iCubPartsYarp, iCubParts))
     {
         yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a vector of "
                     "strings.";
-        m_isActive = false;
         return false;
     }
 
@@ -45,7 +44,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     if (!config.check("joints_list", axesListYarp))
     {
         yError() << "[RobotControlHelper::configure] Unable to find joints_list into config file.";
-        m_isActive = false;
         return false;
     }
 
@@ -53,7 +51,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     {
         yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a "
                     "vector of strings.";
-        m_isActive = false;
         return false;
     }
 
@@ -75,53 +72,46 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     m_actuatedDOFs = axesList.size();
 
     // open the device
-    if (!m_robotDevice.open(options))
+    if (!m_robotDevice.open(options) && m_isMandatory)
     {
         yError() << "[RobotControlHelper::configure] Could not open remotecontrolboardremapper "
                     "object.";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_encodersInterface) || !m_encodersInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain IEncoders interface";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_positionInterface) || !m_positionInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain IPositionControl interface";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_positionDirectInterface) || !m_positionDirectInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain IPositionDirect interface";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_limitsInterface) || !m_limitsInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain IPositionDirect interface";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_controlModeInterface) || !m_controlModeInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain IControlMode interface";
-        m_isActive = false;
         return false;
     }
 
     if (!m_robotDevice.view(m_timedInterface) || !m_timedInterface)
     {
         yError() << "[RobotControlHelper::configure] Cannot obtain iTimed interface";
-        m_isActive = false;
         return false;
     }
 
@@ -142,17 +132,21 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     }
     if (!okPosition)
     {
-        yError() << "[configure] Unable to read encoders (position).";
-        m_isActive = false;
+        yError() << "[RobotControlHelper::close] Unable to read encoders (position).";
         return false;
     }
 
+    // set the limits equal to the measured velue
+    // this is useful in case of HW fault
+    m_maxJointsPosition = m_positionFeedbackInDegrees;
+    m_minJointsPosition = m_positionFeedbackInDegrees;
+
     for (int i = 0; i < m_actuatedDOFs; i++)
         // get position limits
-        if (!m_limitsInterface->getLimits(i, &m_minJointsPosition(i), &m_maxJointsPosition(i)))
+        if (!m_limitsInterface->getLimits(i, &m_minJointsPosition(i), &m_maxJointsPosition(i))
+            && m_isMandatory)
         {
             yError() << "[configure] Unable get joints position limits.";
-            m_isActive = false;
             return false;
         }
 
@@ -161,10 +155,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
 
 bool RobotControlHelper::switchToControlMode(const int& controlMode)
 {
-    // if the part is not active skip
-    if (!m_isActive)
-        return true;
-
     // check if the control interface is ready
     if (!m_controlModeInterface)
     {
@@ -174,7 +164,8 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
 
     // set the control interface
     std::vector<int> controlModes(m_actuatedDOFs, controlMode);
-    if (!m_controlModeInterface->setControlModes(controlModes.data()))
+    if (!m_controlModeInterface->setControlModes(controlModes.data())
+        && m_isMandatory)
     {
         yError()
             << "[RobotControlHelper::switchToControlMode] Error while setting the controlMode.";
@@ -185,9 +176,6 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
 
 bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& desiredPosition)
 {
-    if (!m_isActive)
-        return true;
-
     if (m_positionDirectInterface == nullptr)
     {
         yError()
@@ -202,20 +190,20 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
         return false;
     }
 
-    double threshold = 5;
     for (int i = 0; i < m_actuatedDOFs; i++)
     {
         m_desiredPositionInDegrees(i) = iDynTree::rad2deg(desiredPosition(i));
 
         // check if the position is outside the limit
         if (m_desiredPositionInDegrees(i) <= m_minJointsPosition(i))
-            m_desiredPositionInDegrees(i) = m_minJointsPosition(i) + threshold;
+            m_desiredPositionInDegrees(i) = m_minJointsPosition(i);
         else if (m_desiredPositionInDegrees(i) >= m_maxJointsPosition(i))
-            m_desiredPositionInDegrees(i) = m_maxJointsPosition(i) - threshold;
+            m_desiredPositionInDegrees(i) = m_maxJointsPosition(i);
     }
 
     // set position diret mode
-    if (!m_positionDirectInterface->setPositions(m_desiredPositionInDegrees.data()))
+    if (!m_positionDirectInterface->setPositions(m_desiredPositionInDegrees.data())
+        && m_isMandatory)
     {
         yError() << "[RobotControlHelper::setDirectPositionReferences] Error while setting the "
                     "desired position.";
@@ -227,11 +215,6 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
 
 void RobotControlHelper::updateTimeStamp()
 {
-    if (!m_isActive)
-        return;
-
-    yInfo() << "ciao";
-
     if (m_timedInterface)
         m_timeStamp = m_timedInterface->getLastInputStamp();
     else
@@ -240,12 +223,8 @@ void RobotControlHelper::updateTimeStamp()
 
 bool RobotControlHelper::getFeedback()
 {
-    if (!m_isActive)
-        return true;
-
-    yInfo() << "ciao";
-
-    if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()))
+    if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()) &&
+        m_isMandatory)
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get joint position";
         return false;
@@ -275,12 +254,10 @@ const yarp::sig::Vector& RobotControlHelper::jointEncoders() const
 void RobotControlHelper::close()
 {
     if (!switchToControlMode(VOCAB_CM_POSITION))
-    {
-        yError() << "[close] Unable to switch in position control.";
-    }
+        yError() << "[RobotControlHelper::close] Unable to switch in position control.";
 
     if (!m_robotDevice.close())
-        yError() << "[close] Unable to close the device.";
+        yError() << "[RobotControlHelper::close] Unable to close the device.";
 }
 
 int RobotControlHelper::getDoFs()
