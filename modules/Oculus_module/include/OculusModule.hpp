@@ -27,12 +27,18 @@
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
 
+
 /**
  * Class usefull to manage the retargeting of one hand
  */
 class OculusModule : public yarp::os::RFModule
 {
 private:
+
+    enum class OculusFSM {Configured, Running};
+
+    OculusFSM m_state;
+
     double m_dT; /**< Module period. */
 
     // joypad utils
@@ -57,7 +63,7 @@ private:
 
     bool m_useLeftHand; /**< If True the left hand is controlled */
     bool m_useRightHand; /**< If True the right hand is controlled */
-    bool m_useVirtualizer; /*using virtualizer*/
+    bool m_useVirtualizer; /**< Using virtualizer */
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
@@ -106,6 +112,7 @@ private:
 
     /**
      * Configure the Oculus.
+     * @param config
      * @return true in case of success and false otherwise.
      */
     bool configureOculus(const yarp::os::Searchable& config);
