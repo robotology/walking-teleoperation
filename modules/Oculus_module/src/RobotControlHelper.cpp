@@ -258,7 +258,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
 
     for (int i = 0; i < m_actuatedDOFs; i++)
         // get position limits
-        if (m_limitsInterface->getLimits(i, &limits(i, 0), &limits(i, 0)))
+        if (m_limitsInterface->getLimits(i, &limits(i, 0), &limits(i, 1)))
         {
             if(m_isMandatory)
             {
@@ -271,7 +271,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
                 limits(i,0) = m_positionFeedbackInDegrees(i);
                 limits(i,1) = m_positionFeedbackInDegrees(i);
                 yWarning() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
-                         << " joint limits. The current joint value is used as lower and upper limits.";
+                           << " joint limits. The current joint value is used as lower and upper limits.";
             }
 
         }
