@@ -173,6 +173,10 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
         return false;
     }
 
+    // convert radiant to degree
+    for(int i = 0; i < m_actuatedDOFs; i++)
+        m_desiredPositionInDegrees(i) = iDynTree::rad2deg(desiredPosition(i));
+
     // set desired position
     if (!m_positionDirectInterface->setPositions(m_desiredPositionInDegrees.data())
         && m_isMandatory)
