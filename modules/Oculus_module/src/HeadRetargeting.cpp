@@ -125,5 +125,5 @@ bool HeadRetargeting::move()
     m_headTrajectorySmoother->computeNextValues(tmp);
     m_desiredJointPosition = m_headTrajectorySmoother->getPos();
 
-    return RetargetingHelper::move();
+    return RetargetingController::move();
 }

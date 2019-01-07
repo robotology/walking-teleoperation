@@ -1,13 +1,13 @@
 /**
- * @file RetargetingHelper.hpp
+ * @file RetargetingController.hpp
  * @authors Giulio Romualdi <giulio.romualdi@iit.it>
  * @copyright 2018 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2018
  */
 
-#ifndef RETARGETING_HELPER_HPP
-#define RETARGETING_HELPER_HPP
+#ifndef RETARGETING_CONTROLLER_HPP
+#define RETARGETING_CONTROLLER_HPP
 
 // std
 #include <memory>
@@ -22,7 +22,7 @@ using namespace yarp::math;
 /**
  * Class useful to manage the retargeting
  */
-class RetargetingHelper
+class RetargetingController
 {
 protected:
     std::unique_ptr<RobotControlHelper> m_controlHelper;

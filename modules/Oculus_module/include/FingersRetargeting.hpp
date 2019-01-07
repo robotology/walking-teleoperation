@@ -20,14 +20,14 @@
 // iCub-ctrl
 #include <iCub/ctrl/pids.h>
 
-#include <RetargetingHelper.hpp>
+#include <RetargetingController.hpp>
 
 using namespace yarp::math;
 
 /**
  * Class useful to manage the retargeting of fingers.
  */
-class FingersRetargeting : public RetargetingHelper
+class FingersRetargeting : public RetargetingController
 {
 private:
     yarp::sig::Vector m_fingersScaling; /**< It contains the finger velocity scaling. */

@@ -22,12 +22,12 @@
 // iDynTree
 #include <iDynTree/Core/Rotation.h>
 
-#include <RetargetingHelper.hpp>
+#include <RetargetingController.hpp>
 
 /**
  * Class useful to manage the head retargeting.
  */
-class HeadRetargeting : public RetargetingHelper
+class HeadRetargeting : public RetargetingController
 {
 private:
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
