@@ -45,14 +45,14 @@ class RobotControlHelper
                                                      position [deg]. */
     yarp::sig::Vector m_positionFeedbackInDegrees;
     yarp::sig::Vector m_positionFeedbackInRadians;
-    yarp::sig::Vector m_minJointsPosition;
-    yarp::sig::Vector m_maxJointsPosition;
     yarp::os::Stamp m_timeStamp;
+
+    std::vector<std::string> m_axesList; /**< Vector containing the name of the controlled joints. */
 
     bool m_isMandatory;
 
 public:
-    yarp::sig::Matrix getLimits();
+    bool getLimits(yarp::sig::Matrix& limits);
 
     /**
      * @param controlMode

@@ -39,7 +39,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property options;
-    std::vector<std::string> axesList;
     yarp::os::Value* axesListYarp;
     if (!config.check("joints_list", axesListYarp))
     {
@@ -47,7 +46,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    if (!YarpHelper::yarpListToStringVector(axesListYarp, axesList))
+    if (!YarpHelper::yarpListToStringVector(axesListYarp, m_axesList))
     {
         yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a "
                     "vector of strings.";
@@ -55,7 +54,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     }
 
     options.put("device", "remotecontrolboardremapper");
-    YarpHelper::addVectorOfStringToProperty(options, "axesNames", axesList);
+    YarpHelper::addVectorOfStringToProperty(options, "axesNames", m_axesList);
 
     // prepare the remotecontrolboards
     yarp::os::Bottle remoteControlBoards;
@@ -69,7 +68,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     yarp::os::Property& remoteControlBoardsOpts = options.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
     remoteControlBoardsOpts.put("writeStrict", "on");
 
-    m_actuatedDOFs = axesList.size();
+    m_actuatedDOFs = m_axesList.size();
 
     // open the device
     if (!m_robotDevice.open(options) && m_isMandatory)
@@ -118,8 +117,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     m_desiredPositionInDegrees.resize(m_actuatedDOFs);
     m_positionFeedbackInDegrees.resize(m_actuatedDOFs);
     m_positionFeedbackInRadians.resize(m_actuatedDOFs);
-    m_minJointsPosition.resize(m_actuatedDOFs);
-    m_maxJointsPosition.resize(m_actuatedDOFs);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -135,20 +132,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
         yError() << "[RobotControlHelper::close] Unable to read encoders (position).";
         return false;
     }
-
-    // set the limits equal to the measured velue
-    // this is useful in case of HW fault
-    m_maxJointsPosition = m_positionFeedbackInDegrees;
-    m_minJointsPosition = m_positionFeedbackInDegrees;
-
-    for (int i = 0; i < m_actuatedDOFs; i++)
-        // get position limits
-        if (!m_limitsInterface->getLimits(i, &m_minJointsPosition(i), &m_maxJointsPosition(i))
-            && m_isMandatory)
-        {
-            yError() << "[configure] Unable get joints position limits.";
-            return false;
-        }
 
     return true;
 }
@@ -190,18 +173,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
         return false;
     }
 
-    for (int i = 0; i < m_actuatedDOFs; i++)
-    {
-        m_desiredPositionInDegrees(i) = iDynTree::rad2deg(desiredPosition(i));
-
-        // check if the position is outside the limit
-        if (m_desiredPositionInDegrees(i) <= m_minJointsPosition(i))
-            m_desiredPositionInDegrees(i) = m_minJointsPosition(i);
-        else if (m_desiredPositionInDegrees(i) >= m_maxJointsPosition(i))
-            m_desiredPositionInDegrees(i) = m_maxJointsPosition(i);
-    }
-
-    // set position diret mode
+    // set desired position
     if (!m_positionDirectInterface->setPositions(m_desiredPositionInDegrees.data())
         && m_isMandatory)
     {
@@ -265,13 +237,43 @@ int RobotControlHelper::getDoFs()
     return m_actuatedDOFs;
 }
 
-yarp::sig::Matrix RobotControlHelper::getLimits()
+bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
 {
-    yarp::sig::Matrix limits(m_minJointsPosition.size(), 2);
-    for (int i = 0; i < m_minJointsPosition.size(); i++)
+    bool okPosition = false;
+    for (int i = 0; i < 10 && !okPosition; i++)
     {
-        limits(i, 0) = iDynTree::deg2rad(m_minJointsPosition(i));
-        limits(i, 1) = iDynTree::deg2rad(m_maxJointsPosition(i));
+        okPosition = m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data());
+
+        if (!okPosition)
+            yarp::os::Time::delay(0.1);
     }
-    return limits;
+    if (!okPosition)
+    {
+        yError() << "[RobotControlHelper::getLimits] Unable to read encoders (position).";
+        return false;
+    }
+
+    // resize matrix
+    limits.resize(m_actuatedDOFs, 2);
+
+    for (int i = 0; i < m_actuatedDOFs; i++)
+        // get position limits
+        if (m_limitsInterface->getLimits(i, &limits(i, 0), &limits(i, 0)))
+        {
+            if(m_isMandatory)
+            {
+                yError() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                         << " joint limits.";
+                return false;
+            }
+            else
+            {
+                limits(i,0) = m_positionFeedbackInDegrees(i);
+                limits(i,1) = m_positionFeedbackInDegrees(i);
+                yWarning() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                         << " joint limits. The current joint value is used as lower and upper limits.";
+            }
+
+        }
+    return true;
 }

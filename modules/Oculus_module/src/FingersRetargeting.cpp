@@ -38,9 +38,17 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 
     m_desiredJointPosition.resize(fingersJoints);
     yarp::sig::Vector buff(fingersJoints, 0.0);
-    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(
-        samplingTime, buff, m_controlHelper->getLimits());
+    yarp::sig::Matrix limits(fingersJoints, 2);
+    if (!m_controlHelper->getLimits(limits))
+    {
+        yError() << "[FingersRetargeting::configure] Unable to get the joint limits.";
+        return false;
+    }
+    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
 
+    // switch to position direct mode. Notice it might be nice to control the fingers in
+    // velocity mode. Indeed now we are setting a desired joint velocity and we evaluate
+    // the joint position using an integrator.
     if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
     {
         yError() << "unable to switch the control mode";
