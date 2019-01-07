@@ -15,44 +15,42 @@
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
 
-iDynTree::Vector3 HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix)
+void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,
+                                        double& neckRoll, double& neckYaw)
 {
     // YXZ decomposition
-    iDynTree::Vector3 YXZ;
     double thetaX, thetaY, thetaZ;
     if (matrix(1, 2) < 1)
     {
         if (matrix(1, 2) > -1)
         {
-            thetaX = std::asin(-matrix(1, 2));
-            thetaY = std::atan2(matrix(0, 2), matrix(2, 2));
-            thetaZ = std::atan2(matrix(1, 0), matrix(1, 1));
+            neckPitch = std::asin(-matrix(1, 2));
+            neckRoll = std::atan2(matrix(0, 2), matrix(2, 2));
+            neckYaw = std::atan2(matrix(1, 0), matrix(1, 1));
         } else
         {
-            thetaX = M_PI / 2;
-            thetaY = -std::atan2(-matrix(0, 1), matrix(0, 0));
-            thetaZ = 0;
+            neckPitch = M_PI / 2;
+            neckRoll = -std::atan2(-matrix(0, 1), matrix(0, 0));
+            neckYaw = 0;
         }
     } else
     {
-        thetaX = -M_PI / 2;
-        thetaY = std::atan2(-matrix(0, 1), matrix(0, 0));
-        thetaZ = 0;
+        neckPitch = -M_PI / 2;
+        neckRoll = std::atan2(-matrix(0, 1), matrix(0, 0));
+        neckYaw = 0;
     }
 
     // minus due to the joints structure of the iCub neck
-    YXZ(0) = -thetaY;
-    YXZ(1) = thetaX;
-    YXZ(2) = thetaZ;
-
-    return YXZ;
+    neckPitch = -neckPitch;
+    return;
 }
 
-iDynTree::Rotation HeadRetargeting::forwardKinematics(const yarp::sig::Vector& YXZ)
+iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, const double& neckRoll,
+                                                      const double& neckYaw)
 {
     iDynTree::Rotation root_R_head;
-    root_R_head = iDynTree::Rotation::RotY(-YXZ(0)) * iDynTree::Rotation::RotX(YXZ(1))
-                  * iDynTree::Rotation::RotZ(YXZ(2));
+    root_R_head = iDynTree::Rotation::RotY(-neckPitch) * iDynTree::Rotation::RotX(neckRoll)
+        * iDynTree::Rotation::RotZ(neckYaw);
 
     return root_R_head;
 }
@@ -119,10 +117,15 @@ bool HeadRetargeting::move()
 {
     m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
 
-    yarp::sig::Vector tmp(3);
-    iDynTree::toYarp(inverseKinematics(m_desiredHeadOrientation), tmp);
+    // notice here the following assumption is done:
+    // desiredNeckJoint(0) = neckPitch
+    // desiredNeckJoint(1) = neckRoll
+    // desiredNeckJoint(2) = neckYaw
+    yarp::sig::Vector desiredNeckJoint(3);
+    inverseKinematics(m_desiredHeadOrientation, desiredNeckJoint(0),
+                      desiredNeckJoint(1), desiredNeckJoint(2));
 
-    m_headTrajectorySmoother->computeNextValues(tmp);
+    m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
     m_desiredJointPosition = m_headTrajectorySmoother->getPos();
 
     return RetargetingController::move();

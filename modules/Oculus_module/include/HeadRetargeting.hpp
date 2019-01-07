@@ -36,9 +36,6 @@ private:
     iDynTree::Rotation m_desiredHeadOrientation;
     iDynTree::Rotation m_oculusRoot_T_oculusHeadset;
 
-    // double m_playerOrientation;
-    // yarp::sig::Vector m_desiredHeadOrientation;
-
 public:
     /**
      * Configure the object.
@@ -53,9 +50,11 @@ public:
 
     void setDesiredHeadOrientation(const yarp::sig::Vector& desiredHeadOrientation);
 
-    iDynTree::Vector3 inverseKinematics(const iDynTree::Rotation& matrix);
+    static void inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,
+                                  double& neckRoll, double& neckYaw);
 
-    iDynTree::Rotation forwardKinematics(const yarp::sig::Vector& YXZ);
+    static iDynTree::Rotation forwardKinematics(const double& neckPitch, const double& neckRoll,
+                                                const double& neckYaw);
 
     bool move() override;
 };

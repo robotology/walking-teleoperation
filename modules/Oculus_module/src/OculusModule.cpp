@@ -153,8 +153,8 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     m_releaseLeftIndex = 2;
     m_releaseRightIndex = 3;
 
-    m_startWalkingIndex = 4;
-    m_prepareWalkingIndex = 0;
+    m_startWalkingIndex = 4; // X button
+    m_prepareWalkingIndex = 0; // A button
 
     return true;
 }
@@ -183,7 +183,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     // check if the configuration file is empty
     if (rf.isNull())
     {
-        yError() << "[OculusModule::configure] Empty configuration for the force torque sensors.";
+        yError() << "[OculusModule::configure] Empty configuration for the OculusModule application.";
         return false;
     }
 
@@ -224,7 +224,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
     {
         yError() << "[OculusModule::configure] Unable to initialize the left fingers retargeting.";
-        // return false;
+        return false;
     }
 
     m_rightHandFingers = std::make_unique<FingersRetargeting>();
@@ -233,7 +233,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
     {
         yError() << "[OculusModule::configure] Unable to initialize the right fingers retargeting.";
-        // return false;
+        return false;
     }
 
     // configure hands retargeting
@@ -566,8 +566,12 @@ bool OculusModule::updateModule()
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
     imagesOrientation.clear();
 
+    double neckPitch, neckRoll, neckYaw;
     yarp::sig::Vector neckEncoders = m_head->controlHelper()->jointEncoders();
-    iDynTree::Rotation root_R_head = m_head->forwardKinematics(neckEncoders);
+    neckPitch = neckEncoders(0);
+    neckRoll = neckEncoders(1);
+    neckYaw = neckEncoders(2);
+    iDynTree::Rotation root_R_head = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(m_robotYaw);
     iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
