@@ -61,8 +61,6 @@ private:
     unsigned int m_startWalkingIndex;
     unsigned int m_prepareWalkingIndex;
 
-    bool m_useLeftHand; /**< If True the left hand is controlled */
-    bool m_useRightHand; /**< If True the right hand is controlled */
     bool m_useVirtualizer; /**< Using virtualizer */
 
     // transform server

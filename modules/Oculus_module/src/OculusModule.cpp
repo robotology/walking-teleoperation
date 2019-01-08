@@ -359,7 +359,7 @@ bool OculusModule::getTransforms()
     // check if everything is ok
     if (!m_frameTransformInterface->frameExists(m_rootFrameName))
     {
-        yError() << "[OculusModule::getTransforms] No " << m_headFrameName << " frame.";
+        yError() << "[OculusModule::getTransforms] No " << m_rootFrameName << " frame.";
         return false;
     }
 
@@ -376,9 +376,9 @@ bool OculusModule::getTransforms()
                     = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
 
             iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
-                = iDynTree::toEigen(iDynTree::Rotation::RPY(desiredHeadOrientationVector(0),
-                                                            desiredHeadOrientationVector(1),
-                                                            desiredHeadOrientationVector(2)));
+                = iDynTree::toEigen(HeadRetargeting::forwardKinematics(desiredHeadOrientationVector(0),
+                                                                       desiredHeadOrientationVector(1),
+                                                                       desiredHeadOrientationVector(2)));
         }
     } else
     {
@@ -503,24 +503,20 @@ bool OculusModule::updateModule()
         }
 
         // left hand
-        if (m_useLeftHand)
-        {
-            yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
-            m_leftHand->setPlayerOrientation(m_playerOrientation);
-            m_leftHand->setHandTransform(m_oculusRoot_T_lOculus);
-            m_leftHand->evaluateHandToRootLinkTransform(leftHandPose);
-            m_leftHandPosePort.write();
-        }
+        yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
+        m_leftHand->setPlayerOrientation(m_playerOrientation);
+        m_leftHand->setHandTransform(m_oculusRoot_T_lOculus);
+        m_leftHand->evaluateHandToRootLinkTransform(leftHandPose);
+        m_leftHandPosePort.write();
 
-        if (m_useRightHand)
-        {
-            yarp::sig::Vector& rightHandPose = m_rightHandPosePort.prepare();
-            m_rightHand->setPlayerOrientation(m_playerOrientation);
-            m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
-            m_rightHand->evaluateHandToRootLinkTransform(rightHandPose);
-            m_rightHandPosePort.write();
-        }
-            // use joypad
+        // right hand
+        yarp::sig::Vector& rightHandPose = m_rightHandPosePort.prepare();
+        m_rightHand->setPlayerOrientation(m_playerOrientation);
+        m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
+        m_rightHand->evaluateHandToRootLinkTransform(rightHandPose);
+        m_rightHandPosePort.write();
+
+        // use joypad
         if (!m_useVirtualizer)
         {
             yarp::os::Bottle cmd, outcome;
@@ -559,8 +555,8 @@ bool OculusModule::updateModule()
             cmd.addString("startWalking");
             m_Joyrpc.write(cmd, outcome);
             // the outcome of the
-            if(outcome.get(0).asBool())
-                m_state = OculusFSM::Running;
+            //if(outcome.get(0).asBool())
+            m_state = OculusFSM::Running;
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
@@ -575,8 +571,10 @@ bool OculusModule::updateModule()
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(m_robotYaw);
     iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
-    imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(0)));
-    imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(1)));
+
+    // todo check the minus
+    imagesOrientation.addDouble(iDynTree::rad2deg(-inertial_R_headRPY(0)));
+    imagesOrientation.addDouble(iDynTree::rad2deg(-inertial_R_headRPY(1)));
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(2)));
 
     // fake imu
