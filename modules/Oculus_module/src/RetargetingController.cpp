@@ -10,7 +10,7 @@
 
 bool RetargetingController::move()
 {
-    return m_controlHelper->setDirectPositionReferences(m_desiredJointPosition);
+    return m_controlHelper->setJointReference(m_desiredJointValue);
 }
 
 const std::unique_ptr<RobotControlHelper>& RetargetingController::controlHelper() const

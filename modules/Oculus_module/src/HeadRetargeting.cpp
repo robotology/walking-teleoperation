@@ -91,12 +91,6 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
     yarp::sig::Vector buff(3, 0.0);
     m_headTrajectorySmoother->init(buff);
 
-    if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
-    {
-        yError() << "[HeadRetargeting::configure] Unable to switch the control mode";
-        return false;
-    }
-
     return true;
 }
 
@@ -126,7 +120,7 @@ bool HeadRetargeting::move()
                       desiredNeckJoint(1), desiredNeckJoint(2));
 
     m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
-    m_desiredJointPosition = m_headTrajectorySmoother->getPos();
+    m_desiredJointValue = m_headTrajectorySmoother->getPos();
 
     return RetargetingController::move();
 }

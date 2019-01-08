@@ -36,7 +36,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    m_desiredJointPosition.resize(fingersJoints);
+    m_desiredJointValue.resize(fingersJoints);
     yarp::sig::Vector buff(fingersJoints, 0.0);
     yarp::sig::Matrix limits(fingersJoints, 2);
     if (!m_controlHelper->getLimits(limits))
@@ -45,15 +45,6 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
     m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
-
-    // switch to position direct mode. Notice it might be nice to control the fingers in
-    // velocity mode. Indeed now we are setting a desired joint velocity and we evaluate
-    // the joint position using an integrator.
-    if (!m_controlHelper->switchToControlMode(VOCAB_CM_POSITION_DIRECT))
-    {
-        yError() << "unable to switch the control mode";
-        return false;
-    }
 
     return true;
 }
@@ -67,6 +58,9 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
         return false;
     }
 
-    m_desiredJointPosition = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
+    if(m_controlHelper->isVelocityControlUsed())
+        m_desiredJointValue = fingersVelocity * m_fingersScaling;
+    else
+        m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
     return true;
 }

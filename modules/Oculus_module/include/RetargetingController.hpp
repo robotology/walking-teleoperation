@@ -25,8 +25,8 @@ using namespace yarp::math;
 class RetargetingController
 {
 protected:
-    std::unique_ptr<RobotControlHelper> m_controlHelper;
-    yarp::sig::Vector m_desiredJointPosition;
+    std::unique_ptr<RobotControlHelper> m_controlHelper; /**< Controller helper */
+    yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
 
 public:
     /**
