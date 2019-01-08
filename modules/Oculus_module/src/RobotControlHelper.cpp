@@ -310,7 +310,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
     for (int i = 0; i < m_actuatedDOFs; i++)
     {
         // get position limits
-        if (m_limitsInterface->getLimits(i, &minLimitInDegree, &maxLimitInDegree))
+        if (!m_limitsInterface->getLimits(i, &minLimitInDegree, &maxLimitInDegree))
         {
             if(m_isMandatory)
             {
