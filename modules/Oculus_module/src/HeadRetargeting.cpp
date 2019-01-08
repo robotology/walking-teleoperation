@@ -19,24 +19,23 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double
                                         double& neckRoll, double& neckYaw)
 {
     // YXZ decomposition
-    double thetaX, thetaY, thetaZ;
     if (matrix(1, 2) < 1)
     {
         if (matrix(1, 2) > -1)
         {
-            neckPitch = std::asin(-matrix(1, 2));
-            neckRoll = std::atan2(matrix(0, 2), matrix(2, 2));
+            neckRoll = std::asin(-matrix(1, 2));
+            neckPitch = std::atan2(matrix(0, 2), matrix(2, 2));
             neckYaw = std::atan2(matrix(1, 0), matrix(1, 1));
         } else
         {
-            neckPitch = M_PI / 2;
-            neckRoll = -std::atan2(-matrix(0, 1), matrix(0, 0));
+            neckRoll = M_PI / 2;
+            neckPitch = -std::atan2(-matrix(0, 1), matrix(0, 0));
             neckYaw = 0;
         }
     } else
     {
-        neckPitch = -M_PI / 2;
-        neckRoll = std::atan2(-matrix(0, 1), matrix(0, 0));
+        neckRoll = -M_PI / 2;
+        neckPitch = std::atan2(-matrix(0, 1), matrix(0, 0));
         neckYaw = 0;
     }
 
