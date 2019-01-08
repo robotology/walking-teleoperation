@@ -348,7 +348,7 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
         break;
 
     case VOCAB_CM_VELOCITY:
-        if (!setDirectPositionReferences(desiredValue))
+        if (!setVelocityReferences(desiredValue))
         {
             yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint velocity";
             return false;
