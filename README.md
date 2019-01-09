@@ -21,10 +21,12 @@ It implements the following architecture:
 
 
 # :page_facing_up: Dependencies
-* [YARP](http://www.yarp.it/): to handle the comunication with the robot with both ovrheadset and SDLjoypad drivers;
-* [Walking-controllers](https://github.com/robotology/walking-controllers) to handl the hand cartesian task and walking commands
-* [Oculus SDK](https://developer.oculus.com/downloads/package/oculus-sdk-for-windows/): The native Windows SDK.
-* [Cyberith SDK](https://www.cyberith.com/research-development/): To allow the virtualizer module to capture the operator data.
+The description of dependencies are located in [docs/Dependencies.md](https://github.com/kouroshD/walking-teleoperation/blob/kouroshD-readMeUpdates/docs/Dependencies.md).
+
+This guide is only for teleoperation dependencies on a Windows machine and it includes the guide to install Oculus module and Virtualizer module SDKs.
+
+Besides, you need to have a linux machine for **Walking-controllers** if you intend to move the robot base as well. to install follow the instructions in [robotology-superbuild#dynamics](https://github.com/robotology/robotology-superbuild#dynamics)
+
 
 # :hammer: Build the suite
 ## Linux/macOs
