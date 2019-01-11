@@ -26,7 +26,7 @@
 #include <yarp/sig/Vector.h>
 
 /**
- * Helper to control the robot
+ * RobotControlHelper is an helper class for controlling the robot.
  */
 class RobotControlHelper
 {

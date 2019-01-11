@@ -20,7 +20,8 @@
 using namespace yarp::math;
 
 /**
- * Class useful to manage the retargeting
+ * RetargetingController is a virtual class for retargeting one part of the robot (i.e. head or
+ * fingers)
  */
 class RetargetingController
 {
@@ -37,7 +38,7 @@ public:
     virtual bool configure(const yarp::os::Searchable& config, const std::string& name) = 0;
 
     /**
-     * Move the part
+     * Move the robot part
      * @return true in case of success and false otherwise.
      */
     virtual bool move();
@@ -49,7 +50,7 @@ public:
     const std::unique_ptr<RobotControlHelper>& controlHelper() const;
 
     /**
-     * Expose the contolHelper interface (const)
+     * Expose the contolHelper interface
      * @return control helper interface
      */
     std::unique_ptr<RobotControlHelper>& controlHelper();

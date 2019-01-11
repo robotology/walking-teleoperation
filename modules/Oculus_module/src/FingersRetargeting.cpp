@@ -15,7 +15,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     m_controlHelper = std::make_unique<RobotControlHelper>();
     if (!m_controlHelper->configure(config, name, false))
     {
-        yError() << "[FingersRetargeting::configure] Unable to configure the finger helper";
+        yError() << "[FingersRetargeting::configure] Unable to configure the control helper";
         return false;
     }
 
@@ -24,15 +24,14 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
     {
-        yError() << "[configure] Unable to find the head smoothing time";
+        yError() << "[FingersRetargeting::configure] Unable to find the sampling time";
         return false;
     }
 
     m_fingersScaling.resize(fingersJoints);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersScaling", m_fingersScaling))
     {
-        yError() << "[configure] Initialization failed while reading "
-                    "fingersVelocity vector.";
+        yError() << "[FingersRetargeting::configure] Initialization failed while reading fingersScaling vector.";
         return false;
     }
 
@@ -53,8 +52,7 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] the integrator is not initialize "
-                    "please call configure() method";
+        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize please call configure() method";
         return false;
     }
 

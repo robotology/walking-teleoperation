@@ -97,25 +97,28 @@ void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
 {
     // notice in this case the real transformation is rotx(-pi) * rotz(playerOrientation) * rotx(pi)
     // which is equal to rotz(-playerOrietation);
-    m_playerOrientation = iDynTree::Rotation::RotZ(-playerOrientation);
+    m_oculusInertial_R_teleopFrame = iDynTree::Rotation::RotZ(-playerOrientation);
 }
 
-void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusRoot_T_oculusHeadset)
+void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus)
 {
-    iDynTree::toEigen(m_oculusRoot_T_oculusHeadset)
-        = iDynTree::toEigen(oculusRoot_T_oculusHeadset).block(0, 0, 3, 3);
+    // get the rotation matrix
+    iDynTree::toEigen(m_oculusInertial_R_headOculus)
+        = iDynTree::toEigen(oculusInertial_T_headOculus).block(0, 0, 3, 3);
 }
 
 bool HeadRetargeting::move()
 {
-    m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
+     m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse()
+         * m_oculusInertial_R_headOculus;
+//   m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
 
     // notice here the following assumption is done:
     // desiredNeckJoint(0) = neckPitch
     // desiredNeckJoint(1) = neckRoll
     // desiredNeckJoint(2) = neckYaw
     yarp::sig::Vector desiredNeckJoint(3);
-    inverseKinematics(m_desiredHeadOrientation, desiredNeckJoint(0),
+    inverseKinematics(m_teleopFrame_R_headOculus, desiredNeckJoint(0),
                       desiredNeckJoint(1), desiredNeckJoint(2));
 
     m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);

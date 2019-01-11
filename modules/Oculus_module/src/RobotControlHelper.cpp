@@ -225,7 +225,7 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
 
     // since the velocity interface use a minimum jerk trajectory a very high acceleration is set in
-    // order to overcome this drawback
+    // order to use it as velocity "direct" interface
     yarp::sig::Vector dummy(m_actuatedDOFs, std::numeric_limits<double>::max());
     if(!m_velocityInterface->setRefAccelerations(dummy.data())
        && m_isMandatory)

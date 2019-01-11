@@ -11,7 +11,7 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 
-#include "OculusModule.hpp"
+#include <OculusModule.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
     rf.configure(argc, argv);
 
-    // create the producer module
+    // create the module
     OculusModule module;
 
     return module.runModule(rf);

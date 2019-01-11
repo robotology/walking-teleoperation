@@ -55,26 +55,18 @@ bool HandRetargeting::configure(const yarp::os::Searchable& config)
 
     m_oculusInertial_T_teleopFrame.setPosition(iDynTree::Position::Zero());
 
-    // m_rootFixedRotated_T_rootFixed.setRotation(
-    //     iDynTree::Rotation::RPY(0, 0, iDynTree::deg2rad(180)));
-    // m_rootFixedRotated_T_rootFixed.setPosition(iDynTree::Position::Zero());
-
     return true;
 }
 
 void HandRetargeting::setPlayerOrientation(const double& playerOrientation)
 {
-    // m_root_T_rootFixedRotated.setPosition(iDynTree::Position::Zero());
-    // m_root_T_rootFixedRotated.setRotation(iDynTree::Rotation::RPY(0, 0, playerOrientation));
-
     // notice the minus sign is not an error. Indeed the virtualizer angle is positive clockwise
     m_oculusInertial_T_teleopFrame.setRotation(iDynTree::Rotation::RotZ(-playerOrientation));
 }
 
 void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformation)
 {
-    // iDynTree::toiDynTree(handTransformation, m_rootOculus_T_handOculus);
-    iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
+     iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
 }
 
 void HandRetargeting::evaluateDesiredHandPose(yarp::sig::Vector& handPose)
@@ -83,10 +75,6 @@ void HandRetargeting::evaluateDesiredHandPose(yarp::sig::Vector& handPose)
                                                  * m_oculusInertial_T_teleopFrame.inverse()
                                                  * m_oculusInertial_T_handOculusFrame
                                                  * m_handOculusFrame_T_handRobotFrame;
-
-    // iDynTree::Transform root_T_hand;
-    // root_T_hand
-    //     = m_root_T_rootFixedRotated * m_rootFixedRotated_T_rootFixed * m_rootOculus_T_handOculus;
 
     // probably we should avoid to use roll pitch and yaw. A possible solution
     // is to use quaternion or directly SE(3).
