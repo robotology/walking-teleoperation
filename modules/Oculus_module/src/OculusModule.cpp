@@ -110,35 +110,40 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
         return false;
     }
 
-    yarp::os::Bottle& axisOptions = config.findGroup("AXIS");
-    m_useVirtualizer = true;
+    yarp::os::Bottle& joypadOptions = config.findGroup("JOYPAD");
+    if (!joypadOptions.isNull())
+    {
+        yError() << "[OculusModule::configureJoypad] Unable to find the JOYPAD group";
+        return false;
+    }
 
-    if (!axisOptions.isNull())
+    m_useVirtualizer = !(joypadOptions.check("move_icub_using_joypad", yarp::os::Value(false)).asBool());
+    if (!m_useVirtualizer)
     {
         m_useVirtualizer = false;
-        if (!YarpHelper::getDoubleFromSearchable(axisOptions, "deadzone", m_deadzone))
+        if (!YarpHelper::getDoubleFromSearchable(joypadOptions, "deadzone", m_deadzone))
         {
             yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
             return false;
         }
-        if (!YarpHelper::getDoubleFromSearchable(axisOptions, "fullscale", m_fullscale))
+        if (!YarpHelper::getDoubleFromSearchable(joypadOptions, "fullscale", m_fullscale))
         {
             yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
             return false;
         }
-        if (!YarpHelper::getDoubleFromSearchable(axisOptions, "scale_X", m_scaleX))
+        if (!YarpHelper::getDoubleFromSearchable(joypadOptions, "scale_X", m_scaleX))
         {
             yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
             return false;
         }
-        if (!YarpHelper::getDoubleFromSearchable(axisOptions, "scale_Y", m_scaleY))
+        if (!YarpHelper::getDoubleFromSearchable(joypadOptions, "scale_Y", m_scaleY))
         {
             yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
             return false;
         }
 
         // set the index of the axis according to the OVRheadset yarp device
-        bool useLeftStick = axisOptions.check("use_left", yarp::os::Value("false")).asBool();
+        bool useLeftStick = joypadOptions.check("use_left", yarp::os::Value("false")).asBool();
         m_xJoypadIndex = useLeftStick ? 4 : 6;
         m_yJoypadIndex = useLeftStick ? 5 : 7;
     }
