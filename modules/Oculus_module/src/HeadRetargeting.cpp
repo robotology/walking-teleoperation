@@ -15,6 +15,8 @@
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
 
+// This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
+// Section 2.2
 void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,
                                         double& neckRoll, double& neckYaw)
 {
@@ -28,13 +30,13 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double
             neckYaw = std::atan2(matrix(1, 0), matrix(1, 1));
         } else
         {
-            neckRoll = M_PI / 2;
+            neckRoll = iDynTree::deg2rad(90);
             neckPitch = -std::atan2(-matrix(0, 1), matrix(0, 0));
             neckYaw = 0;
         }
     } else
     {
-        neckRoll = -M_PI / 2;
+        neckRoll = -iDynTree::deg2rad(90);
         neckPitch = std::atan2(-matrix(0, 1), matrix(0, 0));
         neckYaw = 0;
     }

@@ -7,10 +7,6 @@
  * @date 2018
  */
 
-// std
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 // YARP
 #include <yarp/os/Bottle.h>
 #include <yarp/os/LogStream.h>
