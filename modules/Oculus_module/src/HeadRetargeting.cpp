@@ -17,27 +17,27 @@
 
 // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
 // Section 2.2
-void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,
+void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
                                         double& neckRoll, double& neckYaw)
 {
     // YXZ decomposition
-    if (matrix(1, 2) < 1)
+    if (chest_R_head(1, 2) < 1)
     {
-        if (matrix(1, 2) > -1)
+        if (chest_R_head(1, 2) > -1)
         {
-            neckRoll = std::asin(-matrix(1, 2));
-            neckPitch = std::atan2(matrix(0, 2), matrix(2, 2));
-            neckYaw = std::atan2(matrix(1, 0), matrix(1, 1));
+            neckRoll = std::asin(-chest_R_head(1, 2));
+            neckPitch = std::atan2(chest_R_head(0, 2), chest_R_head(2, 2));
+            neckYaw = std::atan2(chest_R_head(1, 0), chest_R_head(1, 1));
         } else
         {
             neckRoll = iDynTree::deg2rad(90);
-            neckPitch = -std::atan2(-matrix(0, 1), matrix(0, 0));
+            neckPitch = -std::atan2(-chest_R_head(0, 1), chest_R_head(0, 0));
             neckYaw = 0;
         }
     } else
     {
         neckRoll = -iDynTree::deg2rad(90);
-        neckPitch = std::atan2(-matrix(0, 1), matrix(0, 0));
+        neckPitch = std::atan2(-chest_R_head(0, 1), chest_R_head(0, 0));
         neckYaw = 0;
     }
 
@@ -49,11 +49,11 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double
 iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, const double& neckRoll,
                                                       const double& neckYaw)
 {
-    iDynTree::Rotation root_R_head;
-    root_R_head = iDynTree::Rotation::RotY(-neckPitch) * iDynTree::Rotation::RotX(neckRoll)
+    iDynTree::Rotation chest_R_head;
+    chest_R_head = iDynTree::Rotation::RotY(-neckPitch) * iDynTree::Rotation::RotX(neckRoll)
         * iDynTree::Rotation::RotZ(neckYaw);
 
-    return root_R_head;
+    return chest_R_head;
 }
 
 bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)

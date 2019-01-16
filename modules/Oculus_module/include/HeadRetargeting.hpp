@@ -71,20 +71,24 @@ public:
 
     /**
      * Evaluate the inverse kinematics of the head
-     * @param matrix is the rotation matrix of the head with respect the root frame
+     * Further details on the joints name can be found in
+     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
+     * @param chest_R_head is the rotation matrix of the head with respect the chest frame
      * @param neckPitch neck pitch angle expressed in radiant
      * @param neckRoll neck roll angle expressed in radiant
      * @param neckYaw neck yaw angle expressed in radiant
      */
-    static void inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,
+    static void inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
                                   double& neckRoll, double& neckYaw);
 
     /**
      * Evaluate the forward kinematics of the head
+     * Further details on the joints name can be found in
+     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
      * @param neckPitch neck pitch angle expressed in radiant
      * @param neckRoll neck roll angle expressed in radiant
      * @param neckYaw neck yaw angle expressed in radiant
-     * @return rotation matrix of the head with respect the root frame
+     * @return rotation matrix of the head with respect the chest frame
      */
     static iDynTree::Rotation forwardKinematics(const double& neckPitch, const double& neckRoll,
                                                 const double& neckYaw);
