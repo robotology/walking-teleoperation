@@ -7,11 +7,11 @@
  * @date 2018
  */
 
-// YARP
-
 #define _USE_MATH_DEFINES
+#include <cmath>
 
-#include "yarp/os/LogStream.h"
+// YARP
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Property.h>
 
@@ -32,6 +32,10 @@ bool VirtualizerModule::configureVirtualizer()
                 yError() << "[configureVirtualizer] Unable to open the device";
                 return false;
             }
+
+            // reset player orientation
+            m_cvirtDeviceID->ResetPlayerOrientation();
+
             return true;
         }
         // wait one millisecond
@@ -108,6 +112,15 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    // open RPC port for external command
+    std::string rpcPortName = "/" + getName() + "/rpc";
+    this->yarp().attachAsServer(this->m_rpcServerPort);
+    if(!m_rpcServerPort.open(rpcPortName))
+    {
+        yError() << "[configure] Could not open" << rpcPortName << "RPC port.";
+        return false;
+    }
+
     if (!configureVirtualizer())
     {
         yError() << "[configure] Unable to configure the virtualizer";
@@ -125,7 +138,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     oldPlayerYaw = oldPlayerYaw * M_PI / 180;
     oldPlayerYaw = Angles::normalizeAngle(oldPlayerYaw);
 
-    yInfo() << "First player yaw: " << oldPlayerYaw;
+
     return true;
 }
 
@@ -140,6 +153,7 @@ bool VirtualizerModule::close()
     m_rpcPort.close();
     m_robotOrientationPort.close();
     m_playerOrientationPort.close();
+    m_rpcServerPort.close();
 
     // deallocate memory
     delete m_cvirtDeviceID;
@@ -149,6 +163,8 @@ bool VirtualizerModule::close()
 
 bool VirtualizerModule::updateModule()
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
+
     // get data from virtualizer
     double playerYaw;
     playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
@@ -165,7 +181,7 @@ bool VirtualizerModule::updateModule()
         auto vector = *tmp;
         m_robotYaw = -Angles::normalizeAngle(vector[0]);
     }
-    if (fabs(Angles::shortestAngularDistance(playerYaw, oldPlayerYaw)) > 0.15)
+    if (std::fabs(Angles::shortestAngularDistance(playerYaw, oldPlayerYaw)) > 0.15)
     {
         yError() << "Virtualizer misscalibrated or disconnected";
         return false;
@@ -194,6 +210,13 @@ bool VirtualizerModule::updateModule()
     m_playerOrientationPort.write();
 
     return true;
+}
+
+void VirtualizerModule::resetPlayerOrientation()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_cvirtDeviceID->ResetPlayerOrientation();
+    return;
 }
 
 double VirtualizerModule::threshold(const double& input)
