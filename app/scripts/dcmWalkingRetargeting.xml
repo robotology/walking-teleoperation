@@ -69,7 +69,7 @@
   </connection>
 
   <connection>
-    <from>/oculusRetargeting/rpc</from>
+    <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
   </connection>
 
