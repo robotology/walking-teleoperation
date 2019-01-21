@@ -85,12 +85,17 @@
   </connection>
 
   <connection>
-    <from>/oculusRetargeting/rpc</from>
+    <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
   </connection>
 
   <connection>
-    <from>/virtualizer/rpc:o</from>
+    <from>/oculusRetargeting/virtualizerRpc</from>
+    <to>/virtualizer/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/virtualizer/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
   </connection>
 
