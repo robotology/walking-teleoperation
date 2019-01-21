@@ -22,7 +22,7 @@
 #include "CVirt.h"
 #include "CVirtDevice.h"
 
-#include <thrifts/VirtualizerCommands.h>
+#include <thrift/VirtualizerCommands.h>
 
 /**
  * RFModule useful to handle the Virtualizere
