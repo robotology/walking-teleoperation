@@ -122,18 +122,17 @@
     <protocol>mjpeg</protocol>
   </connection>
 
-  <!-- TO BE TESTED -->
-  <!-- <connection> -->
-  <!--   <from>/icub/head/state:o</from> -->
-  <!--   <to>/icub/camcalib/left/head_encs/in</to> -->
-  <!--   <protocol>udp</protocol> -->
-  <!-- </connection> -->
+  <connection>
+    <from>/icub/head/state:o</from>
+    <to>/icub/camcalib/left/head_encs/in</to>
+    <protocol>udp</protocol>
+  </connection>
 
-  <!-- <connection> -->
-  <!--   <from>/icub/head/state:o</from> -->
-  <!--   <to>/icub/camcalib/right/head_encs/in</to> -->
-  <!--   <protocol>udp</protocol> -->
-  <!-- </connection> -->
+  <connection>
+    <from>/icub/head/state:o</from>
+    <to>/icub/camcalib/right/head_encs/in</to>
+    <protocol>udp</protocol>
+  </connection>
 
   <connection>
     <!-- <from>/icub/inertial</from> -->
