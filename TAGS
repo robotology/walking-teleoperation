@@ -1,496 +1,0 @@
-
-.ctags.d/exclusion.ctags,0
-
-.ctags.d/dependencies.ctags,0
-
-app/virtualizerRetargeting/virtualizerConfig.ini,197
-playerOrientationPort_name    /playerOrientation:oplayerOrientation8,103
-robotOrientationPort_name     /robotOrientation:irobotOrientation9,154
-rpcPort_name                  /rpc:o rpc10,204
-
-app/robots/icubGazeboSim/rightFingersRetargetingParams.ini,0
-
-app/robots/icubGazeboSim/leftHandRetargetingParams.ini,0
-
-app/robots/icubGazeboSim/headRetargetingParams.ini,0
-
-app/robots/icubGazeboSim/oculusConfig.ini,992
-leftHandPosePort        /leftHandPose:oleftHandPose4,51
-rightHandPosePort       /rightHandPose:orightHandPose5,91
-playerOrientationPort   /playerOrientation:iplayerOrientation6,132
-[GENERAL]GENERAL9,210
-[include HEAD_RETARGETING "headRetargetingParams.ini"]include HEAD_RETARGETING "headRetargetingParams.ini"14,308
-[include LEFT_FINGERS_RETARGETING "leftFingersRetargetingParams.ini"]include LEFT_FINGERS_RETARGETING "leftFingersRetargetingParams.ini"17,393
-[include RIGHT_FINGERS_RETARGETING "rightFingersRetargetingParams.ini"]include RIGHT_FINGERS_RETARGETING "rightFingersRetargetingParams.ini"18,463
-[include LEFT_HAND_RETARGETING "leftHandRetargetingParams.ini"]include LEFT_HAND_RETARGETING "leftHandRetargetingParams.ini"21,562
-[include RIGHT_HAND_RETARGETING "rightHandRetargetingParams.ini"]include RIGHT_HAND_RETARGETING "rightHandRetargetingParams.ini"22,626
-[OCULUS]OCULUS32,944
-oculusOrientationPort           /oculusOrientation:ioculusOrientation37,1120
-
-app/robots/icubGazeboSim/leftFingersRetargetingParams.ini,0
-
-app/robots/icubGazeboSim/rightHandRetargetingParams.ini,0
-
-app/robots/iCubGenova04/rightFingersRetargetingParams.ini,0
-
-app/robots/iCubGenova04/leftHandRetargetingParams.ini,0
-
-app/robots/iCubGenova04/headRetargetingParams.ini,0
-
-app/robots/iCubGenova04/oculusConfig.ini,992
-leftHandPosePort        /leftHandPose:oleftHandPose4,51
-rightHandPosePort       /rightHandPose:orightHandPose5,91
-playerOrientationPort   /playerOrientation:iplayerOrientation6,132
-[GENERAL]GENERAL9,210
-[include HEAD_RETARGETING "headRetargetingParams.ini"]include HEAD_RETARGETING "headRetargetingParams.ini"14,305
-[include LEFT_FINGERS_RETARGETING "leftFingersRetargetingParams.ini"]include LEFT_FINGERS_RETARGETING "leftFingersRetargetingParams.ini"17,390
-[include RIGHT_FINGERS_RETARGETING "rightFingersRetargetingParams.ini"]include RIGHT_FINGERS_RETARGETING "rightFingersRetargetingParams.ini"18,460
-[include LEFT_HAND_RETARGETING "leftHandRetargetingParams.ini"]include LEFT_HAND_RETARGETING "leftHandRetargetingParams.ini"21,559
-[include RIGHT_HAND_RETARGETING "rightHandRetargetingParams.ini"]include RIGHT_HAND_RETARGETING "rightHandRetargetingParams.ini"22,623
-[OCULUS]OCULUS32,941
-oculusOrientationPort           /oculusOrientation:ioculusOrientation36,1084
-
-app/robots/iCubGenova04/xsensConfig.ini,151
-leftHandConfigPort        /leftHandPose:oleftHandPose12,719
-rightHandConfigPort       /rightHandPose:orightHandPose13,761
-[GENERAL]GENERAL16,844
-
-app/robots/iCubGenova04/leftFingersRetargetingParams.ini,0
-
-app/robots/iCubGenova04/rightHandRetargetingParams.ini,0
-
-app/CMakeLists.txt,82
-macro(SUBDIRLIST result curdir)SUBDIRLIST8,346
-  set(dirlist "")dirlist10,431
-
-compile_commands.json,5455
-{02,2
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Utils",directory3,4
-  "command": "/usr/bin/c++ -I/home/giulio/robot-code/walking-teleoperation/modules/Utils/includecommand4,88
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Utils/src/Utils.cpp"file5,403
-{18,493
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory9,495
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand10,587
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/main.cpp"file11,1051
-{214,1148
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory15,1150
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand16,1242
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/FingersRetargfile17,1734
-{320,1845
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory21,1847
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand22,1939
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/HandRetargetifile23,2425
-{426,2533
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory27,2535
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand28,2627
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/HeadRetargetifile29,3113
-{532,3221
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory33,3223
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand34,3315
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/RobotControlHfile35,3807
-{638,3918
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory39,3920
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand40,4012
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/RetargetingCofile41,4510
-{744,4624
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory45,4626
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand46,4718
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/src/OculusModule.file47,5198
-{850,5303
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory51,5305
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand52,5397
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/FingersRefile53,5822
-{956,5937
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory57,5939
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand58,6031
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/HandRetarfile59,6453
-{1062,6565
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory63,6567
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand64,6659
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/OculusModfile65,7078
-{1168,7187
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Utils",directory69,7189
-  "command": "/usr/bin/c++ -I/home/giulio/robot-code/walking-teleoperation/modules/Utils/includecommand70,7273
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Utils/include/Utils.tpp"file71,7543
-{1274,7637
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory75,7639
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand76,7731
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/HeadRetarfile77,8153
-{1380,8265
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Utils",directory81,8267
-  "command": "/usr/bin/c++ -I/home/giulio/robot-code/walking-teleoperation/modules/Utils/includecommand82,8351
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Utils/include/Utils.hpp"file83,8621
-{1486,8715
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory87,8717
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand88,8809
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/RobotContfile89,9234
-{1592,9349
-  "directory": "/home/giulio/robot-code/walking-teleoperation/build/modules/Oculus_module",directory93,9351
-  "command": "/usr/bin/c++ -isystem /usr/include/eigen3 -I/home/giulio/robot-code/walking-teleopcommand94,9443
-  "file": "/home/giulio/robot-code/walking-teleoperation/modules/Oculus_module/include/Retargetifile95,9871
-
-modules/Utils/include/Utils.hpp,122
-#define WALKING_UTILS_HPPWALKING_UTILS_HPP10,266
-namespace AnglesAngles22,465
-namespace YarpHelperYarpHelper49,1363
-
-modules/Utils/CMakeLists.txt,143
-set(UTILITY_LIBRARY_NAME UtilityLibrary)UTILITY_LIBRARY_NAME6,164
-option(ENABLE_RPATH "Enable RPATH for this library" ON)ENABLE_RPATH8,206
-
-modules/Utils/src/Utils.cpp,998
-#define _USE_MATH_DEFINES_USE_MATH_DEFINES10,247
-bool YarpHelper::addVectorOfStringToProperty(yarp::os::Property& prop,addVectorOfStringToProperty18,353
-bool YarpHelper::yarpListToStringVector(yarp::os::Value*& input, std::vector<std::string>& outpuyarpListToStringVector37,947
-bool YarpHelper::getStringFromSearchable(const yarp::os::Searchable& config,getStringFromSearchable63,1687
-bool YarpHelper::getDoubleFromSearchable(const yarp::os::Searchable& config,getDoubleFromSearchable84,2253
-bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,getYarpVectorFromSearchable105,2814
-void YarpHelper::populateBottleWithStrings(yarp::os::Bottle& bottle,populateBottleWithStrings145,4031
-double normalizeAnglePositive(const double& angle)normalizeAnglePositive152,4272
-double Angles::normalizeAngle(const double& angle)normalizeAngle157,4395
-double Angles::shortestAngularDistance(const double& fromRad, const double& toRad)shortestAngularDistance165,4554
-
-modules/CMakeLists.txt,0
-
-modules/Oculus_module/include/FingersRetargeting.hpp,381
-#define FINGERS_RETARGETING_HPPFINGERS_RETARGETING_HPP11,354
-class FingersRetargeting : public RetargetingControllerFingersRetargeting30,649
-    yarp::sig::Vector m_fingersScaling; /**< It contains the finger velocity scaling. */m_fingersScaling33,716
-    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity integratom_fingerIntegrator35,806
-
-modules/Oculus_module/include/OculusModule.hpp,3577
-#define OCULUS_MODULE_HPPOCULUS_MODULE_HPP11,345
-class OculusModule : public yarp::os::RFModuleOculusModule34,831
-    enum class OculusFSM {Configured, Running};OculusFSM38,890
-    enum class OculusFSM {Configured, Running};Configured38,890
-    enum class OculusFSM {Configured, Running};Running38,890
-    OculusFSM m_state;m_state40,939
-    double m_dT; /**< Module period. */m_dT42,963
-    double m_deadzone;m_deadzone45,1024
-    double m_fullscale;m_fullscale46,1047
-    double m_scaleX;m_scaleX47,1071
-    double m_scaleY;m_scaleY48,1092
-    double m_joypadX;m_joypadX49,1113
-    double m_joypadY;m_joypadY50,1135
-    unsigned int m_xJoypadIndex;m_xJoypadIndex52,1158
-    unsigned int m_yJoypadIndex;m_yJoypadIndex53,1191
-    unsigned int m_squeezeLeftIndex;m_squeezeLeftIndex55,1225
-    unsigned int m_squeezeRightIndex;m_squeezeRightIndex56,1262
-    unsigned int m_releaseLeftIndex;m_releaseLeftIndex58,1301
-    unsigned int m_releaseRightIndex;m_releaseRightIndex59,1338
-    unsigned int m_startWalkingIndex;m_startWalkingIndex61,1377
-    unsigned int m_prepareWalkingIndex;m_prepareWalkingIndex62,1415
-    bool m_useVirtualizer; /**< Using virtualizer */m_useVirtualizer64,1456
-    yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */m_transformClientDevice67,1534
-    yarp::dev::IFrameTransform* m_frameTransformInterface{nullptr}; /**< Frame transformm_frameTransformInterface68,1611
-    std::string m_rootFrameName;m_rootFrameName71,1786
-    std::string m_headFrameName;m_headFrameName72,1819
-    std::string m_leftHandFrameName;m_leftHandFrameName73,1852
-    std::string m_rightHandFrameName;m_rightHandFrameName74,1889
-    yarp::dev::PolyDriver m_joypadDevice; /**< Joypad polydriver. */m_joypadDevice76,1928
-    yarp::dev::IJoypadController* m_joypadControllerInterface{nullptr}; /**< joypad interface. *m_joypadControllerInterface77,1997
-    std::unique_ptr<HeadRetargeting> m_head; /**< Pointer to the head retargeting object. */m_head79,2096
-    std::unique_ptr<FingersRetargeting> m_leftHandFingers; /**< Pointer to the leftm_leftHandFingers80,2189
-    std::unique_ptr<FingersRetargeting> m_rightHandFingers; /**< Pointer to the rightm_rightHandFingers82,2365
-    std::unique_ptr<HandRetargeting> m_rightHand; /**< Pointer to the rightm_rightHand84,2544
-    std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left handm_leftHand86,2701
-    yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */m_leftHandPosePort90,2869
-    yarp::os::BufferedPort<yarp::sig::Vector> m_rightHandPosePort; /**< Right hand port pose. */m_rightHandPosePort91,2964
-    yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Playerm_playerOrientationPort93,3062
-    yarp::os::BufferedPort<yarp::os::Bottle> m_imagesOrientationPort;m_imagesOrientationPort95,3240
-    yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;m_robotOrientationPort96,3310
-    yarp::os::BufferedPort<yarp::os::Bottle> m_oculusOrientationPort;m_oculusOrientationPort98,3397
-    yarp::os::RpcClient m_rpcClient;m_rpcClient100,3468
-    double m_robotYaw;m_robotYaw102,3506
-    yarp::sig::Matrix m_oculusRoot_T_lOculus;m_oculusRoot_T_lOculus104,3530
-    yarp::sig::Matrix m_oculusRoot_T_rOculus;m_oculusRoot_T_rOculus105,3576
-    yarp::sig::Matrix m_oculusRoot_T_headOculus;m_oculusRoot_T_headOculus106,3622
-    double m_playerOrientation; /**< Player orientation (read by the Virtualizer)m_playerOrientation108,3672
-
-modules/Oculus_module/include/RobotControlHelper.hpp,1847
-#define ROBOT_CONTROL_HELPER_HPPROBOT_CONTROL_HELPER_HPP10,286
-class RobotControlHelperRobotControlHelper31,784
-    yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */m_robotDevice33,811
-    int m_actuatedDOFs; /**< Number of the actuated DoF */m_actuatedDOFs35,880
-    std::vector<std::string> m_axesList; /**< Vector containing the name of the controlled jointm_axesList37,940
-    yarp::dev::IPreciselyTimed* m_timedInterface{nullptr};m_timedInterface39,1043
-    yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */m_encodersInterface40,1102
-    yarp::dev::IPositionDirect* m_positionDirectInterface{nullptr}; /**< Direct position controlm_positionDirectInterface41,1192
-    yarp::dev::IPositionControl* m_positionInterface{nullptr}; /**< Position control interface. m_positionInterface43,1374
-    yarp::dev::IVelocityControl* m_velocityInterface{nullptr}; /**< Velocity control interface. m_velocityInterface44,1473
-    yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */m_controlModeInterface45,1572
-    yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */m_limitsInterface46,1666
-    yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */m_desiredJointValue48,1755
-    yarp::sig::Vector m_positionFeedbackInDegrees; /**< Joint position [deg]. */m_positionFeedbackInDegrees49,1842
-    yarp::sig::Vector m_positionFeedbackInRadians; /**< Joint position [rad]. */m_positionFeedbackInRadians50,1923
-    yarp::os::Stamp m_timeStamp; /**< Time stamp. */m_timeStamp51,2004
-    bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */m_isMandatory53,2058
-    yarp::conf::vocab32_t m_controlMode; /**< Used control mode. */m_controlMode55,2149
-
-modules/Oculus_module/include/HeadRetargeting.hpp,489
-#define HEAD_RETARGETING_HPPHEAD_RETARGETING_HPP11,348
-class HeadRetargeting : public RetargetingControllerHeadRetargeting30,633
-    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};m_headTrajectorySmoother33,697
-    iDynTree::Rotation m_playerOrientation;m_playerOrientation35,781
-    iDynTree::Rotation m_desiredHeadOrientation;m_desiredHeadOrientation36,825
-    iDynTree::Rotation m_oculusRoot_T_oculusHeadset;m_oculusRoot_T_oculusHeadset37,874
-
-modules/Oculus_module/include/HandRetargeting.hpp,510
-#define HAND_RETARGETING_HPPHAND_RETARGETING_HPP11,348
-class HandRetargetingHandRetargeting23,558
-    iDynTree::Transform m_root_T_rootFixedRotated; /**< */m_root_T_rootFixedRotated26,591
-    iDynTree::Transform m_virtualizer_T_rootOculus; /**< Transformation between the fix framem_virtualizer_T_rootOculus27,650
-    iDynTree::Transform m_rootOculus_T_handOculus; /**< Transformation retrievedm_rootOculus_T_handOculus29,829
-    double m_scalingFactor; /**< Scaling factor */m_scalingFactor31,989
-
-modules/Oculus_module/include/RetargetingController.hpp,354
-#define RETARGETING_CONTROLLER_HPPRETARGETING_CONTROLLER_HPP10,291
-class RetargetingControllerRetargetingController25,505
-    std::unique_ptr<RobotControlHelper> m_controlHelper; /**< Controller helper */m_controlHelper28,546
-    yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */m_desiredJointValue29,629
-
-modules/Oculus_module/CMakeLists.txt,142
-set(EXE_TARGET_NAME OculusRetargetingModule)EXE_TARGET_NAME6,164
-option(ENABLE_RPATH "Enable RPATH for this library" ON)ENABLE_RPATH8,210
-
-modules/Oculus_module/src/OculusModule.cpp,889
-#define _USE_MATH_DEFINES_USE_MATH_DEFINES11,325
-bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)configureTranformClient27,676
-bool OculusModule::configureJoypad(const yarp::os::Searchable& config)configureJoypad96,3245
-bool OculusModule::configureOculus(const yarp::os::Searchable& config)configureOculus162,5535
-bool OculusModule::configure(yarp::os::ResourceFinder& rf)configure179,5963
-double OculusModule::getPeriod()getPeriod324,10999
-bool OculusModule::close()close329,11054
-double OculusModule::evaluateDesiredFingersVelocity(unsigned int squeezeIndex,evaluateDesiredFingersVelocity342,11328
-bool OculusModule::getTransforms()getTransforms357,11936
-bool OculusModule::getFeedbacks()getFeedbacks425,14566
-bool OculusModule::updateModule()updateModule436,14847
-double OculusModule::deadzone(const double& input)deadzone588,20445
-
-modules/Oculus_module/src/HandRetargeting.cpp,422
-bool HandRetargeting::configure(const yarp::os::Searchable& config)configure17,468
-void HandRetargeting::setPlayerOrientation(const double& playerOrientation)setPlayerOrientation39,1164
-void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformation)setHandTransform45,1409
-void HandRetargeting::evaluateHandToRootLinkTransform(yarp::sig::Vector& handPose)evaluateHandToRootLinkTransform50,1571
-
-modules/Oculus_module/src/HeadRetargeting.cpp,632
-void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& matrix, double& neckPitch,inverseKinematics18,516
-iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, const double& necforwardKinematics47,1355
-bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)configure57,1738
-void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)setPlayerOrientation96,3025
-void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusRoot_T_oculusHeadsetDesiredHeadOrientation103,3329
-bool HeadRetargeting::move()move109,3562
-
-modules/Oculus_module/src/FingersRetargeting.cpp,215
-bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)configure13,378
-bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)setFingersVelocity51,1722
-
-modules/Oculus_module/src/main.cpp,45
-int main(int argc, char* argv[])main16,367
-
-modules/Oculus_module/src/RetargetingController.cpp,253
-bool RetargetingController::move()move11,294
-const std::unique_ptr<RobotControlHelper>& RetargetingController::controlHelper() constcontrolHelper16,402
-std::unique_ptr<RobotControlHelper>& RetargetingController::controlHelper()controlHelper21,523
-
-modules/Oculus_module/src/RobotControlHelper.cpp,1200
-bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std::string& name,configure17,374
-bool RobotControlHelper::switchToControlMode(const int& controlMode)switchToControlMode155,5239
-bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& desiredPosition)setDirectPositionReferences176,5878
-bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredVelocity)setVelocityReferences208,6914
-void RobotControlHelper::updateTimeStamp()updateTimeStamp246,8317
-bool RobotControlHelper::getFeedback()getFeedback254,8491
-const yarp::os::Stamp& RobotControlHelper::timeStamp() consttimeStamp269,8921
-yarp::os::Stamp& RobotControlHelper::timeStamp()timeStamp274,9011
-const yarp::sig::Vector& RobotControlHelper::jointEncoders() constjointEncoders279,9089
-void RobotControlHelper::close()close284,9201
-int RobotControlHelper::getDoFs()getDoFs293,9489
-bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)getLimits298,9555
-bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue)setJointReference338,10849
-bool RobotControlHelper::isVelocityControlUsed()isVelocityControlUsed366,11622
-
-modules/Virtualizer_module/include/VirtualizerModule.hpp,819
-#define RETARGETING_VIRTUALIZER_MODULE_HPPRETARGETING_VIRTUALIZER_MODULE_HPP11,364
-class VirtualizerModule : public yarp::os::RFModuleVirtualizerModule26,668
-    double m_dT; /**< RFModule period. */m_dT29,731
-    double m_deadzone; /**< Value of the deadzone. */m_deadzone30,773
-    double m_robotYaw;m_robotYaw31,827
-    double velocity_factor;velocity_factor32,850
-    double oldPlayerYaw;oldPlayerYaw33,878
-    yarp::os::RpcClient m_rpcPort; /**< RPC port. */m_rpcPort35,904
-    yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Used to send the plam_playerOrientationPort36,957
-    yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort; /**< Used to get the robotm_robotOrientationPort38,1157
-    CVirtDevice* m_cvirtDeviceID = nullptr;m_cvirtDeviceID41,1344
-
-modules/Virtualizer_module/CybSDK/include/CVirtDevice.h,35
-class CVirtDeviceCVirtDevice7,61
-
-modules/Virtualizer_module/CybSDK/include/stdafx.h,0
-
-modules/Virtualizer_module/CybSDK/include/CVirtMaths.h,452
-#define PI PI3,49
-struct Vector3Vector37,94
-    float x = 0.0F;x9,111
-    float y = 0.0F;y10,131
-    float z = 0.0F;z11,151
-    static Vector3 CrossProduct(Vector3 a, Vector3 b)CrossProduct13,172
-    static float DotProduct(Vector3 a, Vector3 b)DotProduct24,466
-    static float Length(Vector3 a)Length30,618
-    static Vector3 Normalize(Vector3 a)Normalize35,722
-    static Vector3 Up()Up49,979
-class CVirtMathsCVirtMaths59,1158
-
-modules/Virtualizer_module/CybSDK/include/targetver.h,0
-
-modules/Virtualizer_module/CybSDK/include/CVirtDeviceNative.h,108
-class CVirtDeviceNative : public CVirtDeviceCVirtDeviceNative9,105
-    IntPtr devicePtr;devicePtr12,161
-
-modules/Virtualizer_module/CybSDK/include/CVirt.h,105
-typedef void* IntPtr;IntPtr6,93
-class CVirtCVirt11,127
-    static IntPtr DLLHandle;DLLHandle15,167
-
-modules/Virtualizer_module/CybSDK/src/CVirtMaths.cpp,87
-CVirtMaths::CVirtMaths()CVirtMaths6,125
-CVirtMaths::~CVirtMaths()~CVirtMaths10,155
-
-modules/Virtualizer_module/CybSDK/src/CVirt.cpp,3987
-typedef IntPtr (*_CybSDK_VirtDevice_FindDevice)(); // Declare the DLL function._CybSDK_VirtDevice_FindDevice11,254
-typedef IntPtr (*_CybSDK_VirtDevice_CreateDeviceMockupXInput)();_CybSDK_VirtDevice_CreateDeviceMockupXInput12,334
-typedef bool (*_CybSDK_VirtDevice_Open)(IntPtr device);_CybSDK_VirtDevice_Open14,402
-typedef bool (*_CybSDK_VirtDevice_IsOpen)(IntPtr device);_CybSDK_VirtDevice_IsOpen15,458
-typedef bool (*_CybSDK_VirtDevice_Close)(IntPtr device);_CybSDK_VirtDevice_Close16,516
-typedef float (*_CybSDK_VirtDevice_GetPlayerHeight)(IntPtr device);_CybSDK_VirtDevice_GetPlayerHeight18,576
-typedef void (*_CybSDK_VirtDevice_ResetPlayerHeight)(IntPtr device);_CybSDK_VirtDevice_ResetPlayerHeight19,644
-typedef float (*_CybSDK_VirtDevice_GetPlayerOrientation)(IntPtr device);_CybSDK_VirtDevice_GetPlayerOrientation20,713
-typedef float (*_CybSDK_VirtDevice_GetMovementSpeed)(IntPtr device);_CybSDK_VirtDevice_GetMovementSpeed21,786
-typedef float (*_CybSDK_VirtDevice_GetMovementDirection)(IntPtr device);_CybSDK_VirtDevice_GetMovementDirection22,855
-typedef void (*_CybSDK_VirtDevice_ResetPlayerOrientation)(IntPtr device);_CybSDK_VirtDevice_ResetPlayerOrientation23,928
-_CybSDK_VirtDevice_FindDevice DLLCybSDK_VirtDevice_FindDevice = NULL;DLLCybSDK_VirtDevice_FindDevice29,1058
-_CybSDK_VirtDevice_CreateDeviceMockupXInput DLLCybSDK_VirtDevice_CreateDeviceMockupXInput = NULLDLLCybSDK_VirtDevice_CreateDeviceMockupXInput30,1128
-_CybSDK_VirtDevice_Open DLLCybSDK_VirtDevice_Open = NULL;DLLCybSDK_VirtDevice_Open32,1229
-_CybSDK_VirtDevice_IsOpen DLLCybSDK_VirtDevice_IsOpen = NULL;DLLCybSDK_VirtDevice_IsOpen33,1287
-_CybSDK_VirtDevice_Close DLLCybSDK_VirtDevice_Close = NULL;DLLCybSDK_VirtDevice_Close34,1349
-_CybSDK_VirtDevice_GetPlayerHeight DLLCybSDK_VirtDevice_GetPlayerHeight = NULL;DLLCybSDK_VirtDevice_GetPlayerHeight36,1412
-_CybSDK_VirtDevice_ResetPlayerHeight DLLCybSDK_VirtDevice_ResetPlayerHeight = NULL;DLLCybSDK_VirtDevice_ResetPlayerHeight37,1492
-_CybSDK_VirtDevice_GetPlayerOrientation DLLCybSDK_VirtDevice_GetPlayerOrientation = NULL;DLLCybSDK_VirtDevice_GetPlayerOrientation38,1576
-_CybSDK_VirtDevice_GetMovementSpeed DLLCybSDK_VirtDevice_GetMovementSpeed = NULL;DLLCybSDK_VirtDevice_GetMovementSpeed39,1666
-_CybSDK_VirtDevice_GetMovementDirection DLLCybSDK_VirtDevice_GetMovementDirection = NULL;DLLCybSDK_VirtDevice_GetMovementDirection40,1748
-_CybSDK_VirtDevice_ResetPlayerOrientation DLLCybSDK_VirtDevice_ResetPlayerOrientation = NULL;DLLCybSDK_VirtDevice_ResetPlayerOrientation41,1838
-IntPtr CVirt::DLLHandle = nullptr;DLLHandle46,1960
-IntPtr CVirt::GetDLLHandle()GetDLLHandle51,2038
-IntPtr CVirt::GetDLLProcHandle(std::string _procName)GetDLLProcHandle79,2767
-IntPtr CVirt::CybSDK_VirtDevice_FindDevice()CybSDK_VirtDevice_FindDevice99,3282
-IntPtr CVirt::CybSDK_VirtDevice_CreateDeviceMockupXInput()CybSDK_VirtDevice_CreateDeviceMockupXInput127,4154
-bool CVirt::CybSDK_VirtDevice_Open(IntPtr device)CybSDK_VirtDevice_Open155,5233
-bool CVirt::CybSDK_VirtDevice_IsOpen(IntPtr device)CybSDK_VirtDevice_IsOpen182,6117
-bool CVirt::CybSDK_VirtDevice_Close(IntPtr device)CybSDK_VirtDevice_Close206,6773
-float CVirt::CybSDK_VirtDevice_GetPlayerHeight(IntPtr device)CybSDK_VirtDevice_GetPlayerHeight231,7546
-void CVirt::CybSDK_VirtDevice_ResetPlayerHeight(IntPtr device)CybSDK_VirtDevice_ResetPlayerHeight256,8344
-float CVirt::CybSDK_VirtDevice_GetPlayerOrientation(IntPtr device)CybSDK_VirtDevice_GetPlayerOrientation281,9152
-float CVirt::CybSDK_VirtDevice_GetMovementSpeed(IntPtr device)CybSDK_VirtDevice_GetMovementSpeed306,9990
-float CVirt::CybSDK_VirtDevice_GetMovementDirection(IntPtr device)CybSDK_VirtDevice_GetMovementDirection331,10796
-void CVirt::CybSDK_VirtDevice_ResetPlayerOrientation(IntPtr device)CybSDK_VirtDevice_ResetPlayerOrientation356,11634
-CVirtDevice* CVirt::FindDevice()FindDevice384,12623
-CVirtDevice* CVirt::CreateDeviceMockupXInput()CreateDeviceMockupXInput396,12837
-
-modules/Virtualizer_module/CybSDK/src/CVirtDevice.cpp,93
-CVirtDevice::CVirtDevice()CVirtDevice8,264
-CVirtDevice::~CVirtDevice()~CVirtDevice12,296
-
-modules/Virtualizer_module/CybSDK/src/CVirtDeviceNative.cpp,770
-CVirtDeviceNative::CVirtDeviceNative(IntPtr devicePtr)CVirtDeviceNative6,106
-CVirtDeviceNative::~CVirtDeviceNative()~CVirtDeviceNative11,199
-bool CVirtDeviceNative::Open()Open15,244
-bool CVirtDeviceNative::IsOpen()IsOpen20,339
-bool CVirtDeviceNative::Close()Close25,438
-float CVirtDeviceNative::GetPlayerHeight()GetPlayerHeight30,535
-void CVirtDeviceNative::ResetPlayerHeight()ResetPlayerHeight35,653
-float CVirtDeviceNative::GetPlayerOrientation()GetPlayerOrientation40,774
-float CVirtDeviceNative::GetMovementSpeed()GetMovementSpeed47,948
-float CVirtDeviceNative::GetMovementDirection()GetMovementDirection52,1068
-void CVirtDeviceNative::ResetPlayerOrientation()ResetPlayerOrientation59,1230
-bool CVirtDeviceNative::IsPtrNull()IsPtrNull64,1361
-
-modules/Virtualizer_module/CMakeLists.txt,209
-set(EXE_TARGET_NAME VirtualizerModule)EXE_TARGET_NAME9,272
-option(ENABLE_RPATH "Enable RPATH for this library" ON)ENABLE_RPATH11,314
-add_library(CybSDK ${CybSDK_SOURCE_C} ${CybSDK_SOURCE_H})CybSDK26,876
-
-modules/Virtualizer_module/src/VirtualizerModule.cpp,449
-#define _USE_MATH_DEFINES_USE_MATH_DEFINES12,332
-bool VirtualizerModule::configureVirtualizer()configureVirtualizer21,504
-bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)configure45,1159
-double VirtualizerModule::getPeriod()getPeriod132,3716
-bool VirtualizerModule::close()close137,3776
-bool VirtualizerModule::updateModule()updateModule150,4004
-double VirtualizerModule::threshold(const double& input)threshold199,5613
-
-modules/Virtualizer_module/src/main.cpp,45
-int main(int argc, char* argv[])main16,372
-
-DCM_WALKING_COORDINATOR_+_RETARGETING.xml,0
-
-docs/Dependencies.md,32
-# DependenciesDependencies1,0
-
-cmake/AddInstallRPATHSupport.cmake,831
-function(ADD_INSTALL_RPATH_SUPPORT)ADD_INSTALL_RPATH_SUPPORT92,4209
-  set(_options USE_LINK_PATH)_options94,4246
-  set(_oneValueArgs INSTALL_NAME_DIR)_oneValueArgs95,4276
-  set(_multiValueArgs BIN_DIRS_multiValueArgs96,4314
-      set(CMAKE_INSTALL_NAME_DIR ${_ARS_INSTALL_NAME_DIR} PARENT_SCOPE)CMAKE_INSTALL_NAME_DIR109,4694
-  set(_rpath_available 1)_rpath_available118,4895
-        set(_rpath_available 0)_rpath_available123,5058
-    set(CMAKE_MACOSX_RPATH TRUE PARENT_SCOPE)CMAKE_MACOSX_RPATH131,5183
-    set(_system_lib_dirs ${CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES})_system_lib_dirs134,5273
-    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_RPATH} PARENT_SCOPE)CMAKE_INSTALL_RPATH158,6318
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ${_ARS_USE_LINK_PATH} PARENT_SCOPE)CMAKE_INSTALL_RPATH_USE_LINK_PATH162,6519
-
-cmake/FindCybSDK.cmake,1075
-macro(CHECK_DIR _DIR)CHECK_DIR16,364
-    set(CybSDK_FOUND FALSE)CybSDK_FOUND19,475
-macro(CHECK_FILES _FILES _DIR)CHECK_FILES25,561
-  set(_MISSING_FILES)_MISSING_FILES26,592
-      set(_MISSING_FILES "${_MISSING_FILES}${_FILE}, ")_MISSING_FILES30,724
-    set(CybSDK_FOUND FALSE)CybSDK_FOUND35,914
-set(TARGET_PLATFORM)TARGET_PLATFORM41,1000
-  set(TARGET_PLATFORM x86)TARGET_PLATFORM43,1041
-  set(TARGET_PLATFORM x64)TARGET_PLATFORM45,1075
-set(CybSDK_FOUND TRUE)CybSDK_FOUND51,1144
-  set(CybSDK_FOUND FALSE)CybSDK_FOUND54,1261
-set(CybSDK_DIR)CybSDK_DIR58,1313
-  set(CybSDK_DIR $ENV{CybSDK_DIR} CACHE PATH "CybSDK Path." FORCE)CybSDK_DIR60,1346
-set(CybSDK_INCLUDE_DIRS)CybSDK_INCLUDE_DIRS65,1468
-  set(CybSDK_INCLUDE_DIRS ${CybSDK_DIR}/include)CybSDK_INCLUDE_DIRS67,1510
-set(CybSDK_LIBRARY_DIRS)CybSDK_LIBRARY_DIRS72,1623
-  set(CybSDK_LIBRARY_DIRS ${CybSDK_DIR}/Plugins/${TARGET_PLATFORM})CybSDK_LIBRARY_DIRS74,1665
-set(CybSDK_LIBRARIES)CybSDK_LIBRARIES79,1790
-  set(CybSDK_LIBRARIES ${CybSDK_LIBRARY_DIRS}/CybSDK.dll)CybSDK_LIBRARIES81,1829
-
-cmake/AddClangFormatTarget.cmake,39
-      clang-formatclang-format24,893
-
-cmake/AddUnistallTarget.cmake,263
-set(__ADD_UNINSTALL_TARGET_INCLUDED TRUE)__ADD_UNINSTALL_TARGET_INCLUDED33,1127
-set(_filename ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)_filename36,1171
-  set(_uninstall "UNINSTALL")_uninstall65,2277
-  set(_uninstall "uninstall")_uninstall67,2314
-
-CMakeLists.txt,91
-set(CMAKE_CXX_STANDARD 14)CMAKE_CXX_STANDARD6,182
-project(retargeting)retargeting8,210
-
-cc/general.ctags,0
-
-README.md,475
-# walking-teleoperationwalking-teleoperation1,0
-# OverviewOverview10,404
-# :orange_book: The general idea:orange_book: The general idea16,697
-# :page_facing_up: Dependencies:page_facing_up: Dependencies23,1185
-# :hammer: Build the suite:hammer: Build the suite31,1792
-## Linux/macOsLinux/macOs32,1819
-## WindowsWindows42,1993
-# :running: Using the software with iCub:running: Using the software with iCub45,2110
-## :warning: Warning:warning: Warning59,3351
