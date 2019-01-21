@@ -33,9 +33,6 @@ bool VirtualizerModule::configureVirtualizer()
                 return false;
             }
 
-            // reset player orientation
-            m_cvirtDeviceID->ResetPlayerOrientation();
-
             return true;
         }
         // wait one millisecond
@@ -101,7 +98,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    if (!YarpHelper::getStringFromSearchable(rf, "rpcPort_name", portName))
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
     {
         yError() << "[configure] Unable to get a string from a searchable";
         return false;
@@ -130,6 +127,9 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     // remove me!!!
     // this is because the virtualizer is not ready
     yarp::os::Time::delay(0.5);
+
+	// reset player orientation
+    m_cvirtDeviceID->ResetPlayerOrientation();
 
     // reset some quanties
     m_robotYaw = 0;
@@ -216,6 +216,11 @@ void VirtualizerModule::resetPlayerOrientation()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     m_cvirtDeviceID->ResetPlayerOrientation();
+
+    oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+    oldPlayerYaw *= 360.0f;
+    oldPlayerYaw = oldPlayerYaw * M_PI / 180;
+    oldPlayerYaw = Angles::normalizeAngle(oldPlayerYaw);
     return;
 }
 
