@@ -1,9 +1,10 @@
 // Copyright (c) 2014 Cyberith GmbH
 #include "CVirt.h"
 #include "CVirtDeviceNative.h"
-#include "WinBase.h"
 #include "stdafx.h"
 #include "windows.h"
+// #include "WinBase.h"
+
 
 //////////////////////////////////
 // Shortcuts to DLL function calls

@@ -1,5 +1,7 @@
 // Copyright (c) 2014 Cyberith GmbH
 #pragma once
+#include <math.h> /* sin / cos */
+#include <stdlib.h> /* abs */
 #define PI 3.14159265
 
 //  VECTOR
