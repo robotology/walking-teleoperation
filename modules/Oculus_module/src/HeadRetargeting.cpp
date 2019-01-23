@@ -42,7 +42,7 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, 
     }
 
     // minus due to the joints structure of the iCub neck
-    neckPitch = -neckPitch;
+    neckRoll = -neckRoll;
     return;
 }
 
@@ -50,7 +50,7 @@ iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, c
                                                       const double& neckYaw)
 {
     iDynTree::Rotation chest_R_head;
-    chest_R_head = iDynTree::Rotation::RotY(-neckPitch) * iDynTree::Rotation::RotX(neckRoll)
+    chest_R_head = iDynTree::Rotation::RotY(neckPitch) * iDynTree::Rotation::RotX(-neckRoll)
         * iDynTree::Rotation::RotZ(neckYaw);
 
     return chest_R_head;
@@ -111,8 +111,7 @@ void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusI
 
 bool HeadRetargeting::move()
 {
-     m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse()
-         * m_oculusInertial_R_headOculus;
+     m_teleopFrame_R_headOculus = m_oculusInertial_R_headOculus * m_oculusInertial_R_teleopFrame.inverse();
 //   m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
 
     // notice here the following assumption is done:
