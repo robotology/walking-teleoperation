@@ -74,11 +74,6 @@
   </connection>
 
   <connection>
-    <from>/joypadDevice/Oculus/axis:o</from>
-    <to>/oculusRetargeting/OculusAxis:i</to>
-  </connection>
-
-  <connection>
     <from>/oculus/headpose/orientation:o</from>
     <to>/oculusRetargeting/oculusOrientation:i</to>
   </connection>
@@ -107,21 +102,6 @@
     <to>/icub/camcalib/right/head_encs/in</to>
     <protocol>udp</protocol>
   </connection>
-
-  <!-- TO BE TESTED -->
-  <!-- <connection> -->
-  <!--   <!-\- <from>/icub/inertial</from> -\-> -->
-  <!--   <from>/oculusRetargeting/imagesOrientation:o</from> -->
-  <!--   <to>/icub/camcalib/left/imu/in</to> -->
-  <!--   <protocol>udp</protocol> -->
-  <!-- </connection> -->
-
-  <!-- <connection> -->
-  <!--   <!-\- <from>/icub/inertial</from> -\-> -->
-  <!--   <from>/oculusRetargeting/imagesOrientation:o</from> -->
-  <!--   <to>/icub/camcalib/right/imu/in</to> -->
-  <!--   <protocol>udp</protocol> -->
-  <!-- </connection> -->
 
   <connection>
     <from>/icub/camcalib/left/out</from>
