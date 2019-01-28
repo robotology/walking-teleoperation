@@ -100,8 +100,9 @@ private:
     /** Port used to retrieve the headset oculus orientation. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_oculusOrientationPort;
 
-    yarp::os::RpcClient m_rpcClient; /**< Rpc client used for sending command to the walking
-                                        controller */
+    yarp::os::RpcClient m_rpcWalkingClient; /**< Rpc client used for sending command to the walking
+                                               controller */
+    yarp::os::RpcClient m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 

@@ -38,7 +38,7 @@ set(${EXE_TARGET_NAME}_HDR
 
 # Thrift
 set(${EXE_TARGET_NAME}_THRIFT_HDR
-  thrift/ virtualizerCommand.thrift
+  thrift/virtualizerCommand.thrift
   )
 yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_SRC ${${EXE_TARGET_NAME}_THRIFT_HDR})
 
