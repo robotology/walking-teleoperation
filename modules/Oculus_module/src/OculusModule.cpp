@@ -297,17 +297,28 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    if (!YarpHelper::getStringFromSearchable(rf, "rpcPort_name", portName))
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
     {
         yError() << "[OculusModule::configure] Unable to get a string from a searchable";
         return false;
     }
-
-    if (!m_rpcClient.open("/" + getName() + portName))
+    if (!m_rpcWalkingClient.open("/" + getName() + portName))
     {
         yError() << "[OculusModule::configure] " << portName << " port already open.";
         return false;
     }
+
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcVirtualizerPort_name", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_rpcVirtualizerClient.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] " << portName << " port already open.";
+        return false;
+    }
+
 
     m_playerOrientation = 0;
     m_robotYaw = 0;
@@ -524,7 +535,7 @@ bool OculusModule::updateModule()
             cmd.addString("setGoal");
             cmd.addDouble(x);
             cmd.addDouble(y);
-            m_rpcClient.write(cmd, outcome);
+            m_rpcWalkingClient.write(cmd, outcome);
         }
     }
     else if (m_state == OculusFSM::Configured)
@@ -543,12 +554,20 @@ bool OculusModule::updateModule()
         {
             // TODO add a visual feedback for the user
             cmd.addString("prepareRobot");
-            m_rpcClient.write(cmd, outcome);
+            m_rpcWalkingClient.write(cmd, outcome);
         } else if (buttonMapping[1] > 0)
         {
+            if (m_useVirtualizer)
+            {
+                // reset the player orientation of the virtualizer
+                cmd.addString("resetPlayerOrientation");
+                m_rpcVirtualizerClient.write(cmd, outcome);
+                cmd.clear();
+            }
+
             // TODO add a visual feedback for the user
             cmd.addString("startWalking");
-            m_rpcClient.write(cmd, outcome);
+            m_rpcWalkingClient.write(cmd, outcome);
             if(outcome.get(0).asBool())
                 m_state = OculusFSM::Running;
         }
