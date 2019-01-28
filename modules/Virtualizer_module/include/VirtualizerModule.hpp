@@ -32,9 +32,10 @@ class VirtualizerModule : public yarp::os::RFModule,  public VirtualizerCommands
 private:
     double m_dT; /**< RFModule period. */
     double m_deadzone; /**< Value of the deadzone. */
-    double m_robotYaw;
-    double velocity_factor;
-    double oldPlayerYaw;
+    double m_robotYaw; /**<Robot orientation. */
+    double m_velocityScaling; /**< Linear velocity scaling factor   */
+    double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
+                              previous time step. */
 
     yarp::os::Port m_rpcServerPort; /**< Port used to send command to the virtualizer application. */
 
