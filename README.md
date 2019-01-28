@@ -21,7 +21,7 @@ It implements the following architecture:
 
 
 # :page_facing_up: Dependencies
-The description of dependencies are located in [docs/Dependencies.md](https://github.com/kouroshD/walking-teleoperation/blob/kouroshD-readMeUpdates/docs/Dependencies.md).
+The description of dependencies are located [here](./docs/Dependencies.md).
 
 This guide is only for teleoperation dependencies on a Windows machine and it includes the guide to install Oculus module and Virtualizer module SDKs.
 
