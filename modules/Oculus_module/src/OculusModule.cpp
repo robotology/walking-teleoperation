@@ -121,17 +121,17 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
         }
         if (!YarpHelper::getDoubleFromSearchable(config, "fullscale", m_fullscale))
         {
-            yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
+            yError() << "[OculusModule::configureJoypad] Unable to find parameter fullscale";
             return false;
         }
         if (!YarpHelper::getDoubleFromSearchable(config, "scale_X", m_scaleX))
         {
-            yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
+            yError() << "[OculusModule::configureJoypad] Unable to find parameter scale_X";
             return false;
         }
         if (!YarpHelper::getDoubleFromSearchable(config, "scale_Y", m_scaleY))
         {
-            yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
+            yError() << "[OculusModule::configureJoypad] Unable to find parameter scale_Y";
             return false;
         }
 
