@@ -25,8 +25,7 @@ The description of dependencies are located [here](./docs/Dependencies.md).
 
 This guide is only for teleoperation dependencies on a Windows machine and it includes the guide to install Oculus module and Virtualizer module SDKs.
 
-Besides, you need to have a linux machine for **Walking-controllers** if you intend to move the robot base as well. to install follow the instructions in [robotology-superbuild#dynamics](https://github.com/robotology/robotology-superbuild#dynamics)
-
+Besides, you need to have a linux machine for **Walking-controllers** module described [here](https://github.com/robotology/walking-controllers/tree/devel_hand_retargeting).
 
 # :hammer: Build the suite
 ## Linux/macOs
