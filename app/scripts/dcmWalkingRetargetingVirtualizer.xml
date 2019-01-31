@@ -58,7 +58,7 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
-    <parameters> --JOYPAD::move_icub_using_joypad 0 </parameters>
+    <parameters> --OCULUS::move_icub_using_joypad 0 </parameters>
   </module>
 
   <!-- Connections -->
