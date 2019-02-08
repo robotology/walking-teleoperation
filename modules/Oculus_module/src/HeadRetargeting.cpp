@@ -16,7 +16,7 @@
 #include <Utils.hpp>
 
 // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
-// Section 2.2
+// Section 2.3
 void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
                                         double& neckRoll, double& neckYaw)
 {
@@ -41,8 +41,8 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, 
         neckYaw = 0;
     }
 
-    // minus due to the joints structure of the iCub neck
-    neckPitch = -neckPitch;
+    // minus due to the joints mechanism of the iCub neck
+    neckRoll = -neckRoll;
     return;
 }
 
@@ -50,7 +50,7 @@ iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, c
                                                       const double& neckYaw)
 {
     iDynTree::Rotation chest_R_head;
-    chest_R_head = iDynTree::Rotation::RotY(-neckPitch) * iDynTree::Rotation::RotX(neckRoll)
+    chest_R_head = iDynTree::Rotation::RotY(neckPitch) * iDynTree::Rotation::RotX(-neckRoll)
         * iDynTree::Rotation::RotZ(neckYaw);
 
     return chest_R_head;
@@ -111,9 +111,7 @@ void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusI
 
 bool HeadRetargeting::move()
 {
-     m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse()
-         * m_oculusInertial_R_headOculus;
-//   m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
+    m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
 
     // notice here the following assumption is done:
     // desiredNeckJoint(0) = neckPitch
@@ -123,6 +121,8 @@ bool HeadRetargeting::move()
     inverseKinematics(m_teleopFrame_R_headOculus, desiredNeckJoint(0),
                       desiredNeckJoint(1), desiredNeckJoint(2));
 
+    // Notice: this can generate problems when the inverse kinematics return angles
+    // near the singularity. it would be nice to implement a smoother in SO(3).
     m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
 

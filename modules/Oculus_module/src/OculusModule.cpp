@@ -20,6 +20,7 @@
 #include <OculusModule.hpp>
 #include <Utils.hpp>
 
+
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
     yarp::os::Property options;
@@ -372,7 +373,8 @@ bool OculusModule::getTransforms()
     {
         // head
         yarp::os::Bottle* desiredHeadOrientation = NULL;
-        iDynTree::Vector3 desiredHeadOrientationVector;
+
+        iDynTree::Vector3  desiredHeadOrientationVector;
         desiredHeadOrientation = m_oculusOrientationPort.read(false);
         if (desiredHeadOrientation != NULL)
         {
@@ -380,10 +382,12 @@ bool OculusModule::getTransforms()
                 desiredHeadOrientationVector(i)
                     = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
 
+            // Notice that the data coming from the port are written in the following order:
+            // [ pitch, -roll, yaw].
             iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
-                = iDynTree::toEigen(HeadRetargeting::forwardKinematics(desiredHeadOrientationVector(0),
-                                                                       desiredHeadOrientationVector(1),
-                                                                       desiredHeadOrientationVector(2)));
+              = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
+                                                          desiredHeadOrientationVector(0),
+                                                          desiredHeadOrientationVector(2)));
         }
     } else
     {
@@ -470,6 +474,7 @@ bool OculusModule::updateModule()
 
         m_head->setPlayerOrientation(m_playerOrientation);
         m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
+        // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0), desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
         if (!m_head->move())
         {
             yError() << "[updateModule::updateModule] unable to move the head";
@@ -566,8 +571,8 @@ bool OculusModule::updateModule()
             // TODO add a visual feedback for the user
             cmd.addString("startWalking");
             m_rpcWalkingClient.write(cmd, outcome);
-            if(outcome.get(0).asBool())
-                m_state = OculusFSM::Running;
+            // if(outcome.get(0).asBool())
+            m_state = OculusFSM::Running;
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
@@ -579,16 +584,12 @@ bool OculusModule::updateModule()
     neckRoll = neckEncoders(1);
     neckYaw = neckEncoders(2);
     iDynTree::Rotation root_R_head = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
-    iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(m_robotYaw);
+    iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
 
     // inertial_R_head is used to simulate an imu required by the cam calibration application
-    // Since the imu mounted on the head of the robot has the x axis pointing backwatd  the
-    // RotZ(180) is added
-    iDynTree::Rotation inertial_R_head = iDynTree::Rotation::RotZ(iDynTree::deg2rad(180))
-        * inertial_R_root * root_R_head;
+    iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
 
-    // todo check the minus
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(0)));
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(1)));
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(2)));
