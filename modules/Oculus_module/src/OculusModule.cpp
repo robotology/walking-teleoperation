@@ -20,6 +20,7 @@
 #include <OculusModule.hpp>
 #include <Utils.hpp>
 
+
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
     yarp::os::Property options;
@@ -372,7 +373,8 @@ bool OculusModule::getTransforms()
     {
         // head
         yarp::os::Bottle* desiredHeadOrientation = NULL;
-        iDynTree::Vector3 desiredHeadOrientationVector;
+
+        iDynTree::Vector3  desiredHeadOrientationVector;
         desiredHeadOrientation = m_oculusOrientationPort.read(false);
         if (desiredHeadOrientation != NULL)
         {
@@ -381,9 +383,9 @@ bool OculusModule::getTransforms()
                     = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
 
             iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
-                = iDynTree::toEigen(HeadRetargeting::forwardKinematics(desiredHeadOrientationVector(0),
-                                                                       desiredHeadOrientationVector(1),
-                                                                       desiredHeadOrientationVector(2)));
+              = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
+                                                          desiredHeadOrientationVector(0),
+                                                          desiredHeadOrientationVector(2)));
         }
     } else
     {
@@ -470,6 +472,7 @@ bool OculusModule::updateModule()
 
         m_head->setPlayerOrientation(m_playerOrientation);
         m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
+        // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0), desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
         if (!m_head->move())
         {
             yError() << "[updateModule::updateModule] unable to move the head";
@@ -566,8 +569,8 @@ bool OculusModule::updateModule()
             // TODO add a visual feedback for the user
             cmd.addString("startWalking");
             m_rpcWalkingClient.write(cmd, outcome);
-            if(outcome.get(0).asBool())
-                m_state = OculusFSM::Running;
+            // if(outcome.get(0).asBool())
+            m_state = OculusFSM::Running;
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();

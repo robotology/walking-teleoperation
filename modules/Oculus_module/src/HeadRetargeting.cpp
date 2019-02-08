@@ -111,8 +111,7 @@ void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusI
 
 bool HeadRetargeting::move()
 {
-     m_teleopFrame_R_headOculus = m_oculusInertial_R_headOculus * m_oculusInertial_R_teleopFrame.inverse();
-//   m_desiredHeadOrientation = m_playerOrientation.inverse() * m_oculusRoot_T_oculusHeadset;
+    m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
 
     // notice here the following assumption is done:
     // desiredNeckJoint(0) = neckPitch
