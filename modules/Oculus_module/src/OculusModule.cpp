@@ -382,6 +382,8 @@ bool OculusModule::getTransforms()
                 desiredHeadOrientationVector(i)
                     = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
 
+            // Notice that the data coming from the port are written in the following order:
+            // [ pitch, -roll, yaw].
             iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
               = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
                                                           desiredHeadOrientationVector(0),
@@ -585,13 +587,9 @@ bool OculusModule::updateModule()
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
 
     // inertial_R_head is used to simulate an imu required by the cam calibration application
-    // Since the imu mounted on the head of the robot has the x axis pointing backwatd  the
-    // RotZ(180) is added
-    // iDynTree::Rotation inertial_R_head = iDynTree::Rotation::RotZ(iDynTree::deg2rad(180))
     iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
 
-    // todo check the minus
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(0)));
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(1)));
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(2)));

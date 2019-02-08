@@ -16,7 +16,7 @@
 #include <Utils.hpp>
 
 // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
-// Section 2.2
+// Section 2.3
 void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
                                         double& neckRoll, double& neckYaw)
 {
@@ -41,7 +41,7 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, 
         neckYaw = 0;
     }
 
-    // minus due to the joints structure of the iCub neck
+    // minus due to the joints mechanism of the iCub neck
     neckRoll = -neckRoll;
     return;
 }
@@ -121,6 +121,8 @@ bool HeadRetargeting::move()
     inverseKinematics(m_teleopFrame_R_headOculus, desiredNeckJoint(0),
                       desiredNeckJoint(1), desiredNeckJoint(2));
 
+    // Notice: this can generate problems when the inverse kinematics return angles
+    // near the singularity. it would be nice to implement a smoother in SO(3).
     m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
 
