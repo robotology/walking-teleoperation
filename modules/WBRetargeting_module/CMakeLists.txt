@@ -3,7 +3,7 @@
 # Authors: Giulio Romualdi <giulio.romualdi@iit.it>
 
 # set target name
-set(EXE_TARGET_NAME OculusRetargetingModule)
+set(EXE_TARGET_NAME WholeBodyRetargetingModule)
 
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 mark_as_advanced(ENABLE_RPATH)
@@ -24,25 +24,11 @@ include(FindPackageHandleStandardArgs)
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
-  src/FingersRetargeting.cpp
-  src/HandRetargeting.cpp
-  src/HeadRetargeting.cpp
-  src/RobotControlHelper.cpp
-  src/RetargetingController.cpp
-  src/OculusModule.cpp
-  #src/WholeBodyRetargeting.cpp
-  )
+  src/WholeBodyRetargeting.cpp)
 
 # set hpp files
 set(${EXE_TARGET_NAME}_HDR
-  include/FingersRetargeting.hpp
-  include/HandRetargeting.hpp
-  include/HeadRetargeting.hpp
-  include/RobotControlHelper.hpp
-  include/RetargetingController.hpp
-  include/OculusModule.hpp
-  #include/WholeBodyRetargeting.hpp
-  )
+  include/WholeBodyRetargeting.hpp)
 
 # add include directories to the build.
 include_directories(

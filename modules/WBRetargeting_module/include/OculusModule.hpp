@@ -26,7 +26,7 @@
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
-//#include <WholeBodyRetargeting.hpp>
+#include <WholeBodyRetargeting.hpp>
 
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
@@ -39,11 +39,7 @@ private:
     double m_dT; /**< Module period. */
 
     /** Oculus Finite state machine */
-    enum class OculusFSM
-    {
-        Configured,
-        Running
-    };
+    enum class OculusFSM {Configured, Running};
     OculusFSM m_state; /**< State of the OculusFSM */
 
     // joypad utils
@@ -77,10 +73,8 @@ private:
     std::string m_rootFrameName; /**< Name of the root frame used in the transform server */
     std::string m_headFrameName; /**< Name of the head frame used in the transform server (NOT
                                     SUPPORTED BY YARP)*/
-    std::string
-        m_leftHandFrameName; /**< Name of the left hand frame used in the transform server */
-    std::string
-        m_rightHandFrameName; /**< Name of the right hand frame used in the transform server */
+    std::string m_leftHandFrameName; /**< Name of the left hand frame used in the transform server */
+    std::string m_rightHandFrameName; /**< Name of the right hand frame used in the transform server */
 
     yarp::dev::PolyDriver m_joypadDevice; /**< Joypad polydriver. */
     yarp::dev::IJoypadController* m_joypadControllerInterface{nullptr}; /**< joypad interface. */
@@ -94,8 +88,8 @@ private:
                                                      hand retargeting object. */
     std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left hand
                                                     retargeting object. */
-//    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
-//                                                                        retargeting object. */
+    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
+                                                                        retargeting object. */
 
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */
@@ -112,8 +106,7 @@ private:
 
     yarp::os::RpcClient m_rpcWalkingClient; /**< Rpc client used for sending command to the walking
                                                controller */
-    yarp::os::RpcClient
-        m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
+    yarp::os::RpcClient m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
     /** Port used to retrieve the human whole body joint pose. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_wholeBodyHumanJointsPort;

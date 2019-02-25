@@ -165,4 +165,17 @@
     <protocol>shmem</protocol>
   </connection>
 
+<!-- Whole Body Retargetting -->
+<connection>
+  <from>/HDE/HumanStateWrapper/state:o</from>
+  <to>/oculusRetargeting/HumanStateWrapper/state:i</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/oculusRetargeting/HumanSmoothedJoints:o</from>
+  <to>/walking-coordinator/jointPosition:i</to>
+  <protocol>udp</protocol>
+</connection>
+
 </application>
