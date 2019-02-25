@@ -20,6 +20,7 @@
 #include <OculusModule.hpp>
 #include <Utils.hpp>
 
+
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
     yarp::os::Property options;
@@ -177,8 +178,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     // check if the configuration file is empty
     if (rf.isNull())
     {
-        yError()
-            << "[OculusModule::configure] Empty configuration for the OculusModule application.";
+        yError() << "[OculusModule::configure] Empty configuration for the OculusModule application.";
         return false;
     }
 
@@ -195,17 +195,19 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
     setName(name.c_str());
 
-    m_useXsens = generalOptions.check("useXsens", yarp::os::Value(false)).asBool();
-    yInfo() << "Teleoperation uses Xsens: " << m_useXsens;
 
-    //    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
-    //    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
-    //    wholeBodyRetargetingOptions.append(generalOptions);
-    //    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
-    //    {
-    //        yError() << "[OculusModule::configure] Unable to initialize the whole body
-    //        retargeting."; return false;
-    //    }
+    m_useXsens = generalOptions.check("useXsens", yarp::os::Value(false)).asBool();
+    yInfo()<<"Teleoperation uses Xsens: "<<m_useXsens;
+
+
+    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
+    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
+    wholeBodyRetargetingOptions.append(generalOptions);
+    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
+    {
+        yError() << "[OculusModule::configure] Unable to initialize the whole body retargeting.";
+        return false;
+    }
 
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
@@ -262,14 +264,16 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    //    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
-    //    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
-    //    wholeBodyRetargetingOptions.append(generalOptions);
-    //    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
-    //    {
-    //        yError() << "[OculusModule::configure] Unable to initialize the whole body
-    //        retargeting."; return false;
-    //    }
+//    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
+//    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
+//    wholeBodyRetargetingOptions.append(generalOptions);
+//    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
+//    {
+//        yError() << "[OculusModule::configure] Unable to initialize the whole body retargeting.";
+//        return false;
+//    }
+
+
 
     // open ports
     std::string portName;
@@ -339,6 +343,30 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    if (!YarpHelper::getStringFromSearchable(rf, "wholeBodyJointsPort", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_wholeBodyHumanJointsPort.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] " << portName << " port already open.";
+        return false;
+    }
+
+    if (!YarpHelper::getStringFromSearchable(rf, "wholeBodySmoothJointsPort", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_wholeBodyHumanSmoothedJointsPort.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] Unable to open the port " << portName;
+        return false;
+    }
+
+
+
     m_playerOrientation = 0;
     m_robotYaw = 0;
 
@@ -358,11 +386,11 @@ bool OculusModule::close()
     m_head->controlHelper()->close();
     m_rightHandFingers->controlHelper()->close();
     m_leftHandFingers->controlHelper()->close();
-    //    m_wholeBodyRetargeting->controlHelper()->close();
+    m_wholeBodyRetargeting->controlHelper()->close();
 
     m_joypadDevice.close();
     m_transformClientDevice.close();
-    // remember: close the wb retargeting
+    //remember: close the wb retargeting
 
     return true;
 }
@@ -384,22 +412,22 @@ double OculusModule::evaluateDesiredFingersVelocity(unsigned int squeezeIndex,
 
 bool OculusModule::getTransforms()
 {
-    if (m_useXsens)
+    if(m_useXsens)
     {
 
         // Complete the implementation of the Reading the Joints
-        //        yarp::sig::Vector humanJointValues;
-        //        yarp::os::Bottle* desiredWBJoints = NULL;
-        //        desiredWBJoints=m_wholeBodyHumanJointsPort.read(false);
-        //        if(desiredWBJoints != NULL)
-        //        {
-        //           yInfo()<< "desiredWBJoints size: "<<desiredWBJoints->size();
-        //           // fill the humanJointValue vectors
-        //           m_wholeBodyRetargeting->setJointValues(humanJointValues);
-        //        }
+        yarp::sig::Vector humanJointValues;
+        yarp::os::Bottle* desiredWBJoints = NULL;
+        desiredWBJoints=m_wholeBodyHumanJointsPort.read(false);
+        if(desiredWBJoints != NULL)
+        {
+           yInfo()<< "desiredWBJoints size: "<<desiredWBJoints->size();
+           // fill the humanJointValue vectors
+           m_wholeBodyRetargeting->setJointValues(humanJointValues);
+        }
 
-    } else
-    {
+    }
+    else {
         // check if everything is ok
         if (!m_frameTransformInterface->frameExists(m_rootFrameName))
         {
@@ -412,35 +440,34 @@ bool OculusModule::getTransforms()
             // head
             yarp::os::Bottle* desiredHeadOrientation = NULL;
 
-            iDynTree::Vector3 desiredHeadOrientationVector;
+            iDynTree::Vector3  desiredHeadOrientationVector;
             desiredHeadOrientation = m_oculusOrientationPort.read(false);
             if (desiredHeadOrientation != NULL)
             {
                 for (int i = 0; i < desiredHeadOrientation->size(); i++)
                     desiredHeadOrientationVector(i)
-                        = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
+                            = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
 
                 // Notice that the data coming from the port are written in the following order:
                 // [ pitch, -roll, yaw].
                 iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
-                    = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
-                                                                desiredHeadOrientationVector(0),
-                                                                desiredHeadOrientationVector(2)));
+                        = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
+                                                                    desiredHeadOrientationVector(0),
+                                                                    desiredHeadOrientationVector(2)));
             }
         } else
         {
             if (!m_frameTransformInterface->getTransform(
-                    m_headFrameName, m_rootFrameName, m_oculusRoot_T_headOculus))
+                        m_headFrameName, m_rootFrameName, m_oculusRoot_T_headOculus))
             {
-                yError() << "[OculusModule::getTransforms] Unable to evaluate the "
-                         << m_headFrameName << " to " << m_rootFrameName << "transformation";
+                yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_headFrameName << " to "
+                         << m_rootFrameName << "transformation";
                 return false;
             }
         }
 
         if (!m_frameTransformInterface->frameExists(m_leftHandFrameName))
         {
-
             yError() << "[OculusModule::getTransforms] No " << m_leftHandFrameName << " frame.";
             return false;
         }
@@ -452,41 +479,42 @@ bool OculusModule::getTransforms()
         }
 
         if (!m_frameTransformInterface->getTransform(
-                m_leftHandFrameName, m_rootFrameName, m_oculusRoot_T_lOculus))
+                    m_leftHandFrameName, m_rootFrameName, m_oculusRoot_T_lOculus))
         {
-            yError() << "[OculusModule::getTransforms] Unable to evaluate the "
-                     << m_leftHandFrameName << " to " << m_rootFrameName << "transformation";
+            yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_leftHandFrameName << " to "
+                     << m_rootFrameName << "transformation";
             return false;
         }
 
         if (!m_frameTransformInterface->getTransform(
-                m_rightHandFrameName, m_rootFrameName, m_oculusRoot_T_rOculus))
+                    m_rightHandFrameName, m_rootFrameName, m_oculusRoot_T_rOculus))
         {
-            yError() << "[OculusModule::getTransforms] Unable to evaluate the "
-                     << m_rightHandFrameName << " to " << m_rootFrameName << "transformation";
+            yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_rightHandFrameName << " to "
+                     << m_rootFrameName << "transformation";
             return false;
         }
     }
+
+
     return true;
 }
 
 bool OculusModule::getFeedbacks()
 {
 
-    if (m_useXsens)
+    if(m_useXsens)
     {
-        //        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
-        //        {
-        //            yError() << "[OculusModule::getFeedbacks] Unable to get the joint
-        //            encoders feedback: WholeBodyRetargetting"; return false;
-        //        }
-        //        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
-    } else
-    {
+        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
+        {
+            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: WholeBodyRetargetting";
+            return false;
+        }
+        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
+    }
+    else {
         if (!m_head->controlHelper()->getFeedback())
         {
-            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders "
-                        "feedback: HeadRetargeting";
+            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: HeadRetargeting";
             return false;
         }
         m_head->controlHelper()->updateTimeStamp();
@@ -502,7 +530,7 @@ bool OculusModule::updateModule()
         return false;
     }
 
-    if (m_state == OculusFSM::Running)
+    if(m_state == OculusFSM::Running)
     {
         // get the transformation form the oculus
         if (!getTransforms())
@@ -524,26 +552,28 @@ bool OculusModule::updateModule()
                 m_robotYaw = Angles::normalizeAngle((*robotOrientation)(0));
         }
 
-        if (m_useXsens)
+        if(m_useXsens)
         {
-            // use Xsens data to update robot movements
-            // m_wholeBodyRetargeting->setJointValues(const yarp::sig::Vector& jointValues)
-            //            yarp::sig::Vector& WBSmoothedJointValues =
-            //            m_wholeBodyHumanSmoothedJointsPort.prepare();
-            //            m_wholeBodyRetargeting->getSmoothedJointValues(WBSmoothedJointValues);
-            //            m_wholeBodyHumanSmoothedJointsPort.write();
-        } else
+            //use Xsens data to update robot movements
+
+
+            //m_wholeBodyRetargeting->setJointValues(const yarp::sig::Vector& jointValues)
+            yarp::sig::Vector& WBSmoothedJointValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
+            m_wholeBodyRetargeting->getSmoothedJointValues(WBSmoothedJointValues);
+            m_wholeBodyHumanSmoothedJointsPort.write();
+        }
+        else
         {
 
             m_head->setPlayerOrientation(m_playerOrientation);
             m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
-            // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
-            // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
+            // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0), desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
             if (!m_head->move())
             {
                 yError() << "[OculusModule::updateModule] unable to move the head";
                 return false;
             }
+
 
             // left hand
             yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
@@ -558,6 +588,7 @@ bool OculusModule::updateModule()
             m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
             m_rightHand->evaluateDesiredHandPose(rightHandPose);
             m_rightHandPosePort.write();
+
         }
 
         // use joypad
@@ -606,7 +637,8 @@ bool OculusModule::updateModule()
             return false;
         }
 
-    } else if (m_state == OculusFSM::Configured)
+    }
+    else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
         std::vector<float> buttonMapping(2);
@@ -648,12 +680,10 @@ bool OculusModule::updateModule()
     neckPitch = neckEncoders(0);
     neckRoll = neckEncoders(1);
     neckYaw = neckEncoders(2);
-    iDynTree::Rotation root_R_head
-        = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
+    iDynTree::Rotation root_R_head = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
 
-    // inertial_R_head is used to simulate an imu required by the cam calibration
-    // application
+    // inertial_R_head is used to simulate an imu required by the cam calibration application
     iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
 
