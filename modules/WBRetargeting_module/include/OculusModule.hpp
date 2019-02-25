@@ -26,7 +26,7 @@
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
-//#include <WholeBodyRetargeting.hpp>
+#include <WholeBodyRetargeting.hpp>
 
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
@@ -88,8 +88,8 @@ private:
                                                      hand retargeting object. */
     std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left hand
                                                     retargeting object. */
-//    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
-//                                                                        retargeting object. */
+    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
+                                                                        retargeting object. */
 
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */

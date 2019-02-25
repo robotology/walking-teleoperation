@@ -200,14 +200,14 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     yInfo()<<"Teleoperation uses Xsens: "<<m_useXsens;
 
 
-//    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
-//    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
-//    wholeBodyRetargetingOptions.append(generalOptions);
-//    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
-//    {
-//        yError() << "[OculusModule::configure] Unable to initialize the whole body retargeting.";
-//        return false;
-//    }
+    m_wholeBodyRetargeting = std::make_unique<WholeBodyRetargeting>();
+    yarp::os::Bottle& wholeBodyRetargetingOptions = rf.findGroup("WHOLE_BODY_RETARGETING");
+    wholeBodyRetargetingOptions.append(generalOptions);
+    if (!m_wholeBodyRetargeting->configure(wholeBodyRetargetingOptions,getName()))
+    {
+        yError() << "[OculusModule::configure] Unable to initialize the whole body retargeting.";
+        return false;
+    }
 
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
@@ -343,7 +343,27 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    if (!YarpHelper::getStringFromSearchable(rf, "wholeBodyJointsPort", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_wholeBodyHumanJointsPort.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] " << portName << " port already open.";
+        return false;
+    }
 
+    if (!YarpHelper::getStringFromSearchable(rf, "wholeBodySmoothJointsPort", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_wholeBodyHumanSmoothedJointsPort.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] Unable to open the port " << portName;
+        return false;
+    }
 
 
 
@@ -366,7 +386,7 @@ bool OculusModule::close()
     m_head->controlHelper()->close();
     m_rightHandFingers->controlHelper()->close();
     m_leftHandFingers->controlHelper()->close();
-//    m_wholeBodyRetargeting->controlHelper()->close();
+    m_wholeBodyRetargeting->controlHelper()->close();
 
     m_joypadDevice.close();
     m_transformClientDevice.close();
@@ -396,15 +416,15 @@ bool OculusModule::getTransforms()
     {
 
         // Complete the implementation of the Reading the Joints
-//        yarp::sig::Vector humanJointValues;
-//        yarp::os::Bottle* desiredWBJoints = NULL;
-//        desiredWBJoints=m_wholeBodyHumanJointsPort.read(false);
-//        if(desiredWBJoints != NULL)
-//        {
-//           yInfo()<< "desiredWBJoints size: "<<desiredWBJoints->size();
-//           // fill the humanJointValue vectors
-//           m_wholeBodyRetargeting->setJointValues(humanJointValues);
-//        }
+        yarp::sig::Vector humanJointValues;
+        yarp::os::Bottle* desiredWBJoints = NULL;
+        desiredWBJoints=m_wholeBodyHumanJointsPort.read(false);
+        if(desiredWBJoints != NULL)
+        {
+           yInfo()<< "desiredWBJoints size: "<<desiredWBJoints->size();
+           // fill the humanJointValue vectors
+           m_wholeBodyRetargeting->setJointValues(humanJointValues);
+        }
 
     }
     else {
@@ -484,12 +504,12 @@ bool OculusModule::getFeedbacks()
 
     if(m_useXsens)
     {
-//        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
-//        {
-//            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: WholeBodyRetargetting";
-//            return false;
-//        }
-//        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
+        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
+        {
+            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: WholeBodyRetargetting";
+            return false;
+        }
+        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
     }
     else {
         if (!m_head->controlHelper()->getFeedback())
@@ -538,9 +558,9 @@ bool OculusModule::updateModule()
 
 
             //m_wholeBodyRetargeting->setJointValues(const yarp::sig::Vector& jointValues)
-//            yarp::sig::Vector& WBSmoothedJointValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
-//            m_wholeBodyRetargeting->getSmoothedJointValues(WBSmoothedJointValues);
-//            m_wholeBodyHumanSmoothedJointsPort.write();
+            yarp::sig::Vector& WBSmoothedJointValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
+            m_wholeBodyRetargeting->getSmoothedJointValues(WBSmoothedJointValues);
+            m_wholeBodyHumanSmoothedJointsPort.write();
         }
         else
         {
