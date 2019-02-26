@@ -18,8 +18,8 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
 
-
-
+#include <yarp/os/Clock.h>
+#include <chrono>
 // iDynTree
 #include <iDynTree/Core/Transform.h>
 #include <RetargetingController.hpp>
@@ -52,6 +52,8 @@ private:
     size_t m_actuatedDOFs; /**< Number of the actuated DoF */
 
     std::vector<unsigned> m_humanToRobotMap;
+
+   std::chrono::milliseconds m_tick,m_tock;
 
 public:
    WholeBodyRetargeting();
