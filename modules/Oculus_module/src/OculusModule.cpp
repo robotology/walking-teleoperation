@@ -473,24 +473,24 @@ bool OculusModule::getTransforms()
 bool OculusModule::getFeedbacks()
 {
 
-    if (m_useXsens)
+    //    if(m_useXsens)
+    //    {
+    //        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
+    //        {
+    //            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders
+    //            feedback: WholeBodyRetargetting"; return false;
+    //        }
+    //        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
+    //    }
+    //    else {
+    if (!m_head->controlHelper()->getFeedback())
     {
-        //        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
-        //        {
-        //            yError() << "[OculusModule::getFeedbacks] Unable to get the joint
-        //            encoders feedback: WholeBodyRetargetting"; return false;
-        //        }
-        //        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
-    } else
-    {
-        if (!m_head->controlHelper()->getFeedback())
-        {
-            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders "
-                        "feedback: HeadRetargeting";
-            return false;
-        }
-        m_head->controlHelper()->updateTimeStamp();
+        yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders "
+                    "feedback: HeadRetargeting";
+        return false;
     }
+    m_head->controlHelper()->updateTimeStamp();
+    //    }
     return true;
 }
 
