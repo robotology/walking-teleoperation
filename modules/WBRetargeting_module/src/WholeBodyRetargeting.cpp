@@ -140,7 +140,7 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
         yError() << "[OculusModule::configure] Unable to get a string from a searchable";
         return false;
     }
-    if (!m_wholeBodyHumanSmoothedJointsPort.open(portName))
+    if (!m_wholeBodyHumanSmoothedJointsPort.open("/" + getName() + portName))
     {
         yError() << "[OculusModule::configure] Unable to open the port " << portName;
         return false;
@@ -173,6 +173,8 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
         yInfo()<<"("<<i<<", "<<m_humanToRobotMap[i]<<"): "<<m_robotJointsListNames[i]<<" , "<<m_humanJointsListName[(m_humanToRobotMap[i])] ;
     }
 
+     m_tick =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+     m_tock =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 
 
    yInfo()<<" WholeBodyRetargeting::configure done!";
@@ -186,26 +188,45 @@ bool WholeBodyRetargeting::getJointValues()
 //    yarp::os::Bottle* desiredHumanJoints = NULL;
 //    yInfo()<<" WholeBodyRetargeting::setJointValues 2";
 
-       yarp::os::Bottle* desiredHumanJoints=m_wholeBodyHumanJointsPort.read();
+       yarp::os::Bottle* desiredHumanJoints=m_wholeBodyHumanJointsPort.read(false);
 //    yInfo()<<" WholeBodyRetargeting::setJointValues 3: "<<desiredHumanJoints->size();
 
     if(desiredHumanJoints == NULL)
     {
-       yError()<< "[WholeBodyRetargeting::setJointValues()] desiredWBJoints size: "<<desiredHumanJoints->size();
+       //yError()<< "[WholeBodyRetargeting::setJointValues()] desiredWBJoints size: 0";
+       return true;
     }
+    //yInfo()<< "[WholeBodyRetargeting::setJointValues()] desiredWBJoints size: "<<desiredHumanJoints->size();
 //    printf("Received %s\n", desiredHumanJoints->toString().c_str());
     //humanJointValues=desiredHumanJoints->get(0).toString().c_str();
 //    printf("Received %s\n", desiredHumanJoints->get(0).toString().c_str());
-    std::string humanjointsValueS=desiredHumanJoints->get(0).toString().c_str();
+  //  std::string humanjointsValueS=desiredHumanJoints->get(0).toString().c_str();
+     yarp::os::Value humanjointsValueS=desiredHumanJoints->get(0);
+     yarp::os::Bottle* dummy = humanjointsValueS.asList();
+
+     if (dummy->size() != m_actuatedDOFs)
+     {
+         //TODO: Throw some error
+     }
+
+     for (unsigned j = 0; j < dummy->size(); j++) {
+         m_jointValues(j) = dummy->get(m_humanToRobotMap[j]).asDouble();
+     }
 //    yarp::sig::Vector humanjointsValueD=desiredHumanJoints->get(0).asDouble();
 //    yInfo()<<"humanjointsValueS: " <<humanjointsValueS;
 
-    std::vector<double> humanJointValues=split(humanjointsValueS," ");
+    //std::vector<double> humanJointValues=split(humanjointsValueS," ");
 
-    yInfo()<<"1: "<<humanJointValues[0]<<" ,2: "<<humanJointValues[1]<<" , "<<humanJointValues[2];
+    yInfo()<<"1: "<<m_jointValues[0]<<" ,2: "<<m_jointValues[1]<<" , "<<m_jointValues[2];
 
-    for( unsigned i=0;i<m_actuatedDOFs;i++)
-    m_jointValues(i)=humanJointValues[m_humanToRobotMap[i]];
+    m_tock =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+    yDebug() << "---------- >rate: "<< (m_tock-m_tick).count() << "ms";
+
+    m_tick =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+
+
+    //for( unsigned i=0;i<m_actuatedDOFs;i++)
+    //m_jointValues(i)=humanJointValues[m_humanToRobotMap[i]];
 
 
     return true;
@@ -214,8 +235,12 @@ bool WholeBodyRetargeting::getJointValues()
 bool WholeBodyRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJointValues)
 {
 
+
     m_WBTrajectorySmoother->computeNextValues(m_jointValues);
     smoothedJointValues = m_WBTrajectorySmoother->getPos();
+//    auto tock = std::chrono::high_resolution_clock::now();
+//    yDebug() << "IK took"
+//          << std::chrono::duration_cast<std::chrono::milliseconds>(tock - tick).count() << "ms";
 
 
     return true;
@@ -230,13 +255,18 @@ double WholeBodyRetargeting::getPeriod()
 bool WholeBodyRetargeting::updateModule()
 {
 
-
+//    std::chrono::milliseconds tick=std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
     getJointValues();
 
 
     yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
     getSmoothedJointValues(refValues);
     m_wholeBodyHumanSmoothedJointsPort.write();
+
+//    std::chrono::milliseconds tock=std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
+//    yDebug() << "update rate: "<< (tock-tick).count() << "ms";
+
+
 
     return true;
 }
