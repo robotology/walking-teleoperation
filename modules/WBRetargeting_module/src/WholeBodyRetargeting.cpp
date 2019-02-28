@@ -175,7 +175,8 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
 
      m_tick =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
      m_tock =std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
-
+    m_firstIteration=true;
+    m_jointDiffThreshold=0.5;
 
    yInfo()<<" WholeBodyRetargeting::configure done!";
     return true;
@@ -206,12 +207,31 @@ bool WholeBodyRetargeting::getJointValues()
 
      if (dummy->size() != m_actuatedDOFs)
      {
-         //TODO: Throw some error
+//         yError() << "Dummy joint size is not matched to m_actuatedDOFs";
+//         return false;
      }
 
-     for (unsigned j = 0; j < dummy->size(); j++) {
-         m_jointValues(j) = dummy->get(m_humanToRobotMap[j]).asDouble();
+    yarp::sig::Vector newJointValues;
+    newJointValues.resize(m_actuatedDOFs,0.0);
+
+//    yInfo() << "a";
+
+     for (unsigned j = 0; j < m_actuatedDOFs; j++) {
+         newJointValues(j) = dummy->get(m_humanToRobotMap[j]).asDouble();
+         if(!m_firstIteration)
+         {
+             if( std::abs(newJointValues(j)-m_jointValues(j)) <m_jointDiffThreshold   )
+                m_jointValues(j)=newJointValues(j);
+         }
+         else {
+             m_firstIteration=false;
+              m_jointValues(j)=newJointValues(j);
+         }
      }
+
+//     yInfo() << "b";
+
+
 //    yarp::sig::Vector humanjointsValueD=desiredHumanJoints->get(0).asDouble();
 //    yInfo()<<"humanjointsValueS: " <<humanjointsValueS;
 
@@ -228,6 +248,7 @@ bool WholeBodyRetargeting::getJointValues()
     //for( unsigned i=0;i<m_actuatedDOFs;i++)
     //m_jointValues(i)=humanJointValues[m_humanToRobotMap[i]];
 
+//    yInfo() << "c";
 
     return true;
 }
@@ -243,8 +264,7 @@ bool WholeBodyRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJoi
 //          << std::chrono::duration_cast<std::chrono::milliseconds>(tock - tick).count() << "ms";
 
 
-    return true;
-}
+    return true;}
 
 double WholeBodyRetargeting::getPeriod()
 {
@@ -258,7 +278,10 @@ bool WholeBodyRetargeting::updateModule()
 //    std::chrono::milliseconds tick=std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
     getJointValues();
 
-
+    if(m_wholeBodyHumanJointsPort.isClosed()) {
+        yError() << "m_wholeBodyHumanJointsPort port is closed";
+        return false;
+    }
     yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
     getSmoothedJointValues(refValues);
     m_wholeBodyHumanSmoothedJointsPort.write();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.8.1, 2019-02-25T16:22:16. -->
+<!-- Written by QtCreator 4.8.1, 2019-02-27T22:52:21. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -298,7 +298,7 @@
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.AdditionalArguments"></value>
       <valuelist type="QVariantList" key="CMakeProjectManager.MakeStep.BuildTargets">
-       <value type="QString">all</value>
+       <value type="QString">install</value>
       </valuelist>
       <value type="bool" key="ProjectExplorer.BuildStep.Enabled">true</value>
       <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">CMake Build</value>
@@ -457,7 +457,7 @@
     <value type="bool" key="RunConfiguration.UseMultiProcess">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
-    <value type="QString" key="RunConfiguration.WorkingDirectory"></value>
+    <value type="QString" key="RunConfiguration.WorkingDirectory">/Users/kdarvish/Desktop/icub_ws/robotology-superbuild/robotology/walking-teleoperation/app/robots/iCubGazeboV2_5</value>
     <value type="QString" key="RunConfiguration.WorkingDirectory.default">/Users/kdarvish/Desktop/icub_ws/robotology-superbuild/build/robotology/walking-teleoperation/modules/WBRetargeting_module</value>
    </valuemap>
    <value type="int" key="ProjectExplorer.Target.RunConfigurationCount">2</value>
