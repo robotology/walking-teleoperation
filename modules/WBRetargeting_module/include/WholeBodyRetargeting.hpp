@@ -3,6 +3,7 @@
 
 // std
 #include <memory>
+#include <cmath>
 
 // YARP
 #include <yarp/os/Bottle.h>
@@ -54,6 +55,8 @@ private:
     std::vector<unsigned> m_humanToRobotMap;
 
    std::chrono::milliseconds m_tick,m_tock;
+   bool m_firstIteration;
+   double m_jointDiffThreshold;
 
 public:
    WholeBodyRetargeting();
