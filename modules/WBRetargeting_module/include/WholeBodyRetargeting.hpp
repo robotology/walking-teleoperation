@@ -54,7 +54,7 @@ private:
 
     std::vector<unsigned> m_humanToRobotMap;
 
-   std::chrono::milliseconds m_tick,m_tock;
+//   std::chrono::milliseconds m_tick,m_tock;
    bool m_firstIteration;
    double m_jointDiffThreshold;
 
@@ -96,7 +96,8 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
-    std::vector<double> split(const std::string& str, const std::string& delim);
+
+//    std::vector<double> split(const std::string& str, const std::string& delim);
 
 };
 
