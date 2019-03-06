@@ -47,7 +47,6 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
-    <parameters> --from dcm_walking_retargeting.ini </parameters>
   </module>
 
   <module>
@@ -60,16 +59,14 @@
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
     <parameters> --OCULUS::move_icub_using_joypad 0 </parameters>
-    <dependencies>
-      <port timeout="5.0">/transformServer/transforms:o</port>
-      <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
-    </dependencies>
   </module>
 
-    <module>
-      <name>WholeBodyRetargetingModule</name>
-      <node>icub-head</node>
-    </module>
+  <!-- Whole Body Retargeting using Xsens-->
+   <module>
+     <name>WholeBodyRetargetingModule</name>
+     <node>icub-head</node>
+   </module>
+
 
   <!-- Connections -->
   <!-- Hand retargeting  -->
@@ -170,10 +167,15 @@
     <protocol>shmem</protocol>
   </connection>
 
-
   <connection>
     <from>/HDE/HumanStateWrapper/state:o</from>
-    <to>/oculus/display/right:i</to>
+    <to>/XsensRetargeting//HumanStateWrapper/state:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/XsensRetargeting/jointPosition:o</from>
+    <to>/walking-coordinator/jointPosition:i</to>
     <protocol>shmem</protocol>
   </connection>
 
