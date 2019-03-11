@@ -4,10 +4,11 @@
 
 <application>
 
-  <name>DCM walking retargeting </name>
+  <name>DCM walking retargeting (Xsens)</name>
   <description>2D-DCM walking application.</description>
   <version>1.0</version>
   <authors>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
     <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
     <author email="yue.hu@iit.it">Yue Hu</author>
   </authors>
