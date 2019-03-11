@@ -224,6 +224,19 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    // configure torso retargeting, iff we use Xsens
+    if (m_useXsens)
+    {
+        m_torso = std::make_unique<TorsoRetargeting>();
+        yarp::os::Bottle& torsoOptions = rf.findGroup("TORSO_RETARGETING");
+        torsoOptions.append(generalOptions);
+        if (!m_torso->configure(torsoOptions, getName()))
+        {
+            yError() << "[OculusModule::configure] Unable to initialize the torso retargeting.";
+            return false;
+        }
+    }
+
     // configure fingers retargeting
     m_leftHandFingers = std::make_unique<FingersRetargeting>();
     yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
@@ -358,6 +371,12 @@ bool OculusModule::close()
     m_head->controlHelper()->close();
     m_rightHandFingers->controlHelper()->close();
     m_leftHandFingers->controlHelper()->close();
+
+    if (m_useXsens)
+    {
+        m_torso->controlHelper()->close();
+    }
+
     //    m_wholeBodyRetargeting->controlHelper()->close();
 
     m_joypadDevice.close();
@@ -473,24 +492,25 @@ bool OculusModule::getTransforms()
 bool OculusModule::getFeedbacks()
 {
 
-    //    if(m_useXsens)
-    //    {
-    //        if(!m_wholeBodyRetargeting->controlHelper()->getFeedback())
-    //        {
-    //            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders
-    //            feedback: WholeBodyRetargetting"; return false;
-    //        }
-    //        m_wholeBodyRetargeting->controlHelper()->updateTimeStamp();
-    //    }
-    //    else {
+    if (m_useXsens)
+    {
+        if (!m_torso->controlHelper()->getFeedback())
+        {
+            yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: "
+                        "TorsoRetargeting";
+            return false;
+        }
+        m_torso->controlHelper()->updateTimeStamp();
+    }
+
     if (!m_head->controlHelper()->getFeedback())
     {
-        yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders "
-                    "feedback: HeadRetargeting";
+        yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: "
+                    "HeadRetargeting";
         return false;
     }
     m_head->controlHelper()->updateTimeStamp();
-    //    }
+
     return true;
 }
 
@@ -648,13 +668,24 @@ bool OculusModule::updateModule()
     neckPitch = neckEncoders(0);
     neckRoll = neckEncoders(1);
     neckYaw = neckEncoders(2);
-    iDynTree::Rotation root_R_head
+
+    iDynTree::Rotation chest_R_head
         = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
+
+    iDynTree::Rotation root_R_chest = iDynTree::Rotation::Identity();
+    if (m_useXsens)
+    {
+        double torsoPitch, torsoRoll, torsoYaw;
+        yarp::sig::Vector torsoEncoders = m_torso->controlHelper()->jointEncoders();
+        torsoPitch = torsoEncoders(0);
+        torsoRoll = torsoEncoders(1);
+        torsoYaw = torsoEncoders(2);
+        root_R_chest = TorsoRetargeting::forwardKinematics(torsoPitch, torsoRoll, torsoYaw);
+    }
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
 
-    // inertial_R_head is used to simulate an imu required by the cam calibration
-    // application
-    iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_head;
+    // inertial_R_head is used to simulate an imu required by the cam calibration application
+    iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_chest * chest_R_head;
     iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
 
     imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(0)));
