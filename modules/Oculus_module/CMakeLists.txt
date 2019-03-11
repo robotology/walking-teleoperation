@@ -30,7 +30,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/RobotControlHelper.cpp
   src/RetargetingController.cpp
   src/OculusModule.cpp
-  #src/WholeBodyRetargeting.cpp
+  src/TorsoRetargeting.cpp
   )
 
 # set hpp files
@@ -41,7 +41,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/RobotControlHelper.hpp
   include/RetargetingController.hpp
   include/OculusModule.hpp
-  #include/WholeBodyRetargeting.hpp
+  include/TorsoRetargeting.hpp
   )
 
 # add include directories to the build.

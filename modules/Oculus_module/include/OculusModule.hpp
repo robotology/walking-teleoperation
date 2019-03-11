@@ -26,6 +26,7 @@
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
+#include <TorsoRetargeting.hpp>
 //#include <WholeBodyRetargeting.hpp>
 
 /**
@@ -96,6 +97,7 @@ private:
                                                     retargeting object. */
 //    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
 //                                                                        retargeting object. */
+        std::unique_ptr<TorsoRetargeting> m_torso; /**< Pointer to the torso retargeting object. */
 
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */
