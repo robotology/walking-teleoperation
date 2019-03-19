@@ -10,7 +10,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
-#include <WholeBodyRetargeting.hpp>
+#include <XsensRetargeting.hpp>
 //#include <OculusModule.hpp>
 
 int main(int argc, char* argv[])
