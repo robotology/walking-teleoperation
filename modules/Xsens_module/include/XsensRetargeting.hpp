@@ -1,5 +1,5 @@
-#ifndef WHOLEBODYRETARGETING_H
-#define WHOLEBODYRETARGETING_H
+#ifndef XSENSRETARGETING_H
+#define XSENSRETARGETING_H
 
 // std
 #include <memory>

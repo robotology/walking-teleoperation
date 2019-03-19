@@ -64,7 +64,7 @@
 
   <!-- Whole Body Retargeting using Xsens-->
    <module>
-     <name>WholeBodyRetargetingModule</name>
+     <name>XsensRetargetingModule</name>
      <node>icub-head</node>
    </module>
 
@@ -170,14 +170,12 @@
 
   <connection>
     <from>/HDE/HumanStateWrapper/state:o</from>
-    <to>/XsensRetargeting//HumanStateWrapper/state:i</to>
-    <protocol>udp</protocol>
+    <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
   </connection>
 
   <connection>
     <from>/XsensRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
-    <protocol>shmem</protocol>
   </connection>
 
 </application>
