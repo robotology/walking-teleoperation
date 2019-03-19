@@ -1,4 +1,4 @@
-#include <WholeBodyRetargeting.hpp>
+#include <XsensRetargeting.hpp>
 #include <Utils.hpp>
 #include <sstream>
 #include <iterator>

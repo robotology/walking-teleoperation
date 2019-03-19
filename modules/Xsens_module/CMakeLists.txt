@@ -3,7 +3,7 @@
 # Authors: Giulio Romualdi <giulio.romualdi@iit.it>
 
 # set target name
-set(EXE_TARGET_NAME WholeBodyRetargetingModule)
+set(EXE_TARGET_NAME XsensRetargetingModule)
 
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 mark_as_advanced(ENABLE_RPATH)
@@ -24,11 +24,11 @@ include(FindPackageHandleStandardArgs)
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
-  src/WholeBodyRetargeting.cpp)
+  src/XsensRetargeting.cpp)
 
 # set hpp files
 set(${EXE_TARGET_NAME}_HDR
-  include/WholeBodyRetargeting.hpp)
+  include/XsensRetargeting.hpp)
 
 # add include directories to the build.
 include_directories(
