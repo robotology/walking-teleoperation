@@ -223,20 +223,31 @@ bool WholeBodyRetargeting::getJointValues()
 
 //    yInfo() << "a";
 
-     for (unsigned j = 0; j < m_actuatedDOFs; j++)
+     if(!m_firstIteration)
      {
-         newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
-         if(!m_firstIteration)
-         {
+        for (unsigned j = 0; j < m_actuatedDOFs; j++)
+        {
+             newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
              if( std::abs(newJointValues(j)-m_jointValues(j)) <m_jointDiffThreshold   )
-             {   m_jointValues(j)=newJointValues(j);  }
+             {
+                 m_jointValues(j)=newJointValues(j);  
+             }
+             else
+             {
+                  yWarning()<< "spike in data: joint[ "<<j<<" ] , old data: "<<m_jointValues(j)<<" , new data:"<<newJointValues(j);
+             }
          }
-         else
-         {
-            yInfo()<<"[WholeBodyRetargeting::getJointValues] Whole Body Retargeting Module is Running ...";
-             m_firstIteration=false;
+		 yInfo()<<"{ "	<<newJointValues(0)<<" , "<<m_jointValues(0)<<" } , { "<<newJointValues(1)<<" , "<<m_jointValues(1)<<" }";
+     }
+     else
+     {
+        yInfo()<<"[XsensRetargeting::getJointValues] Whole Body Retargeting Module is Running ...";
+        m_firstIteration=false;
+        for (unsigned j = 0; j < m_actuatedDOFs; j++)
+        {
+             newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
              m_jointValues(j)=newJointValues(j);
-         }
+        }
      }
 
 //     yInfo() << "b";
