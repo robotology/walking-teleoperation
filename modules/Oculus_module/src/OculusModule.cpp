@@ -225,17 +225,23 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     // configure torso retargeting, iff we use Xsens
+
+    yInfo() << "[OculusModule::configure] initialize the torso!";
     if (m_useXsens)
     {
         m_torso = std::make_unique<TorsoRetargeting>();
+        yInfo() << "--1";
         yarp::os::Bottle& torsoOptions = rf.findGroup("TORSO_RETARGETING");
+        yInfo() << "--2";
         torsoOptions.append(generalOptions);
+        yInfo() << "--3";
         if (!m_torso->configure(torsoOptions, getName()))
         {
             yError() << "[OculusModule::configure] Unable to initialize the torso retargeting.";
             return false;
         }
     }
+    yInfo() << "[OculusModule::configure] finish the torso!";
 
     // configure fingers retargeting
     m_leftHandFingers = std::make_unique<FingersRetargeting>();

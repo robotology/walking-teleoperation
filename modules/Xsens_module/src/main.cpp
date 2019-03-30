@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     rf.configure(argc, argv);
 
     // create the module
-    WholeBodyRetargeting module;
+    XsensRetargeting module;
 
     return module.runModule(rf);
 }
