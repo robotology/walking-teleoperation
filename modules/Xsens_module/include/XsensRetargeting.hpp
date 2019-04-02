@@ -32,7 +32,7 @@ public:
 
 };
 
-class WholeBodyRetargeting: public yarp::os::RFModule
+class XsensRetargeting: public yarp::os::RFModule
 {
 private:
     /** Minimum jerk trajectory smoother for the desired whole body joints */
@@ -59,8 +59,8 @@ private:
    double m_jointDiffThreshold;
 
 public:
-   WholeBodyRetargeting();
-   ~WholeBodyRetargeting();
+   XsensRetargeting();
+   ~XsensRetargeting();
    /*
     * Configure the whole body retargeting retargeting.
     * @param config reference to a resource finder object.

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iterator>
 
-//std::vector<double> WholeBodyRetargeting::split(const std::string& str, const std::string& delim)
+//std::vector<double> XsensRetargeting::split(const std::string& str, const std::string& delim)
 //{
 //    std::vector<double> tokens;
 //    size_t prev = 0, pos = 0;
@@ -18,16 +18,16 @@
 //    while (pos < str.length() && prev < str.length());
 //    return tokens;
 //}
-WholeBodyRetargeting::WholeBodyRetargeting(){};
+XsensRetargeting::XsensRetargeting(){};
 
-WholeBodyRetargeting::~WholeBodyRetargeting(){};
+XsensRetargeting::~XsensRetargeting(){};
 
-bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
+bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
 {
     // check if the configuration file is empty
     if (rf.isNull())
     {
-        yError() << "[WholeBodyRetargeting::configure] Empty configuration for the OculusModule application.";
+        yError() << "[XsensRetargeting::configure] Empty configuration for the OculusModule application.";
         return false;
     }
 
@@ -39,7 +39,7 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     std::string name;
     if (!YarpHelper::getStringFromSearchable(rf, "name", name))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to get a string from a searchable";
+        yError() << "[XsensRetargeting::configure] Unable to get a string from a searchable";
         return false;
     }
     setName(name.c_str());
@@ -56,7 +56,7 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     double smoothingTime;
     if (!YarpHelper::getDoubleFromSearchable(rf, "smoothingTime", smoothingTime))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to find the whole body smoothing time";
+        yError() << "[XsensRetargeting::configure] Unable to find the whole body smoothing time";
         return false;
     }
 
@@ -65,13 +65,13 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     yarp::os::Value* axesListYarp;
     if (!rf.check("joints_list", axesListYarp))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to find joints_list into config file.";
+        yError() << "[XsensRetargeting::configure] Unable to find joints_list into config file.";
         return false;
     }
 
     if (!YarpHelper::yarpListToStringVector(axesListYarp, m_robotJointsListNames))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to convert yarp list into a "
+        yError() << "[XsensRetargeting::configure] Unable to convert yarp list into a "
                     "vector of strings.";
         return false;
     }
@@ -86,21 +86,21 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     m_WBTrajectorySmoother->init(buff);
     m_jointValues.resize(m_actuatedDOFs,0.0);
 
-    yInfo()<<"WholeBodyRetargeting::configure:  smoothingTime: "<<smoothingTime;
-    yInfo()<<"WholeBodyRetargeting::configure:  NoOfJoints: "<<m_actuatedDOFs;
+    yInfo()<<"XsensRetargeting::configure:  smoothingTime: "<<smoothingTime;
+    yInfo()<<"XsensRetargeting::configure:  NoOfJoints: "<<m_actuatedDOFs;
 
 
     // check the human joints name list
     yarp::os::Value* humanAxesListYarp;
     if (!rf.check("human_joint_list_stream", humanAxesListYarp))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to find human_joint_list_stream into config file.";
+        yError() << "[XsensRetargeting::configure] Unable to find human_joint_list_stream into config file.";
         return false;
     }
 
     if (!YarpHelper::yarpListToStringVector(humanAxesListYarp, m_humanJointsListName))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to convert yarp list into a "
+        yError() << "[XsensRetargeting::configure] Unable to convert yarp list into a "
                     "vector of strings.";
         return false;
     }
@@ -119,30 +119,30 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     std::string portName;
     if (!YarpHelper::getStringFromSearchable(rf, "wholeBodyJointsPort", portName))
     {
-        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        yError() << "[XsensRetargeting::configure] Unable to get a string from a searchable";
         return false;
     }
     if (!m_wholeBodyHumanJointsPort.open("/" + getName() + portName))
     {
-        yError() << "[OculusModule::configure] " << portName << " port already open.";
+        yError() << "[XsensRetargeting::configure] " << portName << " port already open.";
         return false;
     }
     //DEL Later
 //    if( !yarp::os::Network::connect("/HDE/HumanStateWrapper/state:o","/" + getName() + portName))
 //    {
-//        yError() << "[OculusModule::configure] could nor connect";
+//        yError() << "[XsensRetargeting::configure] could nor connect";
 //        return false;
 //    }
 
 
     if (!YarpHelper::getStringFromSearchable(rf, "controllerPort", portName))
     {
-        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        yError() << "[XsensRetargeting::configure] Unable to get a string from a searchable";
         return false;
     }
     if (!m_wholeBodyHumanSmoothedJointsPort.open("/" + getName() + portName))
     {
-        yError() << "[OculusModule::configure] Unable to open the port " << portName;
+        yError() << "[XsensRetargeting::configure] Unable to open the port " << portName;
         return false;
     }
 
@@ -181,7 +181,7 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     double jointThreshold;
     if (!YarpHelper::getDoubleFromSearchable(rf, "jointDifferenceThreshold", jointThreshold))
     {
-        yError() << "[WholeBodyRetargeting::configure] Unable to find the whole body joint difference threshold.";
+        yError() << "[XsensRetargeting::configure] Unable to find the whole body joint difference threshold.";
         return false;
     }
     m_jointDiffThreshold=jointThreshold;
@@ -191,20 +191,20 @@ bool WholeBodyRetargeting::configure(yarp::os::ResourceFinder& rf)
     yInfo()<<" Joint threshold: "<<m_jointDiffThreshold;
 
 
-   yInfo()<<" WholeBodyRetargeting::configure done!";
+   yInfo()<<" XsensRetargeting::configure done!";
     return true;
 
 }
-bool WholeBodyRetargeting::getJointValues()
+bool XsensRetargeting::getJointValues()
 {
        yarp::os::Bottle* desiredHumanJoints=m_wholeBodyHumanJointsPort.read(false);
 
     if(desiredHumanJoints == NULL)
     {
-       //yError()<< "[WholeBodyRetargeting::getJointValues()] desiredWBJoints size: 0";
+       //yError()<< "[XsensRetargeting::getJointValues()] desiredWBJoints size: 0";
        return true;
     }
-    //yInfo()<< "[WholeBodyRetargeting::setJointValues()] desiredWBJoints size: "<<desiredHumanJoints->size();
+    //yInfo()<< "[XsensRetargeting::setJointValues()] desiredWBJoints size: "<<desiredHumanJoints->size();
 //    printf("Received %s\n", desiredHumanJoints->toString().c_str());
     //humanJointValues=desiredHumanJoints->get(0).toString().c_str();
 //    printf("Received %s\n", desiredHumanJoints->get(0).toString().c_str());
@@ -237,7 +237,7 @@ bool WholeBodyRetargeting::getJointValues()
                   yWarning()<< "spike in data: joint[ "<<j<<" ] , old data: "<<m_jointValues(j)<<" , new data:"<<newJointValues(j);
              }
          }
-		 yInfo()<<"{ "	<<newJointValues(0)<<" , "<<m_jointValues(0)<<" } , { "<<newJointValues(1)<<" , "<<m_jointValues(1)<<" }";
+         yInfo()<<"joint [0]: "<<m_robotJointsListNames[0]<<" : " <<newJointValues(0)<<" , "<<m_jointValues(0);
      }
      else
      {
@@ -273,7 +273,7 @@ bool WholeBodyRetargeting::getJointValues()
     return true;
 }
 
-bool WholeBodyRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJointValues)
+bool XsensRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJointValues)
 {
 
 
@@ -283,23 +283,24 @@ bool WholeBodyRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJoi
 //    yDebug() << "IK took"
 //          << std::chrono::duration_cast<std::chrono::milliseconds>(tock - tick).count() << "ms";
 
+    return true;
+}
 
-    return true;}
-
-double WholeBodyRetargeting::getPeriod()
+double XsensRetargeting::getPeriod()
 {
 
      return m_dT;
 }
 
-bool WholeBodyRetargeting::updateModule()
+bool XsensRetargeting::updateModule()
 {
 
 //    std::chrono::milliseconds tick=std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
     getJointValues();
 
+    // DEL probably this check here in every step
     if(m_wholeBodyHumanJointsPort.isClosed()) {
-        yError() << "[WholeBodyRetargeting::updateModule] m_wholeBodyHumanJointsPort port is closed";
+        yError() << "[XsensRetargeting::updateModule] m_wholeBodyHumanJointsPort port is closed";
         return false;
     }
     yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
@@ -309,12 +310,10 @@ bool WholeBodyRetargeting::updateModule()
 //    std::chrono::milliseconds tock=std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch());
 //    yDebug() << "update rate: "<< (tock-tick).count() << "ms";
 
-
-
     return true;
 }
 
-bool WholeBodyRetargeting::close()
+bool XsensRetargeting::close()
 {
     return true;
 
