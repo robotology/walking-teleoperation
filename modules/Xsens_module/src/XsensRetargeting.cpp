@@ -230,14 +230,16 @@ bool XsensRetargeting::getJointValues()
              newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
              if( std::abs(newJointValues(j)-m_jointValues(j)) <m_jointDiffThreshold   )
              {
+		if(j==0)
+                {yInfo()<<"joint [0]: "<<m_robotJointsListNames[0]<<" : new: " <<newJointValues(0)<<" , old: "<<m_jointValues(0);}
                  m_jointValues(j)=newJointValues(j);  
              }
              else
              {
-                  yWarning()<< "spike in data: joint[ "<<j<<" ] , old data: "<<m_jointValues(j)<<" , new data:"<<newJointValues(j);
+                  yWarning()<< "spike in data: joint[ "<<j<<" ] "<<m_robotJointsListNames[j]<<", old data: "<<m_jointValues(j)<<" , new data:"<<newJointValues(j);
              }
          }
-         yInfo()<<"joint [0]: "<<m_robotJointsListNames[0]<<" : " <<newJointValues(0)<<" , "<<m_jointValues(0);
+
      }
      else
      {
@@ -299,10 +301,11 @@ bool XsensRetargeting::updateModule()
     getJointValues();
 
     // DEL probably this check here in every step
-    if(m_wholeBodyHumanJointsPort.isClosed()) {
+/*    if(m_wholeBodyHumanJointsPort.isClosed()) {
         yError() << "[XsensRetargeting::updateModule] m_wholeBodyHumanJointsPort port is closed";
         return false;
     }
+*/
     yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
     getSmoothedJointValues(refValues);
     m_wholeBodyHumanSmoothedJointsPort.write();
