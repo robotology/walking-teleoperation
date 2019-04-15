@@ -33,7 +33,6 @@ private:
     /** Minimum jerk trajectory smoother for the desired head joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
 
-
     // In order to understand the transform defined the following frames has to be defined
     // oculusInertial frame: it is the inertial frame of the oculus and it is placed in the
     //                       initial position of the ovrheadset. The z axis points upward while
@@ -78,8 +77,10 @@ public:
      * @param neckRoll neck roll angle expressed in radiant
      * @param neckYaw neck yaw angle expressed in radiant
      */
-    static void inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
-                                  double& neckRoll, double& neckYaw);
+    static void inverseKinematics(const iDynTree::Rotation& chest_R_head,
+                                  double& neckPitch,
+                                  double& neckRoll,
+                                  double& neckYaw);
 
     /**
      * Evaluate the forward kinematics of the head
@@ -90,8 +91,8 @@ public:
      * @param neckYaw neck yaw angle expressed in radiant
      * @return rotation matrix of the head with respect the chest frame
      */
-    static iDynTree::Rotation forwardKinematics(const double& neckPitch, const double& neckRoll,
-                                                const double& neckYaw);
+    static iDynTree::Rotation
+    forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
 
     /**
      * Move the neck joints according to the desired head pose

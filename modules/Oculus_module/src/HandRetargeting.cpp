@@ -66,15 +66,14 @@ void HandRetargeting::setPlayerOrientation(const double& playerOrientation)
 
 void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformation)
 {
-     iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
+    iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
 }
 
 void HandRetargeting::evaluateDesiredHandPose(yarp::sig::Vector& handPose)
 {
-    m_teleopRobotFrame_T_handRobotFrame = m_teleopRobotFrame_T_teleopFrame
-                                                 * m_oculusInertial_T_teleopFrame.inverse()
-                                                 * m_oculusInertial_T_handOculusFrame
-                                                 * m_handOculusFrame_T_handRobotFrame;
+    m_teleopRobotFrame_T_handRobotFrame
+        = m_teleopRobotFrame_T_teleopFrame * m_oculusInertial_T_teleopFrame.inverse()
+          * m_oculusInertial_T_handOculusFrame * m_handOculusFrame_T_handRobotFrame;
 
     // probably we should avoid to use roll pitch and yaw. A possible solution
     // is to use quaternion or directly SE(3).

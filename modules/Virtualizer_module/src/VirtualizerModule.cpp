@@ -11,8 +11,8 @@
 #include <cmath>
 
 // YARP
-#include <yarp/os/LogStream.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 
 #include "Utils.hpp"
@@ -117,7 +117,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     // open RPC port for external command
     std::string rpcPortName = "/" + getName() + "/rpc";
     this->yarp().attachAsServer(this->m_rpcServerPort);
-    if(!m_rpcServerPort.open(rpcPortName))
+    if (!m_rpcServerPort.open(rpcPortName))
     {
         yError() << "[configure] Could not open" << rpcPortName << "RPC port.";
         return false;
@@ -133,7 +133,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     // this is because the virtualizer is not ready
     yarp::os::Time::delay(0.5);
 
-	// reset player orientation
+    // reset player orientation
     m_cvirtDeviceID->ResetPlayerOrientation();
 
     // reset some quanties
@@ -142,7 +142,6 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     m_oldPlayerYaw *= 360.0f;
     m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
     m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
-
 
     return true;
 }

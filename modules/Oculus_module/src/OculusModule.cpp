@@ -20,7 +20,6 @@
 #include <OculusModule.hpp>
 #include <Utils.hpp>
 
-
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
     yarp::os::Property options;
@@ -178,7 +177,8 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     // check if the configuration file is empty
     if (rf.isNull())
     {
-        yError() << "[OculusModule::configure] Empty configuration for the OculusModule application.";
+        yError()
+            << "[OculusModule::configure] Empty configuration for the OculusModule application.";
         return false;
     }
 
@@ -318,7 +318,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-
     m_playerOrientation = 0;
     m_robotYaw = 0;
 
@@ -374,7 +373,7 @@ bool OculusModule::getTransforms()
         // head
         yarp::os::Bottle* desiredHeadOrientation = NULL;
 
-        iDynTree::Vector3  desiredHeadOrientationVector;
+        iDynTree::Vector3 desiredHeadOrientationVector;
         desiredHeadOrientation = m_oculusOrientationPort.read(false);
         if (desiredHeadOrientation != NULL)
         {
@@ -385,17 +384,17 @@ bool OculusModule::getTransforms()
             // Notice that the data coming from the port are written in the following order:
             // [ pitch, -roll, yaw].
             iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
-              = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
-                                                          desiredHeadOrientationVector(0),
-                                                          desiredHeadOrientationVector(2)));
+                = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
+                                                            desiredHeadOrientationVector(0),
+                                                            desiredHeadOrientationVector(2)));
         }
     } else
     {
         if (!m_frameTransformInterface->getTransform(
                 m_headFrameName, m_rootFrameName, m_oculusRoot_T_headOculus))
         {
-            yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_headFrameName << " to "
-                     << m_rootFrameName << "transformation";
+            yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_headFrameName
+                     << " to " << m_rootFrameName << "transformation";
             return false;
         }
     }
@@ -415,16 +414,16 @@ bool OculusModule::getTransforms()
     if (!m_frameTransformInterface->getTransform(
             m_leftHandFrameName, m_rootFrameName, m_oculusRoot_T_lOculus))
     {
-        yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_leftHandFrameName << " to "
-                 << m_rootFrameName << "transformation";
+        yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_leftHandFrameName
+                 << " to " << m_rootFrameName << "transformation";
         return false;
     }
 
     if (!m_frameTransformInterface->getTransform(
             m_rightHandFrameName, m_rootFrameName, m_oculusRoot_T_rOculus))
     {
-        yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_rightHandFrameName << " to "
-                 << m_rootFrameName << "transformation";
+        yError() << "[OculusModule::getTransforms] Unable to evaluate the " << m_rightHandFrameName
+                 << " to " << m_rootFrameName << "transformation";
         return false;
     }
 
@@ -450,7 +449,7 @@ bool OculusModule::updateModule()
         return false;
     }
 
-    if(m_state == OculusFSM::Running)
+    if (m_state == OculusFSM::Running)
     {
         // get the transformation form the oculus
         if (!getTransforms())
@@ -474,7 +473,8 @@ bool OculusModule::updateModule()
 
         m_head->setPlayerOrientation(m_playerOrientation);
         m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
-        // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0), desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
+        // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
+        // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
         if (!m_head->move())
         {
             yError() << "[updateModule::updateModule] unable to move the head";
@@ -540,8 +540,7 @@ bool OculusModule::updateModule()
             cmd.addDouble(y);
             m_rpcWalkingClient.write(cmd, outcome);
         }
-    }
-    else if (m_state == OculusFSM::Configured)
+    } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
         std::vector<float> buttonMapping(2);
@@ -583,7 +582,8 @@ bool OculusModule::updateModule()
     neckPitch = neckEncoders(0);
     neckRoll = neckEncoders(1);
     neckYaw = neckEncoders(2);
-    iDynTree::Rotation root_R_head = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
+    iDynTree::Rotation root_R_head
+        = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
     iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
 
     // inertial_R_head is used to simulate an imu required by the cam calibration application

@@ -31,7 +31,8 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     m_fingersScaling.resize(fingersJoints);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersScaling", m_fingersScaling))
     {
-        yError() << "[FingersRetargeting::configure] Initialization failed while reading fingersScaling vector.";
+        yError() << "[FingersRetargeting::configure] Initialization failed while reading "
+                    "fingersScaling vector.";
         return false;
     }
 
@@ -52,11 +53,12 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize please call configure() method";
+        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize "
+                    "please call configure() method";
         return false;
     }
 
-    if(m_controlHelper->isVelocityControlUsed())
+    if (m_controlHelper->isVelocityControlUsed())
         m_desiredJointValue = fingersVelocity * m_fingersScaling;
     else
         m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);

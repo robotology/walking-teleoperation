@@ -34,7 +34,8 @@ class RobotControlHelper
 
     int m_actuatedDOFs; /**< Number of the actuated DoF */
 
-    std::vector<std::string> m_axesList; /**< Vector containing the name of the controlled joints. */
+    std::vector<std::string>
+        m_axesList; /**< Vector containing the name of the controlled joints. */
 
     yarp::dev::IPreciselyTimed* m_timedInterface{nullptr};
     yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */
@@ -84,8 +85,7 @@ public:
      * problem in the configuration phase
      * @return true / false in case of success / failure
      */
-    bool configure(const yarp::os::Searchable& config, const std::string& name,
-                   bool isMandatory);
+    bool configure(const yarp::os::Searchable& config, const std::string& name, bool isMandatory);
 
     /**
      * Update the time stamp

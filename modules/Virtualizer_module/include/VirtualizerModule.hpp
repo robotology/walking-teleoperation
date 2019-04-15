@@ -27,7 +27,7 @@
 /**
  * RFModule useful to handle the Virtualizere
  */
-class VirtualizerModule : public yarp::os::RFModule,  public VirtualizerCommands
+class VirtualizerModule : public yarp::os::RFModule, public VirtualizerCommands
 {
 private:
     double m_dT; /**< RFModule period. */
@@ -37,7 +37,8 @@ private:
     double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
                               previous time step. */
 
-    yarp::os::Port m_rpcServerPort; /**< Port used to send command to the virtualizer application. */
+    yarp::os::Port
+        m_rpcServerPort; /**< Port used to send command to the virtualizer application. */
 
     yarp::os::RpcClient m_rpcPort; /**< RPC port. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Used to send the player

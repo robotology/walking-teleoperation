@@ -38,7 +38,11 @@ private:
     double m_dT; /**< Module period. */
 
     /** Oculus Finite state machine */
-    enum class OculusFSM {Configured, Running};
+    enum class OculusFSM
+    {
+        Configured,
+        Running
+    };
     OculusFSM m_state; /**< State of the OculusFSM */
 
     // joypad utils
@@ -71,8 +75,10 @@ private:
     std::string m_rootFrameName; /**< Name of the root frame used in the transform server */
     std::string m_headFrameName; /**< Name of the head frame used in the transform server (NOT
                                     SUPPORTED BY YARP)*/
-    std::string m_leftHandFrameName; /**< Name of the left hand frame used in the transform server */
-    std::string m_rightHandFrameName; /**< Name of the right hand frame used in the transform server */
+    std::string
+        m_leftHandFrameName; /**< Name of the left hand frame used in the transform server */
+    std::string
+        m_rightHandFrameName; /**< Name of the right hand frame used in the transform server */
 
     yarp::dev::PolyDriver m_joypadDevice; /**< Joypad polydriver. */
     yarp::dev::IJoypadController* m_joypadControllerInterface{nullptr}; /**< joypad interface. */
@@ -102,7 +108,8 @@ private:
 
     yarp::os::RpcClient m_rpcWalkingClient; /**< Rpc client used for sending command to the walking
                                                controller */
-    yarp::os::RpcClient m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
+    yarp::os::RpcClient
+        m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 

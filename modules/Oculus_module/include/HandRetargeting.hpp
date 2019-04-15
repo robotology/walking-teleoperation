@@ -25,7 +25,6 @@
 class HandRetargeting
 {
 private:
-
     // In order to understand the transform defined the following frames has to be defined
     // oculusInertial frame: it is the inertial frame of the oculus and it is placed in the
     //                       initial position of the ovrheadset. The z axis points upward while

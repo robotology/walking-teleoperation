@@ -17,8 +17,10 @@
 
 // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
 // Section 2.3
-void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
-                                        double& neckRoll, double& neckYaw)
+void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head,
+                                        double& neckPitch,
+                                        double& neckRoll,
+                                        double& neckYaw)
 {
     // YXZ decomposition
     if (chest_R_head(1, 2) < 1)
@@ -46,12 +48,13 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, 
     return;
 }
 
-iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch, const double& neckRoll,
+iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch,
+                                                      const double& neckRoll,
                                                       const double& neckYaw)
 {
     iDynTree::Rotation chest_R_head;
     chest_R_head = iDynTree::Rotation::RotY(neckPitch) * iDynTree::Rotation::RotX(-neckRoll)
-        * iDynTree::Rotation::RotZ(neckYaw);
+                   * iDynTree::Rotation::RotZ(neckYaw);
 
     return chest_R_head;
 }
@@ -102,7 +105,8 @@ void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
     m_oculusInertial_R_teleopFrame = iDynTree::Rotation::RotZ(-playerOrientation);
 }
 
-void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus)
+void HeadRetargeting::setDesiredHeadOrientation(
+    const yarp::sig::Matrix& oculusInertial_T_headOculus)
 {
     // get the rotation matrix
     iDynTree::toEigen(m_oculusInertial_R_headOculus)
@@ -111,15 +115,16 @@ void HeadRetargeting::setDesiredHeadOrientation(const yarp::sig::Matrix& oculusI
 
 bool HeadRetargeting::move()
 {
-    m_teleopFrame_R_headOculus = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
+    m_teleopFrame_R_headOculus
+        = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
 
     // notice here the following assumption is done:
     // desiredNeckJoint(0) = neckPitch
     // desiredNeckJoint(1) = neckRoll
     // desiredNeckJoint(2) = neckYaw
     yarp::sig::Vector desiredNeckJoint(3);
-    inverseKinematics(m_teleopFrame_R_headOculus, desiredNeckJoint(0),
-                      desiredNeckJoint(1), desiredNeckJoint(2));
+    inverseKinematics(
+        m_teleopFrame_R_headOculus, desiredNeckJoint(0), desiredNeckJoint(1), desiredNeckJoint(2));
 
     // Notice: this can generate problems when the inverse kinematics return angles
     // near the singularity. it would be nice to implement a smoother in SO(3).

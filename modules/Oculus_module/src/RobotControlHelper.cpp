@@ -14,7 +14,8 @@
 #include <RobotControlHelper.hpp>
 #include <Utils.hpp>
 
-bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std::string& name,
+bool RobotControlHelper::configure(const yarp::os::Searchable& config,
+                                   const std::string& name,
                                    bool isMandatory)
 {
     m_isMandatory = isMandatory;
@@ -163,8 +164,7 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
 
     // set the control interface
     std::vector<int> controlModes(m_actuatedDOFs, controlMode);
-    if (!m_controlModeInterface->setControlModes(controlModes.data())
-        && m_isMandatory)
+    if (!m_controlModeInterface->setControlModes(controlModes.data()) && m_isMandatory)
     {
         yError()
             << "[RobotControlHelper::switchToControlMode] Error while setting the controlMode.";
@@ -190,12 +190,11 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
     }
 
     // convert radiant to degree
-    for(int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_actuatedDOFs; i++)
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
 
     // set desired position
-    if (!m_positionDirectInterface->setPositions(m_desiredJointValue.data())
-        && m_isMandatory)
+    if (!m_positionDirectInterface->setPositions(m_desiredJointValue.data()) && m_isMandatory)
     {
         yError() << "[RobotControlHelper::setDirectPositionReferences] Error while setting the "
                     "desired position.";
@@ -207,13 +206,13 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
 
 bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredVelocity)
 {
-    if(m_velocityInterface == nullptr)
+    if (m_velocityInterface == nullptr)
     {
         yError() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
         return false;
     }
 
-    if(desiredVelocity.size() != m_actuatedDOFs)
+    if (desiredVelocity.size() != m_actuatedDOFs)
     {
         yError() << "[RobotControlHelper::setVelocityReferences] Dimension mismatch between "
                     "desired velocity vector and the number of controlled joints.";
@@ -221,23 +220,23 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
     }
 
     // convert radiant/s  to degree/s
-    for(int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_actuatedDOFs; i++)
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
 
     // since the velocity interface use a minimum jerk trajectory a very high acceleration is set in
     // order to use it as velocity "direct" interface
     yarp::sig::Vector dummy(m_actuatedDOFs, std::numeric_limits<double>::max());
-    if(!m_velocityInterface->setRefAccelerations(dummy.data())
-       && m_isMandatory)
+    if (!m_velocityInterface->setRefAccelerations(dummy.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired acceleration.";
+        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired "
+                    "acceleration.";
         return false;
     }
 
-    if(!m_velocityInterface->velocityMove(m_desiredJointValue.data())
-       && m_isMandatory)
+    if (!m_velocityInterface->velocityMove(m_desiredJointValue.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired velocity.";
+        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired "
+                    "velocity.";
         return false;
     }
     return true;
@@ -253,8 +252,7 @@ void RobotControlHelper::updateTimeStamp()
 
 bool RobotControlHelper::getFeedback()
 {
-    if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()) &&
-        m_isMandatory)
+    if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()) && m_isMandatory)
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get joint position";
         return false;
@@ -312,21 +310,20 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
         // get position limits
         if (!m_limitsInterface->getLimits(i, &minLimitInDegree, &maxLimitInDegree))
         {
-            if(m_isMandatory)
+            if (m_isMandatory)
             {
                 yError() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
                          << " joint limits.";
                 return false;
-            }
-            else
+            } else
             {
-                limits(i,0) = m_positionFeedbackInRadians(i);
-                limits(i,1) = m_positionFeedbackInRadians(i);
-                yWarning() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
-                           << " joint limits. The current joint value is used as lower and upper limits.";
+                limits(i, 0) = m_positionFeedbackInRadians(i);
+                limits(i, 1) = m_positionFeedbackInRadians(i);
+                yWarning()
+                    << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                    << " joint limits. The current joint value is used as lower and upper limits.";
             }
-        }
-        else
+        } else
         {
             limits(i, 0) = iDynTree::deg2rad(minLimitInDegree);
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
@@ -342,7 +339,8 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
     case VOCAB_CM_POSITION_DIRECT:
         if (!setDirectPositionReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint position";
+            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                        "position";
             return false;
         }
         break;
@@ -350,7 +348,8 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint velocity";
+            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                        "velocity";
             return false;
         }
         break;
