@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # Authors: Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
 #          Giulio Romualdi <giulio.romualdi@iit.it>
-#          
+#
 # set target name
 
 find_package(CybSDK REQUIRED)
@@ -36,13 +36,20 @@ set(${EXE_TARGET_NAME}_HDR
   include/VirtualizerModule.hpp
   )
 
+# Thrift
+set(${EXE_TARGET_NAME}_THRIFT_HDR
+  thrift/virtualizerCommand.thrift
+  )
+yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_SRC ${${EXE_TARGET_NAME}_THRIFT_HDR})
+
 # add include directories to the build.
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/include)
 
 # add an executable to the project using the specified source files.
-add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
+add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR}
+  ${${EXE_TARGET_NAME}_THRIFT_SRC})
 
 target_link_libraries(${EXE_TARGET_NAME}
   ${YARP_LIBRARIES}
@@ -51,9 +58,3 @@ target_link_libraries(${EXE_TARGET_NAME}
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
 install(FILES ${CybSDK_LIBRARIES} DESTINATION bin)
-
-#add_custom_command(
-#       TARGET  ${EXE_TARGET_NAME} PRE_BUILD
-#		COMMAND ${CMAKE_COMMAND} -E copy "${CybSDK_DIR}/Plugins/x64/CybSDK.dll"
-#		bin
-#		)

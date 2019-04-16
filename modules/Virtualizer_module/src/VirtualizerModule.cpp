@@ -7,12 +7,12 @@
  * @date 2018
  */
 
-// YARP
-
 #define _USE_MATH_DEFINES
+#include <cmath>
 
-#include "yarp/os/LogStream.h"
+// YARP
 #include <yarp/os/Bottle.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 
 #include "Utils.hpp"
@@ -32,6 +32,7 @@ bool VirtualizerModule::configureVirtualizer()
                 yError() << "[configureVirtualizer] Unable to open the device";
                 return false;
             }
+
             return true;
         }
         // wait one millisecond
@@ -45,7 +46,6 @@ bool VirtualizerModule::configureVirtualizer()
 bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
 {
     yarp::os::Value* value;
-    velocity_factor = 2;
     // check if the configuration file is empty
     if (rf.isNull())
     {
@@ -67,6 +67,12 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
 
     // set deadzone
     if (!YarpHelper::getDoubleFromSearchable(rf, "deadzone", m_deadzone))
+    {
+        yError() << "[configure] Unable to get a double from a searchable";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(rf, "velocityScaling", m_velocityScaling))
     {
         yError() << "[configure] Unable to get a double from a searchable";
         return false;
@@ -97,7 +103,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    if (!YarpHelper::getStringFromSearchable(rf, "rpcPort_name", portName))
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
     {
         yError() << "[configure] Unable to get a string from a searchable";
         return false;
@@ -105,6 +111,15 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_rpcPort.open("/" + getName() + portName))
     {
         yError() << "[configure] " << portName << " port already open.";
+        return false;
+    }
+
+    // open RPC port for external command
+    std::string rpcPortName = "/" + getName() + "/rpc";
+    this->yarp().attachAsServer(this->m_rpcServerPort);
+    if (!m_rpcServerPort.open(rpcPortName))
+    {
+        yError() << "[configure] Could not open" << rpcPortName << "RPC port.";
         return false;
     }
 
@@ -118,14 +133,16 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     // this is because the virtualizer is not ready
     yarp::os::Time::delay(0.5);
 
+    // reset player orientation
+    m_cvirtDeviceID->ResetPlayerOrientation();
+
     // reset some quanties
     m_robotYaw = 0;
-    oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-    oldPlayerYaw *= 360.0f;
-    oldPlayerYaw = oldPlayerYaw * M_PI / 180;
-    oldPlayerYaw = Angles::normalizeAngle(oldPlayerYaw);
+    m_oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+    m_oldPlayerYaw *= 360.0f;
+    m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
+    m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
 
-    yInfo() << "First player yaw: " << oldPlayerYaw;
     return true;
 }
 
@@ -140,6 +157,7 @@ bool VirtualizerModule::close()
     m_rpcPort.close();
     m_robotOrientationPort.close();
     m_playerOrientationPort.close();
+    m_rpcServerPort.close();
 
     // deallocate memory
     delete m_cvirtDeviceID;
@@ -149,6 +167,8 @@ bool VirtualizerModule::close()
 
 bool VirtualizerModule::updateModule()
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
+
     // get data from virtualizer
     double playerYaw;
     playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
@@ -165,20 +185,20 @@ bool VirtualizerModule::updateModule()
         auto vector = *tmp;
         m_robotYaw = -Angles::normalizeAngle(vector[0]);
     }
-    if (fabs(Angles::shortestAngularDistance(playerYaw, oldPlayerYaw)) > 0.15)
+    if (std::fabs(Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)) > 0.15)
     {
         yError() << "Virtualizer misscalibrated or disconnected";
         return false;
     }
-    oldPlayerYaw = playerYaw;
+    m_oldPlayerYaw = playerYaw;
     // error between the robot orientation and the player orientation
     double angulareError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
 
     // get the player speed
     double speedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
 
-    double x = speedData * cos(angulareError) * velocity_factor;
-    double y = speedData * sin(angulareError) * velocity_factor;
+    double x = speedData * cos(angulareError) * m_velocityScaling;
+    double y = speedData * sin(angulareError) * m_velocityScaling;
 
     // send data to the walking module
     yarp::os::Bottle cmd, outcome;
@@ -194,6 +214,18 @@ bool VirtualizerModule::updateModule()
     m_playerOrientationPort.write();
 
     return true;
+}
+
+void VirtualizerModule::resetPlayerOrientation()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_cvirtDeviceID->ResetPlayerOrientation();
+
+    m_oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+    m_oldPlayerYaw *= 360.0f;
+    m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
+    m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
+    return;
 }
 
 double VirtualizerModule::threshold(const double& input)

@@ -25,6 +25,9 @@ foreach (dir ${subdirs})
   yarp_install(FILES ${scripts} DESTINATION ${YARP_ROBOTS_INSTALL_DIR}/${dir})
 endforeach ()
 
+file(GLOB scripts scripts/*.xml)
+yarp_install(FILES ${scripts} DESTINATION ${YARP_APPLICATIONS_INSTALL_DIR})
+
 if (MSVC)
   yarp_install(DIRECTORY virtualizerRetargeting DESTINATION ${YARP_CONTEXTS_INSTALL_DIR})
 endif (MSVC)

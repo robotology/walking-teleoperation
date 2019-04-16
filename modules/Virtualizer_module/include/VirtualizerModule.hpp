@@ -10,6 +10,8 @@
 #ifndef RETARGETING_VIRTUALIZER_MODULE_HPP
 #define RETARGETING_VIRTUALIZER_MODULE_HPP
 
+#include <mutex>
+
 // YARP
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
@@ -20,17 +22,23 @@
 #include "CVirt.h"
 #include "CVirtDevice.h"
 
+#include <thrift/VirtualizerCommands.h>
+
 /**
  * RFModule useful to handle the Virtualizere
  */
-class VirtualizerModule : public yarp::os::RFModule
+class VirtualizerModule : public yarp::os::RFModule, public VirtualizerCommands
 {
 private:
     double m_dT; /**< RFModule period. */
     double m_deadzone; /**< Value of the deadzone. */
-    double m_robotYaw;
-    double velocity_factor;
-    double oldPlayerYaw;
+    double m_robotYaw; /**<Robot orientation. */
+    double m_velocityScaling; /**< Linear velocity scaling factor   */
+    double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
+                              previous time step. */
+
+    yarp::os::Port
+        m_rpcServerPort; /**< Port used to send command to the virtualizer application. */
 
     yarp::os::RpcClient m_rpcPort; /**< RPC port. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Used to send the player
@@ -38,6 +46,7 @@ private:
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort; /**< Used to get the robot
                                                                          orientation. */
 
+    std::mutex m_mutex;
     CVirtDevice* m_cvirtDeviceID = nullptr;
     /**
      * Establish the connection with the virtualizer.
@@ -77,6 +86,11 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() override;
+
+    /**
+     * Reset the player orientation
+     */
+    void resetPlayerOrientation() override;
 };
 
 #endif

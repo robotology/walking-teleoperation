@@ -33,3 +33,13 @@
 
 # Temporary Files
 *~
+
+# build folder
+build/
+
+# emacs
+\#*\#
+.\#*\#
+
+TAGS
+compile_commands.json

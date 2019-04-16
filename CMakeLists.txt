@@ -5,7 +5,8 @@
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 14)
 
-project(walking-teleoperation)
+project(walking-teleoperation
+  VERSION 0.2.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -17,3 +18,5 @@ add_subdirectory(app)
 
  # Include clang-format target
 include(AddClangFormatTarget)
+
+include(AddUninstallTarget)
