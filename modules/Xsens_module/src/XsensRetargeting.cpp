@@ -233,19 +233,22 @@ bool XsensRetargeting::getJointValues()
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
             newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
-            //            yInfo() << newJointValues(j);
             if (std::abs(newJointValues(j) - m_jointValues(j)) < m_jointDiffThreshold)
             {
+                if (j == 0)
+                {
+                    yInfo() << "joint [0]: " << m_robotJointsListNames[0]
+                            << " : new: " << newJointValues(0) << " , old: " << m_jointValues(0);
+                }
                 m_jointValues(j) = newJointValues(j);
             } else
             {
-                yWarning() << "spike in data: joint : " << j << " , " << m_robotJointsListNames[j]
-                           << " ; old data: " << m_jointValues(j)
-                           << " ; new data:" << newJointValues(j);
+                yWarning() << "spike in data: joint[ " << j << " ] " << m_robotJointsListNames[j]
+                           << ", old data: " << m_jointValues(j)
+                           << " , new data:" << newJointValues(j);
             }
         }
-        yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
-                << m_jointValues(0);
+
     } else
     {
         yInfo()
@@ -261,27 +264,6 @@ bool XsensRetargeting::getJointValues()
         yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
                 << m_jointValues(0);
     }
-
-    //     yInfo() << "b";
-
-    //    yarp::sig::Vector humanjointsValueD=desiredHumanJoints->get(0).asDouble();
-    //    yInfo()<<"humanjointsValueS: " <<humanjointsValueS;
-    //    std::vector<double> humanJointValues=split(humanjointsValueS," ");
-
-    //    yInfo()<<"1: "<<m_jointValues[0]<<" ,2: "<<m_jointValues[1]<<" , "<<m_jointValues[2];
-
-    //    m_tock =std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch()); yDebug() << "---------- >rate: "<<
-    //    (m_tock-m_tick).count() << "ms";
-
-    //    m_tick =std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch());
-
-    // for( unsigned i=0;i<m_actuatedDOFs;i++)
-    // m_jointValues(i)=humanJointValues[m_humanToRobotMap[i]];
-
-    //    yInfo() << "c";
-
     return true;
 }
 
