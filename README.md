@@ -7,6 +7,8 @@ The suite includes:
 * **Virtualizer_module**: this module allows using the cyberith virtualizer as a joypad interface for walking commands.
 * **Utils_module**: an module that can be useful to implement some common functionality
 
+The technical description of the suit is described [here](./docs/FrameDescriptions.md).
+
 # Overview
  - [:orange_book: The general idea](#orange_book-some-theory-behind-the-code)
  - [:page_facing_up: Dependencies](#page_facing_up-dependencies)
