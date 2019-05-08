@@ -165,11 +165,4 @@
     <protocol>shmem</protocol>
   </connection>
 
-
-  <connection>
-    <from>/HDE/HumanStateWrapper/state:o</from>
-    <to>/oculus/display/right:i</to>
-    <protocol>shmem</protocol>
-  </connection>
-
 </application>

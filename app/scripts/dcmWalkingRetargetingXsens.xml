@@ -124,7 +124,7 @@
 
 
   <connection>
-    <from>/HDE/HumanStateWrapper/state:o</from>
+    <from>/HDE/RobotStateWrapper/state:o</from>
     <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
   </connection>
 
