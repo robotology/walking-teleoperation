@@ -3,21 +3,6 @@
 #include <iterator>
 #include <sstream>
 
-// std::vector<double> XsensRetargeting::split(const std::string& str, const std::string& delim)
-//{
-//    std::vector<double> tokens;
-//    size_t prev = 0, pos = 0;
-//    do
-//    {
-//        pos = str.find(delim, prev);
-//        if (pos == std::string::npos) pos = str.length();
-//        std::string token =  str.substr(prev, pos-prev);
-//        if (!token.empty()) tokens.push_back(std::stod(token));
-//        prev = pos + delim.length();
-//    }
-//    while (pos < str.length() && prev < str.length());
-//    return tokens;
-//}
 XsensRetargeting::XsensRetargeting(){};
 
 XsensRetargeting::~XsensRetargeting(){};
@@ -32,7 +17,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    //    yarp::os::Bottle& generalOptions = rf.findGroup("GENERAL");
     // get the period
     m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asDouble();
 
@@ -44,11 +28,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
     setName(name.c_str());
-
-    //    m_useXsens = generalOptions.check("useXsens", yarp::os::Value(false)).asBool();
-    //    yInfo()<<"Teleoperation uses Xsens: "<<m_useXsens;
-
-    //    yarp::os::Bottle& config = rf.findGroup("WHOLE_BODY_RETARGETING");
 
     // initialize minimum jerk trajectory for the whole body
 
@@ -125,13 +104,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
         yError() << "[XsensRetargeting::configure] " << portName << " port already open.";
         return false;
     }
-    // DEL Later
-    //    if( !yarp::os::Network::connect("/HDE/HumanStateWrapper/state:o","/" + getName() +
-    //    portName))
-    //    {
-    //        yError() << "[XsensRetargeting::configure] could nor connect";
-    //        return false;
-    //    }
 
     if (!YarpHelper::getStringFromSearchable(rf, "controllerPort", portName))
     {
@@ -206,34 +178,21 @@ bool XsensRetargeting::getJointValues()
         //        yError() << "[XsensRetargeting::getJointValues()] desiredWBJoints size: 0";
         return true;
     }
-    // yInfo()<< "[XsensRetargeting::setJointValues()] desiredWBJoints size:
-    // "<<desiredHumanJoints->size();
-    //    printf("Received %s\n", desiredHumanJoints->toString().c_str());
-    // humanJointValues=desiredHumanJoints->get(0).toString().c_str();
-    //    printf("Received %s\n", desiredHumanJoints->get(0).toString().c_str());
-    //  std::string humanjointsValueS=desiredHumanJoints->get(0).toString().c_str();
+
+    // in the msg thrift the first list is the joint names [get(0)], second the joint values
+    // [get(1)]
     yarp::os::Value humanjointsValueS = desiredHumanJoints->get(1);
     yarp::os::Bottle* tmpHumanNewJointValues = humanjointsValueS.asList();
 
-    //     if (tmpHumanNewJointValues->size() != m_actuatedDOFs)
-    //     {
-    //         yError() << "Dummy joint size is not matched to m_actuatedDOFs";
-    //         return false;
-    //     }
-
     yarp::sig::Vector newJointValues;
     newJointValues.resize(m_actuatedDOFs, 0.0);
-
-    //    yInfo() << "a";
-
-    //    yInfo() << tmpHumanNewJointValues->get(0).asString();
 
     if (!m_firstIteration)
     {
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
             newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
-            //            yInfo() << newJointValues(j);
+            // check for the spikes in joint values
             if (std::abs(newJointValues(j) - m_jointValues(j)) < m_jointDiffThreshold)
             {
                 m_jointValues(j) = newJointValues(j);
@@ -244,12 +203,9 @@ bool XsensRetargeting::getJointValues()
                            << " ; new data:" << newJointValues(j);
             }
         }
-        yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
-                << m_jointValues(0);
     } else
     {
-        yInfo()
-            << "[XsensRetargeting::getJointValues] Whole Body Retargeting Module is Running ...";
+        yInfo() << "[XsensRetargeting::getJointValues] Xsens Retargeting Module is Running ...";
         m_firstIteration = false;
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
@@ -257,61 +213,38 @@ bool XsensRetargeting::getJointValues()
             m_jointValues(j) = newJointValues(j);
         }
         m_WBTrajectorySmoother->init(m_jointValues);
-
-        yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
-                << m_jointValues(0);
     }
 
-    //     yInfo() << "b";
-
-    //    yarp::sig::Vector humanjointsValueD=desiredHumanJoints->get(0).asDouble();
-    //    yInfo()<<"humanjointsValueS: " <<humanjointsValueS;
-    //    std::vector<double> humanJointValues=split(humanjointsValueS," ");
-
-    //    yInfo()<<"1: "<<m_jointValues[0]<<" ,2: "<<m_jointValues[1]<<" , "<<m_jointValues[2];
+    yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
+            << m_jointValues(0);
 
     //    m_tock =std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch()); yDebug() << "---------- >rate: "<<
+    //    >(std::chrono::system_clock::now().time_since_epoch()); yDebug() << "------> rate: "<<
     //    (m_tock-m_tick).count() << "ms";
 
     //    m_tick =std::chrono::duration_cast< std::chrono::milliseconds
     //    >(std::chrono::system_clock::now().time_since_epoch());
-
-    // for( unsigned i=0;i<m_actuatedDOFs;i++)
-    // m_jointValues(i)=humanJointValues[m_humanToRobotMap[i]];
-
-    //    yInfo() << "c";
 
     return true;
 }
 
 bool XsensRetargeting::getSmoothedJointValues(yarp::sig::Vector& smoothedJointValues)
 {
-
     m_WBTrajectorySmoother->computeNextValues(m_jointValues);
     smoothedJointValues = m_WBTrajectorySmoother->getPos();
-    //    auto tock = std::chrono::high_resolution_clock::now();
-    //    yDebug() << "IK took"
-    //          << std::chrono::duration_cast<std::chrono::milliseconds>(tock - tick).count() <<
-    //          "ms";
 
     return true;
 }
 
 double XsensRetargeting::getPeriod()
 {
-
     return m_dT;
 }
 
 bool XsensRetargeting::updateModule()
 {
 
-    //    std::chrono::milliseconds tick=std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch());
     getJointValues();
-
-    // DEL probably this check here in every step
 
     if (m_wholeBodyHumanJointsPort.isClosed())
     {
@@ -319,6 +252,8 @@ bool XsensRetargeting::updateModule()
         return false;
     }
 
+    // DEL: delete this check here! it was initially applied to check if the joint values at the
+    // beginning does not go to 0.0 .
     if (!m_firstIteration)
     {
         double temp_jointsNorm = 0.0, tmp_normThreshold = 0.001;
@@ -333,8 +268,6 @@ bool XsensRetargeting::updateModule()
             yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
             getSmoothedJointValues(refValues);
             m_wholeBodyHumanSmoothedJointsPort.write();
-            //            yInfo() << temp_jointsNorm << " , " << refValues(0) << " , " <<
-            //            refValues(1);
         } else
         {
             yWarning() << "The norm of joint values are less than the given threshold ( "
@@ -344,10 +277,6 @@ bool XsensRetargeting::updateModule()
             //            return false;
         }
     }
-
-    //    std::chrono::milliseconds tock=std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch()); yDebug() << "update rate: "<<
-    //    (tock-tick).count() << "ms";
 
     return true;
 }

@@ -69,7 +69,7 @@ private:
     unsigned int m_prepareWalkingIndex; /**< Index of the prepare walking button */
 
     bool m_useVirtualizer; /**< True if the virtualizer is used in the retargeting */
-    bool m_useXsens;/**< True if the Xsens is used in the retargeting */
+    bool m_useXsens; /**< True if the Xsens is used in the retargeting */
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
@@ -95,9 +95,8 @@ private:
                                                      hand retargeting object. */
     std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left hand
                                                     retargeting object. */
-//    std::unique_ptr<WholeBodyRetargeting> m_wholeBodyRetargeting; /**< Pointer to the whole body
-//                                                                        retargeting object. */
-        std::unique_ptr<TorsoRetargeting> m_torso; /**< Pointer to the torso retargeting object. */
+
+    std::unique_ptr<TorsoRetargeting> m_torso; /**< Pointer to the torso retargeting object. */
 
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */
@@ -122,7 +121,6 @@ private:
 
     /** Port used to retrieve the human whole body joint pose. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_wholeBodyHumanSmoothedJointsPort;
-
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 
