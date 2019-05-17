@@ -58,13 +58,8 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
-    <parameters> --OCULUS::move_icub_using_joypad 0 </parameters>
+    <parameters> --OCULUS::move_icub_using_joypad 0 --useXsens 0 </parameters>
   </module>
-
-    <module>
-      <name>WholeBodyRetargetingModule</name>
-      <node>icub-head</node>
-    </module>
 
   <!-- Connections -->
   <!-- Hand retargeting  -->

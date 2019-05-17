@@ -54,6 +54,7 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
+    <parameters> --useXsens 0 </parameters>
   </module>
 
   <!-- Connections -->
