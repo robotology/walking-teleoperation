@@ -7,11 +7,10 @@
  */
 
 // YARP
+#include <XsensRetargeting.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
-#include <XsensRetargeting.hpp>
-//#include <OculusModule.hpp>
 
 int main(int argc, char* argv[])
 {
@@ -26,7 +25,7 @@ int main(int argc, char* argv[])
     // prepare and configure the resource finder
     yarp::os::ResourceFinder& rf = yarp::os::ResourceFinder::getResourceFinderSingleton();
 
-    rf.setDefaultConfigFile("wholeBodyRetargeting.ini");
+    rf.setDefaultConfigFile("XsensRetargeting.ini");
 
     rf.configure(argc, argv);
 

@@ -25,17 +25,11 @@
 
 #include <RetargetingController.hpp>
 
-
 /**
  * Class useful to get torso info for retargeting.
  */
 class TorsoRetargeting : public RetargetingController
 {
-private:
-
-//    std::unique_ptr<RobotControlHelper> m_controlHelper; /**< Controller helper */
-
-
 public:
     /**
      * Configure the object.
@@ -54,10 +48,10 @@ public:
      * @param torsoYaw neck yaw angle expressed in radiant
      * @return rotation matrix of the chest with respect to the root_link frame
      */
-    static iDynTree::Rotation forwardKinematics(const double& torsoPitch, const double& torsoRoll,
-                                                const double& torsoYaw);
+    static iDynTree::Rotation
+    forwardKinematics(const double& torsoPitch, const double& torsoRoll, const double& torsoYaw);
 
-     bool move() override;
+    bool move() override;
 };
 
 #endif
