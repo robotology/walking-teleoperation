@@ -147,10 +147,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
                 << " , " << m_humanJointsListName[(m_humanToRobotMap[i])];
     }
 
-    //     m_tick =std::chrono::duration_cast< std::chrono::milliseconds
-    //     >(std::chrono::system_clock::now().time_since_epoch()); m_tock
-    //     =std::chrono::duration_cast< std::chrono::milliseconds
-    //     >(std::chrono::system_clock::now().time_since_epoch());
     m_firstIteration = true;
 
     double jointThreshold;
@@ -162,11 +158,14 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     }
     m_jointDiffThreshold = jointThreshold;
 
-    yInfo() << " Sampling time  : " << m_dT;
-    yInfo() << " Smoothing time : " << smoothingTime;
-    yInfo() << " Joint threshold: " << m_jointDiffThreshold;
+    yInfo() << "[XsensRetargeting::configure]"
+            << " Sampling time  : " << m_dT;
+    yInfo() << "[XsensRetargeting::configure]"
+            << " Smoothing time : " << smoothingTime;
+    yInfo() << "[XsensRetargeting::configure]"
+            << " Joint threshold: " << m_jointDiffThreshold;
 
-    yInfo() << " XsensRetargeting::configure done!";
+    yInfo() << " [XsensRetargeting::configure] done!";
     return true;
 }
 bool XsensRetargeting::getJointValues()
@@ -175,7 +174,6 @@ bool XsensRetargeting::getJointValues()
 
     if (desiredHumanJoints == NULL)
     {
-        //        yError() << "[XsensRetargeting::getJointValues()] desiredWBJoints size: 0";
         return true;
     }
 
@@ -218,13 +216,6 @@ bool XsensRetargeting::getJointValues()
     yInfo() << "joint [0]: " << m_robotJointsListNames[0] << " : " << newJointValues(0) << " , "
             << m_jointValues(0);
 
-    //    m_tock =std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch()); yDebug() << "------> rate: "<<
-    //    (m_tock-m_tick).count() << "ms";
-
-    //    m_tick =std::chrono::duration_cast< std::chrono::milliseconds
-    //    >(std::chrono::system_clock::now().time_since_epoch());
-
     return true;
 }
 
@@ -252,30 +243,12 @@ bool XsensRetargeting::updateModule()
         return false;
     }
 
-    // DEL: delete this check here! it was initially applied to check if the joint values at the
-    // beginning does not go to 0.0 .
     if (!m_firstIteration)
     {
-        double temp_jointsNorm = 0.0, tmp_normThreshold = 0.001;
-        for (unsigned i = 0; i < m_jointValues.size(); i++)
-        {
-            temp_jointsNorm += (m_jointValues(i) * m_jointValues(i));
-        }
-        temp_jointsNorm = std::sqrt(temp_jointsNorm);
 
-        if (temp_jointsNorm > tmp_normThreshold)
-        {
-            yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
-            getSmoothedJointValues(refValues);
-            m_wholeBodyHumanSmoothedJointsPort.write();
-        } else
-        {
-            yWarning() << "The norm of joint values are less than the given threshold ( "
-                       << "joint  norm: " << temp_jointsNorm
-                       << " , threshold: " << tmp_normThreshold
-                       << " ), is not passed to Controller ";
-            //            return false;
-        }
+        yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
+        getSmoothedJointValues(refValues);
+        m_wholeBodyHumanSmoothedJointsPort.write();
     }
 
     return true;

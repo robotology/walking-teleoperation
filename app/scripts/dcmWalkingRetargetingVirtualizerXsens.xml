@@ -70,16 +70,6 @@
 
 
   <!-- Connections -->
-  <!-- Hand retargeting  -->
-  <connection>
-    <from>/oculusRetargeting/leftHandPose:o</from>
-    <to>/walking-coordinator/leftHandDesiredPose:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculusRetargeting/rightHandPose:o</from>
-    <to>/walking-coordinator/rightHandDesiredPose:i</to>
-  </connection>
 
   <!-- Virtualizer and Oculus -->
   <connection>
@@ -110,11 +100,6 @@
   <connection>
     <from>/virtualizer/playerOrientation:o</from>
     <to>/oculusRetargeting/playerOrientation:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/orientation:o</from>
-    <to>/oculusRetargeting/oculusOrientation:i</to>
   </connection>
 
   <!-- Camera-->

@@ -221,11 +221,8 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     if (m_useXsens)
     {
         m_torso = std::make_unique<TorsoRetargeting>();
-        yInfo() << "--1";
         yarp::os::Bottle& torsoOptions = rf.findGroup("TORSO_RETARGETING");
-        yInfo() << "--2";
         torsoOptions.append(generalOptions);
-        yInfo() << "--3";
         if (!m_torso->configure(torsoOptions, getName()))
         {
             yError() << "[OculusModule::configure] Unable to initialize the torso retargeting.";
