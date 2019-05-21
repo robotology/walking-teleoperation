@@ -64,25 +64,10 @@
   </module>
 
   <!-- Connections -->
-  <!-- Hand retargeting  -->
-  <connection>
-    <from>/oculusRetargeting/leftHandPose:o</from>
-    <to>/walking-coordinator/leftHandDesiredPose:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculusRetargeting/rightHandPose:o</from>
-    <to>/walking-coordinator/rightHandDesiredPose:i</to>
-  </connection>
 
   <connection>
     <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/orientation:o</from>
-    <to>/oculusRetargeting/oculusOrientation:i</to>
   </connection>
 
   <!-- Camera-->

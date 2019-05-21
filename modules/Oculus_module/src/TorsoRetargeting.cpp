@@ -15,44 +15,13 @@
 #include <TorsoRetargeting.hpp>
 #include <Utils.hpp>
 
-
-// This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
-// Section 2.3
-//void TorsoRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head, double& neckPitch,
-//                                        double& neckRoll, double& neckYaw)
-//{
-//    // YXZ decomposition
-//    if (chest_R_head(1, 2) < 1)
-//    {
-//        if (chest_R_head(1, 2) > -1)
-//        {
-//            neckRoll = std::asin(-chest_R_head(1, 2));
-//            neckPitch = std::atan2(chest_R_head(0, 2), chest_R_head(2, 2));
-//            neckYaw = std::atan2(chest_R_head(1, 0), chest_R_head(1, 1));
-//        } else
-//        {
-//            neckRoll = iDynTree::deg2rad(90);
-//            neckPitch = -std::atan2(-chest_R_head(0, 1), chest_R_head(0, 0));
-//            neckYaw = 0;
-//        }
-//    } else
-//    {
-//        neckRoll = -iDynTree::deg2rad(90);
-//        neckPitch = std::atan2(-chest_R_head(0, 1), chest_R_head(0, 0));
-//        neckYaw = 0;
-//    }
-
-//    // minus due to the joints mechanism of the iCub neck
-//    neckRoll = -neckRoll;
-//    return;
-//}
-
-iDynTree::Rotation TorsoRetargeting::forwardKinematics(const double& torsoPitch, const double& torsoRoll,
-                                                      const double& torsoYaw)
+iDynTree::Rotation TorsoRetargeting::forwardKinematics(const double& torsoPitch,
+                                                       const double& torsoRoll,
+                                                       const double& torsoYaw)
 {
     iDynTree::Rotation chest_R_root;
     chest_R_root = iDynTree::Rotation::RotY(-torsoPitch) * iDynTree::Rotation::RotX(torsoRoll)
-        * iDynTree::Rotation::RotZ(-torsoYaw);
+                   * iDynTree::Rotation::RotZ(-torsoYaw);
 
     return chest_R_root;
 }
@@ -73,13 +42,11 @@ bool TorsoRetargeting::configure(const yarp::os::Searchable& config, const std::
         return false;
     }
 
-
     return true;
 }
 
-
 bool TorsoRetargeting::move()
 {
-    yInfo()<<"Nothing Implemented!";
+    yInfo() << "Nothing Implemented!";
     return true;
 }

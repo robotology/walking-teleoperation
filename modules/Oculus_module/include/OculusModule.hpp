@@ -27,7 +27,6 @@
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
 #include <TorsoRetargeting.hpp>
-//#include <WholeBodyRetargeting.hpp>
 
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
