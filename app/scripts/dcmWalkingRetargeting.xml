@@ -49,6 +49,7 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
+    <parameters> --from dcm_walking_retargeting.ini </parameters>
   </module>
 
   <module>
