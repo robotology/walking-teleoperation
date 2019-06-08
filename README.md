@@ -1,5 +1,5 @@
 # walking-teleoperation
-Software related to walking and teleoperation. 
+This repository contains software related to walking and teleoperation. 
 
 The suite includes:
 
