@@ -60,6 +60,10 @@
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
     <parameters> --OCULUS::move_icub_using_joypad 0 </parameters>
+    <dependencies>
+      <port timeout="5.0">/transformServer/transforms:o</port>
+      <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
+    </dependencies>
   </module>
 
   <!-- Whole Body Retargeting using Xsens-->
