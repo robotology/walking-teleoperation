@@ -33,7 +33,7 @@ private:
     double m_dT; /**< RFModule period. */
     double m_deadzone; /**< Value of the deadzone. */
     double m_robotYaw; /**<Robot orientation. */
-    double m_velocityScaling; /**< Linear velocity scaling factor   */
+    double m_scale_X, m_scale_Y; /**< Linear and angular velocity scaling factor */
     double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
                               previous time step. */
 
