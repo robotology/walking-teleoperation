@@ -46,6 +46,8 @@ bool VirtualizerModule::configureVirtualizer()
 bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
 {
     yarp::os::Value* value;
+    //    velocity_factor = 2;
+
     // check if the configuration file is empty
     if (rf.isNull())
     {
@@ -65,14 +67,20 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     }
     setName(name.c_str());
 
-    // set deadzone
-    if (!YarpHelper::getDoubleFromSearchable(rf, "deadzone", m_deadzone))
+    // set scales for walking
+    if (!YarpHelper::getDoubleFromSearchable(rf, "scale_X", m_scale_X))
     {
-        yError() << "[configure] Unable to get a double from a searchable";
+        yError() << "[configure] Unable to get scale_X from a searchable";
+        return false;
+    }
+    if (!YarpHelper::getDoubleFromSearchable(rf, "scale_Y", m_scale_Y))
+    {
+        yError() << "[configure] Unable to get scale_Y from a searchable";
         return false;
     }
 
-    if (!YarpHelper::getDoubleFromSearchable(rf, "velocityScaling", m_velocityScaling))
+    // set deadzone
+    if (!YarpHelper::getDoubleFromSearchable(rf, "deadzone", m_deadzone))
     {
         yError() << "[configure] Unable to get a double from a searchable";
         return false;
@@ -197,14 +205,32 @@ bool VirtualizerModule::updateModule()
     // get the player speed
     double speedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
 
-    double x = speedData * cos(angulareError) * m_velocityScaling;
-    double y = speedData * sin(angulareError) * m_velocityScaling;
+    double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
+    double speedDirection = 1.0; // set the speed direction to forward by default.
+    if (std::abs(tmpSpeedDirection) < 0.01)
+        speedDirection = 1.0;
+    else if (std::abs(tmpSpeedDirection - 1) < 0.01)
+    {
+        speedDirection = -1.0;
+    } else
+    {
+        yError() << "The virtualizer speed direction is not normal; speed direction value: "
+                 << tmpSpeedDirection;
+        return false;
+    }
+
+    //   double x = speedData * cos(angulareError) * velocity_factor;
+    //   double y = speedData * sin(angulareError) * velocity_factor;
+    double x = speedDirection * m_scale_X * speedData;
+    double y = m_scale_Y * angulareError;
+    yInfo() << "speed (x,y): " << x << " , " << y;
 
     // send data to the walking module
     yarp::os::Bottle cmd, outcome;
     cmd.addString("setGoal");
     cmd.addDouble(x);
-    cmd.addDouble(-y);
+    cmd.addDouble(-y); // because the virtualizer orientation value is CCW, therefore we put "-" to
+                       // make it CW, same as the robot world.
     m_rpcPort.write(cmd, outcome);
 
     // send the orientation of the player
