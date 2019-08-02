@@ -95,7 +95,23 @@ public:
     forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
 
     /**
-     * Move the neck joints according to the desired head pose
+     * Evaluate the neck joints according to the desired head pose
+     */
+    void evalueNeckJointValues();
+
+    /**
+     * Initialize neck joints values at preparation time with Zero value
+     */
+    void initializeNeckJointValues();
+
+    /**
+     * Get the neck joints values
+     * @param neckValues neck joint values vector
+     */
+    void getNeckJointValues(std::vector<double>& neckValues);
+
+    /**
+     * Move the neck joints according to the desired joint values
      * @return true in case of success and false otherwise
      */
     bool move() override;

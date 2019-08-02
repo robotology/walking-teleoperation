@@ -18,6 +18,7 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(iDynTree REQUIRED)
+find_package(matlogger2 REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include(FindPackageHandleStandardArgs)
 
@@ -56,6 +57,7 @@ target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
   ${YARP_LIBRARIES}
   ${iDynTree_LIBRARIES}
   ctrlLib
-  UtilityLibrary)
+  UtilityLibrary
+  matlogger2::matlogger2)
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
