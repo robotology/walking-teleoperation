@@ -64,3 +64,10 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
         m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
     return true;
 }
+
+void FingersRetargeting::getFingerValues(std::vector<double>& fingerValues)
+{
+    fingerValues.clear();
+    for (size_t i = 0; i < m_desiredJointValue.size(); i++)
+        fingerValues.push_back(m_desiredJointValue[i]);
+}

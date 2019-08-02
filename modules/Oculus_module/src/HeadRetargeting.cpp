@@ -115,6 +115,12 @@ void HeadRetargeting::setDesiredHeadOrientation(
 
 bool HeadRetargeting::move()
 {
+    return RetargetingController::move();
+}
+
+void HeadRetargeting::evalueNeckJointValues()
+{
+
     m_teleopFrame_R_headOculus
         = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
 
@@ -130,6 +136,19 @@ bool HeadRetargeting::move()
     // near the singularity. it would be nice to implement a smoother in SO(3).
     m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
+}
 
-    return RetargetingController::move();
+void HeadRetargeting::initializeNeckJointValues()
+{
+    m_desiredJointValue.resize(3);
+    m_desiredJointValue.zero();
+}
+
+void getNeckJointValues();
+
+void HeadRetargeting::getNeckJointValues(std::vector<double>& neckValues)
+{
+    neckValues.clear();
+    for (size_t i = 0; i < m_desiredJointValue.size(); i++)
+        neckValues.push_back(m_desiredJointValue[i]);
 }
