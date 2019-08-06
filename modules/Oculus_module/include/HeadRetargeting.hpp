@@ -101,8 +101,9 @@ public:
 
     /**
      * Initialize neck joints values at preparation time with Zero value
+     * @return intialized if the neck is initialized return true
      */
-    void initializeNeckJointValues();
+    bool initializeNeckJointValues();
 
     /**
      * Get the neck joints values
