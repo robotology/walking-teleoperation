@@ -364,6 +364,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     m_state = OculusFSM::Configured;
+    m_prepareHead = false;
 
     return true;
 }
@@ -703,8 +704,9 @@ bool OculusModule::updateModule()
                 cmd.addString("prepareRobot");
                 m_rpcWalkingClient.write(cmd, outcome);
                 // initialize the neck joint angles
-                m_head->initializeNeckJointValues();
-                m_head->move();
+                m_prepareHead = true;
+                //                m_head->initializeNeckJointValues();
+                //                m_head->move();
             }
         } else if (buttonMapping[1] > 0)
         {
@@ -725,6 +727,22 @@ bool OculusModule::updateModule()
             }
             // if(outcome.get(0).asBool())
             m_state = OculusFSM::Running;
+        }
+
+        if (m_prepareHead)
+        {
+            // initialize the neck joint angles
+            if (m_moveRobot)
+            {
+                // if m_head->initializeNeckJointValues() return True, the neck is initialized!
+                if (m_head->initializeNeckJointValues())
+                {
+                    m_prepareHead = false;
+                } else
+                {
+                    m_head->move();
+                }
+            }
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
