@@ -59,7 +59,7 @@
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
     </dependencies>
-    <parameters> --useXsens 0 </parameters>
+    <parameters> --GENERAL::useXsens 0 </parameters>
   </module>
 
   <!-- Connections -->
