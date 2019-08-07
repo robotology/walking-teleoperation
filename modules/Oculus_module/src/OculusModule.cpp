@@ -364,7 +364,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     m_state = OculusFSM::Configured;
-    m_prepareHead = false;
 
     return true;
 }
@@ -637,7 +636,13 @@ bool OculusModule::updateModule()
         {
             m_logger->add(m_logger_prefix + "_time", yarp::os::Time::now());
             m_logger->add(m_logger_prefix + "_playerOrientation", m_playerOrientation);
-            m_logger->add(m_logger_prefix + "_robotYaw", m_robotYaw);
+            if (m_moveRobot)
+            {
+                m_logger->add(m_logger_prefix + "_robotYaw", m_robotYaw);
+            } else
+            {
+                m_logger->add(m_logger_prefix + "_robotYaw", 0.0);
+            }
 
             std::vector<double> neckAngles;
             m_head->getNeckJointValues(neckAngles);
@@ -703,11 +708,10 @@ bool OculusModule::updateModule()
             {
                 cmd.addString("prepareRobot");
                 m_rpcWalkingClient.write(cmd, outcome);
-                // initialize the neck joint angles
-                m_prepareHead = true;
-                //                m_head->initializeNeckJointValues();
-                //                m_head->move();
+                // initialize the neck joint angles to zero
+                m_head->initializeNeckJointValues();
             }
+            yInfo() << "[OculusModule::updateModule] prepare the robot";
         } else if (buttonMapping[1] > 0)
         {
             if (m_useVirtualizer)
@@ -727,22 +731,8 @@ bool OculusModule::updateModule()
             }
             // if(outcome.get(0).asBool())
             m_state = OculusFSM::Running;
-        }
-
-        if (m_prepareHead)
-        {
-            // initialize the neck joint angles
-            if (m_moveRobot)
-            {
-                // if m_head->initializeNeckJointValues() return True, the neck is initialized!
-                if (m_head->initializeNeckJointValues())
-                {
-                    m_prepareHead = false;
-                } else
-                {
-                    m_head->move();
-                }
-            }
+            yInfo() << "[OculusModule::updateModule] start the robot";
+            yInfo() << "[OculusModule::updateModule] Running ...";
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
@@ -817,7 +807,9 @@ bool OculusModule::openLogger()
 
     m_logger->create(m_logger_prefix + "_time", 1);
     m_logger->create(m_logger_prefix + "_playerOrientation", 1);
+
     m_logger->create(m_logger_prefix + "_robotYaw", 1);
+
     m_logger->create(m_logger_prefix + "_neckJointValues", m_head->controlHelper()->getDoFs());
     m_logger->create(m_logger_prefix + "_leftFingerValues",
                      m_leftHandFingers->controlHelper()->getDoFs());

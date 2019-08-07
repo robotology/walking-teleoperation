@@ -140,28 +140,10 @@ void HeadRetargeting::evalueNeckJointValues()
 
 bool HeadRetargeting::initializeNeckJointValues()
 {
-    double samplingTime = 0.01;
-    double smoothingTime = 3.0;
-
-    iCub::ctrl::minJerkTrajGen headTrajectorySmoother(3, samplingTime, smoothingTime);
-    yarp::sig::Vector buff = RetargetingController::controlHelper()->jointEncoders();
-    yarp::sig::Vector desiredNeckJoint(3, 0.0);
-
-    double difference = 0.0;
-    for (size_t i = 0; i < 3; i++)
-    {
-        difference += (buff[i] - desiredNeckJoint[i]) * (buff[i] - desiredNeckJoint[i]);
-    }
-    difference = std::sqrt((difference));
-    if (difference < 0.05)
-    {
-        // the head neck reached the goal
-        return true;
-    }
-    headTrajectorySmoother.init(buff);
-    headTrajectorySmoother.computeNextValues(desiredNeckJoint);
-    m_desiredJointValue = headTrajectorySmoother.getPos();
-    return false;
+    m_desiredJointValue.clear();
+    m_desiredJointValue.resize(
+        static_cast<size_t>(RetargetingController::controlHelper()->getDoFs()), 0.0);
+    return RetargetingController::controlHelper()->initializeJointValues(m_desiredJointValue);
 }
 
 void getNeckJointValues();
