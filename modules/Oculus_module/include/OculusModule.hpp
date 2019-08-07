@@ -59,7 +59,6 @@ private:
     double m_scaleY; /**< Scaling factor on the y axis */
     double m_joypadX; /**< x value */
     double m_joypadY; /**< y value */
-    bool m_prepareHead; /**< prepare the head*/
 
     unsigned int m_xJoypadIndex; /**< Mapping of the axis related to x coordinate */
     unsigned int m_yJoypadIndex; /**< Mapping of the axis related to y coordinate */

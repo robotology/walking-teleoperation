@@ -204,6 +204,36 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
     return true;
 }
 
+bool RobotControlHelper::setPositionReferences(const yarp::sig::Vector& desiredPosition)
+{
+    if (m_positionInterface == nullptr)
+    {
+        yError() << "[RobotControlHelper::setPositionReferences] Position I/F not ready.";
+        return false;
+    }
+
+    if (desiredPosition.size() != m_actuatedDOFs)
+    {
+        yError() << "[RobotControlHelper::setDirectPositionReferences] Dimension mismatch between "
+                    "desired position vector and the number of controlled joints.";
+        return false;
+    }
+
+    // convert radiant to degree
+    for (int i = 0; i < m_actuatedDOFs; i++)
+        m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
+
+    // set desired position
+    if (!m_positionInterface->positionMove(m_desiredJointValue.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlHelper::setPositionReferences] Error while setting the "
+                    "desired position.";
+        return false;
+    }
+
+    return true;
+}
+
 bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredVelocity)
 {
     if (m_velocityInterface == nullptr)
@@ -365,4 +395,9 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
 bool RobotControlHelper::isVelocityControlUsed()
 {
     return m_controlMode == VOCAB_CM_VELOCITY;
+}
+
+bool RobotControlHelper::initializeJointValues(const yarp::sig::Vector& desiredValue)
+{
+    return setPositionReferences(desiredValue);
 }
