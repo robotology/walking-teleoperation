@@ -54,18 +54,38 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
         // the oculus headset orientation is actually streamed through a yarp port and
         // not using the transform server. In a future implementation this port
         // will be removed
+        // oculus orientation values
         std::string portName;
         if (!YarpHelper::getStringFromSearchable(config, "oculusOrientationPort", portName))
         {
-            yError() << "[OculusModule::configureTranformClient] Unable to get a string from a "
+            yError() << "[OculusModule::configureTranformClient] Unable to get string "
+                        "(oculusOrientationPort) from a "
                         "searchable";
             return false;
         }
 
         if (!m_oculusOrientationPort.open("/" + getName() + portName))
         {
-            yError() << "[OculusModule::configureTranformClient] Unable to open the port "
+            yError() << "[OculusModule::configureTranformClient] Unable to open the port oculus "
+                        "orientation "
                      << "/" << getName() << portName;
+            return false;
+        }
+
+        // oculus position values
+        if (!YarpHelper::getStringFromSearchable(config, "oculusPositionPort", portName))
+        {
+            yError() << "[OculusModule::configureTranformClient] Unable to get a string "
+                        "(oculusPositionPort) from a "
+                        "searchable";
+            return false;
+        }
+
+        if (!m_oculusPositionPort.open("/" + getName() + portName))
+        {
+            yError()
+                << "[OculusModule::configureTranformClient] Unable to open the port oculus position"
+                << "/" << getName() << portName;
             return false;
         }
     }
@@ -420,8 +440,8 @@ bool OculusModule::getTransforms()
         if (!m_frameTransformInterface->frameExists(m_headFrameName))
         {
             // head
+            // get head orientation
             yarp::os::Bottle* desiredHeadOrientation = NULL;
-
             iDynTree::Vector3 desiredHeadOrientationVector;
             desiredHeadOrientation = m_oculusOrientationPort.read(false);
             if (desiredHeadOrientation != NULL)
@@ -437,6 +457,32 @@ bool OculusModule::getTransforms()
                                                                 desiredHeadOrientationVector(0),
                                                                 desiredHeadOrientationVector(2)));
             }
+
+            // get head position
+            yarp::os::Bottle* desiredHeadPosition = NULL;
+            iDynTree::Vector3 desiredHeadPositionVector;
+            desiredHeadPosition = m_oculusPositionPort.read(false);
+            if (desiredHeadPosition != NULL)
+            {
+                for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
+                {
+                    desiredHeadPositionVector(i) = desiredHeadPosition->get(i).asDouble();
+                }
+
+                // the data coming from oculus vr is with the following order:
+                // [x,y,z]
+                // coordinate system definition is provided in:
+                // https://developer.oculus.com/documentation/pcsdk/latest/concepts/dg-sensor/
+                //            iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 3, 3, 1)
+                //                = iDynTree::toEigen(desiredHeadPositionVector);
+            }
+            m_oculusHeadsetPoseInertial.clear();
+            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(0));
+            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(1));
+            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(2));
+            m_oculusHeadsetPoseInertial.push_back(-desiredHeadOrientationVector(1));
+            m_oculusHeadsetPoseInertial.push_back(desiredHeadOrientationVector(0));
+            m_oculusHeadsetPoseInertial.push_back(desiredHeadOrientationVector(2));
         } else
         {
             if (!m_frameTransformInterface->getTransform(
@@ -629,8 +675,6 @@ bool OculusModule::updateModule()
             }
         }
 
-
-
 #ifdef ENABLE_LOGGER
         if (m_enableLogger)
         {
@@ -680,6 +724,9 @@ bool OculusModule::updateModule()
                           right_humanHandpose_oculusInertial);
             m_logger->add(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
                           right_humanHandpose_humanTel);
+
+            m_logger->add(m_logger_prefix + "_oculusHeadset_Inertial",
+                          m_oculusHeadsetPoseInertial); // pose sizein 3D space
 
             if (!m_useVirtualizer)
             {
@@ -828,6 +875,8 @@ bool OculusModule::openLogger()
     m_logger->create(m_logger_prefix + "_right_humanHandpose_oculusInertial",
                      6); // pose sizein 3D space
     m_logger->create(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_oculusHeadset_Inertial",
                      6); // pose sizein 3D space
 
     m_logger->create(m_logger_prefix + "_loc_joypad_x_y",
