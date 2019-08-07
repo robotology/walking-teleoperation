@@ -116,6 +116,8 @@ private:
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;
     /** Port used to retrieve the headset oculus orientation. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_oculusOrientationPort;
+    /** Port used to retrieve the headset oculus position. */
+    yarp::os::BufferedPort<yarp::os::Bottle> m_oculusPositionPort;
 
     yarp::os::RpcClient m_rpcWalkingClient; /**< Rpc client used for sending command to the walking
                                                controller */
@@ -133,6 +135,7 @@ private:
     yarp::sig::Matrix m_oculusRoot_T_lOculus;
     yarp::sig::Matrix m_oculusRoot_T_rOculus;
     yarp::sig::Matrix m_oculusRoot_T_headOculus;
+    std::vector<double> m_oculusHeadsetPoseInertial;
 
     double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
                                    only yaw. */

@@ -114,6 +114,11 @@
     <to>/oculusRetargeting/oculusOrientation:i</to>
   </connection>
 
+  <connection>
+    <from>/oculus/headpose/position:o</from>
+    <to>/oculusRetargeting/oculusPosition:i</to>
+  </connection>
+
   <!-- Camera-->
   <connection>
     <from>/icub/cam/left</from>
