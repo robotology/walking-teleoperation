@@ -43,6 +43,17 @@
     <node>icub-virtualizer</node>
   </module>
 
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config TransformServer.xml</parameters>
+    <node>icub30</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config RobotStateProvider_iCub.xml</parameters>
+    <node>icub30</node>
+  </module>
 
   <!-- Modules -->
   <module>
@@ -158,7 +169,7 @@
   </connection>
 
   <connection>
-    <from>/HDE/RobotStateWrapper/state:o</from>
+    <from>/iCub/RobotStateWrapper/state:o</from>
     <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
   </connection>
 

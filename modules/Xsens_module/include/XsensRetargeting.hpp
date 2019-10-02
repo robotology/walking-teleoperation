@@ -35,6 +35,8 @@ public:
 class XsensRetargeting : public yarp::os::RFModule
 {
 private:
+    class impl;
+    std::unique_ptr<impl> pImpl;
     /** Minimum jerk trajectory smoother for the desired whole body joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_WBTrajectorySmoother{nullptr};
     yarp::sig::Vector m_jointValues, m_smoothedJointValues;
