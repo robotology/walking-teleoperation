@@ -6,7 +6,15 @@
 class XsensRetargeting::impl
 {
 public:
-    bool mapJointsHDE2CONTROLLER(std::vector<std::string> robotJointsListNames,
+    /*
+     * map the joint values (order) coming from HDE to the controller order
+     * @param robotJointsListNames list of the joint names used in controller
+     * @param humanJointsListName list of the joint names received from the HDE
+     * (human-dynamics-estimation repository)
+     * @param humanToRobotMap the container for mapping of the human joints to the robot ones
+     * @return true in case of success and false otherwise
+     */
+    bool mapJointsHDE2Controller(std::vector<std::string> robotJointsListNames,
                                  std::vector<std::string> humanJointsListName,
                                  std::vector<unsigned>& humanToRobotMap);
 };
@@ -187,7 +195,7 @@ bool XsensRetargeting::getJointValues()
             }
         }
         /* find the map between the human and robot joint list orders*/
-        if (!pImpl->mapJointsHDE2CONTROLLER(
+        if (!pImpl->mapJointsHDE2Controller(
                 m_robotJointsListNames, m_humanJointsListName, m_humanToRobotMap))
         {
             yError() << "[XsensRetargeting::getJointValues()] mapping is not possible";
@@ -254,7 +262,7 @@ bool XsensRetargeting::close()
 {
     return true;
 }
-bool XsensRetargeting::impl::mapJointsHDE2CONTROLLER(std::vector<std::string> robotJointsListNames,
+bool XsensRetargeting::impl::mapJointsHDE2Controller(std::vector<std::string> robotJointsListNames,
                                                      std::vector<std::string> humanJointsListName,
                                                      std::vector<unsigned>& humanToRobotMap)
 {

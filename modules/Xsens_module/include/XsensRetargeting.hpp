@@ -35,6 +35,7 @@ public:
 class XsensRetargeting : public yarp::os::RFModule
 {
 private:
+    /** An implementation class for spepcific functionalities required in this module. */
     class impl;
     std::unique_ptr<impl> pImpl;
     /** Minimum jerk trajectory smoother for the desired whole body joints */
