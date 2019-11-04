@@ -4,8 +4,9 @@ Software related to walking and teleoperation.
 The suite includes:
 
 * **Oculus_module**: this is the module that implements retargeting of the upper body end_effectors.
-* **Virtualizer_module**: this module allows using the cyberith virtualizer as a joypad interface for walking commands.
-* **Utils_module**: an module that can be useful to implement some common functionality
+* **Virtualizer_module**: this module allows using the Cyberith virtualizer as a joypad interface for walking commands.
+* **Utils_module**: a module that can be useful to implement some common functionality
+* **Xsens_module**: a module that gets joint values from [human state provider](https://github.com/robotology/human-dynamics-estimation/) and maps them to the [walking controller](https://github.com/robotology/walking-controllers) input
 
 The technical description of the suit is described [here](./docs/FrameDescriptions.md).
 
@@ -16,21 +17,23 @@ The technical description of the suit is described [here](./docs/FrameDescriptio
  - [:running: Using the software with iCub](#running-using-the-software-with-iCub)
 
 # :orange_book: The general idea
-This software allows teleoperation of a walking humanoid robot with a walking controller that expects positions on the plane as walking direction commands for the planner.
+This software allows teleoperation of a biped humanoid robot,e.g., iCub, with a walking controller that expects speed and orientation of the robot locomotion on a horizontal plane and commands for upper body control of the humanoid robot.
 It implements the following architecture:
-* Oculus module that captures the end effectors of the hands and head of the human operator and commands the respective movement;
-* Virtualizer module [Optional] that graps the human walking teleoperation commands (orientation and Speed).
-
+* Oculus module: that captures the end effectors of the hands and head of the human operator and commands the respective movement (if only using Oculus VR);
+* Virtualizer module: [Optional]  grasps the human walking teleoperation commands (orientation and Speed).
+* Xsens module: [optional] maps the robot's joints values to the controller
 
 # :page_facing_up: Dependencies
 The description of dependencies are located [here](./docs/Dependencies.md).
 
 This guide is only for teleoperation dependencies on a Windows machine and it includes the guide to install Oculus module and Virtualizer module SDKs.
 
-Besides, you need to have a linux machine for **Walking-controllers** module described [here](https://github.com/robotology/walking-controllers/tree/devel_hand_retargeting).
+If you want to run the teleoperation scenario with Xsens MVN technologies, you need to enable the option [human-dynamics in robotology/superbuild](https://github.com/robotology/robotology-superbuild#human-dynamics) and install all the dependencies described there.
+
+Besides, you need to have a Linux machine for **Walking-controllers** module described [here](https://github.com/robotology/walking-controllers/tree/devel_hand_retargeting).
 
 # :hammer: Build the suite
-## Linux/macOs
+## Linux/macOS
 
 ```sh
 git clone https://github.com/robotology/walking-teleoperation.git
@@ -45,21 +48,22 @@ Follow the same instructions from the Powershell. One can also opt to use the ``
 
 # :running: Using the software with iCub
 Import the `DCM_WALKING_COORDINATOR_+_RETARGETING` to the `yarpmanager` applications.
-The current set-up allows to run the module either on windows, or from a linux machine through `yarprun --server /name_of_server`. The preference is the following.
-* Turn on the robot, through the linux machine.
+The current set-up allows running the module either on windows or from a Linux machine through `yarprun --server /name_of_server`. The preference is the following.
+* Turn on the robot, through the Linux machine.
 * On the windows machine, use the same network.
 * Do a `yarp namespace /the_robot_network_namespace`
 * Do a `yarprun --server /icub-virtualizer`
 * Calibrate the virtualizer and the oculus
 * At this point, the operator should be in the virtualizer wearing the oculus and in the zero configuration, i.e. zero orientation in the virtualizer, facing the same direction as the robot and standing still.
-* On the linux server, and from the `yarpmanager` run the application `DCM_WALKING_COORDINATOR_+_RETARGETING`
+* On the Linux server, and from the `yarpmanager` run one of the applications `DCM_walking_retargeting`,`DCM_walking_retargeting (Virtualizer)` ,`DCM_walking_retargeting_(Xsens)`, or `DCM_walking_retargeting_(Virtualizer_Xsens)` depending on the experiment you want to perform.
 * On the same application window, connect all the ports.
 * On the windows machine, adjust the image size and positioning (field of view) of the Oculus (to zoom out press ctrl+z, to move the right display use right ctrl+direction, to move the left display use left ctrl+direction ).
-* On the linux machine to adjust the image quality, use the `frameGrapperGui` in the `calib_cams` application.
+* On the Linux machine to adjust the image quality, use the `frameGrapperGui` in the `calib_cams` application.
+
 
 ## :warning: Warning
-Currently the supported robots are only:
+Currently, the supported robots are only:
 - ``iCubGenova04``
 - ``iCubGenova02``
 
-
+**To get the updated information about the dependencies branches and how to run, please check the wiki page of this repository.**

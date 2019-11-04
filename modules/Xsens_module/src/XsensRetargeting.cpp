@@ -3,7 +3,24 @@
 #include <iterator>
 #include <sstream>
 
-XsensRetargeting::XsensRetargeting(){};
+class XsensRetargeting::impl
+{
+public:
+    /*
+     * map the joint values (order) coming from HDE to the controller order
+     * @param robotJointsListNames list of the joint names used in controller
+     * @param humanJointsListName list of the joint names received from the HDE
+     * (human-dynamics-estimation repository)
+     * @param humanToRobotMap the container for mapping of the human joints to the robot ones
+     * @return true in case of success and false otherwise
+     */
+    bool mapJointsHDE2Controller(std::vector<std::string> robotJointsListNames,
+                                 std::vector<std::string> humanJointsListName,
+                                 std::vector<unsigned>& humanToRobotMap);
+};
+
+XsensRetargeting::XsensRetargeting()
+    : pImpl{new impl()} {};
 
 XsensRetargeting::~XsensRetargeting(){};
 
@@ -63,36 +80,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     yInfo() << "XsensRetargeting::configure:  smoothingTime: " << smoothingTime;
     yInfo() << "XsensRetargeting::configure:  NoOfJoints: " << m_actuatedDOFs;
 
-    // check the human joints name list
-    yarp::os::Value* humanAxesListYarp;
-    if (!rf.check("human_joint_list_stream", humanAxesListYarp))
-    {
-        yError() << "[XsensRetargeting::configure] Unable to find human_joint_list_stream into "
-                    "config file.";
-        return false;
-    }
-
-    if (!YarpHelper::yarpListToStringVector(humanAxesListYarp, m_humanJointsListName))
-    {
-        yError() << "[XsensRetargeting::configure] Unable to convert yarp list into a "
-                    "vector of strings.";
-        return false;
-    }
-
-    yInfo() << "Human joints name list: [human joints list] [robot joints list]"
-            << m_humanJointsListName.size() << " , " << m_robotJointsListNames.size();
-
-    for (size_t i = 0; i < m_humanJointsListName.size(); i++)
-    {
-        if (i < m_robotJointsListNames.size())
-            yInfo() << "(" << i << "): " << m_humanJointsListName[i] << " , "
-                    << m_robotJointsListNames[i];
-        else
-        {
-            yInfo() << "(" << i << "): " << m_humanJointsListName[i] << " , --";
-        }
-    }
-
     std::string portName;
     if (!YarpHelper::getStringFromSearchable(rf, "wholeBodyJointsPort", portName))
     {
@@ -114,37 +101,6 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     {
         yError() << "[XsensRetargeting::configure] Unable to open the port " << portName;
         return false;
-    }
-
-    // I should do a maping between two vectors here.
-
-    bool foundMatch = false;
-    for (unsigned i = 0; i < m_robotJointsListNames.size(); i++)
-    {
-        for (unsigned j = 0; j < m_humanJointsListName.size(); j++)
-        {
-
-            if (m_robotJointsListNames[i] == m_humanJointsListName[j])
-            {
-                foundMatch = true;
-                m_humanToRobotMap.push_back(j);
-                break;
-            }
-        }
-        if (!foundMatch)
-        {
-            yError() << "not found match for: " << m_robotJointsListNames[i] << " , " << i;
-            ;
-            return false;
-        }
-        foundMatch = false;
-    }
-
-    yInfo() << "*** mapped joint names: ****";
-    for (size_t i = 0; i < m_robotJointsListNames.size(); i++)
-    {
-        yInfo() << "(" << i << ", " << m_humanToRobotMap[i] << "): " << m_robotJointsListNames[i]
-                << " , " << m_humanJointsListName[(m_humanToRobotMap[i])];
     }
 
     m_firstIteration = true;
@@ -179,8 +135,9 @@ bool XsensRetargeting::getJointValues()
 
     // in the msg thrift the first list is the joint names [get(0)], second the joint values
     // [get(1)]
-    yarp::os::Value humanjointsValueS = desiredHumanJoints->get(1);
-    yarp::os::Bottle* tmpHumanNewJointValues = humanjointsValueS.asList();
+
+    yarp::os::Value humanjointsValues = desiredHumanJoints->get(1);
+    yarp::os::Bottle* tmpHumanNewJointValues = humanjointsValues.asList();
 
     yarp::sig::Vector newJointValues;
     newJointValues.resize(m_actuatedDOFs, 0.0);
@@ -205,10 +162,57 @@ bool XsensRetargeting::getJointValues()
     {
         yInfo() << "[XsensRetargeting::getJointValues] Xsens Retargeting Module is Running ...";
         m_firstIteration = false;
+
+        /* We should do a maping between two vectors here: human and robot joint vectors, since
+         their order are not the same! */
+
+        // check the human joints name list
+        yarp::os::Value humanjointsNames = desiredHumanJoints->get(0);
+        yarp::os::Bottle* tmpHumanNewJointNames = humanjointsNames.asList();
+        if (tmpHumanNewJointNames->isNull())
+        {
+            yError() << "[XsensRetargeting::getJointValues()] Human joints name list is empty";
+            return false;
+        }
+
+        for (unsigned j = 0; j < tmpHumanNewJointNames->size(); j++)
+        {
+            m_humanJointsListName.push_back(tmpHumanNewJointNames->get(j).asString());
+        }
+
+        /* print human and robot joint name list */
+        yInfo() << "Human joints name list: [human joints list] [robot joints list]"
+                << m_humanJointsListName.size() << " , " << m_robotJointsListNames.size();
+
+        for (size_t i = 0; i < m_humanJointsListName.size(); i++)
+        {
+            if (i < m_robotJointsListNames.size())
+                yInfo() << "(" << i << "): " << m_humanJointsListName[i] << " , "
+                        << m_robotJointsListNames[i];
+            else
+            {
+                yInfo() << "(" << i << "): " << m_humanJointsListName[i] << " , --";
+            }
+        }
+        /* find the map between the human and robot joint list orders*/
+        if (!pImpl->mapJointsHDE2Controller(
+                m_robotJointsListNames, m_humanJointsListName, m_humanToRobotMap))
+        {
+            yError() << "[XsensRetargeting::getJointValues()] mapping is not possible";
+            return false;
+        }
+        if (m_humanToRobotMap.size() == 0)
+        {
+            yError() << "[XsensRetargeting::getJointValues()] m_humanToRobotMap.size is zero";
+        }
+
+        /* fill the robot joint list values*/
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
+
             newJointValues(j) = tmpHumanNewJointValues->get(m_humanToRobotMap[j]).asDouble();
             m_jointValues(j) = newJointValues(j);
+            yInfo() << " robot initial joint value: (" << j << "): " << m_jointValues[j];
         }
         m_WBTrajectorySmoother->init(m_jointValues);
     }
@@ -256,5 +260,45 @@ bool XsensRetargeting::updateModule()
 
 bool XsensRetargeting::close()
 {
+    return true;
+}
+bool XsensRetargeting::impl::mapJointsHDE2Controller(std::vector<std::string> robotJointsListNames,
+                                                     std::vector<std::string> humanJointsListName,
+                                                     std::vector<unsigned>& humanToRobotMap)
+{
+    if (!humanToRobotMap.empty())
+    {
+        humanToRobotMap.clear();
+    }
+
+    bool foundMatch = false;
+    for (unsigned i = 0; i < robotJointsListNames.size(); i++)
+    {
+        for (unsigned j = 0; j < humanJointsListName.size(); j++)
+        {
+
+            if (robotJointsListNames[i] == humanJointsListName[j])
+            {
+                foundMatch = true;
+                humanToRobotMap.push_back(j);
+                break;
+            }
+        }
+        if (!foundMatch)
+        {
+            yError() << "[XsensRetargeting::impl::mapJointsHDE2CONTROLLER] not found match for: "
+                     << robotJointsListNames[i] << " , " << i;
+            return false;
+        }
+        foundMatch = false;
+    }
+
+    yInfo() << "*** mapped joint names: ****";
+    for (size_t i = 0; i < robotJointsListNames.size(); i++)
+    {
+        yInfo() << "(" << i << ", " << humanToRobotMap[i] << "): " << robotJointsListNames[i]
+                << " , " << humanJointsListName[(humanToRobotMap[i])];
+    }
+
     return true;
 }
