@@ -178,4 +178,9 @@
     <to>/walking-coordinator/jointPosition:i</to>
   </connection>
 
+  <connection>
+    <from>/XsensRetargeting/CoM:o</from>
+    <to>/walking-coordinator/CoM:i</to>
+  </connection>
+
 </application>
