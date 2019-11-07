@@ -4,7 +4,11 @@
 
 add_subdirectory(Utils)
 add_subdirectory(Oculus_module)
-add_subdirectory(Xsens_module)
+
+if(WALKING_TELEOPERATION_COMPILE_XsensModule)
+  add_subdirectory(Xsens_module)
+endif (WALKING_TELEOPERATION_COMPILE_XsensModule)
+
 if (MSVC)
   add_subdirectory(Virtualizer_module)
 endif (MSVC)
