@@ -24,13 +24,13 @@
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
@@ -43,18 +43,6 @@
     <name>yarpdev</name>
     <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --gui_elements 0</parameters>
     <node>icub-virtualizer</node>
-  </module>
-
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config TransformServer.xml</parameters>
-    <node>icub30</node>
-  </module>
-
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config RobotStateProvider_iCub.xml</parameters>
-    <node>icub30</node>
   </module>
 
 
@@ -77,7 +65,7 @@
  <!-- Whole Body Retargeting using Xsens-->
   <module>
     <name>XsensRetargetingModule</name>
-    <node>icub-head</node>
+    <node>icub30</node>
   </module>
 
   <!-- Connections -->
@@ -115,13 +103,13 @@
   <connection>
     <from>/icub/camcalib/left/out</from>
     <to>/oculus/display/left:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/camcalib/right/out</from>
     <to>/oculus/display/right:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
 
