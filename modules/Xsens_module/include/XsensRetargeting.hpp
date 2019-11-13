@@ -67,6 +67,12 @@ private:
     bool m_firstIteration;
     double m_jointDiffThreshold;
 
+    /* do smoothing of the joint values */
+    bool m_useSmoothing;
+
+    /* do smoothing of the joint values */
+    bool m_yogaRetargeting;
+
 public:
     XsensRetargeting();
     ~XsensRetargeting();

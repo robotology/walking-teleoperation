@@ -35,6 +35,15 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    // check if doing yoga retargeting, otherwise it is Xsens-walking retargeing
+    m_yogaRetargeting = rf.check("yogaRetargeting", yarp::os::Value(false)).asBool();
+
+    // check if use the smoothing, otherwise we do not smooth the joint values
+    m_useSmoothing = rf.check("useSmoothing", yarp::os::Value(true)).asBool();
+
+    yInfo() << "[XsensRetargeting::configure] m_yogaRetargeting: " << m_yogaRetargeting;
+    yInfo() << "[XsensRetargeting::configure] m_useSmoothing: " << m_useSmoothing;
+
     // get the period
     m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asDouble();
 
@@ -57,10 +66,23 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     }
 
     yarp::os::Value* axesListYarp;
-    if (!rf.check("joints_list", axesListYarp))
+    if (m_yogaRetargeting)
+    { // read yoga retargeting
+        if (!rf.check("joints_list_yoga_controller", axesListYarp))
+        {
+            yError() << "[XsensRetargeting::configure] Unable to find joints_list_yoga_controller "
+                        "into config file.";
+            return false;
+        }
+    } else
     {
-        yError() << "[XsensRetargeting::configure] Unable to find joints_list into config file.";
-        return false;
+        // read from walking retargeting
+        if (!rf.check("joints_list_walking_controller", axesListYarp))
+        {
+            yError() << "[XsensRetargeting::configure] Unable to find "
+                        "joints_list_walking_controller into config file.";
+            return false;
+        }
     }
 
     if (!YarpHelper::yarpListToStringVector(axesListYarp, m_robotJointsListNames))
@@ -264,7 +286,13 @@ bool XsensRetargeting::updateModule()
         m_HumanCoMPort.write();
 
         yarp::sig::Vector& refValues = m_wholeBodyHumanSmoothedJointsPort.prepare();
-        getSmoothedJointValues(refValues);
+        if (m_useSmoothing)
+        {
+            getSmoothedJointValues(refValues);
+        } else
+        {
+            refValues = m_jointValues;
+        }
         m_wholeBodyHumanSmoothedJointsPort.write();
     }
 
