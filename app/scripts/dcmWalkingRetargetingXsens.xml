@@ -35,12 +35,6 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
-    <node>icub-virtualizer</node>
-  </module>
-
-  <module>
-    <name>yarpdev</name>
     <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --gui_elements 0</parameters>
     <node>icub-virtualizer</node>
   </module>
@@ -51,6 +45,7 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
+    <parameters>--from dcm_walking_joint_retargeting.ini</parameters>
   </module>
 
   <module>
@@ -65,7 +60,7 @@
  <!-- Whole Body Retargeting using Xsens-->
   <module>
     <name>XsensRetargetingModule</name>
-    <parameters> --yogaRetargeting 0  --useSmoothing 1</parameters>
+    <parameters> --yogaRetargeting 0  --useSmoothing 0</parameters>
     <node>icub30</node>
   </module>
 
