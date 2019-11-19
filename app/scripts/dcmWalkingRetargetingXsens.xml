@@ -60,7 +60,6 @@
  <!-- Whole Body Retargeting using Xsens-->
   <module>
     <name>XsensRetargetingModule</name>
-    <parameters> --yogaRetargeting 0  --useSmoothing 0</parameters>
     <node>icub30</node>
   </module>
 

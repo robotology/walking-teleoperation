@@ -20,7 +20,7 @@
  <!-- Whole Body Retargeting using Xsens-->
   <module>
     <name>XsensRetargetingModule</name>
-    <parameters> --yogaRetargeting 1  --useSmoothing 1</parameters>
+    <parameters>--from XsensRetargetingYoga.ini</parameters>
     <node>icub30</node>
   </module>
 
