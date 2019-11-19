@@ -41,7 +41,9 @@ private:
     std::unique_ptr<impl> pImpl;
     /** Minimum jerk trajectory smoother for the desired whole body joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_WBTrajectorySmoother{nullptr};
+    /** target (robot) joint values (raw amd smoothed values) */
     yarp::sig::Vector m_jointValues, m_smoothedJointValues;
+    /** CoM joint values coming from human-state-provider */
     yarp::sig::Vector m_CoMValues;
     std::vector<std::string>
         m_humanJointsListName; // the order of joints list arrived from human state provider is
@@ -69,9 +71,6 @@ private:
 
     /* do smoothing of the joint values */
     bool m_useSmoothing;
-
-    /* do smoothing of the joint values */
-    bool m_yogaRetargeting;
 
 public:
     XsensRetargeting();

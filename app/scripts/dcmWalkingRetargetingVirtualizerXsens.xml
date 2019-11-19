@@ -65,7 +65,6 @@
    <module>
      <name>XsensRetargetingModule</name>
      <node>icub30</node>
-    <parameters>--yogaRetargeting 0 --useSmoothing 0</parameters>
    </module>
 
 
