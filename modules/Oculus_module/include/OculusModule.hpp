@@ -47,8 +47,11 @@ private:
     enum class OculusFSM
     {
         Configured,
-        Running
+        Running,
+        InPreparation
     };
+    class impl;
+    std::unique_ptr<impl> pImpl;
     OculusFSM m_state; /**< State of the OculusFSM */
 
     // joypad utils
@@ -200,6 +203,8 @@ private:
     bool openLogger();
 
 public:
+    OculusModule();
+    ~OculusModule();
     /**
      * Get the period of the RFModule.
      * @return the period of the module.

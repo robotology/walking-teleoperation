@@ -396,8 +396,3 @@ bool RobotControlHelper::isVelocityControlUsed()
 {
     return m_controlMode == VOCAB_CM_VELOCITY;
 }
-
-bool RobotControlHelper::initializeJointValues(const yarp::sig::Vector& desiredValue)
-{
-    return setPositionReferences(desiredValue);
-}
