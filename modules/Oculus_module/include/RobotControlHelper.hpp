@@ -150,13 +150,6 @@ public:
     int getDoFs();
 
     /**
-     * Set the desired joint reference in position mode for board intialization
-     * @param desiredValue desired joint poision (radiant)
-     * @return true / false in case of success / failure
-     */
-    bool initializeJointValues(const yarp::sig::Vector& desiredValue);
-
-    /**
      * Close the helper
      */
     void close();

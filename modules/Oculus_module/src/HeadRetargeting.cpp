@@ -15,6 +15,23 @@
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
 
+class HeadRetargeting::impl
+{
+public:
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
+    yarp::sig::Vector m_preparationJointReferenceValues;
+    void initializeNeckJointsSmoother(unsigned actuatedDOFs,
+                                      double dT,
+                                      double smoothingTime,
+                                      yarp::sig::Vector jointsInitialValue);
+    void getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues);
+};
+
+HeadRetargeting::HeadRetargeting()
+    : pImpl{new impl()} {};
+
+HeadRetargeting::~HeadRetargeting(){};
+
 // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
 // Section 2.3
 void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head,
@@ -90,10 +107,36 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
         return false;
     }
 
+    double preparationSmoothingTime;
+    if (!YarpHelper::getDoubleFromSearchable(
+            config, "PreparationSmoothingTime", preparationSmoothingTime))
+    {
+        yError() << "[HeadRetargeting::configure] Unable to find the head smoothing time";
+        return false;
+    }
+    unsigned headDoFs = controlHelper()->getDoFs();
+
+    yarp::sig::Vector preparationJointReferenceValues;
+    preparationJointReferenceValues.resize(headDoFs);
+
+    if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "PreparationJointReferenceValues", preparationJointReferenceValues))
+    {
+        yError() << "[HeadRetargeting::configure] Initialization failed while reading "
+                    "PreparationJointReferenceValues vector.";
+        return false;
+    }
+
     m_headTrajectorySmoother
-        = std::make_unique<iCub::ctrl::minJerkTrajGen>(3, samplingTime, smoothingTime);
-    yarp::sig::Vector buff(3, 0.0);
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(headDoFs, samplingTime, smoothingTime);
+    yarp::sig::Vector buff(headDoFs, 0.0);
     m_headTrajectorySmoother->init(buff);
+
+    yarp::sig::Vector neckJointsFbk;
+    getNeckJointValues(neckJointsFbk);
+    pImpl->initializeNeckJointsSmoother(
+        headDoFs, samplingTime, preparationSmoothingTime, neckJointsFbk);
+    pImpl->m_preparationJointReferenceValues = preparationJointReferenceValues;
 
     return true;
 }
@@ -141,16 +184,39 @@ void HeadRetargeting::evalueNeckJointValues()
 bool HeadRetargeting::initializeNeckJointValues()
 {
     m_desiredJointValue.clear();
-    m_desiredJointValue.resize(
-        static_cast<size_t>(RetargetingController::controlHelper()->getDoFs()), 0.0);
-    return RetargetingController::controlHelper()->initializeJointValues(m_desiredJointValue);
+    pImpl->getNeckJointsRefSmoothedValues(m_desiredJointValue);
 }
 
-void getNeckJointValues();
+void HeadRetargeting::setDesiredNeckjointsValues(yarp::sig::Vector& DesiredNeckValues)
+{
+    m_desiredJointValue.clear();
+    m_desiredJointValue = DesiredNeckValues;
+    yInfo() << "head desired joint values: " << m_desiredJointValue(0) << " "
+            << m_desiredJointValue(1) << " " << m_desiredJointValue(2);
+}
 
-void HeadRetargeting::getNeckJointValues(std::vector<double>& neckValues)
+void HeadRetargeting::getNeckJointValues(yarp::sig::Vector& neckValues)
 {
     neckValues.clear();
-    for (size_t i = 0; i < m_desiredJointValue.size(); i++)
-        neckValues.push_back(m_desiredJointValue[i]);
+    if (!controlHelper()->getFeedback())
+    {
+        yInfo() << "[HeadRetargeting::getNeckJointValues] Unable the get the neck joints feedback "
+                   "from the robot.";
+    }
+    neckValues = controlHelper()->jointEncoders();
+}
+
+void HeadRetargeting::impl::initializeNeckJointsSmoother(unsigned m_actuatedDOFs,
+                                                         double m_dT,
+                                                         double smoothingTime,
+                                                         yarp::sig::Vector jointsInitialValue)
+{
+    m_NeckJointsPreparationSmoother
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_actuatedDOFs, m_dT, smoothingTime);
+    m_NeckJointsPreparationSmoother->init(jointsInitialValue);
+}
+void HeadRetargeting::impl::getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues)
+{
+    m_NeckJointsPreparationSmoother->computeNextValues(m_preparationJointReferenceValues);
+    smoothedJointValues = m_NeckJointsPreparationSmoother->getPos();
 }

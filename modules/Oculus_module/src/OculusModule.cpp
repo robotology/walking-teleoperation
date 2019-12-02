@@ -19,6 +19,24 @@
 
 #include <OculusModule.hpp>
 #include <Utils.hpp>
+class OculusModule::impl
+{
+public:
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
+    double m_PreparationSmoothingTime;
+    double m_dT;
+    unsigned m_actuatedDOFs;
+    void initializeNeckJointsSmoother(unsigned actuatedDOFs,
+                                      double dT,
+                                      double smoothingTime,
+                                      yarp::sig::Vector jointsInitialValue);
+    void getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues);
+};
+
+OculusModule::OculusModule()
+    : pImpl{new impl()} {};
+
+OculusModule::~OculusModule(){};
 
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
@@ -689,15 +707,25 @@ bool OculusModule::updateModule()
             }
 
             std::vector<double> neckAngles;
-            m_head->getNeckJointValues(neckAngles);
+            yarp::sig::Vector neckValuesSig;
+            m_head->getNeckJointValues(neckValuesSig);
+            for (unsigned i = 0; i < neckValuesSig.size(); i++)
+            {
+                neckAngles.push_back(neckValuesSig(i));
+            }
             m_logger->add(m_logger_prefix + "_neckJointValues", neckAngles);
 
             std::vector<double> lFingers, rFingers;
             m_leftHandFingers->getFingerValues(lFingers);
-            m_leftHandFingers->controlHelper()->getDoFs();
             m_rightHandFingers->getFingerValues(rFingers);
-            m_logger->add(m_logger_prefix + "_leftFingerValues", lFingers);
-            m_logger->add(m_logger_prefix + "_rightFingerValues", rFingers);
+            if (lFingers.size() > 0)
+            {
+                m_logger->add(m_logger_prefix + "_leftFingerValues", lFingers);
+            }
+            if (rFingers.size() > 0)
+            {
+                m_logger->add(m_logger_prefix + "_rightFingerValues", rFingers);
+            }
 
             std::vector<double> left_robotHandpose_robotTel, left_humanHandpose_oculusInertial,
                 left_humanHandpose_humanTel;
@@ -739,27 +767,41 @@ bool OculusModule::updateModule()
     } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
-        std::vector<float> buttonMapping(2);
+        float buttonMapping;
 
         // prepare robot (A button)
-        m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping[0]);
-
-        // start walking (X button)
-        m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping[1]);
-
+        m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
         yarp::os::Bottle cmd, outcome;
-        if (buttonMapping[0] > 0)
+
+        if (buttonMapping > 0)
         {
             // TODO add a visual feedback for the user
             if (m_moveRobot)
             {
                 cmd.addString("prepareRobot");
                 m_rpcWalkingClient.write(cmd, outcome);
-                // initialize the neck joint angles to zero
-                m_head->initializeNeckJointValues();
             }
+            m_state = OculusFSM::InPreparation;
             yInfo() << "[OculusModule::updateModule] prepare the robot";
-        } else if (buttonMapping[1] > 0)
+        }
+    } else if (m_state == OculusFSM::InPreparation)
+    {
+        if (m_moveRobot)
+        {
+            m_head->initializeNeckJointValues();
+            if (!m_head->move())
+            {
+                yError() << "[updateModule::updateModule] unable to move the head";
+                return false;
+            }
+        }
+
+        float buttonMapping;
+        // start walking (X button)
+        m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
+        yarp::os::Bottle cmd, outcome;
+
+        if (buttonMapping > 0)
         {
             if (m_useVirtualizer)
             {
@@ -887,4 +929,20 @@ bool OculusModule::openLogger()
 
 #endif
     return true;
+}
+
+void OculusModule::impl::initializeNeckJointsSmoother(unsigned m_actuatedDOFs,
+                                                      double m_dT,
+                                                      double smoothingTime,
+                                                      yarp::sig::Vector jointsInitialValue)
+{
+    m_NeckJointsPreparationSmoother
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_actuatedDOFs, m_dT, smoothingTime);
+    m_NeckJointsPreparationSmoother->init(jointsInitialValue);
+}
+void OculusModule::impl::getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues)
+{
+    yarp::sig::Vector jointValues = {0.0, 0.0, 0.0};
+    m_NeckJointsPreparationSmoother->computeNextValues(jointValues);
+    smoothedJointValues = m_NeckJointsPreparationSmoother->getPos();
 }
