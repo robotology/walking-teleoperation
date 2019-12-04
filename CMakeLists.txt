@@ -12,6 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(YARP REQUIRED)
 find_package(YCM REQUIRED)
+include(WalkingTeleoperationFindDependencies)
 
 add_subdirectory(modules)
 add_subdirectory(app)

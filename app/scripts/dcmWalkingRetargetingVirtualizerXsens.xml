@@ -22,19 +22,13 @@
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left --useIMU</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right --useIMU</parameters>
-    <node>icub-virtualizer</node>
-  </module>
-
-  <module>
-    <name>yarpdev</name>
-    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
@@ -43,22 +37,12 @@
     <node>icub-virtualizer</node>
   </module>
 
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config TransformServer.xml</parameters>
-    <node>icub30</node>
-  </module>
-
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config RobotStateProvider_iCub.xml</parameters>
-    <node>icub30</node>
-  </module>
 
   <!-- Modules -->
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
+    <parameters>--from dcm_walking_joint_retargeting.ini</parameters>
   </module>
 
   <module>
@@ -80,7 +64,7 @@
   <!-- Whole Body Retargeting using Xsens-->
    <module>
      <name>XsensRetargetingModule</name>
-     <node>icub-head</node>
+     <node>icub30</node>
    </module>
 
 
@@ -159,13 +143,13 @@
   <connection>
     <from>/icub/camcalib/left/out</from>
     <to>/oculus/display/left:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/camcalib/right/out</from>
     <to>/oculus/display/right:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
@@ -176,6 +160,11 @@
   <connection>
     <from>/XsensRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
+  </connection>
+
+  <connection>
+    <from>/XsensRetargeting/CoM:o</from>
+    <to>/walking-coordinator/CoM:i</to>
   </connection>
 
 </application>

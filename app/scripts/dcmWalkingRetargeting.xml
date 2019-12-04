@@ -23,13 +23,13 @@
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
-    <node>icub-virtualizer</node>
+    <node>icub30</node>
   </module>
 
   <module>
@@ -49,7 +49,7 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
-    <parameters> --from dcm_walking_retargeting.ini </parameters>
+    <parameters> --from dcm_walking_hand_retargeting.ini </parameters>
   </module>
 
   <module>
@@ -112,13 +112,13 @@
   <connection>
     <from>/icub/camcalib/left/out</from>
     <to>/oculus/display/left:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/camcalib/right/out</from>
     <to>/oculus/display/right:i</to>
-    <protocol>shmem</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
 </application>
