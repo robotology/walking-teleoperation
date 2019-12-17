@@ -400,6 +400,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
     }
+    m_oculusHeadsetPoseInertial.resize(6, 0.0);
 
     m_state = OculusFSM::Configured;
 
@@ -413,6 +414,14 @@ double OculusModule::getPeriod()
 
 bool OculusModule::close()
 {
+#ifdef ENABLE_LOGGER
+    if (m_enableLogger)
+    {
+        m_logger->flush_available_data();
+    }
+#endif
+    // m_logger.reset();
+
     // close devices
     m_head->controlHelper()->close();
     m_rightHandFingers->controlHelper()->close();
@@ -474,6 +483,10 @@ bool OculusModule::getTransforms()
                     = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
                                                                 desiredHeadOrientationVector(0),
                                                                 desiredHeadOrientationVector(2)));
+
+                m_oculusHeadsetPoseInertial[3] = -desiredHeadOrientationVector(1);
+                m_oculusHeadsetPoseInertial[4] = desiredHeadOrientationVector(0);
+                m_oculusHeadsetPoseInertial[5] = desiredHeadOrientationVector(2);
             }
 
             // get head position
@@ -493,14 +506,12 @@ bool OculusModule::getTransforms()
                 // https://developer.oculus.com/documentation/pcsdk/latest/concepts/dg-sensor/
                 //            iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 3, 3, 1)
                 //                = iDynTree::toEigen(desiredHeadPositionVector);
+
+                m_oculusHeadsetPoseInertial[0] = desiredHeadPositionVector(0);
+                m_oculusHeadsetPoseInertial[1] = desiredHeadPositionVector(1);
+                m_oculusHeadsetPoseInertial[2] = desiredHeadPositionVector(2);
             }
-            m_oculusHeadsetPoseInertial.clear();
-            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(0));
-            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(1));
-            m_oculusHeadsetPoseInertial.push_back(desiredHeadPositionVector(2));
-            m_oculusHeadsetPoseInertial.push_back(-desiredHeadOrientationVector(1));
-            m_oculusHeadsetPoseInertial.push_back(desiredHeadOrientationVector(0));
-            m_oculusHeadsetPoseInertial.push_back(desiredHeadOrientationVector(2));
+
         } else
         {
             if (!m_frameTransformInterface->getTransform(
