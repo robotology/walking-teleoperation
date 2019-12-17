@@ -142,6 +142,9 @@ private:
 
     double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
                                    only yaw. */
+    double m_playerOrientationOld; /**< previous updated Player orientation (read by the
+                                   Virtualizer) only yaw. */
+    double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
     bool m_enableLogger; /**< log the data (if ON) */
 #ifdef ENABLE_LOGGER

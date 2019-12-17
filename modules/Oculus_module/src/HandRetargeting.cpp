@@ -64,6 +64,11 @@ void HandRetargeting::setPlayerOrientation(const double& playerOrientation)
     m_oculusInertial_T_teleopFrame.setRotation(iDynTree::Rotation::RotZ(-playerOrientation));
 }
 
+void HandRetargeting::setPlayerPosition(const iDynTree::Position& playerPosition)
+{
+    m_oculusInertial_T_teleopFrame.setPosition(playerPosition);
+}
+
 void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformation)
 {
     iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
