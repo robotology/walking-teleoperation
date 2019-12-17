@@ -72,6 +72,12 @@ public:
     void setPlayerOrientation(const double& playerOrientation);
 
     /**
+     * Set the player position (coming from the ovr headset)
+     * @param playerPosition Position of the player head (teleopartion frame) in meter
+     */
+    void setPlayerPosition(const iDynTree::Position& playerPosition);
+
+    /**
      * Set the root tho hand transformation
      * @param handTransformation root to hand transformation (root_T_hand)
      */

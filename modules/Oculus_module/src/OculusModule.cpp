@@ -234,6 +234,12 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_moveRobot = generalOptions.check("enableMoveRobot", yarp::os::Value(1)).asBool();
     yInfo() << "[OculusModule::configure] move the robot: " << m_moveRobot;
 
+    // check if move the robot
+    m_playerOrientationThreshold
+        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asDouble();
+    yInfo() << "[OculusModule::configure] player orientation threshold: "
+            << m_playerOrientationThreshold;
+
     // check if log the data
     m_enableLogger = generalOptions.check("enableLogger", yarp::os::Value(0)).asBool();
 
@@ -389,6 +395,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     m_playerOrientation = 0;
+    m_playerOrientationOld = 0;
     m_robotYaw = 0;
 
     // open the logger only if all the vecotos sizes are clear.
@@ -626,22 +633,39 @@ bool OculusModule::updateModule()
                     return false;
                 }
             }
-            // left hand
+            // update left hand transformation values
             yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
             m_leftHand->setPlayerOrientation(m_playerOrientation);
             m_leftHand->setHandTransform(m_oculusRoot_T_lOculus);
-            m_leftHand->evaluateDesiredHandPose(leftHandPose);
-            if (m_moveRobot)
-            {
-                m_leftHandPosePort.write();
-            }
-            // right hand
+
+            // update right hand transformation values
             yarp::sig::Vector& rightHandPose = m_rightHandPosePort.prepare();
             m_rightHand->setPlayerOrientation(m_playerOrientation);
             m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
+
+            if (m_useVirtualizer)
+            {
+                if (std::abs(m_playerOrientation - m_playerOrientationOld)
+                    > m_playerOrientationThreshold)
+                {
+                    iDynTree::Position teleopPosition = {m_oculusHeadsetPoseInertial[0],
+                                                         m_oculusHeadsetPoseInertial[1],
+                                                         m_oculusHeadsetPoseInertial[2]};
+
+                    m_leftHand->setPlayerPosition(teleopPosition);
+                    m_rightHand->setPlayerPosition(teleopPosition);
+                    m_playerOrientationOld = m_playerOrientation;
+                }
+            }
+
+            // evaluate the robot hands' pose
+            m_leftHand->evaluateDesiredHandPose(leftHandPose);
             m_rightHand->evaluateDesiredHandPose(rightHandPose);
+
+            // move the robot
             if (m_moveRobot)
             {
+                m_leftHandPosePort.write();
                 m_rightHandPosePort.write();
             }
         }
