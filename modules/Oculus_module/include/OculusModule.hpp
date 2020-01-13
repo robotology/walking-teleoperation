@@ -50,8 +50,8 @@ private:
         Running,
         InPreparation
     };
-    class impl;
-    std::unique_ptr<impl> pImpl;
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
     OculusFSM m_state; /**< State of the OculusFSM */
 
     // joypad utils
@@ -240,7 +240,7 @@ inline std::string getTimeDateMatExtension()
     // https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono
     auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::string timedate;
-    std::strftime(&timedate[0], timedate.size(), "%Y-%m-%d%H:%M:%Slog.mat", std::localtime(&now));
+    std::strftime(&timedate[0], timedate.size(), "%Y-%m-%d%H:%M:%S", std::localtime(&now));
     return timedate;
 }
 
