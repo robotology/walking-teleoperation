@@ -19,22 +19,21 @@
 
 #include <OculusModule.hpp>
 #include <Utils.hpp>
-class OculusModule::impl
+struct OculusModule::Impl
 {
-public:
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
     double m_PreparationSmoothingTime;
     double m_dT;
     unsigned m_actuatedDOFs;
-    void initializeNeckJointsSmoother(unsigned actuatedDOFs,
-                                      double dT,
-                                      double smoothingTime,
-                                      yarp::sig::Vector jointsInitialValue);
+    void initializeNeckJointsSmoother(const unsigned actuatedDOFs,
+                                      const double dT,
+                                      const double smoothingTime,
+                                      const yarp::sig::Vector jointsInitialValue);
     void getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues);
 };
 
 OculusModule::OculusModule()
-    : pImpl{new impl()} {};
+    : pImpl{new Impl()} {};
 
 OculusModule::~OculusModule(){};
 
@@ -211,9 +210,9 @@ bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 {
 #ifdef ENABLE_LOGGER
-    yInfo() << "[OculusModule::configure] matlogger2 is installed!";
+    yInfo() << "[OculusModule::configure] matlogger2 is eanbled!";
 #else
-    yInfo() << "[OculusModule::configure] matlogger2 is not installed!";
+    yInfo() << "[OculusModule::configure] matlogger2 is disabled!";
 #endif
 
     yarp::os::Value* value;
@@ -922,7 +921,7 @@ bool OculusModule::openLogger()
 {
 #ifdef ENABLE_LOGGER
     std::string currentTime = getTimeDateMatExtension();
-    std::string fileName = "OculusModule" + currentTime;
+    std::string fileName = "OculusModule" + currentTime + "log.mat";
 
     m_logger = XBot::MatLogger2::MakeLogger(fileName);
     m_appender = XBot::MatAppender::MakeInstance();
@@ -966,16 +965,16 @@ bool OculusModule::openLogger()
     return true;
 }
 
-void OculusModule::impl::initializeNeckJointsSmoother(unsigned m_actuatedDOFs,
-                                                      double m_dT,
-                                                      double smoothingTime,
-                                                      yarp::sig::Vector jointsInitialValue)
+void OculusModule::Impl::initializeNeckJointsSmoother(const unsigned m_actuatedDOFs,
+                                                      const double m_dT,
+                                                      const double smoothingTime,
+                                                      const yarp::sig::Vector jointsInitialValue)
 {
     m_NeckJointsPreparationSmoother
         = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_actuatedDOFs, m_dT, smoothingTime);
     m_NeckJointsPreparationSmoother->init(jointsInitialValue);
 }
-void OculusModule::impl::getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues)
+void OculusModule::Impl::getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues)
 {
     yarp::sig::Vector jointValues = {0.0, 0.0, 0.0};
     m_NeckJointsPreparationSmoother->computeNextValues(jointValues);

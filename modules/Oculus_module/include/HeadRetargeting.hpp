@@ -30,8 +30,8 @@
 class HeadRetargeting : public RetargetingController
 {
 private:
-    class impl;
-    std::unique_ptr<impl> pImpl;
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
 
     /** Minimum jerk trajectory smoother for the desired head joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
@@ -109,7 +109,7 @@ public:
      * Set the neck desired joints values
      * @param DesiredNeckValues neck joint desired values vector
      */
-    void setDesiredNeckjointsValues(yarp::sig::Vector& DesiredNeckValues);
+    void setDesiredNeckjointsValues(yarp::sig::Vector& desiredNeckValues);
 
     /**
      * Initialize neck joints values at preparation time with Zero value
