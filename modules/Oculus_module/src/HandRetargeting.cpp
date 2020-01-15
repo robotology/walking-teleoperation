@@ -64,6 +64,11 @@ void HandRetargeting::setPlayerOrientation(const double& playerOrientation)
     m_oculusInertial_T_teleopFrame.setRotation(iDynTree::Rotation::RotZ(-playerOrientation));
 }
 
+void HandRetargeting::setPlayerPosition(const iDynTree::Position& playerPosition)
+{
+    m_oculusInertial_T_teleopFrame.setPosition(playerPosition);
+}
+
 void HandRetargeting::setHandTransform(const yarp::sig::Matrix& handTransformation)
 {
     iDynTree::toiDynTree(handTransformation, m_oculusInertial_T_handOculusFrame);
@@ -89,4 +94,52 @@ void HandRetargeting::evaluateDesiredHandPose(yarp::sig::Vector& handPose)
     handPose.push_back(handOrientation(0));
     handPose.push_back(handOrientation(1));
     handPose.push_back(handOrientation(2));
+}
+
+void HandRetargeting::getHandInfo(std::vector<double>& robotHandposeWrtRobotTel,
+                                  std::vector<double>& humanHandposeWrtOculusInertial,
+                                  std::vector<double>& humanHandposeWrtHumanTel)
+{
+    // robot hand pose wrt robot teleoperation frame
+    iDynTree::Vector3 handOrientation, handPosition;
+    handOrientation = m_teleopRobotFrame_T_handRobotFrame.getRotation().asRPY();
+    handPosition = m_teleopRobotFrame_T_handRobotFrame.getPosition();
+    iDynTree::toEigen(handPosition) = m_scalingFactor * iDynTree::toEigen(handPosition);
+
+    robotHandposeWrtRobotTel.clear();
+    robotHandposeWrtRobotTel.push_back(handPosition(0));
+    robotHandposeWrtRobotTel.push_back(handPosition(1));
+    robotHandposeWrtRobotTel.push_back(handPosition(2));
+    robotHandposeWrtRobotTel.push_back(handOrientation(0));
+    robotHandposeWrtRobotTel.push_back(handOrientation(1));
+    robotHandposeWrtRobotTel.push_back(handOrientation(2));
+
+    // human hand pose wrt oculus inertial frame
+    iDynTree::Vector3 handOrientationInertial, handPositionInertial;
+    handOrientationInertial = m_oculusInertial_T_handOculusFrame.getRotation().asRPY();
+    handPositionInertial = m_oculusInertial_T_handOculusFrame.getPosition();
+
+    humanHandposeWrtOculusInertial.clear();
+    humanHandposeWrtOculusInertial.push_back(handPositionInertial(0));
+    humanHandposeWrtOculusInertial.push_back(handPositionInertial(1));
+    humanHandposeWrtOculusInertial.push_back(handPositionInertial(2));
+    humanHandposeWrtOculusInertial.push_back(handOrientationInertial(0));
+    humanHandposeWrtOculusInertial.push_back(handOrientationInertial(1));
+    humanHandposeWrtOculusInertial.push_back(handOrientationInertial(2));
+
+    // human hand pose wrt human teleopration frame
+    iDynTree::Transform teleopFrame_T_handOculusFrame
+        = m_oculusInertial_T_teleopFrame.inverse() * m_oculusInertial_T_handOculusFrame;
+
+    iDynTree::Vector3 handOrientationTeleoperation, handPositionTeleoperation;
+    handOrientationTeleoperation = teleopFrame_T_handOculusFrame.getRotation().asRPY();
+    handPositionTeleoperation = teleopFrame_T_handOculusFrame.getPosition();
+
+    humanHandposeWrtHumanTel.clear();
+    humanHandposeWrtHumanTel.push_back(handPositionTeleoperation(0));
+    humanHandposeWrtHumanTel.push_back(handPositionTeleoperation(1));
+    humanHandposeWrtHumanTel.push_back(handPositionTeleoperation(2));
+    humanHandposeWrtHumanTel.push_back(handOrientationTeleoperation(0));
+    humanHandposeWrtHumanTel.push_back(handOrientationTeleoperation(1));
+    humanHandposeWrtHumanTel.push_back(handOrientationTeleoperation(2));
 }

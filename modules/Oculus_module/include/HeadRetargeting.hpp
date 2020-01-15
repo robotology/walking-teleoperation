@@ -30,6 +30,9 @@
 class HeadRetargeting : public RetargetingController
 {
 private:
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
+
     /** Minimum jerk trajectory smoother for the desired head joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
 
@@ -46,6 +49,9 @@ private:
     iDynTree::Rotation m_teleopFrame_R_headOculus;
 
 public:
+    HeadRetargeting();
+    ~HeadRetargeting() override;
+
     /**
      * Configure the object.
      * @param config is the reference to a resource finder object.
@@ -95,7 +101,30 @@ public:
     forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
 
     /**
-     * Move the neck joints according to the desired head pose
+     * Evaluate the neck joints according to the desired head pose
+     */
+    void evalueNeckJointValues();
+
+    /**
+     * Set the neck desired joints values
+     * @param DesiredNeckValues neck joint desired values vector
+     */
+    void setDesiredNeckjointsValues(yarp::sig::Vector& desiredNeckValues);
+
+    /**
+     * Initialize neck joints values at preparation time with Zero value
+     * @return intialized if the neck is initialized return true
+     */
+    bool initializeNeckJointValues();
+
+    /**
+     * Get the neck joints values
+     * @param neckValues neck joint values vector
+     */
+    void getNeckJointValues(yarp::sig::Vector& neckValues);
+
+    /**
+     * Move the neck joints according to the desired joint values
      * @return true in case of success and false otherwise
      */
     bool move() override;

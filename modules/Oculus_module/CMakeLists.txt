@@ -6,6 +6,8 @@
 set(EXE_TARGET_NAME OculusRetargetingModule)
 
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
+option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
+
 mark_as_advanced(ENABLE_RPATH)
 include(AddInstallRPATHSupport)
 add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
@@ -18,6 +20,10 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(iDynTree REQUIRED)
+if(ENABLE_LOGGER)
+  add_definitions(-DENABLE_LOGGER)
+  find_package(matlogger2 REQUIRED)
+endif(ENABLE_LOGGER)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include(FindPackageHandleStandardArgs)
 
@@ -52,10 +58,20 @@ include_directories(
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
 
-target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
-  ${YARP_LIBRARIES}
-  ${iDynTree_LIBRARIES}
-  ctrlLib
-  UtilityLibrary)
+if(ENABLE_LOGGER)
+  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
+    ${YARP_LIBRARIES}
+    ${iDynTree_LIBRARIES}
+    ctrlLib
+    UtilityLibrary
+    matlogger2::matlogger2)
+else(ENABLE_LOGGER)
+  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
+    ${YARP_LIBRARIES}
+    ${iDynTree_LIBRARIES}
+    ctrlLib
+    UtilityLibrary
+)
+endif()
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)

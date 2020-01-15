@@ -44,10 +44,16 @@ public:
     bool configure(const yarp::os::Searchable& config, const std::string& name) override;
 
     /**
-     * Move the fingers
+     * Set the fingers velocities
      * @param fingersVelocity value from -1 to 1
      * @return true in case of success and false otherwise.
      */
     bool setFingersVelocity(const double& fingersVelocity);
+
+    /**
+     * Get the fingers velocities or values
+     * @param fingerValue get the finger velocity or value
+     */
+    void getFingerValues(std::vector<double>& fingerValues);
 };
 #endif

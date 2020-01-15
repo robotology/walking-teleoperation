@@ -19,6 +19,23 @@
 
 #include <OculusModule.hpp>
 #include <Utils.hpp>
+struct OculusModule::Impl
+{
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
+    double m_PreparationSmoothingTime;
+    double m_dT;
+    unsigned m_actuatedDOFs;
+    void initializeNeckJointsSmoother(const unsigned actuatedDOFs,
+                                      const double dT,
+                                      const double smoothingTime,
+                                      const yarp::sig::Vector jointsInitialValue);
+    void getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues);
+};
+
+OculusModule::OculusModule()
+    : pImpl{new Impl()} {};
+
+OculusModule::~OculusModule(){};
 
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
@@ -54,18 +71,38 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
         // the oculus headset orientation is actually streamed through a yarp port and
         // not using the transform server. In a future implementation this port
         // will be removed
+        // oculus orientation values
         std::string portName;
         if (!YarpHelper::getStringFromSearchable(config, "oculusOrientationPort", portName))
         {
-            yError() << "[OculusModule::configureTranformClient] Unable to get a string from a "
+            yError() << "[OculusModule::configureTranformClient] Unable to get string "
+                        "(oculusOrientationPort) from a "
                         "searchable";
             return false;
         }
 
         if (!m_oculusOrientationPort.open("/" + getName() + portName))
         {
-            yError() << "[OculusModule::configureTranformClient] Unable to open the port "
+            yError() << "[OculusModule::configureTranformClient] Unable to open the port oculus "
+                        "orientation "
                      << "/" << getName() << portName;
+            return false;
+        }
+
+        // oculus position values
+        if (!YarpHelper::getStringFromSearchable(config, "oculusPositionPort", portName))
+        {
+            yError() << "[OculusModule::configureTranformClient] Unable to get a string "
+                        "(oculusPositionPort) from a "
+                        "searchable";
+            return false;
+        }
+
+        if (!m_oculusPositionPort.open("/" + getName() + portName))
+        {
+            yError()
+                << "[OculusModule::configureTranformClient] Unable to open the port oculus position"
+                << "/" << getName() << portName;
             return false;
         }
     }
@@ -172,6 +209,12 @@ bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 
 bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 {
+#ifdef ENABLE_LOGGER
+    yInfo() << "[OculusModule::configure] matlogger2 is eanbled!";
+#else
+    yInfo() << "[OculusModule::configure] matlogger2 is disabled!";
+#endif
+
     yarp::os::Value* value;
 
     // check if the configuration file is empty
@@ -185,6 +228,19 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     yarp::os::Bottle& generalOptions = rf.findGroup("GENERAL");
     // get the period
     m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+
+    // check if move the robot
+    m_moveRobot = generalOptions.check("enableMoveRobot", yarp::os::Value(1)).asBool();
+    yInfo() << "[OculusModule::configure] move the robot: " << m_moveRobot;
+
+    // check if move the robot
+    m_playerOrientationThreshold
+        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asDouble();
+    yInfo() << "[OculusModule::configure] player orientation threshold: "
+            << m_playerOrientationThreshold;
+
+    // check if log the data
+    m_enableLogger = generalOptions.check("enableLogger", yarp::os::Value(0)).asBool();
 
     // set the module name
     std::string name;
@@ -338,7 +394,19 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     m_playerOrientation = 0;
+    m_playerOrientationOld = 0;
     m_robotYaw = 0;
+
+    // open the logger only if all the vecotos sizes are clear.
+    if (m_enableLogger)
+    {
+        if (!openLogger())
+        {
+            yError() << "[OculusModule::configure] Unable to open the logger";
+            return false;
+        }
+    }
+    m_oculusHeadsetPoseInertial.resize(6, 0.0);
 
     m_state = OculusFSM::Configured;
 
@@ -352,6 +420,14 @@ double OculusModule::getPeriod()
 
 bool OculusModule::close()
 {
+#ifdef ENABLE_LOGGER
+    if (m_enableLogger)
+    {
+        m_logger->flush_available_data();
+    }
+#endif
+    // m_logger.reset();
+
     // close devices
     m_head->controlHelper()->close();
     m_rightHandFingers->controlHelper()->close();
@@ -397,8 +473,8 @@ bool OculusModule::getTransforms()
         if (!m_frameTransformInterface->frameExists(m_headFrameName))
         {
             // head
+            // get head orientation
             yarp::os::Bottle* desiredHeadOrientation = NULL;
-
             iDynTree::Vector3 desiredHeadOrientationVector;
             desiredHeadOrientation = m_oculusOrientationPort.read(false);
             if (desiredHeadOrientation != NULL)
@@ -413,7 +489,35 @@ bool OculusModule::getTransforms()
                     = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
                                                                 desiredHeadOrientationVector(0),
                                                                 desiredHeadOrientationVector(2)));
+
+                m_oculusHeadsetPoseInertial[3] = -desiredHeadOrientationVector(1);
+                m_oculusHeadsetPoseInertial[4] = desiredHeadOrientationVector(0);
+                m_oculusHeadsetPoseInertial[5] = desiredHeadOrientationVector(2);
             }
+
+            // get head position
+            yarp::os::Bottle* desiredHeadPosition = NULL;
+            iDynTree::Vector3 desiredHeadPositionVector;
+            desiredHeadPosition = m_oculusPositionPort.read(false);
+            if (desiredHeadPosition != NULL)
+            {
+                for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
+                {
+                    desiredHeadPositionVector(i) = desiredHeadPosition->get(i).asDouble();
+                }
+
+                // the data coming from oculus vr is with the following order:
+                // [x,y,z]
+                // coordinate system definition is provided in:
+                // https://developer.oculus.com/documentation/pcsdk/latest/concepts/dg-sensor/
+                //            iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 3, 3, 1)
+                //                = iDynTree::toEigen(desiredHeadPositionVector);
+
+                m_oculusHeadsetPoseInertial[0] = desiredHeadPositionVector(0);
+                m_oculusHeadsetPoseInertial[1] = desiredHeadPositionVector(1);
+                m_oculusHeadsetPoseInertial[2] = desiredHeadPositionVector(2);
+            }
+
         } else
         {
             if (!m_frameTransformInterface->getTransform(
@@ -492,6 +596,7 @@ bool OculusModule::updateModule()
 
     if (m_state == OculusFSM::Running)
     {
+
         // get the transformation form the oculus
         if (!getTransforms())
         {
@@ -516,30 +621,56 @@ bool OculusModule::updateModule()
         {
             m_head->setPlayerOrientation(m_playerOrientation);
             m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
+            m_head->evalueNeckJointValues();
             // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
             // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
-            if (!m_head->move())
+            if (m_moveRobot)
             {
-                yError() << "[OculusModule::updateModule] unable to move the head";
-                return false;
+                if (!m_head->move())
+                {
+                    yError() << "[updateModule::updateModule] unable to move the head";
+                    return false;
+                }
             }
-
-            // left hand
+            // update left hand transformation values
             yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
             m_leftHand->setPlayerOrientation(m_playerOrientation);
             m_leftHand->setHandTransform(m_oculusRoot_T_lOculus);
-            m_leftHand->evaluateDesiredHandPose(leftHandPose);
-            m_leftHandPosePort.write();
 
-            // right hand
+            // update right hand transformation values
             yarp::sig::Vector& rightHandPose = m_rightHandPosePort.prepare();
             m_rightHand->setPlayerOrientation(m_playerOrientation);
             m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
+
+            if (m_useVirtualizer)
+            {
+                if (std::abs(m_playerOrientation - m_playerOrientationOld)
+                    > m_playerOrientationThreshold)
+                {
+                    iDynTree::Position teleopPosition = {m_oculusHeadsetPoseInertial[0],
+                                                         m_oculusHeadsetPoseInertial[1],
+                                                         m_oculusHeadsetPoseInertial[2]};
+
+                    m_leftHand->setPlayerPosition(teleopPosition);
+                    m_rightHand->setPlayerPosition(teleopPosition);
+                    m_playerOrientationOld = m_playerOrientation;
+                }
+            }
+
+            // evaluate the robot hands' pose
+            m_leftHand->evaluateDesiredHandPose(leftHandPose);
             m_rightHand->evaluateDesiredHandPose(rightHandPose);
-            m_rightHandPosePort.write();
+
+            // move the robot
+            if (m_moveRobot)
+            {
+                m_leftHandPosePort.write();
+                m_rightHandPosePort.write();
+            }
         }
 
         // use joypad
+        std::vector<double> locCmd;
         if (!m_useVirtualizer)
         {
             yarp::os::Bottle cmd, outcome;
@@ -554,7 +685,12 @@ bool OculusModule::updateModule()
             cmd.addString("setGoal");
             cmd.addDouble(x);
             cmd.addDouble(y);
-            m_rpcWalkingClient.write(cmd, outcome);
+            if (m_moveRobot)
+            {
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
+            locCmd.push_back(x);
+            locCmd.push_back(y);
         }
 
         // left fingers
@@ -565,10 +701,13 @@ bool OculusModule::updateModule()
             yError() << "[OculusModule::updateModule] Unable to set the left finger velocity.";
             return false;
         }
-        if (!m_leftHandFingers->move())
+        if (m_moveRobot)
         {
-            yError() << "[OculusModule::updateModule] Unable to move the left finger";
-            return false;
+            if (!m_leftHandFingers->move())
+            {
+                yError() << "[OculusModule::updateModule] Unable to move the left finger";
+                return false;
+            }
         }
 
         // right fingers
@@ -579,33 +718,128 @@ bool OculusModule::updateModule()
             yError() << "[OculusModule::updateModule] Unable to set the right finger velocity.";
             return false;
         }
-        if (!m_rightHandFingers->move())
+        if (m_moveRobot)
         {
-            yError() << "[OculusModule::updateModule] Unable to move the right finger";
-            return false;
+            if (!m_rightHandFingers->move())
+            {
+                yError() << "[OculusModule::updateModule] Unable to move the right finger";
+                return false;
+            }
         }
 
+#ifdef ENABLE_LOGGER
+        if (m_enableLogger)
+        {
+            m_logger->add(m_logger_prefix + "_time", yarp::os::Time::now());
+            m_logger->add(m_logger_prefix + "_playerOrientation", m_playerOrientation);
+            if (m_moveRobot)
+            {
+                m_logger->add(m_logger_prefix + "_robotYaw", m_robotYaw);
+            } else
+            {
+                m_logger->add(m_logger_prefix + "_robotYaw", 0.0);
+            }
+
+            std::vector<double> neckAngles;
+            yarp::sig::Vector neckValuesSig;
+            m_head->getNeckJointValues(neckValuesSig);
+            for (unsigned i = 0; i < neckValuesSig.size(); i++)
+            {
+                neckAngles.push_back(neckValuesSig(i));
+            }
+            m_logger->add(m_logger_prefix + "_neckJointValues", neckAngles);
+
+            std::vector<double> lFingers, rFingers;
+            m_leftHandFingers->getFingerValues(lFingers);
+            m_rightHandFingers->getFingerValues(rFingers);
+            if (lFingers.size() > 0)
+            {
+                m_logger->add(m_logger_prefix + "_leftFingerValues", lFingers);
+            }
+            if (rFingers.size() > 0)
+            {
+                m_logger->add(m_logger_prefix + "_rightFingerValues", rFingers);
+            }
+
+            std::vector<double> left_robotHandpose_robotTel, left_humanHandpose_oculusInertial,
+                left_humanHandpose_humanTel;
+            m_leftHand->getHandInfo(left_robotHandpose_robotTel,
+                                    left_humanHandpose_oculusInertial,
+                                    left_humanHandpose_humanTel);
+
+            m_logger->add(m_logger_prefix + "_left_robotHandpose_robotTeleoperation",
+                          left_robotHandpose_robotTel);
+            m_logger->add(m_logger_prefix + "_left_humanHandpose_oculusInertial",
+                          left_humanHandpose_oculusInertial);
+            m_logger->add(m_logger_prefix + "_left_humanHandpose_humanTeleoperation",
+                          left_humanHandpose_humanTel);
+
+            std::vector<double> right_robotHandpose_robotTel, right_humanHandpose_oculusInertial,
+                right_humanHandpose_humanTel;
+            m_rightHand->getHandInfo(right_robotHandpose_robotTel,
+                                     right_humanHandpose_oculusInertial,
+                                     right_humanHandpose_humanTel);
+
+            m_logger->add(m_logger_prefix + "_right_robotHandpose_robotTeleoperation",
+                          right_robotHandpose_robotTel);
+            m_logger->add(m_logger_prefix + "_right_humanHandpose_oculusInertial",
+                          right_humanHandpose_oculusInertial);
+            m_logger->add(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
+                          right_humanHandpose_humanTel);
+
+            m_logger->add(m_logger_prefix + "_oculusHeadset_Inertial",
+                          m_oculusHeadsetPoseInertial); // pose sizein 3D space
+
+            if (!m_useVirtualizer)
+            {
+                m_logger->add(m_logger_prefix + "_loc_joypad_x_y", locCmd);
+            }
+
+            m_logger->flush_available_data();
+        }
+#endif
     } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
-        std::vector<float> buttonMapping(2);
+        float buttonMapping;
 
         // prepare robot (A button)
-        m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping[0]);
-
-        // start walking (X button)
-        m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping[1]);
-
+        m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
         yarp::os::Bottle cmd, outcome;
-        if (buttonMapping[0] > 0)
+
+        if (buttonMapping > 0)
         {
             // TODO add a visual feedback for the user
-            cmd.addString("prepareRobot");
-            m_rpcWalkingClient.write(cmd, outcome);
-        } else if (buttonMapping[1] > 0)
+            if (m_moveRobot)
+            {
+                cmd.addString("prepareRobot");
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
+            m_state = OculusFSM::InPreparation;
+            yInfo() << "[OculusModule::updateModule] prepare the robot";
+        }
+    } else if (m_state == OculusFSM::InPreparation)
+    {
+        if (m_moveRobot)
+        {
+            m_head->initializeNeckJointValues();
+            if (!m_head->move())
+            {
+                yError() << "[updateModule::updateModule] unable to move the head";
+                return false;
+            }
+        }
+
+        float buttonMapping;
+        // start walking (X button)
+        m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
+        yarp::os::Bottle cmd, outcome;
+
+        if (buttonMapping > 0)
         {
             if (m_useVirtualizer)
             {
+                // not sure if here causes the problem of hand rotation, check it
                 // reset the player orientation of the virtualizer
                 cmd.addString("resetPlayerOrientation");
                 m_rpcVirtualizerClient.write(cmd, outcome);
@@ -613,10 +847,15 @@ bool OculusModule::updateModule()
             }
 
             // TODO add a visual feedback for the user
-            cmd.addString("startWalking");
-            m_rpcWalkingClient.write(cmd, outcome);
+            if (m_moveRobot)
+            {
+                cmd.addString("startWalking");
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
             // if(outcome.get(0).asBool())
             m_state = OculusFSM::Running;
+            yInfo() << "[OculusModule::updateModule] start the robot";
+            yInfo() << "[OculusModule::updateModule] Running ...";
         }
     }
     yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
@@ -676,4 +915,68 @@ double OculusModule::deadzone(const double& input)
         else
             return 0.0;
     }
+}
+
+bool OculusModule::openLogger()
+{
+#ifdef ENABLE_LOGGER
+    std::string currentTime = getTimeDateMatExtension();
+    std::string fileName = "OculusModule" + currentTime + "log.mat";
+
+    m_logger = XBot::MatLogger2::MakeLogger(fileName);
+    m_appender = XBot::MatAppender::MakeInstance();
+    m_appender->add_logger(m_logger);
+    m_appender->start_flush_thread();
+
+    m_logger->create(m_logger_prefix + "_time", 1);
+    m_logger->create(m_logger_prefix + "_playerOrientation", 1);
+
+    m_logger->create(m_logger_prefix + "_robotYaw", 1);
+
+    m_logger->create(m_logger_prefix + "_neckJointValues", m_head->controlHelper()->getDoFs());
+    m_logger->create(m_logger_prefix + "_leftFingerValues",
+                     m_leftHandFingers->controlHelper()->getDoFs());
+    m_logger->create(m_logger_prefix + "_rightFingerValues",
+                     m_rightHandFingers->controlHelper()->getDoFs());
+
+    m_logger->create(m_logger_prefix + "_left_robotHandpose_robotTeleoperation",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_left_humanHandpose_oculusInertial",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_left_humanHandpose_humanTeleoperation",
+                     6); // pose sizein 3D space
+
+    m_logger->create(m_logger_prefix + "_right_robotHandpose_robotTeleoperation",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_right_humanHandpose_oculusInertial",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
+                     6); // pose sizein 3D space
+    m_logger->create(m_logger_prefix + "_oculusHeadset_Inertial",
+                     6); // pose sizein 3D space
+
+    m_logger->create(m_logger_prefix + "_loc_joypad_x_y",
+                     2); // [x,y] component for robot locomotion
+    yInfo() << "[OculusModule::openLogger] Logging is active.";
+#else
+    yInfo() << "[OculusModule::openLogger] option is not active in CMakeLists.";
+
+#endif
+    return true;
+}
+
+void OculusModule::Impl::initializeNeckJointsSmoother(const unsigned m_actuatedDOFs,
+                                                      const double m_dT,
+                                                      const double smoothingTime,
+                                                      const yarp::sig::Vector jointsInitialValue)
+{
+    m_NeckJointsPreparationSmoother
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_actuatedDOFs, m_dT, smoothingTime);
+    m_NeckJointsPreparationSmoother->init(jointsInitialValue);
+}
+void OculusModule::Impl::getNeckJointsRefSmoothedValues(yarp::sig::Vector& smoothedJointValues)
+{
+    yarp::sig::Vector jointValues = {0.0, 0.0, 0.0};
+    m_NeckJointsPreparationSmoother->computeNextValues(jointValues);
+    smoothedJointValues = m_NeckJointsPreparationSmoother->getPos();
 }
