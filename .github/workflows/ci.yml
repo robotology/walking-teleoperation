@@ -98,6 +98,15 @@ jobs:
 
         cmake --build . --config ${{ matrix.build_type }} --target install
 
+        # icub-main
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
+        cd icub-main && mkdir -p build && cd build
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+               -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
+        cmake --build . --config ${{ matrix.build_type }} --target install
+        
+
     - name: Source-based Dependencies [Ubuntu/macOS]
       if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
       shell: bash
@@ -131,19 +140,14 @@ jobs:
               -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
         cmake --build . --config ${{ matrix.build_type }} --target install
 
-    - name: Source-based Dependencies [Ubuntu]
-      if: matrix.os == 'ubuntu-latest'
-      shell: bash
-      run: |
-         git clone https://github.com/catchorg/Catch2.git
-         cd Catch2
-         mkdir -p build
-         cd build
-         cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-                -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install \
-                -DBUILD_TESTING=OFF ..
+        # icub-main
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
+        cd icub-main && mkdir -p build && cd build
+        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+               -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
+        cmake --build . --config ${{ matrix.build_type }} --target install 
 
-         cmake --build . --config ${{ matrix.build_type }} --target install
 
     # ===================
     # CMAKE-BASED PROJECT
