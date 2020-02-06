@@ -26,7 +26,7 @@ bool HandRetargeting::configure(const yarp::os::Searchable& config)
     double humanHeight, robotArmSpan;
     if (!YarpHelper::getDoubleFromSearchable(config, "humanHeight", humanHeight))
     {
-        yError() << "[HandRetargeting::configure] Unable to find the human height";
+        yError() << "[HandRetargeting::configure] Unable to find the humanHeight parameter.";
         return false;
     }
 
