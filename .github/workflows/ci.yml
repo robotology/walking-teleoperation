@@ -179,7 +179,7 @@ jobs:
         cd build
         # Attempt of fix for using YARP idl generators (that link ACE) in Windows
         # See https://github.com/robotology/idyntree/issues/569
-        export $PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin
+        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin
         cmake --build . --config ${{ matrix.build_type }}
 
     - name: Install
