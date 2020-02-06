@@ -32,7 +32,7 @@ bool HandRetargeting::configure(const yarp::os::Searchable& config)
 
     if (!YarpHelper::getDoubleFromSearchable(config, "robotArmSpan", robotArmSpan))
     {
-        yError() << "[HandRetargeting::configure] Unable to find the robot arm span";
+        yError() << "[HandRetargeting::configure] Unable to find the robotArmSpan parameter.";
         return false;
     }
 
