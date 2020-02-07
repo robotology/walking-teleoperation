@@ -12,7 +12,7 @@
 
 // std
 #include <memory>
-#include <time.h>
+#include <ctime>
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
