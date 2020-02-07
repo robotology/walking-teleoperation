@@ -180,7 +180,7 @@ void HeadRetargeting::evalueNeckJointValues()
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
 }
 
-bool HeadRetargeting::initializeNeckJointValues()
+void HeadRetargeting::initializeNeckJointValues()
 {
     m_desiredJointValue.clear();
     pImpl->getNeckJointsRefSmoothedValues(m_desiredJointValue);

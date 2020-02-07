@@ -10,6 +10,9 @@
 #ifndef HAND_RETARGETING_HPP
 #define HAND_RETARGETING_HPP
 
+// std
+#include <vector>
+
 // YARP
 #include <yarp/sig/Matrix.h>
 #include <yarp/sig/Vector.h>
