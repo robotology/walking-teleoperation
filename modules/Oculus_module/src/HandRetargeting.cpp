@@ -23,12 +23,23 @@ bool HandRetargeting::configure(const yarp::os::Searchable& config)
         yError() << "[HandRetargeting::configure] Empty configuration for hand retargeting.";
         return false;
     }
-
-    if (!YarpHelper::getDoubleFromSearchable(config, "scalingFactor", m_scalingFactor))
+    double humanHeight, robotArmSpan;
+    if (!YarpHelper::getDoubleFromSearchable(config, "humanHeight", humanHeight))
     {
-        yError() << "[HandRetargeting::configure] Unable to find the hands smoothing time";
+        yError() << "[HandRetargeting::configure] Unable to find the humanHeight parameter.";
         return false;
     }
+
+    if (!YarpHelper::getDoubleFromSearchable(config, "robotArmSpan", robotArmSpan))
+    {
+        yError() << "[HandRetargeting::configure] Unable to find the robotArmSpan parameter.";
+        return false;
+    }
+
+    m_scalingFactor = robotArmSpan / humanHeight;
+    yInfo()
+        << "[HandRetargeting::configure] kinematic scaling factor (= robotArmSpan / humanHeight): "
+        << m_scalingFactor;
 
     // getting the mapping between the robot and the retargeting frames
     iDynTree::Rotation tempRotation;
