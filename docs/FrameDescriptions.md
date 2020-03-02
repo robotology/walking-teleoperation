@@ -29,13 +29,25 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
 ## Virtualizer (treadmill)
 
 <p align="center">
-  <img width="600" height="300" src="./images/Virtualizer%2Bothers.jpg">
+  <img width="900" src="./images/Virtualizer%2Bothers.jpg">
 </p>
 
 ## Xsens Suit
+Following are the frames attached to the human body links:
+
 
 <p align="center">
   <img width="500" height="500" src="./images/humanXses.png">
-</p> | <p align="center">
+</p> 
+
+Following are the frames attached to the iCub body links:
+
+<p align="center">
   <img width="500" height="500" src="./images/RobotFrames.png">
 </p> 
+
+When we do retargeting using Xsens, each of these frames of the human (where the data are coming) are transformed to the corresponding ones of the robot.
+For more information regarding the correspondence of the frames you can look at [this configuration file](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/xml/RobotStateProvider_iCub.xml).
+Regarding the transformation of the frames, you can find them [in this urdf file](), and the tranformation are done from the parent link (each link_name) to the [child dummy link defined by `_fake`](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/urdfs/teleoperation_iCub_model_V_2_5.urdf).
+
+
