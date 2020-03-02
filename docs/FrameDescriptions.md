@@ -26,13 +26,13 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
   <img width="500" height="500" src="./images/Oculus.png">
 </p>
 
-**Virtualizer (treadmill)**
+## Virtualizer (treadmill)
 
 <p align="center">
   <img width="600" height="300" src="./images/Virtualizer%2Bothers.jpg">
 </p>
 
-**Xsens Suit**
+## Xsens Suit
 
 <p align="center">
   <img width="500" height="500" src="./images/humanXses.png">
