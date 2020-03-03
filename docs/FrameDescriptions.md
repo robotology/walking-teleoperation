@@ -39,7 +39,7 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
 According to the measurement information we get from the cyberith treadmill, we identify the frame of Virtualizer as following:
 
 <p align="center">
-  <img width="300" src="./images/TeleoperationFrame.png">
+  <img width="300" src="./images/virtualizer frame.jpg">
 </p>
 
 Threfore the frame we get [in this part of the code:](https://github.com/robotology/walking-teleoperation/blob/60b449e6e8d5120a2a11ca2997521f46c51821c1/modules/Oculus_module/src/HeadRetargeting.cpp#L105)
@@ -51,6 +51,14 @@ The rotation of the operator (called player here) inside the treadmill is define
 ```
  rotz(- playerOrientation)= rotx(pi) * rotz(playerOrientation) * rotx(-pi)
 ```
+When the human rotates inside the virtualizer, not only he has rotation around `z` axis, but also it translates as following figure shows:
+
+
+<p align="center">
+  <img width="
+              00" src="./images/teleoperationFrameTransformation.jpg">
+</p>
+
 
 
 # Hand Frames
@@ -94,13 +102,13 @@ Following are the frames attached to the human body links:
 
 
 <p align="center">
-  <img width="650" height="500" src="./images/humanXses.png">
+  <img width="650" src="./images/humanXses.png">
 </p> 
 
 Following are the frames attached to the iCub body links:
 
 <p align="center">
-  <img width="500" height="500" src="./images/RobotFrames.png">
+  <img width="500"  src="./images/RobotFrames.png">
 </p> 
 
 When we do retargeting using Xsens, each of these frames of the human (where the data are coming) are transformed to the corresponding ones of the robot.
