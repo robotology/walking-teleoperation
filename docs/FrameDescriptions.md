@@ -39,7 +39,7 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
 According to the measurement information we get from the cyberith treadmill, we identify the frame of Virtualizer as following:
 
 <p align="center">
-  <img width="300" src="./images/virtualizer frame.jpg">
+  <img width="300" src="./images/virtualizerFrame.jpg">
 </p>
 
 Threfore the frame we get [in this part of the code:](https://github.com/robotology/walking-teleoperation/blob/60b449e6e8d5120a2a11ca2997521f46c51821c1/modules/Oculus_module/src/HeadRetargeting.cpp#L105)
@@ -56,7 +56,7 @@ When the human rotates inside the virtualizer, not only he has rotation around `
 
 <p align="center">
   <img width="
-              00" src="./images/teleoperationFrameTransformation.jpg">
+  <img width="300" src="./images/teleoperationFrameTransformation.jpg">
 </p>
 
 
