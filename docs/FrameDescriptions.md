@@ -36,13 +36,26 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
 
 ## treadmill (Virtualizer Cyberith)
 
+According to the measurement information we get from the cyberith treadmill, we identify the frame of Virtualizer as following:
+
 <p align="center">
   <img width="300" src="./images/TeleoperationFrame.png">
 </p>
 
+Threfore the frame we get [in this part of the code:](https://github.com/robotology/walking-teleoperation/blob/60b449e6e8d5120a2a11ca2997521f46c51821c1/modules/Oculus_module/src/HeadRetargeting.cpp#L105)
+
+```
+m_oculusInertial_R_teleopFrame = iDynTree::Rotation::RotZ(-playerOrientation);
+```
+The rotation of the operator (called player here) inside the treadmill is defined with `playerOrientation`, and the rotation of it is expressed in prefered coordinates of the `I_T`, therefore in order to express the rotation in Inertial coordinates (in the code is mentioned by `oculusInertial`), we performam the following transformation
+```
+ rotz(- playerOrientation)= rotx(pi) * rotz(playerOrientation) * rotx(-pi)
+```
+
 
 # Hand Frames
 
+The Frame with we 
 
 ## Frame Chains:
 
