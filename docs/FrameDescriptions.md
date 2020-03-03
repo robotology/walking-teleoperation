@@ -1,4 +1,4 @@
-Following are the descriptions of the Frames used by different devices in our framework:
+**Following are the descriptions of the Frames used by different devices in our framework:**
 
 ## Inertial Frame
 
