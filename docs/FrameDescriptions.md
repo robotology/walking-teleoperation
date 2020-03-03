@@ -82,13 +82,19 @@ The teleoperation frame, is the frame that attached to the virtualizer and rotat
 
 ## Frame Chains:
 
+Following is the frame chain related to the perception system of the human:
+
+
+<p align="center">
+  <img width="800" src="./images/TeleoperationFrameChains.jpg">
+</p> 
 
 ## Xsens Suit
 Following are the frames attached to the human body links:
 
 
 <p align="center">
-  <img width="500" height="500" src="./images/humanXses.png">
+  <img width="650" height="500" src="./images/humanXses.png">
 </p> 
 
 Following are the frames attached to the iCub body links:
