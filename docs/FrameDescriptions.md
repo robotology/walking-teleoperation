@@ -55,7 +55,30 @@ The rotation of the operator (called player here) inside the treadmill is define
 
 # Hand Frames
 
-The Frame with we 
+The human and robot hand frame are similar frame definitions are similar, as following:
+
+<p align="center">
+  <img width="300" src="./images/RobotHand.jpeg">
+</p> 
+
+What we are interested in the teleoperation scnenario is the transfromation `m_teleopRobotFrame_T_handRobotFrame`, i.e., [the trnsformation from the rorobt teleoperation frame to the robot hand frames](https://github.com/robotology/walking-teleoperation/blob/60b449e6e8d5120a2a11ca2997521f46c51821c1/modules/Oculus_module/src/HandRetargeting.cpp#L74-L77)
+```
+    m_teleopRobotFrame_T_handRobotFrame
+        = m_teleopRobotFrame_T_teleopFrame * m_oculusInertial_T_teleopFrame.inverse()
+          * m_oculusInertial_T_handOculusFrame * m_handOculusFrame_T_handRobotFrame;
+
+```
+- In this equation, `teleopRobotFrame` and `teleopFrame` are the frames attached to robot and human teleoperation frames. 
+The teleoperation frame, is the frame that attached to the virtualizer and rotates with that. At the initial point of the teleoperation scenario, the teleoperation and inertial frames match.
+
+- In the code, the `oculusInertial` and `oculusRoot` frames are the intertial frame defined at the begining of this document.
+- The Robot teleoperation frame is the same as [robot imu fram ](https://github.com/kouroshD/walking-teleoperation/blob/feature/updateDocs/app/robots/iCubGenova04/leftHandRetargetingParams.ini#L6-L10), in this case similar to robot `root_link` frame:
+```
+- The z-axis is parallel to gravity but pointing upwards.
+- The x-axis points behind the robot.
+- The y-axis points laterally and is chosen according to the right-hand rule.
+```
+
 
 ## Frame Chains:
 
