@@ -4,7 +4,9 @@ Following are the descriptions of the Frames used by different devices in our fr
 
 The inertial frame of the human in our Oculus and Cyberith Virtualizer treadmill teleoperation setup are as following:
 
-
+<p align="center">
+  <img width="300" src="./images/InertialFrame.jpg">
+</p>
 
 ## Oculus Device
 According to the [Oculus documentation](https://developer.oculus.com/documentation/native/pc/dg-sensor/), the frames attached to the Oculus Virtual Reality (OVR) headset are as following.
@@ -32,10 +34,10 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
   <img width="500" height="500" src="./images/Oculus.png">
 </p>
 
-## Virtualizer (treadmill)
+## treadmill (Virtualizer Cyberith)
 
 <p align="center">
-  <img width="900" src="./images/Virtualizer%2Bothers.jpg">
+  <img width="300" src="./images/TeleoperationFrame.png">
 </p>
 
 
