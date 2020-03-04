@@ -81,7 +81,7 @@ What we are interested in the teleoperation scnenario is the transfromation `m_t
 
 - In the code, the `oculusInertial` and `oculusRoot` frames are the intertial frame defined at the begining of this document.
 - The teleoperation frame, is the frame that attached to the virtualizer and rotates with that. At the initial time of the teleoperation scenario, the teleoperation and inertial frame matches their location and their axes are parallel.
-However, the defenition of the robot teleoperation frame is the same as [robot imu fram ](https://github.com/kouroshD/walking-teleoperation/blob/feature/updateDocs/app/robots/iCubGenova04/leftHandRetargetingParams.ini#L6-L10), and is similar to the robot `root_link` frame:
+However, the defenition of the robot teleoperation frame is the same as [robot imu frame ](https://github.com/kouroshD/walking-teleoperation/blob/feature/updateDocs/app/robots/iCubGenova04/leftHandRetargetingParams.ini#L6-L10), and is similar to the robot `root_link` frame:
 ```
 - The z-axis is parallel to gravity but pointing upwards.
 - The x-axis points behind the robot.
@@ -116,6 +116,6 @@ When we do retargeting using Xsens, each of these frames of the human (where the
 
 For more information regarding the correspondence of the frames you can look at [this configuration file](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/xml/RobotStateProvider_iCub.xml).
 
-Regarding the transformation of the frames, you can find them [in this urdf file](), and the tranformation are done from the parent link (each link_name) to the child dummy link specified by `_fake`, e.g., [from `root_link` to `root_link_fake`](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/urdfs/teleoperation_iCub_model_V_2_5.urdf#L3341-L3353).
+Regarding the transformation of the frames, you can find them [in this urdf file](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/urdfs/teleoperation_iCub_model_V_2_5.urdf), and the tranformation are done from the parent link (each link_name) to the child dummy link specified by `_fake`, e.g., [from `root_link` to `root_link_fake`](https://github.com/robotology/human-dynamics-estimation/blob/devel/conf/urdfs/teleoperation_iCub_model_V_2_5.urdf#L3341-L3353).
 
 
