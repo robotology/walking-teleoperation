@@ -1,7 +1,7 @@
 # walking-teleoperation
 
 The whole-body teleoperation architecture as shown as following.
-The human user receives visual feedback from the robot environment by streaming the robot camera images through the \emph{Oculus Headset}.
+The human user receives visual feedback from the robot environment by streaming the robot camera images through the _Oculus Headset_.
 The robot hands are controlled via the _Joypads_.
 The linear and the angular velocities of the human are obtained from the _Cyberith Virtualizer VR Treadmill_. 
 The operator can wear a sensorized full body suit to obtain the kinematic information of various human links with respect to the inertial frame of reference. 
