@@ -1,6 +1,6 @@
 # walking-teleoperation
 
-The whole-body teleoperation architecture as shown as following.
+The whole-body teleoperation architecture is shown as follows.
 The human user receives visual feedback from the robot environment by streaming the robot camera images through the _Oculus Headset_.
 The robot hands are controlled via the _Joypads_.
 The linear and the angular velocities of the human are obtained from the _Cyberith Virtualizer VR Treadmill_. 
@@ -79,7 +79,7 @@ Currently, the supported robots are only:
 
 ## :eyeglasses: Reference paper
 
-You can read more about the work in [this linke.](https://arxiv.org/pdf/1909.10080.pdf)
+You can read more about the work [here.](https://arxiv.org/pdf/1909.10080.pdf)
 If you're going to use this package for your work, please quote it within any resulting publication:
 ```
 @inproceedings{Whole-Body-2019,
@@ -92,7 +92,7 @@ address = {Toronto, Canada},
 }
 ```
 ## :dollar: License
-Walking-Teleoperation is licensed under either the GNU Lesser General Public License v3.0 :
+The _walking-teleoperation_ repository is licensed under either the GNU Lesser General Public License v3.0 :
 
 https://www.gnu.org/licenses/lgpl-3.0.html
 
