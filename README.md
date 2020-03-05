@@ -6,9 +6,9 @@ The robot hands are controlled via the _Joypads_.
 The linear and the angular velocities of the human are obtained from the _Cyberith Virtualizer VR Treadmill_. 
 The operator can wear a sensorized full body suit to obtain the kinematic information of various human links with respect to the inertial frame of reference. 
 
-<p align="center">
-  <img width="800" src="./docs/images/teleoperationArchitecture.jpg">
-</p>
+
+![teleoperationArchitecture](https://user-images.githubusercontent.com/17707730/75995333-8d15b100-5efc-11ea-8a40-cea64bf36bf8.jpg)
+
 
 Software related to walking and teleoperation. 
 
