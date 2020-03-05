@@ -6,7 +6,9 @@ The inertial frame on the human side is defined as:
 
 ![inertialFrame](https://user-images.githubusercontent.com/17707730/75995174-53dd4100-5efc-11ea-98db-8ea3cbe33379.jpg)
 
-In the code, the `oculusInertial` and `oculusRoot` are used for calling the inertial frame. It is identified at the beginning of the teleoperation scenario. The `x` and `y` axis are parallel to the ground surface, while the `z` axis (heading) is identified according to the front of the human when starting the teleoperation processes.
+In the code, the `oculusInertial` and `oculusRoot` are used for calling the inertial frame. It is identified at the beginning of the teleoperation scenario. The `z` axis of the frame is parallel to the gravity in the opposite direction, 
+while the `x` and `y` axes are parallel to the ground. The `x` axis is toward the front of the human when starting the teleoperation processes, and the `y` axis is identified according to the right-hand rule.
+
 
 ## Oculus Device
 According to the [Oculus documentation](https://developer.oculus.com/documentation/native/pc/dg-sensor/), the frame attached to the Oculus Virtual Reality (OVR) headset is defined by:
