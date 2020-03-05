@@ -4,9 +4,7 @@
 
 We define the inertial frame in the human side as following:
 
-<p align="center">
-  <img width="300" src="./images/InertialFrame.jpg">
-</p>
+![inertialFrame](https://user-images.githubusercontent.com/17707730/75995174-53dd4100-5efc-11ea-98db-8ea3cbe33379.jpg)
 
 In the code, the `oculusInertial` and `oculusRoot` are used for calling the inertial frame. It is identified at the beginning of the teleoperation scenario. The `x` and `y` axis are parallel to the ground surface, while the `z` axis (heading) is identified according to the front of the human when starting the teleoperation processes.
 
@@ -30,10 +28,7 @@ iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
                                                             desiredHeadOrientationVector(0),
                                                             desiredHeadOrientationVector(2)));
 ```                                                           
-
-<p align="center">
-  <img width="500" height="500" src="./images/Oculus.png">
-</p>
+![Oculus](https://user-images.githubusercontent.com/17707730/75995262-72dbd300-5efc-11ea-8998-63ccce533453.png)
 
 ## treadmill (Virtualizer Cyberith)
 
@@ -43,9 +38,8 @@ According to the measurement information we acquire from the Cyberith treadmill,
  rotz(- playerOrientation)= rotx(pi) * rotz(playerOrientation) * rotx(-pi)
 ```
 
-<p align="center">
-  <img width="300" src="./images/virtualizerFrame.jpg">
-</p>
+![virtualizer](https://user-images.githubusercontent.com/17707730/75995418-afa7ca00-5efc-11ea-8288-a6238090de33.jpg)
+
 
 The frame attached to the treadmill ring and rotates with the treadmill is called the _teleoperaiton frame_. At the beginning of the teleoperation scenario when we start the processes, the teleoperation and inertial frame coincide.
 
@@ -58,10 +52,8 @@ m_oculusInertial_R_teleopFrame = iDynTree::Rotation::RotZ(-playerOrientation);
 When the human rotates inside the virtualizer, not only he has rotation around the `z` axis, but also the _teleoperaition frame_  translates as the following figure shows:
 
 
-<p align="center">
-  <img width="
-  <img width="300" src="./images/teleoperationFrameTransformation.jpg">
-</p>
+![teleoperationFrameTransformation](https://user-images.githubusercontent.com/17707730/75995382-a0c11780-5efc-11ea-990e-bb1bc8f1c8ff.jpg)
+                                                                      
 
 To find the translation, we assume when the human rotates, he is looking forward, and [we compute the translation using the acquired oculus headset data](https://github.com/robotology/walking-teleoperation/blob/5ae5a89e504a985528d5263467f806e806f78d37/modules/Oculus_module/src/OculusModule.cpp#L647-L657).
 
@@ -71,9 +63,8 @@ To find the translation, we assume when the human rotates, he is looking forward
 
 The human and robot hand frames are defined similarly, i.e.,
 
-<p align="center">
-  <img width="300" src="./images/RobotHand.jpeg">
-</p> 
+
+![RobotHand](https://user-images.githubusercontent.com/17707730/75995311-85eea300-5efc-11ea-8aac-23b06f2d6fff.jpeg)
 
 What we are interested in the teleoperation scenario is the transformation `m_teleopRobotFrame_T_handRobotFrame`, i.e., [the transformation from the robot teleoperation frame to the robot hand frames](https://github.com/robotology/walking-teleoperation/blob/60b449e6e8d5120a2a11ca2997521f46c51821c1/modules/Oculus_module/src/HandRetargeting.cpp#L74-L77)
 ```
@@ -99,9 +90,7 @@ However, the definition of the robot teleoperation frame is the same as [robot i
 Following is the frame chain related to the perception system of the human:
 
 
-<p align="center">
-  <img width="800" src="./images/TeleoperationFrameChains.jpg">
-</p> 
+![TeleoperationFrameChains](https://user-images.githubusercontent.com/17707730/75995366-99017300-5efc-11ea-814a-6b24669c1d00.jpg)
 
 ## Xsens Suit
 When using the full-body suit to teleoperate the robot, the following are the frames attached to the human body links:
@@ -111,11 +100,12 @@ When using the full-body suit to teleoperate the robot, the following are the fr
   <img width="650" src="./images/humanXses.png">
 </p> 
 
+![humanXses](https://user-images.githubusercontent.com/17707730/75995140-47f17f00-5efc-11ea-8743-bd6a752602d4.png)
+
 Following are the frames attached to the iCub body links:
 
-<p align="center">
-  <img width="500"  src="./images/RobotFrames.png">
-</p> 
+
+![RobotFrames](https://user-images.githubusercontent.com/17707730/75995280-7bcca480-5efc-11ea-9124-cf37298fc655.png)
 
 When we retarget using Xsens, each of the frames associated with the human links (where the data are coming) are transformed to the corresponding ones of the robot.
 
