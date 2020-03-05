@@ -1,5 +1,17 @@
 # walking-teleoperation
-This repository contains software related to walking and teleoperation. 
+This repository contains software related to walking and teleoperation.
+
+The whole-body teleoperation architecture is shown as follows.
+The human user receives visual feedback from the robot environment by streaming the robot camera images through the _Oculus Headset_.
+The robot hands are controlled via the _Joypads_.
+The linear and the angular velocities of the human are obtained from the _Cyberith Virtualizer VR Treadmill_.
+The operator can wear a sensorized full body suit to obtain the kinematic information of various human links with respect to the inertial frame of reference.
+
+
+![teleoperationArchitecture](https://user-images.githubusercontent.com/17707730/75995333-8d15b100-5efc-11ea-8a40-cea64bf36bf8.jpg)
+
+
+Software related to walking and teleoperation.
 
 The suite includes:
 
@@ -8,7 +20,7 @@ The suite includes:
 * **Utils_module**: a module that can be useful to implement some common functionality
 * **Xsens_module**: a module that gets joint values from [human state provider](https://github.com/robotology/human-dynamics-estimation/) and maps them to the [walking controller](https://github.com/robotology/walking-controllers) input
 
-The technical description of the suit is described [here](./docs/FrameDescriptions.md).
+The technical description of the suit and the frame descriptions are documented [here](./docs/FrameDescriptions.md).
 
 # Overview
  - [:orange_book: The general idea](#orange_book-some-theory-behind-the-code)
@@ -65,5 +77,31 @@ The current set-up allows running the module either on windows or from a Linux m
 Currently, the supported robots are only:
 - ``iCubGenova04``
 - ``iCubGenova02``
+
+## :eyeglasses: Reference paper
+
+You can read more about the work [here.](https://arxiv.org/pdf/1909.10080.pdf)
+If you're going to use this package for your work, please quote it within any resulting publication:
+```
+@inproceedings{Whole-Body-2019,
+author = {Darvish, Kourosh and Tirupachuri, Yeshasvi and Romualdi, Giulio and Rapetti, Lorenzo and Ferigo, Diego and Chavez, Francisco Javier Andrade and Pucci, Daniele},
+ title = {Whole-Body Geometric Retargeting for Humanoid Robots},
+booktitle = {Proceedings of the 2019 IEEE/RAS International Conference on Humanoid Robots (Humanoids)},
+year = {2019},
+month={October},
+address = {Toronto, Canada},
+}
+```
+## :dollar: License
+The _walking-teleoperation_ repository is licensed under either the GNU Lesser General Public License v3.0 :
+
+https://www.gnu.org/licenses/lgpl-3.0.html
+
+or the GNU Lesser General Public License v2.1 :
+
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+at your option.
+
 
 **To get the updated information about the dependencies branches and how to run, please check the wiki page of this repository.**
