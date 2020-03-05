@@ -1,4 +1,4 @@
-**This documentation provides the descriptions of the frames and devices associated with the teleoperation framework:**
+**This documentation provides the description of the frames and devices associated with the teleoperation framework:**
 
 ## Inertial Frame
 
