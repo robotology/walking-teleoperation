@@ -63,6 +63,19 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
                     "object.";
         return false;
     }
+
+    if (!m_analogDevice.view(m_AnalogSensorInterface) || !m_AnalogSensorInterface)
+    {
+        yError() << "[RobotControlHelper::configure] Cannot obtain IAnalogSensor interface";
+        return false;
+    }
+
+    size_t noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asBlobLength();
+
+    m_sensorFeedbackRaw.resize(noAnalogSensor);
+    m_sensorFeedbackInDegrees.resize(noAnalogSensor);
+    m_sensorFeedbackInRadians.resize(noAnalogSensor);
+
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
     yarp::os::Value* axesListYarp;
@@ -315,6 +328,12 @@ bool RobotControlHelper::getFeedback()
 
     for (unsigned j = 0; j < m_actuatedDOFs; ++j)
         m_positionFeedbackInRadians(j) = iDynTree::deg2rad(m_positionFeedbackInDegrees(j));
+
+    if (!(m_AnalogSensorInterface->read(m_sensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
+    {
+        yError() << "[RobotControlHelper::getFeedbacks] Unable to get analog sensor data";
+        return false;
+    }
 
     return true;
 }
