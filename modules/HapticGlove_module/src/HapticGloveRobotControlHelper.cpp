@@ -70,16 +70,16 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    size_t noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asBlobLength();
+    m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
 
-    m_sensorFeedbackRaw.resize(noAnalogSensor);
-    m_sensorFeedbackInDegrees.resize(noAnalogSensor);
-    m_sensorFeedbackInRadians.resize(noAnalogSensor);
+    m_sensorFeedbackRaw.resize(m_noAnalogSensor);
+    m_sensorFeedbackInDegrees.resize(m_noAnalogSensor);
+    m_sensorFeedbackInRadians.resize(m_noAnalogSensor);
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
     yarp::os::Value* axesListYarp;
-    if (!config.check("joints_list", axesListYarp))
+    if (!config.check("axis_list", axesListYarp))
     {
         yError() << "[RobotControlHelper::configure] Unable to find joints_list into config file.";
         return false;
@@ -334,7 +334,23 @@ bool RobotControlHelper::getFeedback()
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get analog sensor data";
         return false;
     }
+    if (!getCalibratedFeedback())
+    {
+        yError() << "[RobotControlHelper::getFeedbacks] Unable to get the calibrated analog "
+                    "sensor data";
+        return false;
+    }
 
+    return true;
+}
+
+bool RobotControlHelper::getCalibratedFeedback()
+{
+    for (unsigned j = 0; j < m_noAnalogSensor; ++j)
+    {
+        m_sensorFeedbackInDegrees(j) = m_sensorFeedbackRaw(j); // TOCHECK
+        m_sensorFeedbackInRadians(j) = iDynTree::deg2rad(m_sensorFeedbackInDegrees(j));
+    }
     return true;
 }
 
@@ -351,6 +367,11 @@ yarp::os::Stamp& RobotControlHelper::timeStamp()
 const yarp::sig::Vector& RobotControlHelper::jointEncoders() const
 {
     return m_positionFeedbackInRadians;
+}
+
+const yarp::sig::Vector& RobotControlHelper::analogSensors() const
+{
+    return m_sensorFeedbackInRadians;
 }
 
 void RobotControlHelper::close()
