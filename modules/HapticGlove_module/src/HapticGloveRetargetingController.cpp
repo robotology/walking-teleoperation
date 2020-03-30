@@ -1,5 +1,5 @@
 /**
- * @file RetargetingController.cpp
+ * @file HapticGloveRetargetingController.cpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT

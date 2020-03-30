@@ -1,5 +1,5 @@
 /**
- * @file FingersRetargeting.cpp
+ * @file HapticGloveFingersRetargeting.cpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
@@ -48,7 +48,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     return true;
 }
 
-bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
+bool FingersRetargeting::setFingersAxisReference(const double& fingersReference)
 {
     if (m_fingerIntegrator == nullptr)
     {
@@ -56,17 +56,35 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
                     "please call configure() method";
         return false;
     }
-
+    // TOCHECK: maybe remove m_fingersScaling
     if (m_controlHelper->isVelocityControlUsed())
-        m_desiredJointValue = fingersVelocity * m_fingersScaling;
+        m_desiredJointValue = fingersReference * m_fingersScaling; // velocity reference value
     else
-        m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
+        //        m_desiredJointValue = m_fingerIntegrator->integrate(fingersReference *
+        //        m_fingersScaling);
+        m_desiredJointValue = fingersReference * m_fingersScaling;
+    return true;
+}
+bool FingersRetargeting::updateFeedback()
+{
+    if (!controlHelper()->getFeedback())
+    {
+        yInfo()
+            << "[FingersRetargeting::getFingerAxisValues] Unable the get the finger axis values "
+               "from the robot.";
+        return false;
+    }
     return true;
 }
 
-void FingersRetargeting::getFingerValues(std::vector<double>& fingerValues)
+void FingersRetargeting::getFingerAxisMeasuredValues(yarp::sig::Vector& fingerAxisValues)
 {
-    fingerValues.clear();
-    for (size_t i = 0; i < m_desiredJointValue.size(); i++)
-        fingerValues.push_back(m_desiredJointValue[i]);
+    fingerAxisValues.clear();
+    fingerAxisValues = controlHelper()->jointEncoders();
+}
+
+void FingersRetargeting::getFingerJointsMeasuredValues(yarp::sig::Vector& fingerJointsValues)
+{
+    fingerJointsValues.clear();
+    fingerJointsValues = controlHelper()->analogSensors();
 }

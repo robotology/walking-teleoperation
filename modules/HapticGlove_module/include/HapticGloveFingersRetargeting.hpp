@@ -1,5 +1,5 @@
 /**
- * @file FingersRetargeting.hpp
+ * @file HapticGloveFingersRetargeting.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
@@ -43,16 +43,27 @@ public:
     bool configure(const yarp::os::Searchable& config, const std::string& name) override;
 
     /**
-     * Set the fingers velocities
-     * @param fingersVelocity value from -1 to 1
+     * Set the fingers reference value
+     * @param fingersReference the reference value for the finger to follow
      * @return true in case of success and false otherwise.
      */
-    bool setFingersVelocity(const double& fingersVelocity);
+    bool setFingersAxisReference(const double& fingersReference);
 
     /**
-     * Get the fingers velocities or values
-     * @param fingerValue get the finger velocity or value
+     * Get the fingers' axis velocities or values
+     * @param fingerValue get the fingers' axis velocity or value
      */
-    void getFingerValues(std::vector<double>& fingerValues);
+    void getFingerAxisMeasuredValues(yarp::sig::Vector& fingerValues);
+
+    /**
+     * Get the fingers joint velocities or values
+     * @param fingerValue get the finger joint velocity or value
+     */
+    void getFingerJointsMeasuredValues(yarp::sig::Vector& fingerValues);
+
+    /**
+     * Update the feedback values
+     */
+    bool updateFeedback(void);
 };
 #endif

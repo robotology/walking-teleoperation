@@ -39,6 +39,7 @@ class RobotControlHelper
     yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
 
     int m_actuatedDOFs; /**< Number of the actuated DoF */
+    size_t m_noAnalogSensor; /**< Number of the joints ( associated with the analog sensors) */
 
     std::vector<std::string>
         m_axesList; /**< Vector containing the name of the controlled joints. */
@@ -130,6 +131,12 @@ public:
     bool getFeedback();
 
     /**
+     * Get calibrated sensory feedback from the robot
+     * @return true / false in case of success / failure
+     */
+    bool getCalibratedFeedback();
+
+    /**
      * Get the joint limits
      * @param limits matrix containing the joint limits in radian
      * @return true / false in case of success / failure
@@ -153,6 +160,12 @@ public:
      * @return the joint encoder value
      */
     const yarp::sig::Vector& jointEncoders() const;
+
+    /**
+     * Get the analog sensors value
+     * @return the analog sensor values
+     */
+    const yarp::sig::Vector& analogSensors() const;
 
     /**
      * Get the number of degree of freedom
