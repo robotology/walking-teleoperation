@@ -18,7 +18,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    int fingersJoints = m_controlHelper->getDoFs();
+    size_t fingersNoOfAxis = m_controlHelper->getDoFs();
 
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
@@ -27,7 +27,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    m_fingersScaling.resize(fingersJoints);
+    m_fingersScaling.resize(fingersNoOfAxis);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "fingersScaling", m_fingersScaling))
     {
         yError() << "[FingersRetargeting::configure] Initialization failed while reading "
@@ -35,9 +35,9 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    m_desiredJointValue.resize(fingersJoints);
-    yarp::sig::Vector buff(fingersJoints, 0.0);
-    yarp::sig::Matrix limits(fingersJoints, 2);
+    m_desiredJointValue.resize(fingersNoOfAxis);
+    yarp::sig::Vector buff(fingersNoOfAxis, 0.0);
+    yarp::sig::Matrix limits(fingersNoOfAxis, 2);
     if (!m_controlHelper->getLimits(limits))
     {
         yError() << "[FingersRetargeting::configure] Unable to get the joint limits.";
@@ -48,21 +48,35 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     return true;
 }
 
-bool FingersRetargeting::setFingersAxisReference(const double& fingersReference)
+bool FingersRetargeting::setFingersAxisReference(const yarp::sig::Vector& fingersReference)
 {
-    if (m_fingerIntegrator == nullptr)
+
+    if (fingersReference.size() != m_desiredJointValue.size())
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize "
-                    "please call configure() method";
+        yError() << "[FingersRetargeting::setFingersAxisReference] the size of the "
+                    "fingersReference and m_desiredJointValue does not match.";
         return false;
     }
-    // TOCHECK: maybe remove m_fingersScaling
-    if (m_controlHelper->isVelocityControlUsed())
-        m_desiredJointValue = fingersReference * m_fingersScaling; // velocity reference value
-    else
-        //        m_desiredJointValue = m_fingerIntegrator->integrate(fingersReference *
-        //        m_fingersScaling);
-        m_desiredJointValue = fingersReference * m_fingersScaling;
+
+    for (unsigned i = 0; i < fingersReference.size(); i++)
+    {
+        m_desiredJointValue(i) = fingersReference(i) * m_fingersScaling(i);
+    }
+
+    //    if (m_fingerIntegrator == nullptr)
+    //    {
+    //        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize
+    //        "
+    //                    "please call configure() method";
+    //        return false;
+    //    }
+    //    // TOCHECK: maybe remove m_fingersScaling
+    //    if (m_controlHelper->isVelocityControlUsed())
+    //        m_desiredJointValue = fingersReference * m_fingersScaling; // velocity reference value
+    //    else
+    //        m_desiredJointValue = m_fingerIntegrator->integrate(fingersReference *
+    //        m_fingersScaling);
+
     return true;
 }
 bool FingersRetargeting::updateFeedback()
