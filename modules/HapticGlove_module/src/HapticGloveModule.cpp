@@ -72,6 +72,8 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             << "[HapticGloveModule::configure] Unable to initialize the right fingers retargeting.";
         return false;
     }
+    m_timeStarting = 0.0;
+    m_timeNow = 0.0;
 
     m_state = HapticGloveFSM::Configured;
 
@@ -99,22 +101,23 @@ bool HapticGloveModule::getFeedbacks()
 
     // 2- get the feedback from the iCub hands [force (holding force) and tactile
     // information]
-    yarp::sig::Vector fingerAxis, fingerJoints;
+
     if (!m_leftHandFingers->updateFeedback())
     {
         yError() << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                     "the left hand fingers.";
     }
-    m_leftHandFingers->getFingerAxisMeasuredValues(fingerAxis);
-    m_leftHandFingers->getFingerJointsMeasuredValues(fingerJoints);
-    yInfo() << "fingers axis: " << fingerAxis.toString();
-    yInfo() << "fingers joints: " << fingerJoints.toString();
+    m_leftHandFingers->getFingerAxisMeasuredValues(m_icubFingerAxisFeedback);
+    m_leftHandFingers->getFingerJointsMeasuredValues(m_icubFingerJointsFeedback);
+    yInfo() << "fingers axis: " << m_icubFingerAxisFeedback.toString();
+    yInfo() << "fingers joints: " << m_icubFingerJointsFeedback.toString();
 
     return true;
 }
 
 bool HapticGloveModule::updateModule()
 {
+
     if (!getFeedbacks())
     {
         yError() << "[HapticGloveModule::updateModule] Unable to get the feedback";
@@ -123,13 +126,25 @@ bool HapticGloveModule::updateModule()
 
     if (m_state == HapticGloveFSM::Running)
     {
+        m_timeNow = yarp::os::Time::now();
 
         // 1- Compute the reference values for the iCub hand fingers
+        const unsigned noLeftFingersAxis = 9;
+        yarp::sig::Vector leftHandReference(noLeftFingersAxis);
+        //        leftHandReference.resize(noLeftFingersAxis);
+        for (unsigned i = 0; i < noLeftFingersAxis; i++)
+        {
+            leftHandReference(i) = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timeStarting) / 4);
+        }
 
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
 
         // 3- Set the reference joint valued for the iCub hand fingers
+
+        yInfo() << "leftHandReference" << leftHandReference.size();
+        m_leftHandFingers->setFingersAxisReference(leftHandReference);
+        m_leftHandFingers->move();
 
         // 4- Set the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
@@ -140,6 +155,11 @@ bool HapticGloveModule::updateModule()
         m_state = HapticGloveFSM::InPreparation;
     } else if (m_state == HapticGloveFSM::InPreparation)
     {
+
+        m_timeStarting = yarp::os::Time::now();
+        m_icubFingerAxisFeedbackInit = m_icubFingerAxisFeedback;
+        m_icubFingerJointsFeedbackInit = m_icubFingerJointsFeedback;
+
         // TODO
         m_state = HapticGloveFSM::Running;
         yInfo() << "[HapticGloveModule::updateModule] start the haptic glove module";

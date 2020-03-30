@@ -36,6 +36,10 @@ class HapticGloveModule : public yarp::os::RFModule
 private:
     double m_dT; /**< Module period. */
 
+    yarp::sig::Vector m_icubFingerAxisFeedback, m_icubFingerJointsFeedback;
+    yarp::sig::Vector m_icubFingerAxisFeedbackInit, m_icubFingerJointsFeedbackInit;
+    double m_timeStarting, m_timeNow;
+
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
     {
