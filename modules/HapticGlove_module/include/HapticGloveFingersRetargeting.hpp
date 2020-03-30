@@ -47,7 +47,7 @@ public:
      * @param fingersReference the reference value for the finger to follow
      * @return true in case of success and false otherwise.
      */
-    bool setFingersAxisReference(const double& fingersReference);
+    bool setFingersAxisReference(const yarp::sig::Vector& fingersReference);
 
     /**
      * Get the fingers' axis velocities or values
