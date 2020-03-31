@@ -10,6 +10,7 @@
 #define HAPTIC_GLOVE_MODULE_HPP
 
 // std
+#include <chrono>
 #include <ctime>
 #include <memory>
 
@@ -25,6 +26,11 @@
 
 #include <HapticGloveFingersRetargeting.hpp>
 
+#ifdef ENABLE_LOGGER
+#include <matlogger2/matlogger2.h>
+#include <matlogger2/utils/mat_appender.h>
+#endif
+
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
  * Oculus readouts, send the desired pose of the hands to the walking application, move the robot
@@ -36,8 +42,12 @@ class HapticGloveModule : public yarp::os::RFModule
 private:
     double m_dT; /**< Module period. */
 
-    yarp::sig::Vector m_icubFingerAxisFeedback, m_icubFingerJointsFeedback;
-    yarp::sig::Vector m_icubFingerAxisFeedbackInit, m_icubFingerJointsFeedbackInit;
+    yarp::sig::Vector m_icubLeftFingerAxisReference, m_icubLeftFingerAxisFeedback;
+    yarp::sig::Vector m_icubLeftFingerJointsReference, m_icubLeftFingerJointsFeedback;
+
+    yarp::sig::Vector m_icubRightFingerAxisReference, m_icubRightFingerAxisFeedback;
+    yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
+
     double m_timeStarting, m_timeNow;
 
     /** Haptic Glove Finite state machine */
@@ -57,6 +67,13 @@ private:
                                                               finger retargeting object. */
     std::unique_ptr<FingersRetargeting> m_rightHandFingers; /**< Pointer to the right
                                                                finger retargeting object. */
+
+    bool m_enableLogger; /**< log the data (if ON) */
+#ifdef ENABLE_LOGGER
+    XBot::MatLogger2::Ptr m_logger; /**< */
+    XBot::MatAppender::Ptr m_appender;
+    std::string m_logger_prefix{"hapticGlove"};
+#endif
 
     /**
      * Get all the feedback signal from the interfaces
@@ -97,6 +114,24 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
+
+    /**
+     * Open the logger
+     * @return true if it could open the logger
+     */
+    bool openLogger();
 };
 
+inline std::string getTimeDateMatExtension()
+{
+    // this code snippet is taken from
+    // https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    char timedate[30];
+
+    std::strftime(&timedate[0], 30, "%Y-%m-%d_%H-%M-%S", std::localtime(&now));
+    std::string timeDateStr = timedate;
+    timeDateStr.shrink_to_fit();
+    return timeDateStr;
+}
 #endif
