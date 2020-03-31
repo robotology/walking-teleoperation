@@ -383,9 +383,14 @@ void RobotControlHelper::close()
         yError() << "[RobotControlHelper::close] Unable to close the device.";
 }
 
-int RobotControlHelper::getDoFs()
+int RobotControlHelper::getActuatedDoFs()
 {
     return m_actuatedDOFs;
+}
+
+int RobotControlHelper::getNumberOfJoints()
+{
+    return m_noAnalogSensor;
 }
 
 bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)

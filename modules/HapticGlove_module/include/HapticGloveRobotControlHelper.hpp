@@ -168,10 +168,16 @@ public:
     const yarp::sig::Vector& analogSensors() const;
 
     /**
-     * Get the number of degree of freedom
+     * Get the number of actuated degree of freedom (motors)
      * @return the number of actuated DoF
      */
-    int getDoFs();
+    int getActuatedDoFs();
+
+    /**
+     * Get the number of joints
+     * @return the number of joints
+     */
+    int getNumberOfJoints();
 
     /**
      * Close the helper
