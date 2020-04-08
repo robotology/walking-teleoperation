@@ -76,8 +76,10 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             << "[HapticGloveModule::configure] Unable to initialize the right fingers retargeting.";
         return false;
     }
-    m_timeStarting = 0.0;
+
+    m_timePreparationStarting = 0.0;
     m_timeNow = 0.0;
+    m_timeConfigurationStarting = 0.0;
 
     m_icubLeftFingerAxisReference.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
     m_icubLeftFingerAxisFeedback.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
@@ -106,6 +108,11 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     return true;
 }
 
+bool calibrateRobotMotorsJointsCoupling()
+{
+
+    return true;
+}
 double HapticGloveModule::getPeriod()
 {
     return m_dT;
@@ -151,7 +158,8 @@ bool HapticGloveModule::getFeedbacks()
 
 bool HapticGloveModule::updateModule()
 {
-
+    yInfo() << "********************************* [HapticGloveModule::updateModule()] "
+               "*********************************";
     if (!getFeedbacks())
     {
         yError() << "[HapticGloveModule::updateModule] Unable to get the feedback";
@@ -166,7 +174,8 @@ bool HapticGloveModule::updateModule()
         const unsigned noLeftFingersAxis = m_leftHandFingers->controlHelper()->getActuatedDoFs();
         for (unsigned i = 0; i < noLeftFingersAxis; i++)
         {
-            m_icubLeftFingerAxisReference(i) = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timeStarting));
+            m_icubLeftFingerAxisReference(i)
+                = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting));
             m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
         }
 
@@ -246,16 +255,47 @@ bool HapticGloveModule::updateModule()
     } else if (m_state == HapticGloveFSM::Configured)
     {
         // TODO
+        m_timeConfigurationStarting = yarp::os::Time::now();
         m_state = HapticGloveFSM::InPreparation;
     } else if (m_state == HapticGloveFSM::InPreparation)
     {
 
-        m_timeStarting = yarp::os::Time::now();
+        m_timePreparationStarting = yarp::os::Time::now();
 
         // TODO
-        m_state = HapticGloveFSM::Running;
-        yInfo() << "[HapticGloveModule::updateModule] start the haptic glove module";
-        yInfo() << "[HapticGloveModule::updateModule] Running ...";
+        //        if (m_timePreparationStarting - m_timeConfigurationStarting > 10.0)
+        //        {
+
+        //            m_state = HapticGloveFSM::Running;
+        //            yInfo() << "[HapticGloveModule::updateModule] start the haptic glove module";
+        //            yInfo() << "[HapticGloveModule::updateModule] Running ...";
+        //        } else
+        //        {
+
+        //            yInfo() << "time collecting data:"
+        //                    << m_timePreparationStarting - m_timeConfigurationStarting;
+        //            int dTime = int((m_timePreparationStarting - m_timeConfigurationStarting) /
+        //            m_dT); if (dTime % 20 == 0 || std::abs(dTime - 1) < 0.1)
+        //                m_leftHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingRandom(true);
+        //            else
+        //            {
+        //                m_leftHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingRandom(false);
+        //            }
+        //        }
+        yInfo() << "time collecting data:"
+                << m_timePreparationStarting - m_timeConfigurationStarting;
+        int dTime = int((m_timePreparationStarting - m_timeConfigurationStarting) / m_dT);
+        int axisNumber = dTime / 100;
+        if (axisNumber >= m_leftHandFingers->controlHelper()->getActuatedDoFs())
+        {
+            yInfo() << "******>>>> Data collected ...";
+            return m_leftHandFingers->trainCouplingMatrix();
+
+        } else
+        {
+            double time = double(dTime % 100) / 100.0 * (M_PI * 2.0);
+            m_leftHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
+        }
     }
     // TO
 

@@ -432,6 +432,36 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
+bool RobotControlHelper::getVelocityLimits(yarp::sig::Matrix& limits)
+{
+    if (!getFeedback())
+    {
+        yError()
+            << "[RobotControlHelper::getVelocityLimits] Unable to get the feedback from the robot";
+        return false;
+    }
+    // resize matrix
+    limits.resize(m_actuatedDOFs, 2);
+
+    double maxLimitInDegree, minLimitInDegree;
+    for (int i = 0; i < m_actuatedDOFs; i++)
+    {
+        // get position limits
+        if (!m_limitsInterface->getVelLimits(i, &minLimitInDegree, &maxLimitInDegree))
+        {
+            yError() << "[RobotControlHelper::getVelocityLimits] Unable get " << m_axesList[i]
+                     << " joint limits.";
+            return false;
+
+        } else
+        {
+            limits(i, 0) = iDynTree::deg2rad(minLimitInDegree);
+            limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
+        }
+    }
+    return true;
+}
+
 bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue)
 {
     switch (m_controlMode)

@@ -144,6 +144,13 @@ public:
     bool getLimits(yarp::sig::Matrix& limits);
 
     /**
+     * Get the joint velocity limits
+     * @param limits matrix containing the joint velocity limits in radian/sec
+     * @return true / false in case of success / failure
+     */
+    bool getVelocityLimits(yarp::sig::Matrix& limits);
+
+    /**
      * Get the time stamp (const version)
      * @return time stamp
      */
