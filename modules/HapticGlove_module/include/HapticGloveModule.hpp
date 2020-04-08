@@ -48,7 +48,7 @@ private:
     yarp::sig::Vector m_icubRightFingerAxisReference, m_icubRightFingerAxisFeedback;
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
-    double m_timeStarting, m_timeNow;
+    double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
