@@ -289,7 +289,12 @@ bool HapticGloveModule::updateModule()
         if (axisNumber >= m_leftHandFingers->controlHelper()->getActuatedDoFs())
         {
             yInfo() << "******>>>> Data collected ...";
-            return m_leftHandFingers->trainCouplingMatrix();
+            if (!m_leftHandFingers->trainCouplingMatrix())
+            {
+                yInfo() << "cannot claibrate the coupling matrix and find the coefficient matrix";
+                return false;
+            }
+            m_state = HapticGloveFSM::Running;
 
         } else
         {

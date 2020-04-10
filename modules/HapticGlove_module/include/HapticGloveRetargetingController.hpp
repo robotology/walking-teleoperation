@@ -28,6 +28,7 @@ class RetargetingController
 {
 protected:
     std::unique_ptr<HapticGlove::RobotControlHelper> m_controlHelper; /**< Controller helper */
+    yarp::sig::Vector m_desiredMotorValue; /** Desired Motor value in radiant or radiant/s  */
     yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
 
 public:
