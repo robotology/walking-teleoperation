@@ -10,7 +10,7 @@
 
 bool RetargetingController::move()
 {
-    return m_controlHelper->setJointReference(m_desiredJointValue);
+    return m_controlHelper->setJointReference(m_desiredMotorValue);
 }
 
 const std::unique_ptr<HapticGlove::RobotControlHelper>& RetargetingController::controlHelper() const

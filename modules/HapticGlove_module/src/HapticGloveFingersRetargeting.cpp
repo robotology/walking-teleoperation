@@ -78,7 +78,8 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         m_A = Eigen::MatrixXd::Identity(fingersNoOfAxis, fingersNoOfAxis);
     }
 
-    m_desiredJointValue.resize(fingersNoOfAxis);
+    m_desiredMotorValue.resize(fingersNoOfAxis);
+    m_desiredJointValue.resize(m_controlHelper->getNumberOfJoints());
     yarp::sig::Vector buff(fingersNoOfAxis, 0.0);
     updateFeedback();
     getFingerAxisMeasuredValues(buff);
@@ -99,16 +100,16 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 bool FingersRetargeting::setFingersAxisReference(const yarp::sig::Vector& fingersReference)
 {
 
-    if (fingersReference.size() != m_desiredJointValue.size())
+    if (fingersReference.size() != m_desiredMotorValue.size())
     {
         yError() << "[FingersRetargeting::setFingersAxisReference] the size of the "
-                    "fingersReference and m_desiredJointValue does not match.";
+                    "fingersReference and m_desiredMotorValue does not match.";
         return false;
     }
 
     for (unsigned i = 0; i < fingersReference.size(); i++)
     {
-        m_desiredJointValue(i) = fingersReference(i) * m_fingersScaling(i);
+        m_desiredMotorValue(i) = fingersReference(i) * m_fingersScaling(i);
     }
 
     //    if (m_fingerIntegrator == nullptr)
@@ -127,6 +128,41 @@ bool FingersRetargeting::setFingersAxisReference(const yarp::sig::Vector& finger
 
     return true;
 }
+bool FingersRetargeting::setFingersJointReference(const yarp::sig::Vector& fingersReference)
+{
+    if (fingersReference.size() != m_desiredJointValue.size())
+    {
+        yError() << "[FingersRetargeting::setFingersJointReference] the size of the "
+                    "fingersReference and m_desiredJointValue does not match.";
+        return false;
+    }
+    const int noJoints = m_controlHelper->getNumberOfJoints();
+    const int noMotors = m_controlHelper->getActuatedDoFs();
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> fingersJointsRef,
+        fingersMotorRef;
+
+    fingersJointsRef.resize(noJoints, 1);
+    fingersMotorRef.resize(noMotors, 1);
+
+    for (unsigned i = 0; i < noJoints; i++)
+    {
+        fingersJointsRef(i, 0) = fingersReference(i);
+    }
+    fingersMotorRef = m_controlCoeff * fingersJointsRef;
+
+    yarp::sig::Vector fingersMotorsReference;
+    fingersMotorsReference.resize(noMotors);
+
+    for (int i = 0; i < noMotors; i++)
+    {
+        fingersMotorsReference(i) = fingersMotorRef(i, 0);
+    }
+    setFingersAxisReference(fingersMotorsReference);
+
+    return true;
+}
+
 bool FingersRetargeting::updateFeedback()
 {
     if (!controlHelper()->getFeedback())
@@ -310,4 +346,7 @@ bool FingersRetargeting::trainCouplingMatrix()
     }
     yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
     std::cout << "m_A matrix:\n" << m_A << std::endl;
+    m_controlCoeff = ((m_A.transpose() * m_A).inverse()) * m_A.transpose();
+    yInfo() << "m_controlCoeff matrix:" << m_controlCoeff.rows() << m_controlCoeff.cols();
+    yInfo() << "m_controlCoeff matrix:" << m_controlCoeff;
 }
