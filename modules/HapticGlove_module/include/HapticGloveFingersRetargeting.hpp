@@ -43,6 +43,11 @@ private:
                 the motor values*/
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        m_Q; // weight matrix for desired states
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        m_R; // wieght for control output
+
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_controlCoeff; /**< control coeeficient matrix from the joints to the motors; Dimension
                 <m,q> q: number of joints, m: number of motors*/
 
@@ -86,13 +91,49 @@ public:
      * Get the fingers' axis velocities or values
      * @param fingerValue get the fingers' axis velocity or value
      */
-    void getFingerAxisMeasuredValues(yarp::sig::Vector& fingerValues);
+    void getFingerAxisFeedback(yarp::sig::Vector& fingerValues);
+
+    /**
+     * Get the fingers' axis velocities or values
+     * @param fingerValue get the fingers' axis velocity or value
+     */
+    void getFingerAxisFeedback(std::vector<double>& fingerValues);
 
     /**
      * Get the fingers joint velocities or values
      * @param fingerValue get the finger joint velocity or value
      */
-    void getFingerJointsMeasuredValues(yarp::sig::Vector& fingerValues);
+    void getFingerJointsFeedback(yarp::sig::Vector& fingerValues);
+
+    /**
+     * Get the fingers joint velocities or values
+     * @param fingerValue get the finger joint velocity or value
+     */
+    void getFingerJointsFeedback(std::vector<double>& fingerValues);
+
+    /**
+     * Get the fingers joint reference values
+     * @param fingerJointsReference get the finger joint velocity or value
+     */
+    void getFingerAxisReference(yarp::sig::Vector& fingerAxisReference);
+
+    /**
+     * Get the fingers joint reference values
+     * @param fingerJointsReference get the finger joint velocity or value
+     */
+    void getFingerAxisReference(std::vector<double>& fingerAxisReference);
+
+    /**
+     * Get the fingers joint velocities or values
+     * @param fingerJointsReference get the finger joint velocity or value
+     */
+    void getFingerJointReference(yarp::sig::Vector& fingerJointsReference);
+
+    /**
+     * Get the fingers joint velocities or values
+     * @param fingerJointsReference get the finger joint velocity or value
+     */
+    void getFingerJointReference(std::vector<double>& fingerJointsReference);
 
     /**
      * Update the feedback values
