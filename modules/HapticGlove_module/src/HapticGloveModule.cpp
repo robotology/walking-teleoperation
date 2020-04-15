@@ -148,8 +148,8 @@ bool HapticGloveModule::getFeedbacks()
         yError() << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                     "the left hand fingers.";
     }
-    m_leftHandFingers->getFingerAxisMeasuredValues(m_icubLeftFingerAxisFeedback);
-    m_leftHandFingers->getFingerJointsMeasuredValues(m_icubLeftFingerJointsFeedback);
+    m_leftHandFingers->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
+    m_leftHandFingers->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
     yInfo() << "fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
     yInfo() << "fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
 
@@ -170,13 +170,18 @@ bool HapticGloveModule::updateModule()
     {
         m_timeNow = yarp::os::Time::now();
 
-        // 1- Compute the reference values for the iCub hand fingers
+        // 1- Compute the reference values for the iCub hand joint fingers
         const unsigned noLeftFingersAxis = m_leftHandFingers->controlHelper()->getActuatedDoFs();
-        for (unsigned i = 0; i < noLeftFingersAxis; i++)
+        const unsigned noLeftFingersJoints
+            = m_leftHandFingers->controlHelper()->getNumberOfJoints();
+
+        for (unsigned i = 0; i < noLeftFingersJoints; i++)
         {
-            m_icubLeftFingerAxisReference(i)
-                = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting));
-            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
+            //            m_icubLeftFingerAxisReference(i)
+            m_icubLeftFingerJointsReference(i)
+                = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting) - M_PI_2);
+            //            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
+            //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
         }
 
         // 2- Compute the reference values for the haptic glove, including resistance force and
@@ -184,12 +189,13 @@ bool HapticGloveModule::updateModule()
 
         // 3- Set the reference joint valued for the iCub hand fingers
         // left hand
-        m_leftHandFingers->setFingersAxisReference(m_icubLeftFingerAxisReference);
+        //        m_leftHandFingers->setFingersAxisReference(m_icubLeftFingerAxisReference);
+        m_leftHandFingers->setFingersJointReference(m_icubLeftFingerJointsReference);
         m_leftHandFingers->move();
 
         // right hand
-        m_rightHandFingers->setFingersAxisReference(m_icubRightFingerAxisReference);
-        m_rightHandFingers->move();
+        //        m_rightHandFingers->setFingersAxisReference(m_icubRightFingerAxisReference);
+        //        m_rightHandFingers->move();
 
         // 4- Set the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
@@ -202,47 +208,38 @@ bool HapticGloveModule::updateModule()
             /* Left Hand */
             // Axis
             std::vector<double> icubLeftFingerAxisFeedback, icubLeftFingerAxisReference;
-            for (unsigned i = 0; i < m_leftHandFingers->controlHelper()->getActuatedDoFs(); i++)
-            {
-                icubLeftFingerAxisReference.push_back(m_icubLeftFingerAxisReference(i));
-                icubLeftFingerAxisFeedback.push_back(m_icubLeftFingerAxisFeedback(i));
-            }
+            m_leftHandFingers->getFingerAxisFeedback(icubLeftFingerAxisFeedback);
+            m_leftHandFingers->getFingerAxisReference(icubLeftFingerAxisReference);
 
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisFeedback",
                           icubLeftFingerAxisFeedback);
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisReference",
                           icubLeftFingerAxisReference);
             // Joints
-            std::vector<double> icubLeftFingerJointsReference, icubLeftFingerJointsFeedback;
-            for (unsigned i = 0; i < m_leftHandFingers->controlHelper()->getNumberOfJoints(); i++)
-            {
-                icubLeftFingerJointsReference.push_back(m_icubLeftFingerJointsReference(i));
-                icubLeftFingerJointsFeedback.push_back(m_icubLeftFingerJointsFeedback(i));
-            }
-            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsReference",
-                          icubLeftFingerJointsReference);
+            std::vector<double> icubLeftFingerJointsFeedback, icubLeftFingerJointsReference;
+            m_leftHandFingers->getFingerJointsFeedback(icubLeftFingerJointsFeedback);
+            m_leftHandFingers->getFingerJointReference(icubLeftFingerJointsReference);
+
             m_logger->add(m_logger_prefix + "_icubLeftFingerJointsFeedback",
                           icubLeftFingerJointsFeedback);
+            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsReference",
+                          icubLeftFingerJointsReference);
 
             /* Right Hand */
             // Axis
             std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
-            for (unsigned i = 0; i < m_rightHandFingers->controlHelper()->getActuatedDoFs(); i++)
-            {
-                icubRightFingerAxisFeedback.push_back(m_icubRightFingerAxisFeedback(i));
-                icubRightFingerAxisReference.push_back(m_icubRightFingerAxisReference(i));
-            }
+            m_rightHandFingers->getFingerAxisFeedback(icubRightFingerAxisFeedback);
+            m_rightHandFingers->getFingerAxisReference(icubRightFingerAxisReference);
+
             m_logger->add(m_logger_prefix + "_icubRightFingerAxisFeedback",
                           icubRightFingerAxisFeedback);
             m_logger->add(m_logger_prefix + "_icubRightFingerAxisReference",
                           icubRightFingerAxisReference);
             // Joints
             std::vector<double> icubRightFingerJointsReference, icubRightFingerJointsFeedback;
-            for (unsigned i = 0; i < m_rightHandFingers->controlHelper()->getNumberOfJoints(); i++)
-            {
-                icubRightFingerJointsReference.push_back(m_icubRightFingerJointsReference(i));
-                icubRightFingerJointsFeedback.push_back(m_icubRightFingerJointsFeedback(i));
-            }
+            m_rightHandFingers->getFingerJointsFeedback(icubRightFingerJointsFeedback);
+            m_rightHandFingers->getFingerJointReference(icubRightFingerJointsReference);
+
             m_logger->add(m_logger_prefix + "_icubRightFingerJointsReference",
                           icubRightFingerJointsReference);
             m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedback",
@@ -294,6 +291,7 @@ bool HapticGloveModule::updateModule()
                 yInfo() << "cannot claibrate the coupling matrix and find the coefficient matrix";
                 return false;
             }
+            m_timePreparationStarting = yarp::os::Time::now();
             m_state = HapticGloveFSM::Running;
 
         } else
