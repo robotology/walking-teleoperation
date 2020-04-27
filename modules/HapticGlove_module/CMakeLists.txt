@@ -26,6 +26,10 @@ if(ENABLE_LOGGER)
 endif(ENABLE_LOGGER)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include(FindPackageHandleStandardArgs)
+if(WIN32)
+  # MSVC standard library doesn't include things like M_PI_2 without this
+  add_definitions(-D_USE_MATH_DEFINES)
+endif()
 
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC

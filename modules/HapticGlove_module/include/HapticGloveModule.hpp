@@ -9,10 +9,14 @@
 #ifndef HAPTIC_GLOVE_MODULE_HPP
 #define HAPTIC_GLOVE_MODULE_HPP
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 // std
 #include <chrono>
 #include <ctime>
 #include <memory>
+
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
