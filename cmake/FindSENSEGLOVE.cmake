@@ -35,7 +35,7 @@ if(WIN32)
 elseif(UNIX)
   find_library(SENSEGLOVE SGCore HINTS $ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Linux )
 else()
-  message(SEND_ERROR  "The Sense Glove SDK is not supported for this operating system.")
+  message(FATAL_ERROR  "The Sense Glove SDK is not supported for this operating system.")
 endif()
 
 # Found

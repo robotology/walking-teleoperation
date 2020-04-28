@@ -17,7 +17,6 @@
 #include <ctime>
 #include <memory>
 
-
 // YARP
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/IJoypadController.h>
@@ -29,6 +28,7 @@
 #include <yarp/sig/Vector.h>
 
 #include <HapticGloveFingersRetargeting.hpp>
+#include <GloveControlHelper.hpp>
 
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
