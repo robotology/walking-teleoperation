@@ -7,6 +7,7 @@ set(EXE_TARGET_NAME HapticGloveModule)
 
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 mark_as_advanced(ENABLE_RPATH)
 include(AddInstallRPATHSupport)
@@ -31,6 +32,13 @@ if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
+find_package(SENSEGLOVE REQUIRED)
+#if(SENSEGLOVE_FOUND)
+#  include_directories($SENSEGLOVE_INCLUDE_DIR)
+#endif(SENSEGLOVE_FOUND)
+
+
+
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
@@ -51,6 +59,7 @@ set(${EXE_TARGET_NAME}_HDR
 # add include directories to the build.
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${SENSEGLOVE_INCLUDE_DIRS}
 )
 
 # add an executable to the project using the specified source files.
@@ -60,16 +69,25 @@ if(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
+    ${SENSEGLOVE_LIBRARIES}
     ctrlLib
     UtilityLibrary
-    matlogger2::matlogger2)
+    matlogger2::matlogger2
+    )
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
+    ${SENSEGLOVE_LIBRARIES}
     ctrlLib
     UtilityLibrary
 )
 endif()
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
+#if(WIN32)
+#  install(FILES 
+#    C:/Users/icub/Desktop/SenseGlove-API/Core/SGCoreCpp/lib/Win/x64/Release/SGCore.dll
+#    DESTINATION bin
+#  )
+#endif()
