@@ -32,7 +32,9 @@ if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
-find_package(SENSEGLOVE REQUIRED)
+find_library(SENSEGLOVE SGCore HINTS $ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Win/x64/Release )
+set(SENSEGLOVE_INCLUDE_DIRS $ENV{SenseGlove_DIR}/Core/SGCoreCpp/incl)
+#find_package(SENSEGLOVE REQUIRED)
 #if(SENSEGLOVE_FOUND)
 #  include_directories($SENSEGLOVE_INCLUDE_DIR)
 #endif(SENSEGLOVE_FOUND)
@@ -46,6 +48,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/HapticGloveRobotControlHelper.cpp
   src/HapticGloveRetargetingController.cpp
   src/HapticGloveModule.cpp
+  src/GloveControlHelper.cpp
   )
 
 # set hpp files
@@ -54,9 +57,12 @@ set(${EXE_TARGET_NAME}_HDR
   include/HapticGloveRobotControlHelper.hpp
   include/HapticGloveRetargetingController.hpp
   include/HapticGloveModule.hpp
+  include/GloveControlHelper.hpp
   )
 
 # add include directories to the build.
+message("{SENSEGLOVE_INCLUDE_DIRS}: ${SENSEGLOVE_INCLUDE_DIRS}")
+
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${SENSEGLOVE_INCLUDE_DIRS}
@@ -65,11 +71,17 @@ include_directories(
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
 
+message("YARP_LIBRARIES: ${YARP_LIBRARIES}")
+message("iDynTree_LIBRARIES: ${iDynTree_LIBRARIES}")
+message("SENSEGLOVE_LIBRARIES: ${SENSEGLOVE_LIBRARIES}")
+message("ctrlLib: ${ctrlLib}")
+message("UtilityLibrary: ${UtilityLibrary}")
+
 if(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-    ${SENSEGLOVE_LIBRARIES}
+    ${SENSEGLOVE}
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
@@ -78,16 +90,16 @@ else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-    ${SENSEGLOVE_LIBRARIES}
+    ${SENSEGLOVE}
     ctrlLib
     UtilityLibrary
 )
 endif()
 
+message("BIN: ${bin}")
+message(" {CMAKE_BUILD_TYPE}: ${CMAKE_BUILD_TYPE}")
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
-#if(WIN32)
-#  install(FILES 
-#    C:/Users/icub/Desktop/SenseGlove-API/Core/SGCoreCpp/lib/Win/x64/Release/SGCore.dll
-#    DESTINATION bin
-#  )
-#endif()
+if(WIN32)
+  install(FILES $ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Win/x64/Release/SGCore.dll DESTINATION bin
+  )
+endif()
