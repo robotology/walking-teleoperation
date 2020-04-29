@@ -30,7 +30,7 @@ class GloveControlHelper
 
     int m_forceFbDof; /**< Number of the actuated motors Dofs to produce force feedback to the
                          human*/
-    int m_vibroDof; /**< Number of the actuated vibro tactile Dofs to produce vibro tactile
+    int m_buzzDof; /**< Number of the actuated vibro tactile Dofs to produce vibro tactile
                          feedback to the human*/
     int m_jointsDof; /**< Number of the joints of the hand model*/
 
@@ -40,7 +40,7 @@ class GloveControlHelper
 
 
     yarp::sig::Vector m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
-    std::vector<int> m_desiredVibroValues; /**< Joint position [deg]. */
+    std::vector<int> m_desiredBuzzValues; /**< Joint position [deg]. */
     yarp::sig::Vector m_jointsFeedbackInRadians; /**< Joint position [rad]. */
 
     SGCore::SG::SenseGlove m_Glove;
@@ -83,7 +83,7 @@ public:
      * @param desiredValue desired vibro-tactile values
      * @return true / false in case of success / failure
      */
-    bool setVibroTactileJointsReference(const yarp::sig::Vector& desiredValue);
+    bool setBuzzMotorsReference(const yarp::sig::Vector& desiredValue);
     
     /**
      * Set the number of vibro-tactile reference
@@ -91,6 +91,9 @@ public:
      * @return true / false in case of success / failure
      */
     bool turnOffBuzzMotors();
+
+
+    int getNoOfBuzzMotors();
 
     /**
      * Setup the communication with the glove
