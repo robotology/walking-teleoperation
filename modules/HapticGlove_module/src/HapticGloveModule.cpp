@@ -137,6 +137,7 @@ bool HapticGloveModule::close()
     }
 #endif
     // m_logger.reset();
+    m_gloveRightHand->stopFeedback();
     m_gloveRightHand->turnOffBuzzMotors();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 10ms.
@@ -196,21 +197,26 @@ bool HapticGloveModule::updateModule()
             //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
         }
         double tmp_buzzVal;
-        if ((m_timeNow - m_timePreparationStarting) < (100 * M_PI))
+        if ((m_timeNow - m_timePreparationStarting) < (50 * M_PI))
         {
             yInfo() << "give buzz ref value higher than zero, time: "
                     << m_timeNow - m_timePreparationStarting;
-            tmp_buzzVal = 60 + 40.0 * sin((m_timeNow - m_timePreparationStarting)/4.0 - M_PI_2);
+            tmp_buzzVal = 60 + 20.0 * sin((m_timeNow - m_timePreparationStarting)/4.0 - M_PI_2);
         } else
         {
             yInfo() << "give buzz ref value equal to zero, time: "
                     << m_timeNow - m_timePreparationStarting;
             tmp_buzzVal = 0.0;
         }
-        for (int i=0; i<5;i++)
+       for (int i=0; i<5;i++)
             m_gloveRightBuzzMotorReference(i) = tmp_buzzVal;
+       // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
+        
 
         m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+        m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+        //if (((int)tmp_buzzVal)%4==0)
+        //    m_gloveRightHand->setPalmFeedback(0);
 
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
