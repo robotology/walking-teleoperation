@@ -19,8 +19,6 @@
 #include <HapticGloveModule.hpp>
 #include <Utils.hpp>
 
-
-
 HapticGloveModule::HapticGloveModule(){};
 
 HapticGloveModule::~HapticGloveModule(){};
@@ -79,6 +77,16 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    m_gloveRightHand = std::make_unique<HapticGlove::GloveControlHelper>();
+    if (!m_gloveRightHand->configure(generalOptions, getName(), true))
+    {
+        yError() << "[HapticGloveModule::configure] Unable to initialize the right glove control "
+                    "helper.";
+        return false;
+    }
+
+    m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
+
     m_timePreparationStarting = 0.0;
     m_timeNow = 0.0;
     m_timeConfigurationStarting = 0.0;
@@ -129,7 +137,9 @@ bool HapticGloveModule::close()
     }
 #endif
     // m_logger.reset();
+    m_gloveRightHand->turnOffBuzzMotors();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 10ms.
     return true;
 }
 
@@ -152,8 +162,8 @@ bool HapticGloveModule::getFeedbacks()
     }
     m_leftHandFingers->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
     m_leftHandFingers->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
-    yInfo() << "fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
-    yInfo() << "fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
+    // yInfo() << "fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
+    // yInfo() << "fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
 
     return true;
 }
@@ -185,6 +195,22 @@ bool HapticGloveModule::updateModule()
             //            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
             //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
         }
+        double tmp_buzzVal;
+        if ((m_timeNow - m_timePreparationStarting) < (100 * M_PI))
+        {
+            yInfo() << "give buzz ref value higher than zero, time: "
+                    << m_timeNow - m_timePreparationStarting;
+            tmp_buzzVal = 60 + 40.0 * sin((m_timeNow - m_timePreparationStarting)/4.0 - M_PI_2);
+        } else
+        {
+            yInfo() << "give buzz ref value equal to zero, time: "
+                    << m_timeNow - m_timePreparationStarting;
+            tmp_buzzVal = 0.0;
+        }
+        for (int i=0; i<5;i++)
+            m_gloveRightBuzzMotorReference(i) = tmp_buzzVal;
+
+        m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
 
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
@@ -253,8 +279,14 @@ bool HapticGloveModule::updateModule()
 
     } else if (m_state == HapticGloveFSM::Configured)
     {
+
         // TODO
         m_timeConfigurationStarting = yarp::os::Time::now();
+        if (!m_gloveRightHand->setupGlove())
+        {
+            yError() << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
+            return false;
+        }
         m_state = HapticGloveFSM::InPreparation;
     } else if (m_state == HapticGloveFSM::InPreparation)
     {

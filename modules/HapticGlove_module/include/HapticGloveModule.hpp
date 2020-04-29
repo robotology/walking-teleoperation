@@ -52,6 +52,8 @@ private:
     yarp::sig::Vector m_icubRightFingerAxisReference, m_icubRightFingerAxisFeedback;
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
+    yarp::sig::Vector m_gloveRightBuzzMotorReference;
+
     double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 
     /** Haptic Glove Finite state machine */
@@ -71,6 +73,9 @@ private:
                                                               finger retargeting object. */
     std::unique_ptr<FingersRetargeting> m_rightHandFingers; /**< Pointer to the right
                                                                finger retargeting object. */
+
+    std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveRightHand; /**< Pointer to the right
+                                                               hand glove object. */
 
     bool m_enableLogger; /**< log the data (if ON) */
 #ifdef ENABLE_LOGGER

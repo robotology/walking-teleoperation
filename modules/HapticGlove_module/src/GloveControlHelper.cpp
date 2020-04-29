@@ -27,10 +27,10 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     m_isReady = false;
     m_forceFbDof = 5;
-    m_vibroDof = 5;
+    m_buzzDof = 5;
     m_jointsDof = 25;
     m_isRightHand = rightHand;
-    m_desiredVibroValues.resize(m_vibroDof, 0);
+    m_desiredBuzzValues.resize(m_buzzDof, 0);
 
     return true;
 }
@@ -50,31 +50,41 @@ bool GloveControlHelper::getFingersJointsMeasured(yarp::sig::Vector& measuredVal
     return true;
 }
 
-bool GloveControlHelper::setVibroTactileJointsReference(const yarp::sig::Vector& desiredValue)
+bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desiredValue)
 {
-    if (desiredValue.size() != m_vibroDof)
+    yInfo() << "[GloveControlHelper::setBuzzMotorsReference]";
+
+    if (desiredValue.size() != m_buzzDof)
     {
         yError() << "[GloveControlHelper::setVibroTactileJointsReference] the size of the input "
                     "desired vecotr and the number of buzz motors are not equal.";
         return false;
     }
-    for (size_t i = 0; i < m_vibroDof; i++)
+    for (size_t i = 0; i < m_buzzDof; i++)
     {
         if (desiredValue(i) > 0.0)
-            m_desiredVibroValues[i] = (int)std::round(desiredValue(i));
+            m_desiredBuzzValues[i] = (int)std::round(desiredValue(i));
         else
-            m_desiredVibroValues[i] = 0;
+            m_desiredBuzzValues[i] = 0;
+        std::cout << m_desiredBuzzValues[i] << " ";
     }
-    m_Glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(
-        m_desiredVibroValues)); // vibrate fingers at 80% intensity.
+    std::cout << std::endl;
+    m_Glove.SendHaptics(
+        SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)); // vibrate fingers at 80% intensity.
+    // std::this_thread::sleep_for(std::chrono::milliseconds(10)); // vibrating for for 200ms.
     return true;
 }
 
 bool GloveControlHelper::turnOffBuzzMotors()
 {
-
+    yInfo() << "[GloveControlHelper::turnOffBuzzMotors]";
     m_Glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd::off); // turn off all Buzz Motors.
     return true;
+}
+
+int GloveControlHelper::getNoOfBuzzMotors()
+{
+    return m_buzzDof;
 }
 
 void GloveControlHelper::close()
@@ -83,6 +93,8 @@ void GloveControlHelper::close()
 
 bool GloveControlHelper::setupGlove()
 {
+    yInfo() << "GloveControlHelper::setupGlove()";
+
     if (!SGCore::DeviceList::SenseCommRunning()) // Returns true if SenseComm is running.
     {
         yError() << "SenseComm is not running. Please run SenseComm, then try again.";
@@ -97,6 +109,7 @@ bool GloveControlHelper::setupGlove()
                     "secure, then try again.";
         return false;
     }
+
     yInfo() << "Activating " << m_Glove.ToString();
     return true;
 }
