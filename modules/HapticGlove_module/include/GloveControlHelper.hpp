@@ -39,11 +39,11 @@ class GloveControlHelper
     bool m_isRightHand; /**< true if the glove is the right hand*/
 
 
-    yarp::sig::Vector m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
+    std::vector<int> m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
     std::vector<int> m_desiredBuzzValues; /**< Joint position [deg]. */
     yarp::sig::Vector m_jointsFeedbackInRadians; /**< Joint position [rad]. */
 
-    SGCore::SG::SenseGlove m_Glove;
+    SGCore::SG::SenseGlove m_glove;
 
 public:
     /**
@@ -84,6 +84,9 @@ public:
      * @return true / false in case of success / failure
      */
     bool setBuzzMotorsReference(const yarp::sig::Vector& desiredValue);
+
+
+    bool setPalmFeedback(const int desiredValue);
     
     /**
      * Set the number of vibro-tactile reference
@@ -100,6 +103,12 @@ public:
      * @return true / false in case of success / failure
      */
     bool setupGlove();
+
+    bool stopFeedback();
+
+    
+
+
 
 
 

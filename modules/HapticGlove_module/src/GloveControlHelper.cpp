@@ -31,12 +31,37 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
     m_jointsDof = 25;
     m_isRightHand = rightHand;
     m_desiredBuzzValues.resize(m_buzzDof, 0);
+    m_desiredForceValues.resize(m_forceFbDof, 0);
 
     return true;
 }
 
 bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desiredValue)
 {
+    if (desiredValue.size() != m_forceFbDof)
+    {
+        yError() << "[GloveControlHelper::setFingersForceReference] the size of the input "
+                    "desired vecotr and the number of haptic force feedbacks are not equal.";
+        return false;
+    }
+
+        for (size_t i = 0; i < m_forceFbDof; i++)
+    {
+        if (desiredValue(i) > 0.0)
+            m_desiredForceValues[i] = (int)std::round(desiredValue(i));
+        else
+            m_desiredForceValues[i] = 0;
+        std::cout << m_desiredForceValues[i] << " ";
+    }
+    std::cout << std::endl;
+
+
+    if (!m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues)))
+    {
+        yError() << "[GloveControlHelper::setFingersForceReference] unable the send the force feedback command";
+        return false;
+    } 
+ 
     return true;
 }
 
@@ -52,8 +77,6 @@ bool GloveControlHelper::getFingersJointsMeasured(yarp::sig::Vector& measuredVal
 
 bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desiredValue)
 {
-    yInfo() << "[GloveControlHelper::setBuzzMotorsReference]";
-
     if (desiredValue.size() != m_buzzDof)
     {
         yError() << "[GloveControlHelper::setVibroTactileJointsReference] the size of the input "
@@ -69,16 +92,20 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
         std::cout << m_desiredBuzzValues[i] << " ";
     }
     std::cout << std::endl;
-    m_Glove.SendHaptics(
-        SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)); // vibrate fingers at 80% intensity.
-    // std::this_thread::sleep_for(std::chrono::milliseconds(10)); // vibrating for for 200ms.
+    // vibrate fingers at percetage intensity, between 0-100, integer numbers
+   if( !m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)))
+    {
+       yError() << "[GloveControlHelper::setBuzzMotorsReference] unable the send the Buzz command";
+       return false;
+   } 
+    
     return true;
 }
 
 bool GloveControlHelper::turnOffBuzzMotors()
 {
     yInfo() << "[GloveControlHelper::turnOffBuzzMotors]";
-    m_Glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd::off); // turn off all Buzz Motors.
+    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd::off); // turn off all Buzz Motors.
     return true;
 }
 
@@ -103,13 +130,43 @@ bool GloveControlHelper::setupGlove()
     // GetSenseGlove retrieves the first (connected) Sense Glove it can find. Returns true if one
     // can be found. Additional search parameters can be used.
 
-    if (!SGCore::SG::SenseGlove::GetSenseGlove(m_isRightHand, m_Glove))
+    if (!SGCore::SG::SenseGlove::GetSenseGlove(m_isRightHand, m_glove))
     {
         yError() << "No sense gloves connected to the system. Ensure the USB connection is "
                     "secure, then try again.";
         return false;
     }
 
-    yInfo() << "Activating " << m_Glove.ToString();
+    yInfo() << "Activating " << m_glove.ToString();
     return true;
 }
+
+bool GloveControlHelper::stopFeedback()
+{
+    return m_glove.StopFeedback();
+}
+
+
+bool GloveControlHelper::setPalmFeedback(const int desiredValue)
+{
+
+    return m_glove.SendHaptics(SGCore::Haptics::Impact_Thump_100);
+}
+    ///// <summary> set the level(s) of force and vibrotactile feedback, with an optional thumper
+///command
+///// </summary>
+// bool sendhaptics(haptics::sg_ffbcmd ffbcmd,
+//                 haptics::sg_buzzcmd buzzcmd,
+//                 haptics::sg_thumpercmd thumpercmd = haptics::sg_thumpercmd::none);
+//
+///// <summary> send a force-feedback command to the sense glove. </summary>
+// bool sendhaptics(haptics::sg_ffbcmd ffbcmd);
+//
+///// <summary> send a vibration command to the sense glove. </summary>
+// bool sendhaptics(haptics::sg_buzzcmd buzzcmd);
+//
+///// <summary> send a thumper command. </summary>
+// bool sendhaptics(haptics::sg_thumpercmd thumpercmd);
+//
+///// <summary> stop all haptic feedback on this device. </summary>
+// bool stopfeedback();
