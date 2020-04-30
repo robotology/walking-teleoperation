@@ -19,6 +19,9 @@
 #include <HapticGloveModule.hpp>
 #include <Utils.hpp>
 
+
+#include <Eigen/Dense>
+
 HapticGloveModule::HapticGloveModule(){};
 
 HapticGloveModule::~HapticGloveModule(){};
@@ -213,11 +216,27 @@ bool HapticGloveModule::updateModule()
        // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
         
 
-        m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
-        m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+        //m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+        //m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
         //if (((int)tmp_buzzVal)%4==0)
         //    m_gloveRightHand->setPalmFeedback(0);
 
+       Eigen::MatrixXd handPose, glovePose;
+       std::vector<float> gloveSensors;
+       m_gloveRightHand->getHandPose(handPose);
+       m_gloveRightHand->getGlovePose(glovePose);
+       m_gloveRightHand->getSensorData(gloveSensors);
+
+       yInfo() << "**************";
+       yInfo() << "gloveSensors: \n" << gloveSensors;
+       yInfo() << "**************";
+       std::cout << "hand pose: \n" << handPose << std::endl;
+       yInfo() << "**************";
+       std::cout << "glove pose: \n" << glovePose << std::endl;
+
+
+
+       
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
 
@@ -278,6 +297,17 @@ bool HapticGloveModule::updateModule()
                           icubRightFingerJointsReference);
             m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedback",
                           icubRightFingerJointsFeedback);
+
+            // GLOVE: based on data worn by human user
+            m_logger->add(m_logger_prefix + "_humanHandPose", handPose);
+            m_logger->add(m_logger_prefix + "_humanGlovePose", glovePose);
+            m_logger->add(m_logger_prefix + "_gloveSensors ", );
+
+
+
+       , glovePose;
+
+
             std::cerr << "110 \n";
             m_logger->flush_available_data();
         }
@@ -376,6 +406,13 @@ bool HapticGloveModule::openLogger()
                      m_rightHandFingers->controlHelper()->getNumberOfJoints());
     m_logger->create(m_logger_prefix + "_icubRightFingerJointsFeedback",
                      m_rightHandFingers->controlHelper()->getNumberOfJoints());
+
+    m_logger->create(m_logger_prefix + "_humanHandPose", m_gloveRightHand->getNoHandLinks(), 7);
+
+    
+    m_logger->create(m_logger_prefix + "_humanGlovePose", m_gloveRightHand->getNoGloveLinks(), 7);
+    m_logger->create(m_logger_prefix + "_gloveSensors", m_gloveRightHand->getNoSensors(), 7);
+
 
     m_logger->create(m_logger_prefix + "_loc_joypad_x_y",
                      2); // [x,y] component for robot locomotion
