@@ -9,12 +9,15 @@
 #ifndef GLOVE_CONTROL_HELPER_HPP
 #define GLOVE_CONTROL_HELPER_HPP
 
+#include <Eigen/Dense>
+
 // std
 #include <memory>
 
 // YARP
 
 #include <yarp/sig/Vector.h>
+
 
 // Sense Glove
 #include "DeviceList.h"
@@ -32,7 +35,11 @@ class GloveControlHelper
                          human*/
     int m_buzzDof; /**< Number of the actuated vibro tactile Dofs to produce vibro tactile
                          feedback to the human*/
-    int m_jointsDof; /**< Number of the joints of the hand model*/
+    int m_handNoLinks; /**< Number of the links of the hand model*/
+
+    int m_gloveNoLinks; /**< Number of the links of the hand model*/
+
+    int m_NoSensors;  /**< Number of the sensors of the glove */
 
     bool m_isReady; /**< true if the glove is ready to use, communication working*/
 
@@ -41,6 +48,10 @@ class GloveControlHelper
 
     std::vector<int> m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
     std::vector<int> m_desiredBuzzValues; /**< Joint position [deg]. */
+    std::vector<float> m_sensorData; /**< sensory data of the glove in degree */
+    Eigen::MatrixXd m_glovePose; /**< sensory data of the glove poses*/
+    Eigen::MatrixXd m_handPose; /**< sensory data of the hand link poses;  From thumb to pinky, proximal to distal;
+                                pos [x y z] Quat [x y z w]*/
     yarp::sig::Vector m_jointsFeedbackInRadians; /**< Joint position [rad]. */
 
     SGCore::SG::SenseGlove m_glove;
@@ -54,8 +65,7 @@ public:
      * problem in the configuration phase
      * @return true / false in case of success / failure
      */
-    bool
-    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
+    bool configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
     /**
      * Set the desired joint reference (position or velocity)
@@ -76,7 +86,12 @@ public:
      * @param measuredValue measured joint values
      * @return true / false in case of success / failure
      */
-    bool getFingersJointsMeasured(yarp::sig::Vector& measuredValue);
+    bool getHandPose(Eigen::MatrixXd& measuredValue);
+
+    
+    bool getGlovePose(Eigen::MatrixXd& measuredValue);
+
+    bool getSensorData(std::vector<float>& measuredValues);
 
     /**
      * Set the number of vibro-tactile reference
@@ -105,6 +120,13 @@ public:
     bool setupGlove();
 
     bool stopFeedback();
+
+    bool isConnected();
+
+    int getNoHandLinks();
+    int getNoGloveLinks();
+
+    int getNoSensors();
 
     
 
