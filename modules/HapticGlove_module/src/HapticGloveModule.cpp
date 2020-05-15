@@ -19,7 +19,6 @@
 #include <HapticGloveModule.hpp>
 #include <Utils.hpp>
 
-
 #include <Eigen/Dense>
 
 HapticGloveModule::HapticGloveModule(){};
@@ -88,6 +87,14 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    m_gloveLeftHand = std::make_unique<HapticGlove::GloveControlHelper>();
+    if (!m_gloveLeftHand->configure(generalOptions, getName(), false))
+    {
+        yError() << "[HapticGloveModule::configure] Unable to initialize the right glove control "
+                    "helper.";
+        return false;
+    }
+
     m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
 
     m_timePreparationStarting = 0.0;
@@ -142,6 +149,10 @@ bool HapticGloveModule::close()
     // m_logger.reset();
     m_gloveRightHand->stopFeedback();
     m_gloveRightHand->turnOffBuzzMotors();
+
+    m_gloveLeftHand->stopFeedback();
+    m_gloveLeftHand->turnOffBuzzMotors();
+
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 10ms.
     return true;
@@ -204,45 +215,149 @@ bool HapticGloveModule::updateModule()
         {
             yInfo() << "give buzz ref value higher than zero, time: "
                     << m_timeNow - m_timePreparationStarting;
-            tmp_buzzVal = 60 + 20.0 * sin((m_timeNow - m_timePreparationStarting)/4.0 - M_PI_2);
+            tmp_buzzVal = 85;
+            // 0 + 20.0 * sin((m_timeNow - m_timePreparationStarting) / 4.0 - M_PI_2);
         } else
         {
             yInfo() << "give buzz ref value equal to zero, time: "
                     << m_timeNow - m_timePreparationStarting;
             tmp_buzzVal = 0.0;
         }
-       for (int i=0; i<5;i++)
+        for (int i = 0; i < 5; i++)
             m_gloveRightBuzzMotorReference(i) = tmp_buzzVal;
-       // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
-        
+        // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
 
-        //m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
-        //m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
-        //if (((int)tmp_buzzVal)%4==0)
+        // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+
+                    // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+        // m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+
+        
+        if (false){
+        if (m_timeNow - m_timePreparationStarting < 10.0)
+        {
+            // m_timePreparationStarting = m_timeNow;
+            yInfo() << "++++++++++++++++++++++++ time: " << m_timeNow - m_timePreparationStarting
+                    << " give force feedback command";
+          //  m_gloveRightHand->setPalmFeedbackThumper(0);
+            m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+        }
+        /**else if (m_timeNow - m_timePreparationStarting > 5.0
+                   && m_timeNow - m_timePreparationStarting < 10.0)
+        {
+            m_gloveRightHand->setPalmFeedbackThumper(1);
+        }
+        else if (m_timeNow - m_timePreparationStarting > 10.0
+                   && m_timeNow - m_timePreparationStarting < 15.0)
+        {
+            m_gloveRightHand->setPalmFeedbackThumper(2);
+        } */
+        else
+        {
+            yInfo() << "----------------------------- time: "
+                    << m_timeNow - m_timePreparationStarting << " stop command";
+
+             m_gloveRightHand->stopFeedback();
+            m_timePreparationStarting = m_timeNow;
+        }
+        }
+        // if (((int)tmp_buzzVal)%4==0)
         //    m_gloveRightHand->setPalmFeedback(0);
 
-       Eigen::MatrixXd handPose, glovePose;
-       std::vector<float> gloveSensors;
-       m_gloveRightHand->getHandPose(handPose);
-       m_gloveRightHand->getGlovePose(glovePose);
-       m_gloveRightHand->getSensorData(gloveSensors);
+        Eigen::MatrixXd rightHandPose, rightGlovePose, rightHandJointsAngles;
+        std::vector<float> rightGloveSensors, leftGloveSensors;
+        m_gloveRightHand->getHandPose(rightHandPose);
+        m_gloveRightHand->getGlovePose(rightGlovePose);
+        m_gloveRightHand->getSensorData(rightGloveSensors);
+        m_gloveRightHand->getHandJointsAngles(rightHandJointsAngles);
 
-       yInfo() << "**************";
-       yInfo() << "gloveSensors: \n" << gloveSensors;
-       yInfo() << "**************";
-       std::cout << "hand pose: \n" << handPose << std::endl;
-       yInfo() << "**************";
-       std::cout << "glove pose: \n" << glovePose << std::endl;
+        Eigen::MatrixXd leftHandPose, leftGlovePose, leftHandJointsAngles;
+
+        m_gloveLeftHand->getHandPose(leftHandPose);
+        m_gloveLeftHand->getGlovePose(leftGlovePose);
+        m_gloveLeftHand->getSensorData(leftGloveSensors);
+        m_gloveLeftHand->getHandJointsAngles(leftHandJointsAngles);
+
+
+        yInfo() << "**************";
+        //yInfo() << "gloveSensors: \n" << gloveSensors;
+        //yInfo() << "**************";
+        //std::cout << "hand pose: \n" << handPose << std::endl;
+        //yInfo() << "**************";
+        //std::cout << "glove pose: \n" << glovePose << std::endl;
+        //yInfo() << "handJointsAngles.size :" << rightHandJointsAngles.rows() << rightHandJointsAngles.cols();
+        //yInfo() << "index finger, first joint: " << rightHandJointsAngles(4, 0)
+        //        << rightHandJointsAngles(4, 1) << rightHandJointsAngles(4, 2);
+
+        //yInfo() << "index finger, second joint: " << rightHandJointsAngles(5, 0)
+        //        << rightHandJointsAngles(5, 1) << rightHandJointsAngles(5, 2);
+
+        //yInfo() << "index finger, third joint: " << rightHandJointsAngles(6, 0)
+        //        << rightHandJointsAngles(6, 1) << rightHandJointsAngles(6, 2);
+
+        //yInfo() << "index finger, fourth joint: " << rightHandJointsAngles(7, 0)
+        //        << rightHandJointsAngles(7, 1) << rightHandJointsAngles(7, 2);
+
+        //std::cout << "handJointsAngles: \n" << rightHandJointsAngles << std::endl;
+
+        // yInfo() << "handJointsAngles.size :" << leftHandJointsAngles.rows() <<
+        //        leftHandJointsAngles.cols();
+        //yInfo() << "index finger, first joint: " << leftHandJointsAngles(4, 0)
+        //         << leftHandJointsAngles(4, 1) << leftHandJointsAngles(4, 2);
+
+        // yInfo() << "index finger, second joint: " << leftHandJointsAngles(5, 0)
+        //        << leftHandJointsAngles(5, 1) << leftHandJointsAngles(5, 2);
+
+        // yInfo() << "index finger, third joint: " << leftHandJointsAngles(6, 0)
+        //         << leftHandJointsAngles(6, 1) << leftHandJointsAngles(6, 2);
+
+        // yInfo() << "index finger, fourth joint: " << leftHandJointsAngles(7, 0)
+        //         << leftHandJointsAngles(7, 1) << leftHandJointsAngles(7, 2);
+
+         std::cout << "handJointsAngles: \n" << leftHandJointsAngles << std::endl;
 
 
 
-       
+
+
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
 
         // 3- Set the reference joint valued for the iCub hand fingers
         // left hand
         //        m_leftHandFingers->setFingersAxisReference(m_icubLeftFingerAxisReference);
+         
+         {
+             m_icubLeftFingerJointsReference.zero();
+         
+         int i = 0;
+         // thumb: (i:i+2)
+         m_icubLeftFingerJointsReference(i + 0) = -leftHandJointsAngles(0, 2);
+         m_icubLeftFingerJointsReference(i + 1) = leftHandJointsAngles(1, 1);
+         m_icubLeftFingerJointsReference(i + 2) = leftHandJointsAngles(2, 1);
+
+         //index (i+3:i+5)
+         m_icubLeftFingerJointsReference(i + 3) = leftHandJointsAngles(4, 1);
+         m_icubLeftFingerJointsReference(i + 4) = leftHandJointsAngles(5, 1);
+         m_icubLeftFingerJointsReference(i + 5) = leftHandJointsAngles(6, 1);
+         
+         //middle (i+6:i+8)
+         m_icubLeftFingerJointsReference(i + 6) = leftHandJointsAngles(8, 1);
+         m_icubLeftFingerJointsReference(i + 7) = leftHandJointsAngles(9, 1);
+         m_icubLeftFingerJointsReference(i + 8) = leftHandJointsAngles(10, 1);
+
+         //ring (i+9:i+11)
+         m_icubLeftFingerJointsReference(i + 9) =  leftHandJointsAngles(12, 1);
+         m_icubLeftFingerJointsReference(i + 10) = leftHandJointsAngles(13, 1);
+         m_icubLeftFingerJointsReference(i + 11) = leftHandJointsAngles(14, 1);
+
+         //pinkie (i+12:i+14)
+         m_icubLeftFingerJointsReference(i + 12) = leftHandJointsAngles(16, 1);
+         m_icubLeftFingerJointsReference(i + 13) = leftHandJointsAngles(17, 1);
+         m_icubLeftFingerJointsReference(i + 14) = leftHandJointsAngles(18, 1);
+         }
+         yInfo() << "m_icubLeftFingerJointsReference: " << m_icubLeftFingerJointsReference.toString();
+
         m_leftHandFingers->setFingersJointReference(m_icubLeftFingerJointsReference);
         m_leftHandFingers->move();
 
@@ -303,10 +418,7 @@ bool HapticGloveModule::updateModule()
             m_logger->add(m_logger_prefix + "_humanGlovePose", glovePose);
             m_logger->add(m_logger_prefix + "_gloveSensors ", );
 
-
-
-       , glovePose;
-
+            , glovePose;
 
             std::cerr << "110 \n";
             m_logger->flush_available_data();
@@ -321,6 +433,11 @@ bool HapticGloveModule::updateModule()
         if (!m_gloveRightHand->setupGlove())
         {
             yError() << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
+            return false;
+        }
+        if (!m_gloveLeftHand->setupGlove())
+        {
+            yError() << "[HapticGloveModule::updateModule()] cannot setup the left hand glove.";
             return false;
         }
         m_state = HapticGloveFSM::InPreparation;
@@ -409,10 +526,8 @@ bool HapticGloveModule::openLogger()
 
     m_logger->create(m_logger_prefix + "_humanHandPose", m_gloveRightHand->getNoHandLinks(), 7);
 
-    
     m_logger->create(m_logger_prefix + "_humanGlovePose", m_gloveRightHand->getNoGloveLinks(), 7);
     m_logger->create(m_logger_prefix + "_gloveSensors", m_gloveRightHand->getNoSensors(), 7);
-
 
     m_logger->create(m_logger_prefix + "_loc_joypad_x_y",
                      2); // [x,y] component for robot locomotion
