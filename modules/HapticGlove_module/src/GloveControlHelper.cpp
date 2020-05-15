@@ -35,9 +35,10 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
     m_isRightHand = rightHand;
     m_desiredBuzzValues.resize(m_buzzDof, 0);
     m_desiredForceValues.resize(m_forceFbDof, 0);
-    m_glovePose = Eigen::MatrixXd::Zero(30, 7);
-    m_handPose = Eigen::MatrixXd::Zero(20, 7);
+    m_glovePose = Eigen::MatrixXd::Zero(m_gloveNoLinks, 7);
+    m_handPose = Eigen::MatrixXd::Zero(m_handNoLinks, 7);
 
+    m_handJointsAngles = Eigen::MatrixXd::Zero(m_handNoLinks, 3);
 
     return true;
 }
@@ -122,11 +123,11 @@ bool GloveControlHelper::getSensorData(std::vector<float>& measuredValues)
         return true;
     }
 
-//    if (!sensorData.IsComplete())
-//    {
-        // all the finger, from proximal to distal
-        
-//    }
+    //    if (!sensorData.IsComplete())
+    //    {
+    // all the finger, from proximal to distal
+
+    //    }
     m_sensorData = sensorData.GetAngleSequence();
     measuredValues = m_sensorData;
     return true;
@@ -163,6 +164,38 @@ bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
         }
     }
     measuredValue = m_handPose;
+
+    return true;
+}
+
+bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
+{
+    yInfo() << "[GloveControlHelper::getHandJointsAngles]";
+
+    SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
+    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
+    SGCore::HandPose handPose;
+
+    if (!m_glove.GetHandPose(profile, solver, handPose))
+    {
+        yWarning() << "m_glove.GetHandPose return error.";
+        measuredValue = m_handJointsAngles;
+        return true;
+    }
+
+    int count = 0;
+    for (int i = 0; i < handPose.jointPositions.size(); i++)
+    {
+        for (int j = 0; j < handPose.jointPositions[i].size(); j++)
+        {
+            m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
+            m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
+            m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
+
+            count++;
+        }
+    }
+    measuredValue = m_handJointsAngles;
 
     return true;
 }
@@ -248,10 +281,14 @@ bool GloveControlHelper::stopFeedback()
     return m_glove.StopFeedback();
 }
 
-bool GloveControlHelper::setPalmFeedback(const int desiredValue)
+bool GloveControlHelper::setPalmFeedbackThumper(const int desiredValue)
 {
-
-    return m_glove.SendHaptics(SGCore::Haptics::Impact_Thump_100);
+    if (desiredValue == 0)
+        return m_glove.SendHaptics(SGCore::Haptics::Impact_Thump_100);
+    else if (desiredValue == 1)
+        return m_glove.SendHaptics(SGCore::Haptics::Object_Grasp_100);
+    else
+        return m_glove.SendHaptics(SGCore::Haptics::Button_Double_100);
 }
 
 int GloveControlHelper::getNoGloveLinks()

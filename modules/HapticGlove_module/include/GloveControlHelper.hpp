@@ -52,6 +52,11 @@ class GloveControlHelper
     Eigen::MatrixXd m_glovePose; /**< sensory data of the glove poses*/
     Eigen::MatrixXd m_handPose; /**< sensory data of the hand link poses;  From thumb to pinky, proximal to distal;
                                 pos [x y z] Quat [x y z w]*/
+
+    Eigen::MatrixXd m_handJointsAngles; /**< sensory data of the hand joints angles;  From thumb to pinky,
+                                proximal to distal [rad] [Pronation/Supination (x), Flexion/Extension (y), Abduction/Adduction (z)]*/
+
+
     yarp::sig::Vector m_jointsFeedbackInRadians; /**< Joint position [rad]. */
 
     SGCore::SG::SenseGlove m_glove;
@@ -88,6 +93,9 @@ public:
      */
     bool getHandPose(Eigen::MatrixXd& measuredValue);
 
+
+     bool getHandJointsAngles(Eigen::MatrixXd& measuredValue);
+
     
     bool getGlovePose(Eigen::MatrixXd& measuredValue);
 
@@ -101,7 +109,7 @@ public:
     bool setBuzzMotorsReference(const yarp::sig::Vector& desiredValue);
 
 
-    bool setPalmFeedback(const int desiredValue);
+    bool setPalmFeedbackThumper(const int desiredValue);
     
     /**
      * Set the number of vibro-tactile reference

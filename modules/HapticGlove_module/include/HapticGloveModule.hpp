@@ -76,6 +76,8 @@ private:
 
     std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveRightHand; /**< Pointer to the right
                                                                hand glove object. */
+    std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveLeftHand; /**< Pointer to the left
+                                                               hand glove object. */
 
     bool m_enableLogger; /**< log the data (if ON) */
 #ifdef ENABLE_LOGGER
