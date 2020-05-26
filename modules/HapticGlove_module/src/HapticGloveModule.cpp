@@ -20,6 +20,8 @@
 #include <Utils.hpp>
 
 #include <Eigen/Dense>
+#include <thread>
+
 
 HapticGloveModule::HapticGloveModule(){};
 
