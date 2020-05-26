@@ -27,7 +27,7 @@ endif()
 find_path(SenseGlove_INCLUDE_DIR NAMES DeviceList.h SenseGlove.h HINTS $ENV{SenseGlove_INCLUDE_DIRS})
 
 if(WIN32)
-  find_library(SenseGlove_LIBRARY SGCore HINTS $ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Win/${TARGET_PLATFORM}/${CMAKE_BUILD_TYPE} )
+  find_library(SenseGlove_LIBRARY NAMES SGCore HINTS ${SenseGlove_DIR} NO_DEFAULT_PATH)
 elseif(UNIX)
   find_library(SenseGlove_LIBRARY  NAMES SGCore.so PATHS ${SenseGlove_DIR} NO_DEFAULT_PATH)
 else()
