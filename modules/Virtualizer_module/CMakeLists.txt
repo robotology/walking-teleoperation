@@ -5,6 +5,7 @@
 #
 # set target name
 
+#find_package(CybSDK REQUIRED)
 find_package(CybSDK REQUIRED)
 set(EXE_TARGET_NAME VirtualizerModule)
 
@@ -18,12 +19,12 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   USE_LINK_PATH)
 
 # find virtualizer SDK
-file(GLOB CybSDK_SOURCE_H "${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/include/*")
-file(GLOB CybSDK_SOURCE_C "${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/src/*")
+#file(GLOB CybSDK_SOURCE_H "${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/include/*")
+#file(GLOB CybSDK_SOURCE_C "${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/src/*")
 
 add_definitions(-DUNICODE)
 
-add_library(CybSDK ${CybSDK_SOURCE_C} ${CybSDK_SOURCE_H})
+#add_library(CybSDK ${CybSDK_SOURCE_C} ${CybSDK_SOURCE_H})
 
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
@@ -45,7 +46,7 @@ yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_SRC ${${EXE_TARGET_NAME}_THRIFT_HDR})
 # add include directories to the build.
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/CybSDK/include)
+  ${CybSDK_INCLUDE_DIR})
 
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR}
@@ -53,7 +54,7 @@ add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}
 
 target_link_libraries(${EXE_TARGET_NAME}
   ${YARP_LIBRARIES}
-  CybSDK
+  ${CybSDK_LIBRARIES}
   UtilityLibrary)
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
