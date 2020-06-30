@@ -1,5 +1,7 @@
 # walking-teleoperation
 
+This repository contains software related to walking and teleoperation. 
+
 The whole-body teleoperation architecture is shown as follows.
 The human user receives visual feedback from the robot environment by streaming the robot camera images through the _Oculus Headset_.
 The robot hands are controlled via the _Joypads_.
