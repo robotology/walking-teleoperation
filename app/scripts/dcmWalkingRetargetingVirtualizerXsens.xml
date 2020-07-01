@@ -4,10 +4,11 @@
 
 <application>
 
-  <name>DCM walking retargeting (Virtualizer)</name>
+  <name>DCM walking retargeting (Virtualizer Xsens)</name>
   <description>2D-DCM walking application.</description>
   <version>1.0</version>
   <authors>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
     <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
     <author email="yue.hu@iit.it">Yue Hu</author>
   </authors>
@@ -32,12 +33,6 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
-    <node>icub-virtualizer</node>
-  </module>
-
-  <module>
-    <name>yarpdev</name>
     <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --gui_elements 0</parameters>
     <node>icub-virtualizer</node>
   </module>
@@ -47,7 +42,7 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
-    <parameters> --from dcm_walking_hand_retargeting.ini </parameters>
+    <parameters>--from dcm_walking_joint_retargeting.ini</parameters>
   </module>
 
   <module>
@@ -59,24 +54,21 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
-    <parameters> --OCULUS::move_icub_using_joypad 0 --GENERAL::useXsens 0 --GENERAL::humanHeight 1.76 </parameters>
+    <parameters> --OCULUS::move_icub_using_joypad 0 </parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
     </dependencies>
   </module>
 
-  <!-- Connections -->
-  <!-- Hand retargeting  -->
-  <connection>
-    <from>/oculusRetargeting/leftHandPose:o</from>
-    <to>/walking-coordinator/leftHandDesiredPose:i</to>
-  </connection>
+  <!-- Whole Body Retargeting using Xsens-->
+   <module>
+     <name>XsensRetargetingModule</name>
+     <node>icub30</node>
+   </module>
 
-  <connection>
-    <from>/oculusRetargeting/rightHandPose:o</from>
-    <to>/walking-coordinator/rightHandDesiredPose:i</to>
-  </connection>
+
+  <!-- Connections -->
 
   <!-- Virtualizer and Oculus -->
   <connection>
@@ -107,16 +99,6 @@
   <connection>
     <from>/virtualizer/playerOrientation:o</from>
     <to>/oculusRetargeting/playerOrientation:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/orientation:o</from>
-    <to>/oculusRetargeting/oculusOrientation:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/position:o</from>
-    <to>/oculusRetargeting/oculusPosition:i</to>
   </connection>
 
   <!-- Camera-->
@@ -168,6 +150,21 @@
     <from>/icub/camcalib/right/out</from>
     <to>/oculus/display/right:i</to>
     <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/iCub/RobotStateWrapper/state:o</from>
+    <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
+  </connection>
+
+  <connection>
+    <from>/XsensRetargeting/jointPosition:o</from>
+    <to>/walking-coordinator/jointPosition:i</to>
+  </connection>
+
+  <connection>
+    <from>/XsensRetargeting/CoM:o</from>
+    <to>/walking-coordinator/CoM:i</to>
   </connection>
 
 </application>

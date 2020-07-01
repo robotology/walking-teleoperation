@@ -22,3 +22,5 @@ std::unique_ptr<RobotControlHelper>& RetargetingController::controlHelper()
 {
     return m_controlHelper;
 }
+
+RetargetingController::~RetargetingController(){}

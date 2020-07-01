@@ -28,20 +28,32 @@
       
       - Add the following variables value in robotology/yarp using CMake GUI (search for glew!)
         ```
-        GLEW_INCLUDE_DIR: <path to codes workspace>/glew/glew-2.1.0/glew-2.1.0/include
+        GLEW_INCLUDE_DIR: <path to codes workspace>/glew/glew-2.1.0/include
                (inside this folder you should find the GL folder and inside that the header files)
           
-        GLEW_LIBRARY_DEBUG: <path to codes workspace>/glew/glew-2.1.0/glew-2.1.0/lib/Debug/x64/glew32d.lib
+        GLEW_SHARED_LIBRARY_DEBUG:   <path to codes workspace>/glew/glew-2.1.0/lib/Debug/x64/glew32d.lib
               
-        GLEW_LIBRARY_RELEASE: <path to codes workspace>/glew/glew-2.1.0/glew-2.1.0/lib/Release/x64/glew32.lib
+        GLEW_SHARED_LIBRARY_RELEASE: <path to codes workspace>/glew/glew-2.1.0/lib/Release/x64/glew32.lib
+        
+        GLEW_STATIC_LIBRARY_DEBUG:   <path to codes workspace>/glew/glew-2.1.0/lib/Debug/x64/glew32sd.lib
+              
+        GLEW_STATIC_LIBRARY_RELEASE: <path to codes workspace>/glew/glew-2.1.0/lib/Release/x64/glew32s.lib
               
         YARP_USE_GLEW: check the box
         ```
-      - Append the following directories to the `Path` User environmental variable, for example using the [Rapid Environment Editor](https://www.rapidee.com):
+      - Append the following directories to the User environmental variable, for example using the [Rapid Environment Editor](https://www.rapidee.com):
         ```
         Path: (Expandable string)
-                    <path to codes workspace>\glew\glew-2.1.0\glew-2.1.0\bin\Release\x64
-                    <path to codes workspace>\glew\glew-2.1.0\glew-2.1.0\bin\Debug\x64
+                    <path to codes workspace>\glew\glew-2.1.0\bin\Release\x64
+                    <path to codes workspace>\glew\glew-2.1.0\bin\Debug\x64
+                    <path to codes workspace>\glew\glew-2.1.0\lib\Release
+                    
+        CMAKE_PREFIX_PATH: (Expandable string)
+                    <path to codes workspace>\glew\glew-2.1.0\include
+                    <path to codes workspace>\glew\glew-2.1.0\lib
+
+        GLEW_DIR: (Expandable string)
+                    <path to codes workspace>\glew\glew-2.1.0\
         ```  
   
       - Don't forget to configure, generate the cmake (cmake gui --> robotology yarp) and build release mode the yarp using vs15.  
@@ -63,7 +75,7 @@
       
       - Add the following value to the `CMAKE_INSTALL_PREFIX` of the glfw project
       ```
-      CMAKE_INSTALL_PREFIX: <path to codes workspace>/glfw/glfw-3.2.1/glfw-3.2.1/build/install
+      CMAKE_INSTALL_PREFIX: <path to codes workspace>/glfw/glfw-3.2.1/build/install
       ```
       - After builing the project, install it as well.
 
@@ -89,7 +101,7 @@
       - if you have problems with compiling GLFW3, [this link](https://www.glfw.org/docs/latest/compile_guide.html#compile_generate) or [here](https://github.com/nigels-com/glew) may help.
           
           
-    4. `LibOVR`: to dowload the SDK, you can go to [this website](https://developer.oculus.com/downloads/), choose "Native Windows", then "Core Package: OCULUS SDK for windows". Select the version 1.16.0 to download. Or easily follow this [link](https://developer.oculus.com/downloads/package/oculus-sdk-for-windows/1.16.0/) and choose version 1.16.0 to download.
+    4. `LibOVR`: to dowload the SDK, you can go to [this website](https://developer.oculus.com/downloads/), choose "Native Windows", then "Core Package: OCULUS SDK for windows". Select the version 1.40.0 to download. Or easily follow this [link](https://developer.oculus.com/downloads/package/oculus-sdk-for-windows/1.40.0/) and choose version 1.40.0 to download.
     
       - Extract and place the package in your workspace (in our case in same path of robotology-superbuild), inside that there are two libraries which we need: LibOVR, and LibOVRKernel.
       

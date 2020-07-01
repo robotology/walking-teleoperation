@@ -10,6 +10,9 @@
 #ifndef HAND_RETARGETING_HPP
 #define HAND_RETARGETING_HPP
 
+// std
+#include <vector>
+
 // YARP
 #include <yarp/sig/Matrix.h>
 #include <yarp/sig/Vector.h>
@@ -72,6 +75,12 @@ public:
     void setPlayerOrientation(const double& playerOrientation);
 
     /**
+     * Set the player position (coming from the ovr headset)
+     * @param playerPosition Position of the player head (teleopartion frame) in meter
+     */
+    void setPlayerPosition(const iDynTree::Position& playerPosition);
+
+    /**
      * Set the root tho hand transformation
      * @param handTransformation root to hand transformation (root_T_hand)
      */
@@ -83,6 +92,17 @@ public:
      * @param handPose desired hand position. This can be directly sent to walking controller.
      */
     void evaluateDesiredHandPose(yarp::sig::Vector& handPose);
+
+    /**
+     * Get the hand information
+     * user and the virtualizer (if it is used)
+     * @param robotHandpose_robotTel robot hand pose wrt to robot teleoperation frame.
+     * @param humanHandpose_oculusInertial human hand pose wrt to oculus inertial frame
+     * @param humanHandpose_humanTel human hand pose wrt to human teleoperation frame
+     */
+    void getHandInfo(std::vector<double>& robotHandpose_robotTel,
+                     std::vector<double>& humanHandpose_oculusInertial,
+                     std::vector<double>& humanHandpose_humanTel);
 };
 
 #endif

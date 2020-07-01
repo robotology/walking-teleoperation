@@ -54,5 +54,6 @@ public:
      * @return control helper interface
      */
     std::unique_ptr<RobotControlHelper>& controlHelper();
+    virtual ~RetargetingController();
 };
 #endif

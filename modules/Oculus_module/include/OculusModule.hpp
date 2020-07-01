@@ -12,6 +12,7 @@
 
 // std
 #include <memory>
+#include <ctime>
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
@@ -26,6 +27,12 @@
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
+#include <TorsoRetargeting.hpp>
+
+#ifdef ENABLE_LOGGER
+#include <matlogger2/matlogger2.h>
+#include <matlogger2/utils/mat_appender.h>
+#endif
 
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
@@ -41,8 +48,11 @@ private:
     enum class OculusFSM
     {
         Configured,
-        Running
+        Running,
+        InPreparation
     };
+    struct Impl;
+    std::unique_ptr<Impl> pImpl;
     OculusFSM m_state; /**< State of the OculusFSM */
 
     // joypad utils
@@ -67,6 +77,9 @@ private:
     unsigned int m_prepareWalkingIndex; /**< Index of the prepare walking button */
 
     bool m_useVirtualizer; /**< True if the virtualizer is used in the retargeting */
+    bool m_useXsens; /**< True if the Xsens is used in the retargeting */
+    bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
+                         (default :: true)*/
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
@@ -93,6 +106,8 @@ private:
     std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left hand
                                                     retargeting object. */
 
+    std::unique_ptr<TorsoRetargeting> m_torso; /**< Pointer to the torso retargeting object. */
+
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_rightHandPosePort; /**< Right hand port pose. */
@@ -105,21 +120,39 @@ private:
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort;
     /** Port used to retrieve the headset oculus orientation. */
     yarp::os::BufferedPort<yarp::os::Bottle> m_oculusOrientationPort;
+    /** Port used to retrieve the headset oculus position. */
+    yarp::os::BufferedPort<yarp::os::Bottle> m_oculusPositionPort;
 
     yarp::os::RpcClient m_rpcWalkingClient; /**< Rpc client used for sending command to the walking
                                                controller */
     yarp::os::RpcClient
         m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
+    /** Port used to retrieve the human whole body joint pose. */
+    yarp::os::BufferedPort<yarp::os::Bottle> m_wholeBodyHumanJointsPort;
+
+    /** Port used to retrieve the human whole body joint pose. */
+    yarp::os::BufferedPort<yarp::sig::Vector> m_wholeBodyHumanSmoothedJointsPort;
+
     double m_robotYaw; /**< Yaw angle of the robot base */
 
     yarp::sig::Matrix m_oculusRoot_T_lOculus;
     yarp::sig::Matrix m_oculusRoot_T_rOculus;
     yarp::sig::Matrix m_oculusRoot_T_headOculus;
+    std::vector<double> m_oculusHeadsetPoseInertial;
 
     double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
                                    only yaw. */
+    double m_playerOrientationOld; /**< previous updated Player orientation (read by the
+                                   Virtualizer) only yaw. */
+    double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
+    bool m_enableLogger; /**< log the data (if ON) */
+#ifdef ENABLE_LOGGER
+    XBot::MatLogger2::Ptr m_logger; /**< */
+    XBot::MatAppender::Ptr m_appender;
+    std::string m_logger_prefix{"oculus"};
+#endif
     /**
      * Configure the Oculus.
      * @param config configuration object
@@ -167,7 +200,15 @@ private:
      */
     bool getTransforms();
 
+    /**
+     * Open the logger
+     * @return true if it could open the logger
+     */
+    bool openLogger();
+
 public:
+    OculusModule();
+    ~OculusModule();
     /**
      * Get the period of the RFModule.
      * @return the period of the module.
@@ -193,5 +234,15 @@ public:
      */
     bool close() final;
 };
+
+inline std::string getTimeDateMatExtension()
+{
+    // this code snippet is taken from
+    // https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::string timedate;
+    std::strftime(&timedate[0], timedate.size(), "%Y-%m-%d%H:%M:%S", std::localtime(&now));
+    return timedate;
+}
 
 #endif

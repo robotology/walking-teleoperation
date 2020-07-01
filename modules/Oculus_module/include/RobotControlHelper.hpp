@@ -63,11 +63,18 @@ class RobotControlHelper
     bool switchToControlMode(const int& controlMode);
 
     /**
-     * Set the desired joint position
+     * Set the desired joint position (position direct mode)
      * desiredPosition desired joint position in radiant
      * @return true / false in case of success / failure
      */
     bool setDirectPositionReferences(const yarp::sig::Vector& desiredPositions);
+
+    /**
+     * Set the desired joint position (min jerk trajectory mode)
+     * desiredPosition desired joint position in radiant
+     * @return true / false in case of success / failure
+     */
+    bool setPositionReferences(const yarp::sig::Vector& desiredPositions);
 
     /**
      * Set the desired joint velocity

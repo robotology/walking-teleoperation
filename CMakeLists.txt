@@ -6,12 +6,13 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 14)
 
 project(walking-teleoperation
-  VERSION 0.2.0)
+  VERSION 1.0.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(YARP REQUIRED)
 find_package(YCM REQUIRED)
+include(WalkingTeleoperationFindDependencies)
 
 add_subdirectory(modules)
 add_subdirectory(app)
