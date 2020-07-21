@@ -36,13 +36,14 @@ set(${EXE_TARGET_NAME}_THRIFT_HDR
   )
 yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_SRC ${${EXE_TARGET_NAME}_THRIFT_HDR})
 
-# add include directories to the build.
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR}
   ${${EXE_TARGET_NAME}_THRIFT_SRC})
+
+# add include directories to the build.
+target_include_directories(${EXE_TARGET_NAME} PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/include )
 
 target_link_libraries(${EXE_TARGET_NAME}
   ${YARP_LIBRARIES}
