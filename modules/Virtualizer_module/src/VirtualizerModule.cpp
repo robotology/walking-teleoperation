@@ -207,9 +207,9 @@ bool VirtualizerModule::updateModule()
     double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
     double speedDirection = 1.0; // set the speed direction to forward by default.
     
-    if (std::abs(tmpSpeedDirection) < 0.01)
+    if (std::abs(tmpSpeedDirection) < 0.01) // the "0" value means the user walking forward
         speedDirection = 1.0;
-    else if (std::abs(tmpSpeedDirection + 1) < 0.01)
+    else if (std::abs(tmpSpeedDirection + 1) < 0.01)  // the "-1" value means the user walking backward
     {
         speedDirection = -1.0;
     } else
