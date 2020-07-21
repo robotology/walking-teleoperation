@@ -24,8 +24,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   DEPENDS ENABLE_RPATH
   USE_LINK_PATH)
 
-add_definitions(-DUNICODE)
-
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
