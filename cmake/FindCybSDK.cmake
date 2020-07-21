@@ -3,16 +3,18 @@
 
 # Finds the Cyberith SDK
 #
+set(CybSDK_FOUND FALSE)
 set(CybSDK_DIR $ENV{CybSDK_DIR} CACHE STRING "The directiry containing the Cyberith library")
-if(NOT DEFINED CybSDK_DIR)
-  message( FATAL_ERROR "variable {CybSDK_DIR} is not defined: ${CybSDK_DIR}" )
+if(NOT EXISTS ${CybSDK_DIR})
+  message( WARNING "variable {CybSDK_DIR} is not defined: ${CybSDK_DIR}" )
+  return()
 endif()
 
-option (BUILD_SHARED_LIBS "Please identify the library type SHARED or STATIC" FALSE)
+option (BUILD_SHARED_CybSDK_LIB "Identify if the library type is SHARED or STATIC" FALSE)
 
 
 ##
-if (BUILD_SHARED_LIBS)
+if (BUILD_SHARED_CybSDK_LIB)
     set(EXTENSION ${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(TYPE "SHARED")
 else()
@@ -32,3 +34,5 @@ endif()
 add_library(CybSDK ${TYPE} IMPORTED GLOBAL ${CybSDK_DIR}/${FOLDER}/CybSDK${EXTENSION})
 set_target_properties(CybSDK PROPERTIES IMPORTED_LOCATION ${CybSDK_DIR}/${FOLDER}/CybSDK${EXTENSION})
 target_include_directories(CybSDK INTERFACE ${CybSDK_DIR}/Include)
+
+set(CybSDK_FOUND TRUE)
