@@ -50,4 +50,3 @@ target_link_libraries(${EXE_TARGET_NAME}
   UtilityLibrary)
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
-#install(FILES CybSDK DESTINATION bin)
