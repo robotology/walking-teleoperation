@@ -1,86 +1,38 @@
-# Copyright 2018 Istituto Italiano di Tecnologia (IIT)
-# @author Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
+# Copyright 2020 Istituto Italiano di Tecnologia (IIT)
+# @author Kourosh Darvish <kourosh.darvish@iit.it>
 
-# Finds the Cyb SDK
+# Finds the Cyberith SDK
 #
-# This will define the following variables::
-#
-#   CybSDK_FOUND    - True if the system has the CybSDK 
-#   CybSDK_VERSION  - The version of the CybSDK  which was found
-#
-#
-
-##### Utility #####
-
-# Check Directory Macro
-macro(CHECK_DIR _DIR)
-  if(NOT EXISTS "${${_DIR}}")
-    message(WARNING "Directory \"${${_DIR}}\" not found.")
-    set(CybSDK_FOUND FALSE)
-    unset(_DIR)
-  endif()
-endmacro()
-
-# Check Files Macro
-macro(CHECK_FILES _FILES _DIR)
-  set(_MISSING_FILES)
-  foreach(_FILE ${${_FILES}})
-    if(NOT EXISTS "${_FILE}")
-      get_filename_component(_FILE ${_FILE} NAME)
-      set(_MISSING_FILES "${_MISSING_FILES}${_FILE}, ")
-    endif()
-  endforeach()
-  if(_MISSING_FILES)
-    message(WARNING "In directory \"${${_DIR}}\" not found files: ${_MISSING_FILES}")
-    set(CybSDK_FOUND FALSE)
-    unset(_FILES)
-  endif()
-endmacro()
-
-# Target Platform
-set(TARGET_PLATFORM)
-if(NOT CMAKE_CL_64)
-  set(TARGET_PLATFORM x86)
-else()
-  set(TARGET_PLATFORM x64)
+set(CybSDK_FOUND FALSE)
+set(CybSDK_DIR $ENV{CybSDK_DIR} CACHE STRING "The directiry containing the Cyberith library")
+if(NOT EXISTS ${CybSDK_DIR})
+  message( WARNING "variable {CybSDK_DIR} is not defined: ${CybSDK_DIR}" )
+  return()
 endif()
 
+option (BUILD_SHARED_CybSDK_LIB "Identify if the library type is SHARED or STATIC" FALSE)
+
+
+##
+if (BUILD_SHARED_CybSDK_LIB)
+    set(EXTENSION ${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(TYPE "SHARED")
+else()
+    set(EXTENSION ${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(TYPE "STATIC")
+endif()
+
+if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    # 64 bits
+    set(FOLDER "x64")
+elseif(${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    # 32 bits
+    set(FOLDER "x86")
+endif()
 ##### Find CybSDK #####
 
-# Found
+add_library(CybSDK ${TYPE} IMPORTED GLOBAL ${CybSDK_DIR}/${FOLDER}/CybSDK${EXTENSION})
+set_target_properties(CybSDK PROPERTIES IMPORTED_LOCATION ${CybSDK_DIR}/${FOLDER}/CybSDK${EXTENSION})
+target_include_directories(CybSDK INTERFACE ${CybSDK_DIR}/Include)
+
 set(CybSDK_FOUND TRUE)
-if(MSVC_VERSION LESS 1700)
-  message(WARNING "CybSDK supported Visual Studio 2012 or later.")
-  set(CybSDK_FOUND FALSE)
-endif()
-
-# Root Directoty
-set(CybSDK_DIR)
-if(CybSDK_FOUND)
-  set(CybSDK_DIR $ENV{CybSDK_DIR} CACHE PATH "CybSDK Path." FORCE)
-  check_dir(CybSDK_DIR)
-endif()
-
-# Include Directories
-set(CybSDK_INCLUDE_DIRS)
-if(CybSDK_FOUND)
-  set(CybSDK_INCLUDE_DIRS ${CybSDK_DIR}/include)
-  check_dir(CybSDK_INCLUDE_DIRS)
-endif()
-
-# Library Directories
-set(CybSDK_LIBRARY_DIRS)
-if(CybSDK_FOUND)
-  set(CybSDK_LIBRARY_DIRS ${CybSDK_DIR}/Plugins/${TARGET_PLATFORM})
-  check_dir(CybSDK_LIBRARY_DIRS)
-endif()
-
-# Dependencies
-set(CybSDK_LIBRARIES)
-if(CybSDK_FOUND)
-  set(CybSDK_LIBRARIES ${CybSDK_LIBRARY_DIRS}/CybSDK.dll)
-  check_files(CybSDK_LIBRARIES CybSDK_LIBRARY_DIRS)
-endif()
-
-message(STATUS "CybSDK_FOUND : ${CybSDK_LIBRARIES}")
-
