@@ -19,8 +19,8 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
 
-#include "CVirt.h"
-#include "CVirtDevice.h"
+#include <CVirt.h>
+#include <CVirtDevice.h>
 
 #include <thrift/VirtualizerCommands.h>
 
@@ -47,7 +47,7 @@ private:
                                                                          orientation. */
 
     std::mutex m_mutex;
-    CVirtDevice* m_cvirtDeviceID = nullptr;
+    CybSDK::VirtDevice* m_cvirtDeviceID = nullptr;
     /**
      * Establish the connection with the virtualizer.
      * @return true in case of success and false otherwise.
