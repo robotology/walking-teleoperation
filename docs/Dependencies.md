@@ -160,11 +160,10 @@
 
 5. **Cyberith SDK:**   To allow the virtualizer module to capture the operator data, the virtualizer needs two modules to download: the CybSDK_app (used for the calibration) and the CybSDK:
 
-   1. `CybSDK_app`: you can download the application from [this link](https://developer.cyberith.com/downloads). Go to `Tools` tab, download the `Virtualizer Control Panel`. Copy the download application to the workspace. Everytime start using the virtualizer, please calibrate it using this application.
+   1. `CybSDK_app`: you can download the application from [this link](https://developer.cyberith.com/downloads). Go to `Tools` tab, download the `Virtualizer Control Panel`. When you start the virtualizer application, remember to calibrate it at the begining. After finishing the checks through the virtualizer application, please disconnect it, so that you can use the SDK in your teleoperation application.
      
-   2. `CybSDK`: you can download the application from [this link](https://developer.cyberith.com/downloads). Go to `SDK` tab, download the `C++ SDK for Windows (Developed for: Visual Studio 2015 Community)`. Copy the download application to the workspace. in theory, we should build it in our Windows machine, but time being it is already built (there exists the .dll file) and is working, so you do not need to build it.
-   
-      - Append the following variables to the User environmental variable `Path`:
-        ```     
-        Path: <path to codes workspace>\CybSDK\src\CybSDK_Windows_Cpp_Console\Plugins\x86_64
-        ```
+   2. `CybSDK`: you can download the application from [this link](https://developer.cyberith.com/downloads). Go to `SDK` tab, download the `C++ SDK for Windows (Developed for: Visual Studio 2015 Community)`. After Downloading the SDK, append the following variables to the user environmental variable:
+       ```
+       CybSDK_DIR= <path to the root of the cyberith sdk directory>
+       Path=Path; <path to the root of the cyberith sdk directory>/x64
+       ```
