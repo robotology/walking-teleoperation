@@ -225,7 +225,7 @@ bool FingersRetargeting::updateFeedback()
     if (!controlHelper()->getFeedback())
     {
         yInfo()
-            << "[FingersRetargeting::getFingerAxisValues] Unable the get the finger axis values "
+            << "[FingersRetargeting::getFingerAxisValues] Unable the get the finger axis and joints values "
                "from the robot.";
         return false;
     }

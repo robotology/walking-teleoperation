@@ -60,60 +60,92 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     m_enableLogger = generalOptions.check("enableLogger", yarp::os::Value(0)).asBool();
     yInfo() << "[HapticGloveModule::configure] enable the logger: " << m_enableLogger;
 
+    // check which hand to use
+    m_useLeftHand = generalOptions.check("useLeftHand", yarp::os::Value(1)).asBool();
+    m_useRightHand = generalOptions.check("useRightHand", yarp::os::Value(1)).asBool();
+    yInfo() << "[HapticGloveModule::configure] use the left hand: " << m_useLeftHand;
+    yInfo() << "[HapticGloveModule::configure] use the right hand: " << m_useRightHand;
+
+
     // configure fingers retargeting
-    m_leftHandFingers = std::make_unique<FingersRetargeting>();
-    yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
-    leftFingersOptions.append(generalOptions);
-    if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
+    if (m_useLeftHand)
     {
-        yError()
-            << "[HapticGloveModule::configure] Unable to initialize the left fingers retargeting.";
-        return false;
-    }
+        // initialize the retargeting class of the left hand
+        m_leftHandFingers = std::make_unique<FingersRetargeting>();
+        yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
+        leftFingersOptions.append(generalOptions);
+        if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
+        {
+            yError() << "[HapticGloveModule::configure] Unable to initialize the left fingers "
+                        "retargeting.";
+            return false;
+        }
 
-    m_rightHandFingers = std::make_unique<FingersRetargeting>();
-    yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
-    rightFingersOptions.append(generalOptions);
-    if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
+        // intialize the glove control helper of the left hand
+        m_gloveLeftHand = std::make_unique<HapticGlove::GloveControlHelper>();
+        if (!m_gloveLeftHand->configure(generalOptions, getName(), false))
+        {
+            yError()
+                << "[HapticGloveModule::configure] Unable to initialize the right glove control "
+                   "helper.";
+            return false;
+        }
+    }
+    if (m_useRightHand)
     {
-        yError()
-            << "[HapticGloveModule::configure] Unable to initialize the right fingers retargeting.";
-        return false;
-    }
+        // initialize the retargeting class of the right hand
+        m_rightHandFingers = std::make_unique<FingersRetargeting>();
+        yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
+        rightFingersOptions.append(generalOptions);
+        if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
+        {
+            yError() << "[HapticGloveModule::configure] Unable to initialize the right fingers "
+                        "retargeting.";
+            return false;
+        }
 
-    m_gloveRightHand = std::make_unique<HapticGlove::GloveControlHelper>();
-    if (!m_gloveRightHand->configure(generalOptions, getName(), true))
+        // intialize the glove control helper of the right hand
+        m_gloveRightHand = std::make_unique<HapticGlove::GloveControlHelper>();
+        if (!m_gloveRightHand->configure(generalOptions, getName(), true))
+        {
+            yError()
+                << "[HapticGloveModule::configure] Unable to initialize the right glove control "
+                   "helper.";
+            return false;
+        }
+    }
+    
+     if (m_useLeftHand)
     {
-        yError() << "[HapticGloveModule::configure] Unable to initialize the right glove control "
-                    "helper.";
-        return false;
-    }
+         m_icubLeftFingerAxisReference.resize(
+             m_leftHandFingers->controlHelper()->getActuatedDoFs());
+         m_icubLeftFingerAxisFeedback.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
+         m_icubLeftFingerJointsReference.resize(
+             m_leftHandFingers->controlHelper()->getNumberOfJoints());
+         m_icubLeftFingerJointsFeedback.resize(
+             m_leftHandFingers->controlHelper()->getNumberOfJoints());
+     }
 
-    m_gloveLeftHand = std::make_unique<HapticGlove::GloveControlHelper>();
-    if (!m_gloveLeftHand->configure(generalOptions, getName(), false))
+    if (m_useRightHand)
     {
-        yError() << "[HapticGloveModule::configure] Unable to initialize the right glove control "
-                    "helper.";
-        return false;
-    }
+        m_icubRightFingerAxisReference.resize(
+            m_rightHandFingers->controlHelper()->getActuatedDoFs());
+        m_icubRightFingerAxisFeedback.resize(
+            m_rightHandFingers->controlHelper()->getActuatedDoFs());
+        m_icubRightFingerJointsReference.resize(
+            m_rightHandFingers->controlHelper()->getNumberOfJoints());
+        m_icubRightFingerJointsFeedback.resize(
+            m_rightHandFingers->controlHelper()->getNumberOfJoints());
 
-    m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
+            m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
+
+     }
+
+
 
     m_timePreparationStarting = 0.0;
     m_timeNow = 0.0;
     m_timeConfigurationStarting = 0.0;
-
-    m_icubLeftFingerAxisReference.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
-    m_icubLeftFingerAxisFeedback.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
-    m_icubLeftFingerJointsReference.resize(m_leftHandFingers->controlHelper()->getNumberOfJoints());
-    m_icubLeftFingerJointsFeedback.resize(m_leftHandFingers->controlHelper()->getNumberOfJoints());
-
-    m_icubRightFingerAxisReference.resize(m_rightHandFingers->controlHelper()->getActuatedDoFs());
-    m_icubRightFingerAxisFeedback.resize(m_rightHandFingers->controlHelper()->getActuatedDoFs());
-    m_icubRightFingerJointsReference.resize(
-        m_rightHandFingers->controlHelper()->getNumberOfJoints());
-    m_icubRightFingerJointsFeedback.resize(
-        m_rightHandFingers->controlHelper()->getNumberOfJoints());
 
     // open the logger only if all the vecotos sizes are clear.
     if (m_enableLogger)
@@ -149,12 +181,17 @@ bool HapticGloveModule::close()
     }
 #endif
     // m_logger.reset();
-    m_gloveRightHand->stopFeedback();
-    m_gloveRightHand->turnOffBuzzMotors();
+    if (m_useLeftHand)
+    {
+        m_gloveLeftHand->stopFeedback();
+        m_gloveLeftHand->turnOffBuzzMotors();
+    }
 
-    m_gloveLeftHand->stopFeedback();
-    m_gloveLeftHand->turnOffBuzzMotors();
-
+    if (m_useRightHand)
+    {
+        m_gloveRightHand->stopFeedback();
+        m_gloveRightHand->turnOffBuzzMotors();
+    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 10ms.
     return true;
@@ -172,16 +209,36 @@ bool HapticGloveModule::getFeedbacks()
     // 2- get the feedback from the iCub hands [force (holding force) and tactile
     // information]
 
-    if (!m_leftHandFingers->updateFeedback())
+    if (m_useLeftHand)
     {
-        yError() << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
-                    "the left hand fingers.";
+        // get feedback from the robot left hand values
+        if (!m_leftHandFingers->updateFeedback())
+        {
+            yError()
+                << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
+                   "the left hand fingers.";
+        }
+        m_leftHandFingers->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
+        m_leftHandFingers->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
+        //yInfo() << "left fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
+        // yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
     }
-    m_leftHandFingers->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
-    m_leftHandFingers->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
-    // yInfo() << "fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
-    // yInfo() << "fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
 
+    if (m_useRightHand)
+    {
+        // get feedback from the robot right hand values
+        if (!m_rightHandFingers->updateFeedback())
+        {
+            yError()
+                << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
+                   "the right hand fingers.";
+        }
+        m_rightHandFingers->getFingerAxisFeedback(m_icubRightFingerAxisFeedback);
+        m_rightHandFingers->getFingerJointsFeedback(m_icubRightFingerJointsFeedback);
+        yInfo() << "right fingers axis: " << m_icubRightFingerAxisFeedback.toString();
+        yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
+    }
+    
     return true;
 }
 
@@ -427,23 +484,37 @@ bool HapticGloveModule::updateModule()
         }
 #endif
 
-    } else if (m_state == HapticGloveFSM::Configured)
+    }
+    else if (m_state == HapticGloveFSM::Configured)
     {
 
         // TODO
         m_timeConfigurationStarting = yarp::os::Time::now();
-        if (!m_gloveRightHand->setupGlove())
+        if (m_useLeftHand)
         {
-            yError() << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
-            return false;
+            if (!m_gloveLeftHand->setupGlove())
+            {
+                yError() << "[HapticGloveModule::updateModule()] cannot setup the left hand glove.";
+                return false;
+            }
         }
-        if (!m_gloveLeftHand->setupGlove())
+        
+        if (m_useRightHand)
         {
-            yError() << "[HapticGloveModule::updateModule()] cannot setup the left hand glove.";
-            return false;
+            if (!m_gloveRightHand->setupGlove())
+            {
+                yError()
+                    << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
+                return false;
+            }
         }
+
         m_state = HapticGloveFSM::InPreparation;
-    } else if (m_state == HapticGloveFSM::InPreparation)
+        
+        yInfo() << "[HapticGloveModule::updateModule] <FSM::Configured> exiting ....";
+        exit(0);
+    }
+    else if (m_state == HapticGloveFSM::InPreparation)
     {
 
         m_timePreparationStarting = yarp::os::Time::now();
