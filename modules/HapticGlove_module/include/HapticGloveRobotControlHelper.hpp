@@ -61,6 +61,13 @@ class RobotControlHelper
     yarp::sig::Vector m_sensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_sensorFeedbackInRadians; /**< sensor feedback [rad]*/
 
+    yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
+    yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
+    yarp::sig::Vector m_sensors_min_boundary; /**< senor minimum value [raw]*/
+    yarp::sig::Vector m_sensors_max_boundary; /**< senor maximum value [raw]*/
+    yarp::sig::Vector m_sensors_raw2Degree_scaling; /**< sacling from raw to Degree of joints*/
+
+
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
     bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */

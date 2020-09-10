@@ -71,6 +71,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     }
 
     m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
+    yInfo() << "m_noAnalogSensor " << m_noAnalogSensor;
 
     m_sensorFeedbackRaw.resize(m_noAnalogSensor);
     m_sensorFeedbackInDegrees.resize(m_noAnalogSensor);
@@ -89,6 +90,53 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     {
         yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a "
                     "vector of strings.";
+        return false;
+    }
+
+
+    m_joints_min_boundary.resize(m_noAnalogSensor, 0.0); 
+    m_joints_max_boundary.resize(m_noAnalogSensor, 0.0);  
+    m_sensors_min_boundary.resize(m_noAnalogSensor, 0.0); 
+    m_sensors_max_boundary.resize(m_noAnalogSensor, 0.0); 
+    m_sensors_raw2Degree_scaling.resize(m_noAnalogSensor, 0.0); 
+
+        // get the joints limits boundaries
+    if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "joints_min_boundary", m_joints_min_boundary))
+    {
+        yError() << "RobotControlHelper::configure] unable to get the minimum boundary of the joints limits.";
+        return false;
+    }
+
+     if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "joints_max_boundary", m_joints_max_boundary))
+    {
+        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
+                    "joints limits.";
+        return false;
+    }
+
+        // get the sensors limits boundaries
+    if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "sensors_min_boundary", m_sensors_max_boundary))
+    {
+        yError() << "RobotControlHelper::configure] unable to get the minimum boundary of the "
+                    "joints limits.";
+        return false;
+    }
+
+    for (size_t i = 0; i < m_noAnalogSensor; i++)
+    {
+        m_sensors_raw2Degree_scaling(i)
+            = double(m_joints_max_boundary(i) - m_joints_min_boundary(i))
+              / double(m_sensors_max_boundary(i)- m_sensors_min_boundary(i));
+    }
+
+    if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "sensors_max_boundary", m_joints_max_boundary))
+    {
+        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
+                    "joints limits.";
         return false;
     }
 
@@ -346,9 +394,15 @@ bool RobotControlHelper::getFeedback()
 
 bool RobotControlHelper::getCalibratedFeedback()
 {
+    yInfo() << "m_sensorFeedbackRaw" << m_sensorFeedbackRaw.toString();
+    yInfo() << "m_sensors_raw2Degree_scaling" << m_sensors_raw2Degree_scaling.toString();
+    yInfo() << "m_joints_min_boundary" << m_joints_min_boundary.toString();
+    yInfo() << "m_sensors_min_boundary" << m_sensors_min_boundary.toString();
+
+
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
-        m_sensorFeedbackInDegrees(j) = m_sensorFeedbackRaw(j); // TOCHECK
+        m_sensorFeedbackInDegrees(j) = m_joints_min_boundary(j) +  m_sensors_raw2Degree_scaling(j) * ( m_sensorFeedbackRaw(j) - m_sensors_min_boundary(j) ); // TOCHECK
         m_sensorFeedbackInRadians(j) = iDynTree::deg2rad(m_sensorFeedbackInDegrees(j));
     }
     return true;
