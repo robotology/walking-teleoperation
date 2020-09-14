@@ -22,7 +22,6 @@
 #include <Eigen/Dense>
 #include <thread>
 
-
 HapticGloveModule::HapticGloveModule(){};
 
 HapticGloveModule::~HapticGloveModule(){};
@@ -65,7 +64,6 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     m_useRightHand = generalOptions.check("useRightHand", yarp::os::Value(1)).asBool();
     yInfo() << "[HapticGloveModule::configure] use the left hand: " << m_useLeftHand;
     yInfo() << "[HapticGloveModule::configure] use the right hand: " << m_useRightHand;
-
 
     // configure fingers retargeting
     if (m_useLeftHand)
@@ -114,17 +112,16 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
     }
-    
-     if (m_useLeftHand)
+
+    if (m_useLeftHand)
     {
-         m_icubLeftFingerAxisReference.resize(
-             m_leftHandFingers->controlHelper()->getActuatedDoFs());
-         m_icubLeftFingerAxisFeedback.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
-         m_icubLeftFingerJointsReference.resize(
-             m_leftHandFingers->controlHelper()->getNumberOfJoints());
-         m_icubLeftFingerJointsFeedback.resize(
-             m_leftHandFingers->controlHelper()->getNumberOfJoints());
-     }
+        m_icubLeftFingerAxisReference.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
+        m_icubLeftFingerAxisFeedback.resize(m_leftHandFingers->controlHelper()->getActuatedDoFs());
+        m_icubLeftFingerJointsReference.resize(
+            m_leftHandFingers->controlHelper()->getNumberOfJoints());
+        m_icubLeftFingerJointsFeedback.resize(
+            m_leftHandFingers->controlHelper()->getNumberOfJoints());
+    }
 
     if (m_useRightHand)
     {
@@ -137,11 +134,8 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         m_icubRightFingerJointsFeedback.resize(
             m_rightHandFingers->controlHelper()->getNumberOfJoints());
 
-            m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
-
-     }
-
-
+        m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
+    }
 
     m_timePreparationStarting = 0.0;
     m_timeNow = 0.0;
@@ -220,7 +214,7 @@ bool HapticGloveModule::getFeedbacks()
         }
         m_leftHandFingers->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
         m_leftHandFingers->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
-        //yInfo() << "left fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
+        // yInfo() << "left fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
         // yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
     }
 
@@ -238,7 +232,7 @@ bool HapticGloveModule::getFeedbacks()
         yInfo() << "right fingers axis: " << m_icubRightFingerAxisFeedback.toString();
         yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
     }
-    
+
     return true;
 }
 
@@ -254,21 +248,29 @@ bool HapticGloveModule::updateModule()
 
     if (m_state == HapticGloveFSM::Running)
     {
+        yInfo() << " >>> STATUS: Running";
+
         m_timeNow = yarp::os::Time::now();
-
-        // 1- Compute the reference values for the iCub hand joint fingers
-        const unsigned noLeftFingersAxis = m_leftHandFingers->controlHelper()->getActuatedDoFs();
-        const unsigned noLeftFingersJoints
-            = m_leftHandFingers->controlHelper()->getNumberOfJoints();
-
-        for (unsigned i = 0; i < noLeftFingersJoints; i++)
+        std::cerr << "Debug: 01 \n";
+        if (m_useLeftHand)
         {
-            //            m_icubLeftFingerAxisReference(i)
-            m_icubLeftFingerJointsReference(i)
-                = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting) - M_PI_2);
-            //            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
-            //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
+            // 1- Compute the reference values for the iCub hand joint fingers
+            const unsigned noLeftFingersAxis
+                = m_leftHandFingers->controlHelper()->getActuatedDoFs();
+            const unsigned noLeftFingersJoints
+                = m_leftHandFingers->controlHelper()->getNumberOfJoints();
+
+            std::cerr << "Debug: 02 \n";
+            for (unsigned i = 0; i < noLeftFingersJoints; i++)
+            {
+                //            m_icubLeftFingerAxisReference(i)
+                m_icubLeftFingerJointsReference(i)
+                    = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting) - M_PI_2);
+                //            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
+                //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
+            }
         }
+        std::cerr << "Debug: 03 \n";
         double tmp_buzzVal;
         if ((m_timeNow - m_timePreparationStarting) < (50 * M_PI))
         {
@@ -282,86 +284,75 @@ bool HapticGloveModule::updateModule()
                     << m_timeNow - m_timePreparationStarting;
             tmp_buzzVal = 0.0;
         }
+        std::cerr << "Debug: 04 \n";
         for (int i = 0; i < 5; i++)
             m_gloveRightBuzzMotorReference(i) = tmp_buzzVal;
         // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
 
         // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
 
-                    // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+        // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
         // m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
 
-        
-        if (false){
-        if (m_timeNow - m_timePreparationStarting < 10.0)
+        std::cerr << "Debug: 05 \n";
+        if (false)
         {
-            // m_timePreparationStarting = m_timeNow;
-            yInfo() << "++++++++++++++++++++++++ time: " << m_timeNow - m_timePreparationStarting
-                    << " give force feedback command";
-          //  m_gloveRightHand->setPalmFeedbackThumper(0);
-            m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
-        }
-        /**else if (m_timeNow - m_timePreparationStarting > 5.0
-                   && m_timeNow - m_timePreparationStarting < 10.0)
-        {
-            m_gloveRightHand->setPalmFeedbackThumper(1);
-        }
-        else if (m_timeNow - m_timePreparationStarting > 10.0
-                   && m_timeNow - m_timePreparationStarting < 15.0)
-        {
-            m_gloveRightHand->setPalmFeedbackThumper(2);
-        } */
-        else
-        {
-            yInfo() << "----------------------------- time: "
-                    << m_timeNow - m_timePreparationStarting << " stop command";
+            std::cerr << "Debug: 06 \n";
+            if (m_timeNow - m_timePreparationStarting < 10.0)
+            {
+                // m_timePreparationStarting = m_timeNow;
+                yInfo() << "++++++++++++++++++++++++ time: "
+                        << m_timeNow - m_timePreparationStarting << " give force feedback command";
+                //  m_gloveRightHand->setPalmFeedbackThumper(0);
+                m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+            }
+            /**else if (m_timeNow - m_timePreparationStarting > 5.0
+                       && m_timeNow - m_timePreparationStarting < 10.0)
+            {
+                m_gloveRightHand->setPalmFeedbackThumper(1);
+            }
+            else if (m_timeNow - m_timePreparationStarting > 10.0
+                       && m_timeNow - m_timePreparationStarting < 15.0)
+            {
+                m_gloveRightHand->setPalmFeedbackThumper(2);
+            } */
+            else
+            {
+                yInfo() << "----------------------------- time: "
+                        << m_timeNow - m_timePreparationStarting << " stop command";
 
-             m_gloveRightHand->stopFeedback();
-            m_timePreparationStarting = m_timeNow;
-        }
+                m_gloveRightHand->stopFeedback();
+                m_timePreparationStarting = m_timeNow;
+            }
         }
         // if (((int)tmp_buzzVal)%4==0)
         //    m_gloveRightHand->setPalmFeedback(0);
 
-        Eigen::MatrixXd rightHandPose, rightGlovePose, rightHandJointsAngles;
-        std::vector<float> rightGloveSensors, leftGloveSensors;
-        m_gloveRightHand->getHandPose(rightHandPose);
-        m_gloveRightHand->getGlovePose(rightGlovePose);
-        m_gloveRightHand->getSensorData(rightGloveSensors);
-        m_gloveRightHand->getHandJointsAngles(rightHandJointsAngles);
-
-        Eigen::MatrixXd leftHandPose, leftGlovePose, leftHandJointsAngles;
-
-        m_gloveLeftHand->getHandPose(leftHandPose);
-        m_gloveLeftHand->getGlovePose(leftGlovePose);
-        m_gloveLeftHand->getSensorData(leftGloveSensors);
-        m_gloveLeftHand->getHandJointsAngles(leftHandJointsAngles);
-
-
         yInfo() << "**************";
-        //yInfo() << "gloveSensors: \n" << gloveSensors;
-        //yInfo() << "**************";
-        //std::cout << "hand pose: \n" << handPose << std::endl;
-        //yInfo() << "**************";
-        //std::cout << "glove pose: \n" << glovePose << std::endl;
-        //yInfo() << "handJointsAngles.size :" << rightHandJointsAngles.rows() << rightHandJointsAngles.cols();
-        //yInfo() << "index finger, first joint: " << rightHandJointsAngles(4, 0)
+        // yInfo() << "gloveSensors: \n" << gloveSensors;
+        // yInfo() << "**************";
+        // std::cout << "hand pose: \n" << handPose << std::endl;
+        // yInfo() << "**************";
+        // std::cout << "glove pose: \n" << glovePose << std::endl;
+        // yInfo() << "handJointsAngles.size :" << rightHandJointsAngles.rows() <<
+        // rightHandJointsAngles.cols(); yInfo() << "index finger, first joint: " <<
+        // rightHandJointsAngles(4, 0)
         //        << rightHandJointsAngles(4, 1) << rightHandJointsAngles(4, 2);
 
-        //yInfo() << "index finger, second joint: " << rightHandJointsAngles(5, 0)
+        // yInfo() << "index finger, second joint: " << rightHandJointsAngles(5, 0)
         //        << rightHandJointsAngles(5, 1) << rightHandJointsAngles(5, 2);
 
-        //yInfo() << "index finger, third joint: " << rightHandJointsAngles(6, 0)
+        // yInfo() << "index finger, third joint: " << rightHandJointsAngles(6, 0)
         //        << rightHandJointsAngles(6, 1) << rightHandJointsAngles(6, 2);
 
-        //yInfo() << "index finger, fourth joint: " << rightHandJointsAngles(7, 0)
+        // yInfo() << "index finger, fourth joint: " << rightHandJointsAngles(7, 0)
         //        << rightHandJointsAngles(7, 1) << rightHandJointsAngles(7, 2);
 
-        //std::cout << "handJointsAngles: \n" << rightHandJointsAngles << std::endl;
+        // std::cout << "handJointsAngles: \n" << rightHandJointsAngles << std::endl;
 
         // yInfo() << "handJointsAngles.size :" << leftHandJointsAngles.rows() <<
         //        leftHandJointsAngles.cols();
-        //yInfo() << "index finger, first joint: " << leftHandJointsAngles(4, 0)
+        // yInfo() << "index finger, first joint: " << leftHandJointsAngles(4, 0)
         //         << leftHandJointsAngles(4, 1) << leftHandJointsAngles(4, 2);
 
         // yInfo() << "index finger, second joint: " << leftHandJointsAngles(5, 0)
@@ -373,52 +364,116 @@ bool HapticGloveModule::updateModule()
         // yInfo() << "index finger, fourth joint: " << leftHandJointsAngles(7, 0)
         //         << leftHandJointsAngles(7, 1) << leftHandJointsAngles(7, 2);
 
-         std::cout << "handJointsAngles: \n" << leftHandJointsAngles << std::endl;
-
-
-
-
-
         // 2- Compute the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
 
         // 3- Set the reference joint valued for the iCub hand fingers
         // left hand
         //        m_leftHandFingers->setFingersAxisReference(m_icubLeftFingerAxisReference);
-         
-         {
-             m_icubLeftFingerJointsReference.zero();
-         
-         int i = 0;
-         // thumb: (i:i+2)
-         m_icubLeftFingerJointsReference(i + 0) = -leftHandJointsAngles(0, 2);
-         m_icubLeftFingerJointsReference(i + 1) = leftHandJointsAngles(1, 1);
-         m_icubLeftFingerJointsReference(i + 2) = leftHandJointsAngles(2, 1);
+        if (m_useLeftHand)
+        {
+            std::cerr << "Debug: 07 \n";
+            Eigen::MatrixXd leftHandPose, leftGlovePose, leftHandJointsAngles;
+            std::vector<float> leftGloveSensors;
 
-         //index (i+3:i+5)
-         m_icubLeftFingerJointsReference(i + 3) = leftHandJointsAngles(4, 1);
-         m_icubLeftFingerJointsReference(i + 4) = leftHandJointsAngles(5, 1);
-         m_icubLeftFingerJointsReference(i + 5) = leftHandJointsAngles(6, 1);
-         
-         //middle (i+6:i+8)
-         m_icubLeftFingerJointsReference(i + 6) = leftHandJointsAngles(8, 1);
-         m_icubLeftFingerJointsReference(i + 7) = leftHandJointsAngles(9, 1);
-         m_icubLeftFingerJointsReference(i + 8) = leftHandJointsAngles(10, 1);
+            m_gloveLeftHand->getHandPose(leftHandPose);
+            m_gloveLeftHand->getGlovePose(leftGlovePose);
+            m_gloveLeftHand->getSensorData(leftGloveSensors);
+            m_gloveLeftHand->getHandJointsAngles(leftHandJointsAngles);
 
-         //ring (i+9:i+11)
-         m_icubLeftFingerJointsReference(i + 9) =  leftHandJointsAngles(12, 1);
-         m_icubLeftFingerJointsReference(i + 10) = leftHandJointsAngles(13, 1);
-         m_icubLeftFingerJointsReference(i + 11) = leftHandJointsAngles(14, 1);
+            std::cout << "handJointsAngles: \n" << leftHandJointsAngles << std::endl;
 
-         //pinkie (i+12:i+14)
-         m_icubLeftFingerJointsReference(i + 12) = leftHandJointsAngles(16, 1);
-         m_icubLeftFingerJointsReference(i + 13) = leftHandJointsAngles(17, 1);
-         m_icubLeftFingerJointsReference(i + 14) = leftHandJointsAngles(18, 1);
-         }
-         yInfo() << "m_icubLeftFingerJointsReference: " << m_icubLeftFingerJointsReference.toString();
+            m_icubLeftFingerJointsReference.zero();
 
-        m_leftHandFingers->setFingersJointReference(m_icubLeftFingerJointsReference);
-        m_leftHandFingers->move();
+            int i = 0;
+            // thumb: (i:i+2)
+            m_icubLeftFingerJointsReference(i + 0) = -leftHandJointsAngles(0, 2);
+            m_icubLeftFingerJointsReference(i + 1) = leftHandJointsAngles(1, 1);
+            m_icubLeftFingerJointsReference(i + 2) = leftHandJointsAngles(2, 1);
+
+            // index (i+3:i+5)
+            m_icubLeftFingerJointsReference(i + 3) = leftHandJointsAngles(4, 1);
+            m_icubLeftFingerJointsReference(i + 4) = leftHandJointsAngles(5, 1);
+            m_icubLeftFingerJointsReference(i + 5) = leftHandJointsAngles(6, 1);
+
+            // middle (i+6:i+8)
+            m_icubLeftFingerJointsReference(i + 6) = leftHandJointsAngles(8, 1);
+            m_icubLeftFingerJointsReference(i + 7) = leftHandJointsAngles(9, 1);
+            m_icubLeftFingerJointsReference(i + 8) = leftHandJointsAngles(10, 1);
+
+            // ring (i+9:i+11)
+            m_icubLeftFingerJointsReference(i + 9) = leftHandJointsAngles(12, 1);
+            m_icubLeftFingerJointsReference(i + 10) = leftHandJointsAngles(13, 1);
+            m_icubLeftFingerJointsReference(i + 11) = leftHandJointsAngles(14, 1);
+
+            // pinkie (i+12:i+14)
+            m_icubLeftFingerJointsReference(i + 12) = leftHandJointsAngles(16, 1);
+            m_icubLeftFingerJointsReference(i + 13) = leftHandJointsAngles(17, 1);
+            m_icubLeftFingerJointsReference(i + 14) = leftHandJointsAngles(18, 1);
+            yInfo() << "m_icubLeftFingerJointsReference: "
+                    << m_icubLeftFingerJointsReference.toString();
+        }
+
+        if (m_useRightHand)
+        {
+            std::cerr << "Debug: 08 \n";
+            Eigen::MatrixXd rightHandPose, rightGlovePose, rightHandJointsAngles;
+            std::vector<float> rightGloveSensors;
+
+            m_gloveRightHand->getHandPose(rightHandPose);
+            m_gloveRightHand->getGlovePose(rightGlovePose);
+            m_gloveRightHand->getSensorData(rightGloveSensors);
+            m_gloveRightHand->getHandJointsAngles(rightHandJointsAngles);
+
+            std::cout << "right handJointsAngles: \n" << rightHandJointsAngles << std::endl;
+
+            m_icubRightFingerJointsReference.zero();
+
+            int i = 0;
+            // index (i+3:i+5)
+            m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(4, 1);
+            m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(5, 1);
+            m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(6, 1);
+
+            //// thumb: (i:i+2)
+            // m_icubRightFingerJointsReference(i + 0) = -rightHandJointsAngles(0, 2);
+            // m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(1, 1);
+            // m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(2, 1);
+
+            //// index (i+3:i+5)
+            // m_icubRightFingerJointsReference(i + 3) = rightHandJointsAngles(4, 1);
+            // m_icubRightFingerJointsReference(i + 4) = rightHandJointsAngles(5, 1);
+            // m_icubRightFingerJointsReference(i + 5) = rightHandJointsAngles(6, 1);
+
+            //// middle (i+6:i+8)
+            // m_icubRightFingerJointsReference(i + 6) = rightHandJointsAngles(8, 1);
+            // m_icubRightFingerJointsReference(i + 7) = rightHandJointsAngles(9, 1);
+            // m_icubRightFingerJointsReference(i + 8) = rightHandJointsAngles(10, 1);
+
+            //// ring (i+9:i+11)
+            // m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
+            // m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
+            // m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
+
+            //// pinkie (i+12:i+14)
+            // m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
+            // m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
+            // m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
+            yInfo() << "m_icubRightFingerJointsReference: "
+                    << m_icubRightFingerJointsReference.toString();
+        }
+
+        if (m_useLeftHand)
+        {
+            m_leftHandFingers->setFingersJointReference(m_icubLeftFingerJointsReference);
+            m_leftHandFingers->move();
+        }
+
+        if (m_useRightHand)
+        {
+            m_rightHandFingers->setFingersJointReference(m_icubRightFingerJointsReference);
+            m_rightHandFingers->move();
+        }
 
         // right hand
         //        m_rightHandFingers->setFingersAxisReference(m_icubRightFingerAxisReference);
@@ -484,9 +539,12 @@ bool HapticGloveModule::updateModule()
         }
 #endif
 
-    }
-    else if (m_state == HapticGloveFSM::Configured)
+        // yInfo() << "[HapticGloveModule::updateModule] <FSM::InPreparation> exiting ....";
+        // exit(0);
+
+    } else if (m_state == HapticGloveFSM::Configured)
     {
+        yInfo() << " >>> STATUS: Configured";
 
         // TODO
         m_timeConfigurationStarting = yarp::os::Time::now();
@@ -498,7 +556,7 @@ bool HapticGloveModule::updateModule()
                 return false;
             }
         }
-        
+
         if (m_useRightHand)
         {
             if (!m_gloveRightHand->setupGlove())
@@ -510,12 +568,10 @@ bool HapticGloveModule::updateModule()
         }
 
         m_state = HapticGloveFSM::InPreparation;
-        
-        yInfo() << "[HapticGloveModule::updateModule] <FSM::Configured> exiting ....";
-        exit(0);
-    }
-    else if (m_state == HapticGloveFSM::InPreparation)
+
+    } else if (m_state == HapticGloveFSM::InPreparation)
     {
+        yInfo() << " >>> STATUS: InPreparation";
 
         m_timePreparationStarting = yarp::os::Time::now();
 
@@ -542,25 +598,50 @@ bool HapticGloveModule::updateModule()
         yInfo() << "time collecting data:"
                 << m_timePreparationStarting - m_timeConfigurationStarting;
         int dTime = int((m_timePreparationStarting - m_timeConfigurationStarting) / m_dT);
-        int axisNumber = dTime / 100;
-        if (axisNumber >= m_leftHandFingers->controlHelper()->getActuatedDoFs())
+        int axisNumber = dTime / 500;
+        if (m_useLeftHand)
         {
-            yInfo() << "******>>>> Data collected ...";
-            if (!m_leftHandFingers->trainCouplingMatrix())
+            if (axisNumber >= m_leftHandFingers->controlHelper()->getActuatedDoFs())
             {
-                yInfo() << "cannot claibrate the coupling matrix and find the coefficient matrix";
-                return false;
-            }
-            m_timePreparationStarting = yarp::os::Time::now();
-            m_state = HapticGloveFSM::Running;
+                yInfo() << "******>>>> Data collected ...";
+                if (!m_leftHandFingers->trainCouplingMatrix())
+                {
+                    yInfo()
+                        << "cannot claibrate the coupling matrix and find the coefficient matrix";
+                    return false;
+                }
+                m_timePreparationStarting = yarp::os::Time::now();
+                m_state = HapticGloveFSM::Running;
 
-        } else
+            } else
+            {
+                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
+                m_leftHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
+            }
+        }
+
+        if (m_useRightHand)
         {
-            double time = double(dTime % 100) / 100.0 * (M_PI * 2.0);
-            m_leftHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
+            if (axisNumber >= m_rightHandFingers->controlHelper()->getActuatedDoFs())
+            {
+                yInfo() << "******>>>> Data collected ...";
+                if (!m_rightHandFingers->trainCouplingMatrix())
+                {
+                    yInfo()
+                        << "cannot claibrate the coupling matrix and find the coefficient matrix";
+                    return false;
+                }
+                m_timePreparationStarting = yarp::os::Time::now();
+                m_state = HapticGloveFSM::Running;
+
+            } else
+            {
+                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
+                m_rightHandFingers->LogDataToCalibrateRobotMotorsJointsCouplingSin(time,
+                                                                                   axisNumber);
+            }
         }
     }
-    // TO
 
     return true;
 }

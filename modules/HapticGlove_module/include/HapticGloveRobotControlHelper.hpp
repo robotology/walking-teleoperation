@@ -60,6 +60,7 @@ class RobotControlHelper
     yarp::sig::Vector m_sensorFeedbackRaw; /**< sensor feedback [raw]*/
     yarp::sig::Vector m_sensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_sensorFeedbackInRadians; /**< sensor feedback [rad]*/
+    yarp::sig::Vector m_sensorFeedbackSelected; /**< sensor info to read*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
