@@ -73,9 +73,10 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
     yInfo() << "m_noAnalogSensor " << m_noAnalogSensor;
 
-    m_sensorFeedbackRaw.resize(m_noAnalogSensor);
+    m_sensorFeedbackRaw.resize(15); //ToFix
     m_sensorFeedbackInDegrees.resize(m_noAnalogSensor);
     m_sensorFeedbackInRadians.resize(m_noAnalogSensor);
+    m_sensorFeedbackSelected = {3, 4, 5};
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
@@ -118,9 +119,18 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
 
         // get the sensors limits boundaries
     if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "sensors_min_boundary", m_sensors_max_boundary))
+            config, "sensors_min_boundary", m_sensors_min_boundary))
     {
         yError() << "RobotControlHelper::configure] unable to get the minimum boundary of the "
+                    "joints limits.";
+        return false;
+    }
+
+            // get the sensors limits boundaries
+    if (!YarpHelper::getYarpVectorFromSearchable(
+            config, "sensors_max_boundary", m_sensors_max_boundary))
+    {
+        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
                     "joints limits.";
         return false;
     }
@@ -394,17 +404,19 @@ bool RobotControlHelper::getFeedback()
 
 bool RobotControlHelper::getCalibratedFeedback()
 {
-    yInfo() << "m_sensorFeedbackRaw" << m_sensorFeedbackRaw.toString();
-    yInfo() << "m_sensors_raw2Degree_scaling" << m_sensors_raw2Degree_scaling.toString();
-    yInfo() << "m_joints_min_boundary" << m_joints_min_boundary.toString();
-    yInfo() << "m_sensors_min_boundary" << m_sensors_min_boundary.toString();
-
 
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
-        m_sensorFeedbackInDegrees(j) = m_joints_min_boundary(j) +  m_sensors_raw2Degree_scaling(j) * ( m_sensorFeedbackRaw(j) - m_sensors_min_boundary(j) ); // TOCHECK
+        m_sensorFeedbackInDegrees(j) = m_joints_min_boundary(j)
+                                       + m_sensors_raw2Degree_scaling(j)
+                                             * (m_sensorFeedbackRaw(m_sensorFeedbackSelected(j))
+                                                - m_sensors_min_boundary(j)); // TOCHECK
         m_sensorFeedbackInRadians(j) = iDynTree::deg2rad(m_sensorFeedbackInDegrees(j));
     }
+    yInfo() << "m_sensorFeedbackInDegrees" << m_sensorFeedbackInDegrees.toString();
+    yInfo() << "m_sensorFeedbackInRadians" << m_sensorFeedbackInRadians.toString();
+
+
     return true;
 }
 
@@ -488,6 +500,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
 
 bool RobotControlHelper::getVelocityLimits(yarp::sig::Matrix& limits)
 {
+    yInfo() << "RobotControlHelper::getVelocityLimits";
     if (!getFeedback())
     {
         yError()
