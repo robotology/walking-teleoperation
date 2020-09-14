@@ -109,6 +109,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
     m_desiredMotorValue.resize(fingersNoOfAxis);
     m_desiredJointValue.resize(m_controlHelper->getNumberOfJoints());
     yarp::sig::Vector buff(fingersNoOfAxis, 0.0);
+
     updateFeedback();
     getFingerAxisFeedback(buff);
     yarp::sig::Matrix limits(fingersNoOfAxis, 2);
@@ -224,9 +225,9 @@ bool FingersRetargeting::updateFeedback()
 {
     if (!controlHelper()->getFeedback())
     {
-        yInfo()
-            << "[FingersRetargeting::getFingerAxisValues] Unable the get the finger axis and joints values "
-               "from the robot.";
+        yInfo() << "[FingersRetargeting::getFingerAxisValues] Unable the get the finger axis and "
+                   "joints values "
+                   "from the robot.";
         return false;
     }
     return true;
@@ -391,10 +392,8 @@ bool FingersRetargeting::LogDataToCalibrateRobotMotorsJointsCouplingSin(double t
     motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
     setFingersAxisReference(motorReference);
     move();
-    yInfo() << "m_motorsData.size() : " << m_motorsData.size() << m_motorsData.rows()
-            << m_motorsData.cols();
-    yInfo() << "m_jointsData.size() : " << m_jointsData.size() << m_jointsData.rows()
-            << m_jointsData.cols();
+    yInfo() << "m_motorsData.size() : " << m_motorsData.rows() << m_motorsData.cols();
+    yInfo() << "m_jointsData.size() : " << m_jointsData.rows() << m_jointsData.cols();
 
     return true;
 }
