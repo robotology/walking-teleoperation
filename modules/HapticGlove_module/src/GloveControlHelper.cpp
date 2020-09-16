@@ -61,13 +61,14 @@ bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desir
         std::cout << m_desiredForceValues[i] << " ";
     }
     std::cout << std::endl;
-
-    if (!m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues)))
-    {
-        yError() << "[GloveControlHelper::setFingersForceReference] unable the send the force "
-                    "feedback command";
-        return false;
-    }
+    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues));
+    
+    //if (!m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues)))
+    //{
+    //    yError() << "[GloveControlHelper::setFingersForceReference] unable the send the force "
+    //                "feedback command";
+    //    return false;
+    //}
 
     return true;
 }
@@ -223,11 +224,12 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     }
     std::cout << std::endl;
     // vibrate fingers at percetage intensity, between 0-100, integer numbers
-    if (!m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)))
-    {
-        yError() << "[GloveControlHelper::setBuzzMotorsReference] unable the send the Buzz command";
-        return false;
-    }
+    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
+    //if (!m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)))
+    //{
+    //    yError() << "[GloveControlHelper::setBuzzMotorsReference] unable the send the Buzz command";
+    //    return false;
+    //}
 
     return true;
 }
@@ -269,16 +271,19 @@ bool GloveControlHelper::setupGlove()
 
     yInfo() << "Activating " << m_glove.ToString();
 
-    SGCore::SG::SG_Model gloveModel = m_glove.GetGloveModel();
+/*    SGCore::SG::SG_Model gloveModel = m_glove.GetGloveModel();
     yInfo() << "glove model:" << gloveModel.ToString();
     yInfo() << "glove model:" << gloveModel.ToString(false);
-
+*/
     return true;
 }
 
 bool GloveControlHelper::stopFeedback()
 {
+/*
     return m_glove.StopFeedback();
+*/
+return true;
 }
 
 bool GloveControlHelper::setPalmFeedbackThumper(const int desiredValue)

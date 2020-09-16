@@ -64,9 +64,10 @@ endif()
 #endif()
 ##########
 find_package(SenseGlove REQUIRED)
-#if(SENSEGLOVE_FOUND)
+if(SENSEGLOVE_FOUND)
 #  include_directories($SENSEGLOVE_INCLUDE_DIR)
-#endif(SENSEGLOVE_FOUND)
+   message(WARNING "${EXE_TARGET_NAME} SenseGlove is not found")
+endif(SENSEGLOVE_FOUND)
 
 
 
@@ -93,7 +94,7 @@ set(${EXE_TARGET_NAME}_HDR
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${SenseGlove_INCLUDE_DIR}
+#  ${SenseGlove_INCLUDE_DIR}
 )
 
 # add an executable to the project using the specified source files.
@@ -101,7 +102,7 @@ add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}
 
 message("YARP_LIBRARIES: ${YARP_LIBRARIES}")
 message("iDynTree_LIBRARIES: ${iDynTree_LIBRARIES}")
-message("SenseGlove_LIBRARIES: ${SenseGlove_LIBRARIES}")
+#message("SenseGlove_LIBRARIES: ${SenseGlove_LIBRARIES}")
 message("ctrlLib: ${ctrlLib}")
 message("UtilityLibrary: ${UtilityLibrary}")
 
@@ -109,7 +110,8 @@ if(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-    ${SenseGlove_LIBRARIES}
+#    ${SenseGlove_LIBRARIES}
+    SenseGlove
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
@@ -118,7 +120,8 @@ else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-    ${SenseGlove_LIBRARIES}
+#    ${SenseGlove_LIBRARIES}
+    SenseGlove
     ctrlLib
     UtilityLibrary
 )
@@ -132,5 +135,5 @@ install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
 if(WIN32)
 	install(FILES $ENV{SenseGlove_DIR}/SGCore.dll DESTINATION bin )
 else()
-	install(FILES ${SenseGlove_LIBRARIES} DESTINATION lib RENAME libSGCore.so)
+	install(FILES ${SenseGlove} DESTINATION lib RENAME libSGCore.so)
 endif() 
