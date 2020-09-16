@@ -528,11 +528,10 @@ bool HapticGloveModule::updateModule()
                           icubRightFingerJointsFeedback);
 
             // GLOVE: based on data worn by human user
-            m_logger->add(m_logger_prefix + "_humanHandPose", handPose);
-            m_logger->add(m_logger_prefix + "_humanGlovePose", glovePose);
-            m_logger->add(m_logger_prefix + "_gloveSensors ", );
-
-            , glovePose;
+//            m_logger->add(m_logger_prefix + "_humanHandPose", handPose);
+//            m_logger->add(m_logger_prefix + "_humanGlovePose", glovePose);
+//            m_logger->add(m_logger_prefix + "_gloveSensors ", );
+//            , glovePose;
 
             std::cerr << "110 \n";
             m_logger->flush_available_data();
