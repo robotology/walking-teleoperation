@@ -40,6 +40,7 @@ class RobotControlHelper
 
     int m_actuatedDOFs; /**< Number of the actuated DoF */
     size_t m_noAnalogSensor; /**< Number of the joints ( associated with the analog sensors) */
+    size_t m_noAllSensor; /**< Number of all the interested joints ( associated with the analog & encoders sensors) */
 
     std::vector<std::string>
         m_axesList; /**< Vector containing the name of the controlled joints. */
@@ -55,12 +56,14 @@ class RobotControlHelper
     yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /*Sensor interface*< */
 
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
-    yarp::sig::Vector m_positionFeedbackInDegrees; /**< Joint position [deg]. */
-    yarp::sig::Vector m_positionFeedbackInRadians; /**< Joint position [rad]. */
-    yarp::sig::Vector m_sensorFeedbackRaw; /**< sensor feedback [raw]*/
-    yarp::sig::Vector m_sensorFeedbackInDegrees; /**< sensor feedback [deg]*/
-    yarp::sig::Vector m_sensorFeedbackInRadians; /**< sensor feedback [rad]*/
-    yarp::sig::Vector m_sensorFeedbackSelected; /**< sensor info to read*/
+    yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< Joint position [deg]. */
+    yarp::sig::Vector m_encoderPositionFeedbackInRadians; /**< Joint position [rad]. */
+    yarp::sig::Vector m_analogSensorFeedbackRaw; /**< sensor feedback [raw]*/
+    yarp::sig::Vector m_analogSensorFeedbackInDegrees; /**< sensor feedback [deg]*/
+    yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
+    yarp::sig::Vector m_analogSensorFeedbackSelected; /**< sensor info to read*/
+    yarp::sig::Vector m_allSensorFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
+
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -145,6 +148,12 @@ public:
     bool getCalibratedFeedback();
 
     /**
+     * Set the full interested joints feedback values
+     * @return true / false in case of success / failure
+     */
+    bool setAllJointsFeedback();
+
+    /**
      * Get the joint limits
      * @param limits matrix containing the joint limits in radian
      * @return true / false in case of success / failure
@@ -181,6 +190,14 @@ public:
      * @return the analog sensor values
      */
     const yarp::sig::Vector& analogSensors() const;
+
+    /**
+     * Get all the intersted joints sensors value (including analog+encoders)
+     * @return all the intersted sensor values
+     */
+    const yarp::sig::Vector& allSensors() const;
+
+
 
     /**
      * Get the number of actuated degree of freedom (motors)

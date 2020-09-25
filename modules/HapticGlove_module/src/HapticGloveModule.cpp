@@ -430,35 +430,45 @@ bool HapticGloveModule::updateModule()
             m_icubRightFingerJointsReference.zero();
 
             int i = 0;
+            /* iff only index
             // index (i+3:i+5)
             m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(4, 1);
             m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(5, 1);
             m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(6, 1);
+            */
 
-            //// thumb: (i:i+2)
-            // m_icubRightFingerJointsReference(i + 0) = -rightHandJointsAngles(0, 2);
-            // m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(1, 1);
-            // m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(2, 1);
+            /*
+            // thumb + index
+            m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(1, 1);
+            m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(2, 1);
+            m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(4, 1);
+            m_icubRightFingerJointsReference(i + 3) = rightHandJointsAngles(5, 1);
+            m_icubRightFingerJointsReference(i + 4) = rightHandJointsAngles(6, 1);
+            */
+            // thumb: (i:i+2)
+             m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(0, 2);
+             m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(1, 1);
+             m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(2, 1);
 
-            //// index (i+3:i+5)
-            // m_icubRightFingerJointsReference(i + 3) = rightHandJointsAngles(4, 1);
-            // m_icubRightFingerJointsReference(i + 4) = rightHandJointsAngles(5, 1);
-            // m_icubRightFingerJointsReference(i + 5) = rightHandJointsAngles(6, 1);
+            // index (i+3:i+5)
+             m_icubRightFingerJointsReference(i + 3) = rightHandJointsAngles(4, 1);
+             m_icubRightFingerJointsReference(i + 4) = rightHandJointsAngles(5, 1);
+             m_icubRightFingerJointsReference(i + 5) = rightHandJointsAngles(6, 1);
 
-            //// middle (i+6:i+8)
-            // m_icubRightFingerJointsReference(i + 6) = rightHandJointsAngles(8, 1);
-            // m_icubRightFingerJointsReference(i + 7) = rightHandJointsAngles(9, 1);
-            // m_icubRightFingerJointsReference(i + 8) = rightHandJointsAngles(10, 1);
+            // middle (i+6:i+8)
+             m_icubRightFingerJointsReference(i + 6) = rightHandJointsAngles(8, 1);
+             m_icubRightFingerJointsReference(i + 7) = rightHandJointsAngles(9, 1);
+             m_icubRightFingerJointsReference(i + 8) = rightHandJointsAngles(10, 1);
 
-            //// ring (i+9:i+11)
-            // m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
-            // m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
-            // m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
+            // ring (i+9:i+11)
+             m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
+             m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
+             m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
 
-            //// pinkie (i+12:i+14)
-            // m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
-            // m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
-            // m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
+            // pinkie (i+12:i+14)
+             m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
+             m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
+             m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
             yInfo() << "m_icubRightFingerJointsReference: "
                     << m_icubRightFingerJointsReference.toString();
         }

@@ -251,13 +251,13 @@ void FingersRetargeting::getFingerAxisFeedback(std::vector<double>& fingerAxisVa
 void FingersRetargeting::getFingerJointsFeedback(yarp::sig::Vector& fingerJointsValues)
 {
     fingerJointsValues.clear();
-    fingerJointsValues = controlHelper()->analogSensors();
+    fingerJointsValues = controlHelper()->allSensors();
 }
 
 void FingersRetargeting::getFingerJointsFeedback(std::vector<double>& fingerJointsValues)
 {
     fingerJointsValues.clear();
-    yarp::sig::Vector Temp = controlHelper()->analogSensors();
+    yarp::sig::Vector Temp = controlHelper()->allSensors();
     for (size_t i = 0; i < Temp.size(); i++)
     {
         fingerJointsValues.push_back(Temp(i));
