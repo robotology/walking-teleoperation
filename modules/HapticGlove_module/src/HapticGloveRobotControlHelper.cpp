@@ -73,10 +73,16 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
     yInfo() << "m_noAnalogSensor " << m_noAnalogSensor;
 
-    m_sensorFeedbackRaw.resize(15); //ToFix
-    m_sensorFeedbackInDegrees.resize(m_noAnalogSensor);
-    m_sensorFeedbackInRadians.resize(m_noAnalogSensor);
-    m_sensorFeedbackSelected = {3, 4, 5};
+    m_noAllSensor = config.check("noAllSensor", yarp::os::Value(17)).asInt(); // 5*3 analog sensors+ 1 encoder thumb oppose + 1 encoder hand_finger
+    yInfo() << "m_noAllSensor " << m_noAllSensor;
+
+
+    m_analogSensorFeedbackRaw.resize(15); //ToFix
+    m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackSelected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
+
+    m_allSensorFeedbackInRadians.resize(m_noAllSensor);
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
@@ -223,14 +229,14 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     }
 
     m_desiredJointValue.resize(m_actuatedDOFs);
-    m_positionFeedbackInDegrees.resize(m_actuatedDOFs);
-    m_positionFeedbackInRadians.resize(m_actuatedDOFs);
+    m_encoderPositionFeedbackInDegrees.resize(m_actuatedDOFs);
+    m_encoderPositionFeedbackInRadians.resize(m_actuatedDOFs);
 
     // check if the robot is alive
     bool okPosition = false;
     for (int i = 0; i < 10 && !okPosition; i++)
     {
-        okPosition = m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data());
+        okPosition = m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data());
 
         if (!okPosition)
             yarp::os::Time::delay(0.1);
@@ -378,16 +384,19 @@ void RobotControlHelper::updateTimeStamp()
 
 bool RobotControlHelper::getFeedback()
 {
-    if (!m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data()) && m_isMandatory)
+    if (!m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data()) && m_isMandatory)
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get joint position";
         return false;
     }
 
     for (unsigned j = 0; j < m_actuatedDOFs; ++j)
-        m_positionFeedbackInRadians(j) = iDynTree::deg2rad(m_positionFeedbackInDegrees(j));
+        m_encoderPositionFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
+    yInfo() << "m_encoderPositionFeedbackInDegrees" << m_encoderPositionFeedbackInDegrees.toString();
+    yInfo() << "m_encoderPositionFeedbackInRadians" << m_encoderPositionFeedbackInRadians.toString();
 
-    if (!(m_AnalogSensorInterface->read(m_sensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
+
+    if (!(m_AnalogSensorInterface->read(m_analogSensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get analog sensor data";
         return false;
@@ -395,6 +404,13 @@ bool RobotControlHelper::getFeedback()
     if (!getCalibratedFeedback())
     {
         yError() << "[RobotControlHelper::getFeedbacks] Unable to get the calibrated analog "
+                    "sensor data";
+        return false;
+    }
+
+    if(!setAllJointsFeedback())
+    {
+        yError() << "[RobotControlHelper::getFeedbacks] Unable to set all the interested joints feedback"
                     "sensor data";
         return false;
     }
@@ -407,15 +423,30 @@ bool RobotControlHelper::getCalibratedFeedback()
 
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
-        m_sensorFeedbackInDegrees(j) = m_joints_min_boundary(j)
+        m_analogSensorFeedbackInDegrees(j) = m_joints_min_boundary(j)
                                        + m_sensors_raw2Degree_scaling(j)
-                                             * (m_sensorFeedbackRaw(m_sensorFeedbackSelected(j))
+                                             * (m_analogSensorFeedbackRaw(m_analogSensorFeedbackSelected(j))
                                                 - m_sensors_min_boundary(j)); // TOCHECK
-        m_sensorFeedbackInRadians(j) = iDynTree::deg2rad(m_sensorFeedbackInDegrees(j));
+        m_analogSensorFeedbackInRadians(j) = iDynTree::deg2rad(m_analogSensorFeedbackInDegrees(j));
     }
-    yInfo() << "m_sensorFeedbackInDegrees" << m_sensorFeedbackInDegrees.toString();
-    yInfo() << "m_sensorFeedbackInRadians" << m_sensorFeedbackInRadians.toString();
+    yInfo() << "m_sensorFeedbackInDegrees" << m_analogSensorFeedbackInDegrees.toString();
+    yInfo() << "m_sensorFeedbackInRadians" << m_analogSensorFeedbackInRadians.toString();
 
+
+    return true;
+}
+
+bool RobotControlHelper::setAllJointsFeedback()
+{
+
+
+    m_allSensorFeedbackInRadians(0)=m_encoderPositionFeedbackInRadians(0);
+    for(unsigned j = 0; j < m_noAnalogSensor; ++j)
+    {
+        m_allSensorFeedbackInRadians(j+1)=m_analogSensorFeedbackInRadians(j);
+    }
+
+    yInfo() << "m_allSensorFeedback" << m_allSensorFeedbackInRadians.toString();
 
     return true;
 }
@@ -432,12 +463,17 @@ yarp::os::Stamp& RobotControlHelper::timeStamp()
 
 const yarp::sig::Vector& RobotControlHelper::jointEncoders() const
 {
-    return m_positionFeedbackInRadians;
+    return m_encoderPositionFeedbackInRadians;
 }
 
 const yarp::sig::Vector& RobotControlHelper::analogSensors() const
 {
-    return m_sensorFeedbackInRadians;
+    return m_analogSensorFeedbackInRadians;
+}
+
+const yarp::sig::Vector& RobotControlHelper::allSensors() const
+{
+    return m_allSensorFeedbackInRadians;
 }
 
 void RobotControlHelper::close()
@@ -456,7 +492,9 @@ int RobotControlHelper::getActuatedDoFs()
 
 int RobotControlHelper::getNumberOfJoints()
 {
-    return m_noAnalogSensor;
+    //return m_noAnalogSensor;
+    return m_noAllSensor;
+
 }
 
 bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
@@ -483,8 +521,8 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
                 return false;
             } else
             {
-                limits(i, 0) = m_positionFeedbackInRadians(i);
-                limits(i, 1) = m_positionFeedbackInRadians(i);
+                limits(i, 0) = m_encoderPositionFeedbackInRadians(i);
+                limits(i, 1) = m_encoderPositionFeedbackInRadians(i);
                 yWarning()
                     << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
                     << " joint limits. The current joint value is used as lower and upper limits.";
