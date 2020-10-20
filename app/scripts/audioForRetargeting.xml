@@ -1,0 +1,52 @@
+<!-- Copyright (C) 2020 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Giulio Romualdi <giulio.romualdi@iit.it> -->
+
+<application>
+
+  <name>Audio for Retargeting</name>
+  <description>Audio application.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
+  </authors>
+
+  <!-- Devices -->
+
+  <module>
+    <name>yarpdev</name>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <node>icub-head</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>yarphear</name>
+    <parameters>--name /icub/yarphear:i</parameters>
+    <node>icub-head</node>
+  </module>
+
+   <module>
+    <name>yarphear</name>
+    <parameters>--name /virtualizer/yarphear:i</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <!-- Connections -->
+  <!-- Hand retargeting  -->
+  <connection>
+    <from>/virtualizer/microphone/audio:o</from>
+    <to>/icub/yarphear:i</to>
+  </connection>
+
+  <connection>
+    <from>/icub/microphone/audio:o</from>
+    <to>/virtualizer/yarphear:i</to>
+  </connection>
+
+</application>
