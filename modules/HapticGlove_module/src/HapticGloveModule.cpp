@@ -186,6 +186,9 @@ bool HapticGloveModule::close()
     {
         m_gloveRightHand->stopFeedback();
         m_gloveRightHand->turnOffBuzzMotors();
+        m_gloveRightForceFeedbackReference.zero();
+        m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
+
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 10ms.
@@ -447,7 +450,7 @@ bool HapticGloveModule::updateModule()
             m_icubRightFingerJointsReference(i + 4) = rightHandJointsAngles(6, 1);
             */
             // thumb: (i:i+2)
-             m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(0, 2);
+             m_icubRightFingerJointsReference(i + 0) = rightHandJointsAngles(0, 2)+0.7;
              m_icubRightFingerJointsReference(i + 1) = rightHandJointsAngles(1, 1);
              m_icubRightFingerJointsReference(i + 2) = rightHandJointsAngles(2, 1);
 
@@ -485,10 +488,27 @@ bool HapticGloveModule::updateModule()
             //Axis
             m_rightHandFingers->getFingerAxisFeedback(icubRightFingerAxisFeedback);
             m_rightHandFingers->getFingerAxisReference(icubRightFingerAxisReference);
+            // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
+            // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
-            int k_gain=50;
-            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
-            m_gloveRightForceFeedbackReference(i)=k_gain*std::abs(icubRightFingerAxisFeedback[i]-icubRightFingerAxisReference[i]);
+            yInfo()<<"Right Axis 2: "<<icubRightFingerAxisFeedback[2]<< icubRightFingerAxisReference[2];
+            yInfo()<<"Right Axis 4: "<<icubRightFingerAxisFeedback[4]<< icubRightFingerAxisReference[4];
+            yInfo()<<"Right Axis 6: "<<icubRightFingerAxisFeedback[6]<< icubRightFingerAxisReference[6];
+            yInfo()<<"Right Axis 7: "<<icubRightFingerAxisFeedback[7]<< icubRightFingerAxisReference[7];
+
+            int k_gain=150;
+//            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
+            m_gloveRightForceFeedbackReference(0)=250*std::abs(icubRightFingerAxisFeedback[2]-icubRightFingerAxisReference[2]);
+            m_gloveRightForceFeedbackReference(1)=250*std::abs(icubRightFingerAxisFeedback[4]-icubRightFingerAxisReference[4]);
+            m_gloveRightForceFeedbackReference(2)=100*std::abs(icubRightFingerAxisFeedback[6]-icubRightFingerAxisReference[6]);
+            m_gloveRightForceFeedbackReference(3)=50*std::abs(icubRightFingerAxisFeedback[7]-icubRightFingerAxisReference[7]);
+            m_gloveRightForceFeedbackReference(4)=50*std::abs(icubRightFingerAxisFeedback[7]-icubRightFingerAxisReference[7]);
+
+            yInfo()<<"Hand Feedback Finger 0: "<<m_gloveRightForceFeedbackReference(0);
+            yInfo()<<"Hand Feedback Finger 1: "<<m_gloveRightForceFeedbackReference(1);
+            yInfo()<<"Hand Feedback Finger 2: "<<m_gloveRightForceFeedbackReference(2);
+            yInfo()<<"Hand Feedback Finger 3: "<<m_gloveRightForceFeedbackReference(3);
+            yInfo()<<"Hand Feedback Finger 4: "<<m_gloveRightForceFeedbackReference(4);
         }
 
         if (m_useLeftHand)
