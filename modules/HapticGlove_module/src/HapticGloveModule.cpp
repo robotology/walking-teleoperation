@@ -135,6 +135,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             m_rightHandFingers->controlHelper()->getNumberOfJoints());
 
         m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
+        m_gloveRightForceFeedbackReference.resize(m_gloveRightHand->getNoOfForceFeedback(), 0.0);
     }
 
     m_timePreparationStarting = 0.0;
@@ -473,6 +474,23 @@ bool HapticGloveModule::updateModule()
                     << m_icubRightFingerJointsReference.toString();
         }
 
+        /*** COMPUTE FORCE FEEDBACK***/
+        if (m_useLeftHand)
+        {
+            // TODO
+        }
+        if (m_useRightHand)
+        {
+            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
+            //Axis
+            m_rightHandFingers->getFingerAxisFeedback(icubRightFingerAxisFeedback);
+            m_rightHandFingers->getFingerAxisReference(icubRightFingerAxisReference);
+
+            int k_gain=50;
+            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
+            m_gloveRightForceFeedbackReference(i)=k_gain*std::abs(icubRightFingerAxisFeedback[i]-icubRightFingerAxisReference[i]);
+        }
+
         if (m_useLeftHand)
         {
             m_leftHandFingers->setFingersJointReference(m_icubLeftFingerJointsReference);
@@ -481,8 +499,12 @@ bool HapticGloveModule::updateModule()
 
         if (m_useRightHand)
         {
+            // set robot values
             m_rightHandFingers->setFingersJointReference(m_icubRightFingerJointsReference);
             m_rightHandFingers->move();
+
+            // set glove values
+            m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
         }
 
         // right hand
@@ -498,45 +520,49 @@ bool HapticGloveModule::updateModule()
             m_logger->add(m_logger_prefix + "_time", yarp::os::Time::now());
 
             /* Left Hand */
-            // Axis
-            std::vector<double> icubLeftFingerAxisFeedback, icubLeftFingerAxisReference;
-            m_leftHandFingers->getFingerAxisFeedback(icubLeftFingerAxisFeedback);
-            m_leftHandFingers->getFingerAxisReference(icubLeftFingerAxisReference);
+            if (m_useLeftHand)
+            {
+                std::vector<double> icubLeftFingerAxisFeedback, icubLeftFingerAxisReference;
+                //Axis
+                m_leftHandFingers->getFingerAxisFeedback(icubLeftFingerAxisFeedback);
+                m_leftHandFingers->getFingerAxisReference(icubLeftFingerAxisReference);
 
-            m_logger->add(m_logger_prefix + "_icubLeftFingerAxisFeedback",
-                          icubLeftFingerAxisFeedback);
-            m_logger->add(m_logger_prefix + "_icubLeftFingerAxisReference",
-                          icubLeftFingerAxisReference);
-            // Joints
-            std::vector<double> icubLeftFingerJointsFeedback, icubLeftFingerJointsReference;
-            m_leftHandFingers->getFingerJointsFeedback(icubLeftFingerJointsFeedback);
-            m_leftHandFingers->getFingerJointReference(icubLeftFingerJointsReference);
+                m_logger->add(m_logger_prefix + "_icubLeftFingerAxisFeedback",
+                              icubLeftFingerAxisFeedback);
+                m_logger->add(m_logger_prefix + "_icubLeftFingerAxisReference",
+                              icubLeftFingerAxisReference);
+                // Joints
+                std::vector<double> icubLeftFingerJointsFeedback, icubLeftFingerJointsReference;
+                m_leftHandFingers->getFingerJointsFeedback(icubLeftFingerJointsFeedback);
+                m_leftHandFingers->getFingerJointReference(icubLeftFingerJointsReference);
 
-            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsFeedback",
-                          icubLeftFingerJointsFeedback);
-            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsReference",
-                          icubLeftFingerJointsReference);
-
+                m_logger->add(m_logger_prefix + "_icubLeftFingerJointsFeedback",
+                              icubLeftFingerJointsFeedback);
+                m_logger->add(m_logger_prefix + "_icubLeftFingerJointsReference",
+                              icubLeftFingerJointsReference);
+            }
             /* Right Hand */
             // Axis
-            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
-            m_rightHandFingers->getFingerAxisFeedback(icubRightFingerAxisFeedback);
-            m_rightHandFingers->getFingerAxisReference(icubRightFingerAxisReference);
+            if (m_useRightHand)
+            {
+                std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
+                m_rightHandFingers->getFingerAxisFeedback(icubRightFingerAxisFeedback);
+                m_rightHandFingers->getFingerAxisReference(icubRightFingerAxisReference);
 
-            m_logger->add(m_logger_prefix + "_icubRightFingerAxisFeedback",
-                          icubRightFingerAxisFeedback);
-            m_logger->add(m_logger_prefix + "_icubRightFingerAxisReference",
-                          icubRightFingerAxisReference);
-            // Joints
-            std::vector<double> icubRightFingerJointsReference, icubRightFingerJointsFeedback;
-            m_rightHandFingers->getFingerJointsFeedback(icubRightFingerJointsFeedback);
-            m_rightHandFingers->getFingerJointReference(icubRightFingerJointsReference);
+                m_logger->add(m_logger_prefix + "_icubRightFingerAxisFeedback",
+                              icubRightFingerAxisFeedback);
+                m_logger->add(m_logger_prefix + "_icubRightFingerAxisReference",
+                              icubRightFingerAxisReference);
+                // Joints
+                std::vector<double> icubRightFingerJointsReference, icubRightFingerJointsFeedback;
+                m_rightHandFingers->getFingerJointsFeedback(icubRightFingerJointsFeedback);
+                m_rightHandFingers->getFingerJointReference(icubRightFingerJointsReference);
 
-            m_logger->add(m_logger_prefix + "_icubRightFingerJointsReference",
-                          icubRightFingerJointsReference);
-            m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedback",
-                          icubRightFingerJointsFeedback);
-
+                m_logger->add(m_logger_prefix + "_icubRightFingerJointsReference",
+                              icubRightFingerJointsReference);
+                m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedback",
+                              icubRightFingerJointsFeedback);
+            }
             // GLOVE: based on data worn by human user
 //            m_logger->add(m_logger_prefix + "_humanHandPose", handPose);
 //            m_logger->add(m_logger_prefix + "_humanGlovePose", glovePose);
