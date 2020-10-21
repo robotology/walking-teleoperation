@@ -52,10 +52,11 @@ bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desir
         return false;
     }
 
+    std::cout <<"Desired Force Feedback: ";
     for (size_t i = 0; i < m_forceFbDof; i++)
     {
         if (desiredValue(i) > 0.0)
-            m_desiredForceValues[i] = (int)std::round(desiredValue(i));
+            m_desiredForceValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
         else
             m_desiredForceValues[i] = 0;
         std::cout << m_desiredForceValues[i] << " ";
