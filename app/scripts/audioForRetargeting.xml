@@ -16,37 +16,45 @@
   <module>
     <name>yarpdev</name>
     <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
-    <node>icub-head</node>
+    <node>icub</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
-    <name>yarphear</name>
-    <parameters>--name /icub/yarphear:i</parameters>
+    <name>yarpdev</name>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
     <node>icub-head</node>
+    <dependencies>
+      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
+    </dependencies>
   </module>
 
-   <module>
-    <name>yarphear</name>
-    <parameters>--name /virtualizer/yarphear:i</parameters>
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4</parameters>
     <node>icub-virtualizer</node>
+    <dependencies>
+      <port timeout="5.0" request="start" reply="[ok]">/icub/microphone/rpc</port>
+    </dependencies>
   </module>
 
   <!-- Connections -->
-  <!-- Hand retargeting  -->
   <connection>
-    <from>/virtualizer/microphone/audio:o</from>
-    <to>/icub/yarphear:i</to>
+    <from>/icub-virtualizer/microphone/audio:o</from>
+    <to>/icub/speakers/audio:i</to>
+    <protocol>udp</protocol>
   </connection>
 
   <connection>
     <from>/icub/microphone/audio:o</from>
-    <to>/virtualizer/yarphear:i</to>
+    <to>/icub-virtualizer/speakers/audio:i</to>
+    <protocol>udp</protocol>
   </connection>
+
 
 </application>
