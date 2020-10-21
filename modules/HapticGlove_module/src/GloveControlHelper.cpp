@@ -243,6 +243,10 @@ int GloveControlHelper::getNoOfBuzzMotors()
     return m_buzzDof;
 }
 
+int GloveControlHelper::getNoOfForceFeedback()
+{
+    return m_forceFbDof;
+}
 void GloveControlHelper::close()
 {
 }

@@ -53,6 +53,8 @@ private:
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
     yarp::sig::Vector m_gloveRightBuzzMotorReference;
+    yarp::sig::Vector m_gloveRightForceFeedbackReference;
+
 
     double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 

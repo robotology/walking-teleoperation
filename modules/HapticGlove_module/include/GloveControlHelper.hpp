@@ -121,6 +121,8 @@ public:
 
     int getNoOfBuzzMotors();
 
+    int getNoOfForceFeedback();
+
     /**
      * Setup the communication with the glove
      * @return true / false in case of success / failure
