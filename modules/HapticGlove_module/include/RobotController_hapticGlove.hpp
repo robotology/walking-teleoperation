@@ -1,13 +1,13 @@
 /**
- * @file HapticGloveFingersRetargeting.hpp
+ * @file RobotController_hapticGlove.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2020
  */
 
-#ifndef FINGERS_RETARGETING_HPP
-#define FINGERS_RETARGETING_HPP
+#ifndef ROBOT_CONTROLLER_HAPTIC_GLOVE_HPP
+#define ROBOT_CONTROLLER_HAPTIC_GLOVE_HPP
 
 // std
 #include <iostream>
@@ -23,14 +23,14 @@
 // iCub-ctrl
 #include <iCub/ctrl/pids.h>
 
-#include <HapticGloveRetargetingController.hpp>
+#include <RobotControlHelper_hapticGlove.hpp>
 
 using namespace yarp::math;
 
 /**
  * Class useful to manage the retargeting of fingers.
  */
-class FingersRetargeting : public RetargetingController
+class RobotController : public RobotControlHelper
 {
 private:
     yarp::sig::Vector m_fingersScaling; /**< It contains the finger velocity scaling. */

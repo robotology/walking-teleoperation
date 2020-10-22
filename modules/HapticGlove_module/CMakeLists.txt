@@ -74,18 +74,18 @@ endif(SENSEGLOVE_FOUND)
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
-  src/HapticGloveFingersRetargeting.cpp
-  src/HapticGloveRobotControlHelper.cpp
-  src/HapticGloveRetargetingController.cpp
+  src/RobotController_hapticGlove.cpp
+  src/RobotControlInterface_hapticGlove.cpp
+  src/RobotControlHelper_hapticGlove.cpp
   src/HapticGloveModule.cpp
   src/GloveControlHelper.cpp
   )
 
 # set hpp files
 set(${EXE_TARGET_NAME}_HDR
-  include/HapticGloveFingersRetargeting.hpp
-  include/HapticGloveRobotControlHelper.hpp
-  include/HapticGloveRetargetingController.hpp
+  include/RobotController_hapticGlove.hpp
+  include/RobotControlInterface_hapticGlove.hpp
+  include/RobotControlHelper_hapticGlove.hpp
   include/HapticGloveModule.hpp
   include/GloveControlHelper.hpp
   )
