@@ -11,12 +11,12 @@
 // iDynTree
 #include <iDynTree/Core/Utils.h>
 
-#include <HapticGloveRobotControlHelper.hpp>
+#include <RobotControlInterface_hapticGlove.hpp>
 #include <Utils.hpp>
 
 using namespace HapticGlove;
 
-bool RobotControlHelper::configure(const yarp::os::Searchable& config,
+bool RobotControlInterface::configure(const yarp::os::Searchable& config,
                                    const std::string& name,
                                    bool isMandatory)
 {
@@ -31,13 +31,13 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     yarp::os::Value* iCubPartsYarp;
     if (!config.check("remote_control_boards", iCubPartsYarp))
     {
-        yError() << "[RobotControlHelper::configure] Unable to find remote_control_boards into "
+        yError() << "[RobotControlInterface::configure] Unable to find remote_control_boards into "
                     "config file.";
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(iCubPartsYarp, iCubParts))
     {
-        yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a vector of "
+        yError() << "[RobotControlInterface::configure] Unable to convert yarp list into a vector of "
                     "strings.";
         return false;
     }
@@ -47,7 +47,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
 
     if (!YarpHelper::getStringFromSearchable(config, "remote_sensor_boards", iCubSensorPart))
     {
-        yError() << "[RobotControlHelper::configure] Unable to find remote_sensor_boards into "
+        yError() << "[RobotControlInterface::configure] Unable to find remote_sensor_boards into "
                     "config file.";
         return false;
     }
@@ -59,14 +59,14 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
 
     if (!m_analogDevice.open(optionsAnalogDevice))
     {
-        yError() << "[RobotControlHelper::configure] Could not open analogsensorclient "
+        yError() << "[RobotControlInterface::configure] Could not open analogsensorclient "
                     "object.";
         return false;
     }
 
     if (!m_analogDevice.view(m_AnalogSensorInterface) || !m_AnalogSensorInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IAnalogSensor interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IAnalogSensor interface";
         return false;
     }
 
@@ -89,13 +89,13 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     yarp::os::Value* axesListYarp;
     if (!config.check("axis_list", axesListYarp))
     {
-        yError() << "[RobotControlHelper::configure] Unable to find joints_list into config file.";
+        yError() << "[RobotControlInterface::configure] Unable to find joints_list into config file.";
         return false;
     }
 
     if (!YarpHelper::yarpListToStringVector(axesListYarp, m_axesList))
     {
-        yError() << "[RobotControlHelper::configure] Unable to convert yarp list into a "
+        yError() << "[RobotControlInterface::configure] Unable to convert yarp list into a "
                     "vector of strings.";
         return false;
     }
@@ -111,14 +111,14 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     if (!YarpHelper::getYarpVectorFromSearchable(
             config, "joints_min_boundary", m_joints_min_boundary))
     {
-        yError() << "RobotControlHelper::configure] unable to get the minimum boundary of the joints limits.";
+        yError() << "RobotControlInterface::configure] unable to get the minimum boundary of the joints limits.";
         return false;
     }
 
      if (!YarpHelper::getYarpVectorFromSearchable(
             config, "joints_max_boundary", m_joints_max_boundary))
     {
-        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
+        yError() << "RobotControlInterface::configure] unable to get the maximum boundary of the "
                     "joints limits.";
         return false;
     }
@@ -127,7 +127,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     if (!YarpHelper::getYarpVectorFromSearchable(
             config, "sensors_min_boundary", m_sensors_min_boundary))
     {
-        yError() << "RobotControlHelper::configure] unable to get the minimum boundary of the "
+        yError() << "RobotControlInterface::configure] unable to get the minimum boundary of the "
                     "joints limits.";
         return false;
     }
@@ -136,7 +136,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     if (!YarpHelper::getYarpVectorFromSearchable(
             config, "sensors_max_boundary", m_sensors_max_boundary))
     {
-        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
+        yError() << "RobotControlInterface::configure] unable to get the maximum boundary of the "
                     "joints limits.";
         return false;
     }
@@ -151,7 +151,7 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     if (!YarpHelper::getYarpVectorFromSearchable(
             config, "sensors_max_boundary", m_joints_max_boundary))
     {
-        yError() << "RobotControlHelper::configure] unable to get the maximum boundary of the "
+        yError() << "RobotControlInterface::configure] unable to get the maximum boundary of the "
                     "joints limits.";
         return false;
     }
@@ -181,50 +181,50 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     // open the device
     if (!m_robotDevice.open(optionsRobotDevice) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::configure] Could not open remotecontrolboardremapper "
+        yError() << "[RobotControlInterface::configure] Could not open remotecontrolboardremapper "
                     "object.";
         return false;
     }
 
     if (!m_robotDevice.view(m_encodersInterface) || !m_encodersInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IEncoders interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IEncoders interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_positionInterface) || !m_positionInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IPositionControl interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IPositionControl interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_positionDirectInterface) || !m_positionDirectInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IPositionDirect interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IPositionDirect interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_velocityInterface) || !m_velocityInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IVelocityInterface interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IVelocityInterface interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_limitsInterface) || !m_limitsInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IPositionDirect interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IPositionDirect interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_controlModeInterface) || !m_controlModeInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain IControlMode interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain IControlMode interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_timedInterface) || !m_timedInterface)
     {
-        yError() << "[RobotControlHelper::configure] Cannot obtain iTimed interface";
+        yError() << "[RobotControlInterface::configure] Cannot obtain iTimed interface";
         return false;
     }
 
@@ -243,24 +243,24 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     }
     if (!okPosition)
     {
-        yError() << "[RobotControlHelper::configure] Unable to read encoders (position).";
+        yError() << "[RobotControlInterface::configure] Unable to read encoders (position).";
         return false;
     }
 
     if (!switchToControlMode(m_controlMode))
     {
-        yError() << "[RobotControlHelper::configure] Unable to switch the control mode";
+        yError() << "[RobotControlInterface::configure] Unable to switch the control mode";
         return false;
     }
     return true;
 }
 
-bool RobotControlHelper::switchToControlMode(const int& controlMode)
+bool RobotControlInterface::switchToControlMode(const int& controlMode)
 {
     // check if the control interface is ready
     if (!m_controlModeInterface)
     {
-        yError() << "[RobotControlHelper::switchToControlMode] ControlMode I/F not ready.";
+        yError() << "[RobotControlInterface::switchToControlMode] ControlMode I/F not ready.";
         return false;
     }
 
@@ -269,24 +269,24 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
     if (!m_controlModeInterface->setControlModes(controlModes.data()) && m_isMandatory)
     {
         yError()
-            << "[RobotControlHelper::switchToControlMode] Error while setting the controlMode.";
+            << "[RobotControlInterface::switchToControlMode] Error while setting the controlMode.";
         return false;
     }
     return true;
 }
 
-bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& desiredPosition)
+bool RobotControlInterface::setDirectPositionReferences(const yarp::sig::Vector& desiredPosition)
 {
     if (m_positionDirectInterface == nullptr)
     {
         yError()
-            << "[RobotControlHelper::setDirectPositionReferences] PositionDirect I/F not ready.";
+            << "[RobotControlInterface::setDirectPositionReferences] PositionDirect I/F not ready.";
         return false;
     }
 
     if (desiredPosition.size() != m_actuatedDOFs)
     {
-        yError() << "[RobotControlHelper::setDirectPositionReferences] Dimension mismatch between "
+        yError() << "[RobotControlInterface::setDirectPositionReferences] Dimension mismatch between "
                     "desired position vector and the number of controlled joints.";
         return false;
     }
@@ -298,7 +298,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
     // set desired position
     if (!m_positionDirectInterface->setPositions(m_desiredJointValue.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setDirectPositionReferences] Error while setting the "
+        yError() << "[RobotControlInterface::setDirectPositionReferences] Error while setting the "
                     "desired position.";
         return false;
     }
@@ -306,17 +306,17 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
     return true;
 }
 
-bool RobotControlHelper::setPositionReferences(const yarp::sig::Vector& desiredPosition)
+bool RobotControlInterface::setPositionReferences(const yarp::sig::Vector& desiredPosition)
 {
     if (m_positionInterface == nullptr)
     {
-        yError() << "[RobotControlHelper::setPositionReferences] Position I/F not ready.";
+        yError() << "[RobotControlInterface::setPositionReferences] Position I/F not ready.";
         return false;
     }
 
     if (desiredPosition.size() != m_actuatedDOFs)
     {
-        yError() << "[RobotControlHelper::setDirectPositionReferences] Dimension mismatch between "
+        yError() << "[RobotControlInterface::setDirectPositionReferences] Dimension mismatch between "
                     "desired position vector and the number of controlled joints.";
         return false;
     }
@@ -328,7 +328,7 @@ bool RobotControlHelper::setPositionReferences(const yarp::sig::Vector& desiredP
     // set desired position
     if (!m_positionInterface->positionMove(m_desiredJointValue.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setPositionReferences] Error while setting the "
+        yError() << "[RobotControlInterface::setPositionReferences] Error while setting the "
                     "desired position.";
         return false;
     }
@@ -336,17 +336,17 @@ bool RobotControlHelper::setPositionReferences(const yarp::sig::Vector& desiredP
     return true;
 }
 
-bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredVelocity)
+bool RobotControlInterface::setVelocityReferences(const yarp::sig::Vector& desiredVelocity)
 {
     if (m_velocityInterface == nullptr)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
+        yError() << "[RobotControlInterface::setVelocityReferences] Velocity I/F not ready.";
         return false;
     }
 
     if (desiredVelocity.size() != m_actuatedDOFs)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Dimension mismatch between "
+        yError() << "[RobotControlInterface::setVelocityReferences] Dimension mismatch between "
                     "desired velocity vector and the number of controlled joints.";
         return false;
     }
@@ -360,21 +360,21 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
     yarp::sig::Vector dummy(m_actuatedDOFs, std::numeric_limits<double>::max());
     if (!m_velocityInterface->setRefAccelerations(dummy.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired "
+        yError() << "[RobotControlInterface::setVelocityReferences] Error while setting the desired "
                     "acceleration.";
         return false;
     }
 
     if (!m_velocityInterface->velocityMove(m_desiredJointValue.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Error while setting the desired "
+        yError() << "[RobotControlInterface::setVelocityReferences] Error while setting the desired "
                     "velocity.";
         return false;
     }
     return true;
 }
 
-void RobotControlHelper::updateTimeStamp()
+void RobotControlInterface::updateTimeStamp()
 {
     if (m_timedInterface)
         m_timeStamp = m_timedInterface->getLastInputStamp();
@@ -382,11 +382,11 @@ void RobotControlHelper::updateTimeStamp()
         m_timeStamp.update();
 }
 
-bool RobotControlHelper::getFeedback()
+bool RobotControlInterface::getFeedback()
 {
     if (!m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlHelper::getFeedbacks] Unable to get joint position";
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get joint position";
         return false;
     }
 
@@ -398,19 +398,19 @@ bool RobotControlHelper::getFeedback()
 
     if (!(m_AnalogSensorInterface->read(m_analogSensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
     {
-        yError() << "[RobotControlHelper::getFeedbacks] Unable to get analog sensor data";
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get analog sensor data";
         return false;
     }
     if (!getCalibratedFeedback())
     {
-        yError() << "[RobotControlHelper::getFeedbacks] Unable to get the calibrated analog "
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the calibrated analog "
                     "sensor data";
         return false;
     }
 
     if(!setAllJointsFeedback())
     {
-        yError() << "[RobotControlHelper::getFeedbacks] Unable to set all the interested joints feedback"
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to set all the interested joints feedback"
                     "sensor data";
         return false;
     }
@@ -418,7 +418,7 @@ bool RobotControlHelper::getFeedback()
     return true;
 }
 
-bool RobotControlHelper::getCalibratedFeedback()
+bool RobotControlInterface::getCalibratedFeedback()
 {
 
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
@@ -436,7 +436,7 @@ bool RobotControlHelper::getCalibratedFeedback()
     return true;
 }
 
-bool RobotControlHelper::setAllJointsFeedback()
+bool RobotControlInterface::setAllJointsFeedback()
 {
 
 
@@ -451,57 +451,59 @@ bool RobotControlHelper::setAllJointsFeedback()
     return true;
 }
 
-const yarp::os::Stamp& RobotControlHelper::timeStamp() const
+const yarp::os::Stamp& RobotControlInterface::timeStamp() const
 {
     return m_timeStamp;
 }
 
-yarp::os::Stamp& RobotControlHelper::timeStamp()
+yarp::os::Stamp& RobotControlInterface::timeStamp()
 {
     return m_timeStamp;
 }
 
-const yarp::sig::Vector& RobotControlHelper::jointEncoders() const
+const yarp::sig::Vector& RobotControlInterface::jointEncoders() const
 {
     return m_encoderPositionFeedbackInRadians;
 }
 
-const yarp::sig::Vector& RobotControlHelper::analogSensors() const
+const yarp::sig::Vector& RobotControlInterface::analogSensors() const
 {
     return m_analogSensorFeedbackInRadians;
 }
 
-const yarp::sig::Vector& RobotControlHelper::allSensors() const
+const yarp::sig::Vector& RobotControlInterface::allSensors() const
 {
     return m_allSensorFeedbackInRadians;
 }
 
-void RobotControlHelper::close()
+void RobotControlInterface::close()
 {
     if (!switchToControlMode(VOCAB_CM_POSITION))
-        yError() << "[RobotControlHelper::close] Unable to switch in position control.";
+        yError() << "[RobotControlInterface::close] Unable to switch in position control.";
 
     if (!m_robotDevice.close())
-        yError() << "[RobotControlHelper::close] Unable to close the device.";
+        yError() << "[RobotControlInterface::close] Unable to close the device.";
 }
 
-int RobotControlHelper::getActuatedDoFs()
+int RobotControlInterface::getActuatedDoFs()
 {
+    std::cerr<<"[RobotControlInterface::getActuatedDoFs() "<<std::endl;
+    std::cerr<<"[RobotControlInterface::getActuatedDoFs() "<<m_actuatedDOFs<<std::endl;
     return m_actuatedDOFs;
 }
 
-int RobotControlHelper::getNumberOfJoints()
+int RobotControlInterface::getNumberOfJoints()
 {
     //return m_noAnalogSensor;
     return m_noAllSensor;
 
 }
 
-bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
+bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
 {
     if (!getFeedback())
     {
-        yError() << "[RobotControlHelper::getLimits] Unable to get the feedback from the robot";
+        yError() << "[RobotControlInterface::getLimits] Unable to get the feedback from the robot";
         return false;
     }
 
@@ -516,7 +518,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
         {
             if (m_isMandatory)
             {
-                yError() << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                yError() << "[RobotControlInterface::getLimits] Unable get " << m_axesList[i]
                          << " joint limits.";
                 return false;
             } else
@@ -524,7 +526,7 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
                 limits(i, 0) = m_encoderPositionFeedbackInRadians(i);
                 limits(i, 1) = m_encoderPositionFeedbackInRadians(i);
                 yWarning()
-                    << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                    << "[RobotControlInterface::getLimits] Unable get " << m_axesList[i]
                     << " joint limits. The current joint value is used as lower and upper limits.";
             }
         } else
@@ -536,13 +538,13 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotControlHelper::getVelocityLimits(yarp::sig::Matrix& limits)
+bool RobotControlInterface::getVelocityLimits(yarp::sig::Matrix& limits)
 {
-    yInfo() << "RobotControlHelper::getVelocityLimits";
+    yInfo() << "RobotControlInterface::getVelocityLimits";
     if (!getFeedback())
     {
         yError()
-            << "[RobotControlHelper::getVelocityLimits] Unable to get the feedback from the robot";
+            << "[RobotControlInterface::getVelocityLimits] Unable to get the feedback from the robot";
         return false;
     }
     // resize matrix
@@ -554,7 +556,7 @@ bool RobotControlHelper::getVelocityLimits(yarp::sig::Matrix& limits)
         // get position limits
         if (!m_limitsInterface->getVelLimits(i, &minLimitInDegree, &maxLimitInDegree))
         {
-            yError() << "[RobotControlHelper::getVelocityLimits] Unable get " << m_axesList[i]
+            yError() << "[RobotControlInterface::getVelocityLimits] Unable get " << m_axesList[i]
                      << " joint limits.";
             return false;
 
@@ -567,14 +569,14 @@ bool RobotControlHelper::getVelocityLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue)
+bool RobotControlInterface::setJointReference(const yarp::sig::Vector& desiredValue)
 {
     switch (m_controlMode)
     {
     case VOCAB_CM_POSITION_DIRECT:
         if (!setDirectPositionReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+            yError() << "[RobotControlInterface::setJointReference] Unable to set the desired joint "
                         "position";
             return false;
         }
@@ -583,21 +585,21 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+            yError() << "[RobotControlInterface::setJointReference] Unable to set the desired joint "
                         "velocity";
             return false;
         }
         break;
 
     default:
-        yError() << "[RobotControlHelper::setJointReference] Unknown control mode.";
+        yError() << "[RobotControlInterface::setJointReference] Unknown control mode.";
         return false;
     }
 
     return true;
 }
 
-bool RobotControlHelper::isVelocityControlUsed()
+bool RobotControlInterface::isVelocityControlUsed()
 {
     return m_controlMode == VOCAB_CM_VELOCITY;
 }

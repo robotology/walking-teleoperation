@@ -27,7 +27,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
 
-#include <HapticGloveFingersRetargeting.hpp>
+#include <RobotController_hapticGlove.hpp>
 #include <GloveControlHelper.hpp>
 
 #ifdef ENABLE_LOGGER
@@ -71,9 +71,9 @@ private:
     bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
                          (default :: true)*/
 
-    std::unique_ptr<FingersRetargeting> m_leftHandFingers; /**< Pointer to the left
+    std::unique_ptr<RobotController> m_robotLeftHand; /**< Pointer to the left
                                                               finger retargeting object. */
-    std::unique_ptr<FingersRetargeting> m_rightHandFingers; /**< Pointer to the right
+    std::unique_ptr<RobotController> m_robotRightHand; /**< Pointer to the right
                                                                finger retargeting object. */
 
     std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveRightHand; /**< Pointer to the right
@@ -134,6 +134,13 @@ public:
      * @return true if it could open the logger
      */
     bool openLogger();
+
+    /**
+     * Log the data
+     */
+    void logData();
+
+
 };
 
 inline std::string getTimeDateMatExtension()

@@ -1,13 +1,13 @@
 /**
- * @file HapticGloveRobotControlHelper.hpp
+ * @file HapticGloveRobotControlInterface.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2020
  */
 
-#ifndef HAPTIC_GLOVE_ROBOT_CONTROL_HELPER_HPP
-#define HAPTIC_GLOVE_ROBOT_CONTROL_HELPER_HPP
+#ifndef ROBOT_CONTROL_INTERFACE_HAPTIC_GLOVE_HPP
+#define ROBOT_CONTROL_INTERFACE_HAPTIC_GLOVE_HPP
 
 // std
 #include <memory>
@@ -28,12 +28,12 @@
 #include <yarp/sig/Vector.h>
 
 /**
- * RobotControlHelper is an helper class for controlling the robot.
+ * RobotControlInterface is an helper class for controlling the robot.
  */
 namespace HapticGlove
 {
 
-class RobotControlHelper
+class RobotControlInterface
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
     yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
