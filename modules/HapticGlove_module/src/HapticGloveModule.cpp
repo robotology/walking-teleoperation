@@ -525,7 +525,7 @@ bool HapticGloveModule::updateModule()
             for (int i = 0; i < 5; i++)
                 m_gloveRightBuzzMotorReference(i) = m_gloveRightForceFeedbackReference(i);
 
-            m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+
 
         }
 
@@ -543,6 +543,7 @@ bool HapticGloveModule::updateModule()
 
             // set glove values
             m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
+             m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
         }
 
         // right hand
@@ -728,7 +729,7 @@ void HapticGloveModule::logData()
 
             std::vector<double> gloveRightFingerForceFeedback(m_gloveRightHand->getNoOfForceFeedback());
             for (int i=0;i < m_gloveRightHand->getNoOfForceFeedback(); i++)
-                m_gloveRightForceFeedbackReference[i]=m_gloveRightForceFeedbackReference(i);
+                gloveRightFingerForceFeedback[i]=m_gloveRightForceFeedbackReference(i);
             m_logger->add(m_logger_prefix + "_gloveRightForceFeedback", gloveRightFingerForceFeedback);
 
         }
