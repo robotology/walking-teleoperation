@@ -388,7 +388,8 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
     //    std::cout << "motor values:\n" << m_motorsData << std::endl;
     //    std::cout << "joint values:\n" << m_jointsData << std::endl;
     yarp::sig::Vector motorReference;
-    motorReference.resize(noAxis, 0.0);
+    motorReference.resize(noAxis, 0.0); //0.0
+    motorReference(0)=0.4;
     motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
     setFingersAxisReference(motorReference);
     move();

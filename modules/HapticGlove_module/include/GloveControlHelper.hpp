@@ -118,6 +118,7 @@ public:
      */
     bool turnOffBuzzMotors();
 
+    bool turnForceFeedback();
 
     int getNoOfBuzzMotors();
 
