@@ -239,6 +239,13 @@ bool GloveControlHelper::turnOffBuzzMotors()
     return true;
 }
 
+bool GloveControlHelper::turnForceFeedback()
+{
+    yInfo() << "[GloveControlHelper::turnForceFeedback]";
+    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd::off); // turn off all Force Feedback commands.
+    return true;
+
+}
 int GloveControlHelper::getNoOfBuzzMotors()
 {
     return m_buzzDof;
