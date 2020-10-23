@@ -216,7 +216,7 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     for (size_t i = 0; i < m_buzzDof; i++)
     {
         if (desiredValue(i) > 0.0)
-            m_desiredBuzzValues[i] = (int)std::round(desiredValue(i));
+            m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
         else
             m_desiredBuzzValues[i] = 0;
         std::cout << m_desiredBuzzValues[i] << " ";
