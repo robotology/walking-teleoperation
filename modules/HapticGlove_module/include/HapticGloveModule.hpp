@@ -83,6 +83,7 @@ private:
 
     bool m_enableLogger; /**< log the data (if ON) */
     bool m_useLeftHand, m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
+    double m_calibrationTimePeriod; /**< calibration time period [sec] */
 #ifdef ENABLE_LOGGER
     XBot::MatLogger2::Ptr m_logger; /**< */
     XBot::MatAppender::Ptr m_appender;
