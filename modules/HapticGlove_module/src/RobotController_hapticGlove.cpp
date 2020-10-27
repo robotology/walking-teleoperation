@@ -136,10 +136,15 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
         return false;
     }
 
+    yarp::sig::Vector motorFeedbackValue= controlHelper()->jointEncoders();
+    double k_gain= 0.75;
     for (unsigned i = 0; i < fingersReference.size(); i++)
     {
         m_desiredMotorValue(i) = fingersReference(i) * m_fingersScaling(i);
+        m_desiredMotorValue(i) =  (1-k_gain)* motorFeedbackValue(i)+ k_gain* m_desiredMotorValue(i);
     }
+
+
 
     //    if (m_fingerIntegrator == nullptr)
     //    {
