@@ -63,6 +63,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     m_calibrationTimePeriod = generalOptions.check("calibrationTimePeriod", yarp::os::Value(10.0)).asDouble();
     yInfo() << "[HapticGloveModule::configure] calibration time period: " << m_calibrationTimePeriod;
 
+    double smoothingTime = generalOptions.check("smoothingTime", yarp::os::Value(1.0)).asDouble();
+    yInfo()<<"[HapticGloveModule::configure] smoothingTime :"<<smoothingTime ;
+
     // check which hand to use
     m_useLeftHand = generalOptions.check("useLeftHand", yarp::os::Value(1)).asBool();
     m_useRightHand = generalOptions.check("useRightHand", yarp::os::Value(1)).asBool();
@@ -141,6 +144,17 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
 
         m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
         m_gloveRightForceFeedbackReference.resize(m_gloveRightHand->getNoOfForceFeedback(), 0.0);
+
+        m_axisErrorRightSmoother
+            = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotRightHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
+        yarp::sig::Vector buff(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
+
+        m_axisErrorRightSmoother->init(buff);
+
+        //Axis
+        m_icubRightFingerAxisError.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
+        m_icubRightFingerAxisErrorSmoothed.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
+
     }
 
     m_timePreparationStarting = 0.0;
@@ -236,8 +250,11 @@ bool HapticGloveModule::getFeedbacks()
                        "the right hand fingers.";
         }
         m_robotRightHand->getFingerAxisFeedback(m_icubRightFingerAxisFeedback);
+        m_robotRightHand->getFingerAxisReference(m_icubRightFingerAxisReference);
+
         m_robotRightHand->getFingerJointsFeedback(m_icubRightFingerJointsFeedback);
-        yInfo() << "right fingers axis: " << m_icubRightFingerAxisFeedback.toString();
+        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisFeedback.toString();
+        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisReference.toString();
         yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
     }
 
@@ -488,33 +505,40 @@ bool HapticGloveModule::updateModule()
         }
         if (m_useRightHand)
         {
-            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
-            //Axis
-            m_robotRightHand->getFingerAxisFeedback(icubRightFingerAxisFeedback);
-            m_robotRightHand->getFingerAxisReference(icubRightFingerAxisReference);
+//            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
+
+
+            for (int i=0; i<m_icubRightFingerAxisReference.size();i++)
+            {
+                m_icubRightFingerAxisError(i)= std::abs(m_icubRightFingerAxisFeedback(i) - m_icubRightFingerAxisReference(i));
+            }
+
+            m_axisErrorRightSmoother->computeNextValues(m_icubRightFingerAxisError);
+            m_icubRightFingerAxisErrorSmoothed = m_axisErrorRightSmoother->getPos();
+
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
             // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
-            yInfo()<<"Right Axis thumb: "<<icubRightFingerAxisFeedback[2]- icubRightFingerAxisReference[2]<<" , "
-                  << icubRightFingerAxisFeedback[1] - icubRightFingerAxisReference[1]<<" , " <<
-                     icubRightFingerAxisFeedback[0] - icubRightFingerAxisReference[0];
-            yInfo()<<"Right Axis index: "<<icubRightFingerAxisFeedback[4]- icubRightFingerAxisReference[4]<< " , "
-                  << icubRightFingerAxisFeedback[3]- icubRightFingerAxisReference[3];
-            yInfo()<<"Right Axis middle: "<<icubRightFingerAxisFeedback[6]- icubRightFingerAxisReference[6]<< " , "
-                  << icubRightFingerAxisFeedback[5]- icubRightFingerAxisReference[5];
-            yInfo()<<"Right Axis springy: "<<icubRightFingerAxisFeedback[7]- icubRightFingerAxisReference[7];
+            yInfo()<<"Right Axis thumb: "<<m_icubRightFingerAxisErrorSmoothed(2)<<" , "
+                  << m_icubRightFingerAxisErrorSmoothed(1)<<" , " <<
+                     m_icubRightFingerAxisErrorSmoothed(0);
+            yInfo()<<"Right Axis index: "<<m_icubRightFingerAxisErrorSmoothed(4)<< " , "
+                  << m_icubRightFingerAxisErrorSmoothed(3);
+            yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisErrorSmoothed(6)<< " , "
+                  << m_icubRightFingerAxisErrorSmoothed(5);
+            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisErrorSmoothed(7);
 
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
-            m_gloveRightForceFeedbackReference(0)=150*(std::abs(icubRightFingerAxisFeedback[2]-icubRightFingerAxisReference[2])
-                    + std::abs(icubRightFingerAxisFeedback[1]-icubRightFingerAxisReference[1]));
+            m_gloveRightForceFeedbackReference(0)=150*(m_icubRightFingerAxisErrorSmoothed(2)
+                    + m_icubRightFingerAxisErrorSmoothed(1));
             //                    + std::abs(icubRightFingerAxisFeedback[0]-icubRightFingerAxisReference[0])
-            m_gloveRightForceFeedbackReference(1)=150*(std::abs(icubRightFingerAxisFeedback[4]-icubRightFingerAxisReference[4])
-                    + std::abs(icubRightFingerAxisFeedback[3]-icubRightFingerAxisReference[3]));
-            m_gloveRightForceFeedbackReference(2)=50*(std::abs(icubRightFingerAxisFeedback[6]-icubRightFingerAxisReference[6])
-                    + std::abs(icubRightFingerAxisFeedback[5]-icubRightFingerAxisReference[5]));
-            m_gloveRightForceFeedbackReference(3)=100*(std::abs(icubRightFingerAxisFeedback[7]-icubRightFingerAxisReference[7]));
-            m_gloveRightForceFeedbackReference(4)=100*std::abs(icubRightFingerAxisFeedback[7]-icubRightFingerAxisReference[7]);
+            m_gloveRightForceFeedbackReference(1)=150*(m_icubRightFingerAxisErrorSmoothed(4)
+                    + m_icubRightFingerAxisErrorSmoothed(3));
+            m_gloveRightForceFeedbackReference(2)=50*(m_icubRightFingerAxisErrorSmoothed(6)
+                    + m_icubRightFingerAxisErrorSmoothed(5));
+            m_gloveRightForceFeedbackReference(3)=100*(m_icubRightFingerAxisErrorSmoothed(7));
+            m_gloveRightForceFeedbackReference(4)=100*std::abs(m_icubRightFingerAxisErrorSmoothed(7));
 
             yInfo()<<"Hand Feedback Finger 0: "<<m_gloveRightForceFeedbackReference(0);
             yInfo()<<"Hand Feedback Finger 1: "<<m_gloveRightForceFeedbackReference(1);
@@ -705,6 +729,23 @@ void HapticGloveModule::logData()
                           icubRightFingerAxisFeedback);
             m_logger->add(m_logger_prefix + "_icubRightFingerAxisReference",
                           icubRightFingerAxisReference);
+
+//    yarp::sig::Vector m_icubRightFingerAxisFeedback, m_icubRightFingerAxisReference, m_icubRightFingerAxisError, m_icubRightFingerAxisErrorSmoothed;
+            std::vector<double> icubRightFingerAxisError(m_robotRightHand->controlHelper()->getActuatedDoFs()), icubRightFingerAxisErrorSmoothed(m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+            for (int i =0; i<m_robotRightHand->controlHelper()->getActuatedDoFs(); i++)
+            {
+                icubRightFingerAxisError[i]=m_icubRightFingerAxisError(i);
+                icubRightFingerAxisErrorSmoothed[i]=m_icubRightFingerAxisErrorSmoothed(i);
+            }
+
+            m_logger->add(m_logger_prefix + "_icubRightFingerAxisError",
+                             icubRightFingerAxisError);
+            m_logger->add(m_logger_prefix + "_icubRightFingerAxisErrorSmoothed",
+                             icubRightFingerAxisErrorSmoothed);
+
+
+
             // Joints
             std::vector<double> icubRightFingerJointsReference, icubRightFingerJointsFeedback;
             m_robotRightHand->getFingerJointsFeedback(icubRightFingerJointsFeedback);
@@ -774,11 +815,20 @@ bool HapticGloveModule::openLogger()
                          m_robotRightHand->controlHelper()->getActuatedDoFs());
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisFeedback",
                          m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+        // robot axis errors
+        m_logger->create(m_logger_prefix + "_icubRightFingerAxisError",
+                         m_robotRightHand->controlHelper()->getActuatedDoFs());
+        m_logger->create(m_logger_prefix + "_icubRightFingerAxisErrorSmoothed",
+                         m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+
         // Robot hand joints
         m_logger->create(m_logger_prefix + "_icubRightFingerJointsReference",
                          m_robotRightHand->controlHelper()->getNumberOfJoints());
         m_logger->create(m_logger_prefix + "_icubRightFingerJointsFeedback",
                          m_robotRightHand->controlHelper()->getNumberOfJoints());
+
 
         // Human info comming from Glove
         m_logger->create(m_logger_prefix + "_humanRightHandPose", m_gloveRightHand->getNoHandLinks(), 7);
@@ -786,6 +836,7 @@ bool HapticGloveModule::openLogger()
         m_logger->create(m_logger_prefix + "_humanRightGlovePose", m_gloveRightHand->getNoGloveLinks(), 7);
         m_logger->create(m_logger_prefix + "_gloveRightSensors", m_gloveRightHand->getNoSensors());
         m_logger->create(m_logger_prefix + "_gloveRightForceFeedback", m_gloveRightHand->getNoOfForceFeedback());
+
 
     }
     yInfo() << "[HapticGloveModule::openLogger] Logging is active.";

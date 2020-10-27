@@ -30,6 +30,8 @@
 #include <RobotController_hapticGlove.hpp>
 #include <GloveControlHelper.hpp>
 
+#include <iCub/ctrl/minJerkCtrl.h>
+
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
 #include <matlogger2/utils/mat_appender.h>
@@ -58,6 +60,11 @@ private:
 
     double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_axisErrorRightSmoother{nullptr};
+
+    yarp::sig::Vector m_icubRightFingerAxisError, m_icubRightFingerAxisErrorSmoothed;
+
+
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
     {
@@ -80,6 +87,8 @@ private:
                                                                hand glove object. */
     std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveLeftHand; /**< Pointer to the left
                                                                hand glove object. */
+
+
 
     bool m_enableLogger; /**< log the data (if ON) */
     bool m_useLeftHand, m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
