@@ -21,6 +21,7 @@
 #include <yarp/dev/IPositionControl.h>
 #include <yarp/dev/IPositionDirect.h>
 #include <yarp/dev/IVelocityControl.h>
+#include <yarp/dev/ICurrentControl.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
@@ -53,7 +54,8 @@ class RobotControlInterface
     yarp::dev::IVelocityControl* m_velocityInterface{nullptr}; /**< Velocity control interface. */
     yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
     yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */
-    yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /*Sensor interface*< */
+    yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /**< Sensor interface */
+    yarp::dev::ICurrentControl* m_currentInterface{nullptr};/**< current control interface */
 
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
     yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< Joint position [deg]. */
@@ -63,7 +65,8 @@ class RobotControlInterface
     yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
     yarp::sig::Vector m_analogSensorFeedbackSelected; /**< sensor info to read*/
     yarp::sig::Vector m_allSensorFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
-
+    yarp::sig::Vector m_currentFeedback;/**< motor current feedbacks*/
+    yarp::sig::Vector m_desiredCurrent;/**< motor current reference*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -105,6 +108,17 @@ class RobotControlInterface
      * @return true / false in case of success / failure
      */
     bool setVelocityReferences(const yarp::sig::Vector& desiredVelocity);
+
+    /**
+     * Set the desired motor current
+     * @param desiredCurrent desired motor currents
+     * @return true / false in case of success / failure
+     */
+    bool setCurrentReferences(const yarp::sig::Vector& desiredCurrent);
+
+
+
+
 
 public:
     /**
@@ -196,6 +210,12 @@ public:
      * @return all the intersted sensor values
      */
     const yarp::sig::Vector& allSensors() const;
+
+    /**
+     * Get all the intersted motor current values
+     * @return all the motor current values
+     */
+    const yarp::sig::Vector& motorCurrents() const;
 
 
 

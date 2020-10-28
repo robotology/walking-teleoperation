@@ -227,10 +227,18 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         yError() << "[RobotControlInterface::configure] Cannot obtain iTimed interface";
         return false;
     }
+    m_currentInterface;
+    if (!m_robotDevice.view(m_currentInterface) || !m_currentInterface)
+    {
+        yError() << "[RobotControlInterface::configure] Cannot obtain ICurrentControl interface";
+        return false;
+    }
 
     m_desiredJointValue.resize(m_actuatedDOFs);
     m_encoderPositionFeedbackInDegrees.resize(m_actuatedDOFs);
     m_encoderPositionFeedbackInRadians.resize(m_actuatedDOFs);
+    m_desiredCurrent.resize(m_actuatedDOFs);
+    m_currentFeedback.resize(m_actuatedDOFs);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -374,6 +382,35 @@ bool RobotControlInterface::setVelocityReferences(const yarp::sig::Vector& desir
     return true;
 }
 
+bool RobotControlInterface::setCurrentReferences(const yarp::sig::Vector& desiredCurrent)
+{
+    if (m_currentInterface== nullptr)
+    {
+        yError() << "[RobotControlInterface::setCurrentReferences] Current I/F not ready.";
+        return false;
+    }
+
+    if (desiredCurrent.size() != m_actuatedDOFs)
+    {
+        yError() << "[RobotControlInterface::setCurrentReferences] Dimension mismatch between "
+                    "desired current vector and the number of controlled joints.";
+        return false;
+    }
+
+    // update the desired current values
+    for (int i = 0; i < m_actuatedDOFs; i++)
+        m_desiredCurrent(i) = desiredCurrent(i);
+
+    // set desired current
+    if (!m_currentInterface->setRefCurrents(m_desiredCurrent.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::setCurrentReferences] Error while setting the "
+                    "desired current.";
+        return false;
+    }
+    return true;
+}
+
 void RobotControlInterface::updateTimeStamp()
 {
     if (m_timedInterface)
@@ -412,6 +449,12 @@ bool RobotControlInterface::getFeedback()
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to set all the interested joints feedback"
                     "sensor data";
+        return false;
+    }
+
+    if (!m_currentInterface->getCurrents(m_currentFeedback.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor current feedbacks";
         return false;
     }
 
@@ -474,6 +517,11 @@ const yarp::sig::Vector& RobotControlInterface::analogSensors() const
 const yarp::sig::Vector& RobotControlInterface::allSensors() const
 {
     return m_allSensorFeedbackInRadians;
+}
+
+const yarp::sig::Vector& RobotControlInterface::motorCurrents() const
+{
+    return m_currentFeedback;
 }
 
 void RobotControlInterface::close()
