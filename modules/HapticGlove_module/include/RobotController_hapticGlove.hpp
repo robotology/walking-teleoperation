@@ -112,6 +112,18 @@ public:
     void getFingerJointsFeedback(std::vector<double>& fingerValues);
 
     /**
+     * Get the motor current values
+     * @param motorCurrentFeedback get the motor current feedback values
+     */
+    void getMotorCurrentFeedback(std::vector<double>& motorCurrentFeedback);
+
+    /**
+     * Get the motor current values
+     * @param motorCurrentFeedback get the motor current feedback values
+     */
+    void getMotorCurrentFeedback(yarp::sig::Vector& motorCurrentFeedback);
+
+    /**
      * Get the fingers joint reference values
      * @param fingerJointsReference get the finger joint velocity or value
      */
