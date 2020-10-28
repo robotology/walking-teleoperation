@@ -269,6 +269,24 @@ void RobotController::getFingerJointsFeedback(std::vector<double>& fingerJointsV
     }
 }
 
+void RobotController::getMotorCurrentFeedback(yarp::sig::Vector& motorCurrentFeedback)
+{
+    motorCurrentFeedback.clear();
+    motorCurrentFeedback = controlHelper()->motorCurrents();
+}
+
+void RobotController::getMotorCurrentFeedback(std::vector<double>& motorCurrentFeedback)
+{
+    motorCurrentFeedback.clear();
+    yarp::sig::Vector Temp = controlHelper()->motorCurrents();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        motorCurrentFeedback.push_back(Temp(i));
+    }
+
+}
+
+
 bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingRandom(
     const bool generateRandomVelocity)
 {

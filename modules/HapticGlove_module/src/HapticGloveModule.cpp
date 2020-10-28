@@ -730,8 +730,13 @@ void HapticGloveModule::logData()
             m_logger->add(m_logger_prefix + "_icubRightFingerAxisReference",
                           icubRightFingerAxisReference);
 
-//    yarp::sig::Vector m_icubRightFingerAxisFeedback, m_icubRightFingerAxisReference, m_icubRightFingerAxisError, m_icubRightFingerAxisErrorSmoothed;
-            std::vector<double> icubRightFingerAxisError(m_robotRightHand->controlHelper()->getActuatedDoFs()), icubRightFingerAxisErrorSmoothed(m_robotRightHand->controlHelper()->getActuatedDoFs());
+            std::vector<double> icubRightHandMotorCurrentFeedback;
+            m_robotRightHand->getMotorCurrentFeedback(icubRightHandMotorCurrentFeedback);
+            m_logger->add(m_logger_prefix + "icubRightHandMotorCurrnetFeedback",
+                          icubRightHandMotorCurrentFeedback);
+
+            std::vector<double> icubRightFingerAxisError(m_robotRightHand->controlHelper()->getActuatedDoFs()),
+                    icubRightFingerAxisErrorSmoothed(m_robotRightHand->controlHelper()->getActuatedDoFs());
 
             for (int i =0; i<m_robotRightHand->controlHelper()->getActuatedDoFs(); i++)
             {
@@ -815,6 +820,9 @@ bool HapticGloveModule::openLogger()
                          m_robotRightHand->controlHelper()->getActuatedDoFs());
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisFeedback",
                          m_robotRightHand->controlHelper()->getActuatedDoFs());
+        m_logger->create(m_logger_prefix + "_icubRightHandMotorCurrnetFeedback",
+                         m_robotRightHand->controlHelper()->getActuatedDoFs());
+
 
         // robot axis errors
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisError",
