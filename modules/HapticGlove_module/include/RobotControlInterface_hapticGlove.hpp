@@ -60,6 +60,8 @@ class RobotControlInterface
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
     yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< Joint position [deg]. */
     yarp::sig::Vector m_encoderPositionFeedbackInRadians; /**< Joint position [rad]. */
+    yarp::sig::Vector m_encoderVelocityFeedbackInDegrees; /**< Axis velocities [deg/sec]. */
+    yarp::sig::Vector m_encoderVelocityFeedbackInRadians; /**< Axis velocities [rad/sec]. */
     yarp::sig::Vector m_analogSensorFeedbackRaw; /**< sensor feedback [raw]*/
     yarp::sig::Vector m_analogSensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
@@ -67,6 +69,7 @@ class RobotControlInterface
     yarp::sig::Vector m_allSensorFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
     yarp::sig::Vector m_currentFeedback;/**< motor current feedbacks*/
     yarp::sig::Vector m_desiredCurrent;/**< motor current reference*/
+    yarp::sig::Vector m_desiredCurrentInterface;/**< motor current reference*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -200,6 +203,13 @@ public:
     const yarp::sig::Vector& jointEncoders() const;
 
     /**
+     * Get the joint encoders speed
+     * @return the joint encoder speed
+     */
+    const yarp::sig::Vector& jointEncodersSpeed() const;
+
+
+    /**
      * Get the analog sensors value
      * @return the analog sensor values
      */
@@ -216,6 +226,12 @@ public:
      * @return all the motor current values
      */
     const yarp::sig::Vector& motorCurrents() const;
+
+    /**
+     * Get all the intersted motor current References
+     * @return all the motor current References
+     */
+    const yarp::sig::Vector& motorCurrentReference() const;
 
 
 
