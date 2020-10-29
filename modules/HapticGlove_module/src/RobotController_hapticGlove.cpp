@@ -137,7 +137,7 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
     }
 
     yarp::sig::Vector motorFeedbackValue= controlHelper()->jointEncoders();
-    double k_gain= 0.75;
+    double k_gain= 0.9;
     for (unsigned i = 0; i < fingersReference.size(); i++)
     {
         m_desiredMotorValue(i) = fingersReference(i) * m_fingersScaling(i);
@@ -198,12 +198,12 @@ bool RobotController::setFingersJointReference(const yarp::sig::Vector& fingersR
     return true;
 }
 
-void RobotController::getFingerAxisReference(yarp::sig::Vector& fingerAxisReference)
+void RobotController::getFingerAxisValueReference(yarp::sig::Vector& fingerAxisReference)
 {
     fingerAxisReference = m_desiredMotorValue;
 }
 
-void RobotController::getFingerAxisReference(std::vector<double>& fingerAxisReference)
+void RobotController::getFingerAxisValueReference(std::vector<double>& fingerAxisReference)
 {
     fingerAxisReference.clear();
     for (size_t i = 0; i < m_desiredMotorValue.size(); i++)
@@ -211,6 +211,7 @@ void RobotController::getFingerAxisReference(std::vector<double>& fingerAxisRefe
         fingerAxisReference.push_back(m_desiredMotorValue(i));
     }
 }
+
 
 void RobotController::getFingerJointReference(yarp::sig::Vector& fingerJointsReference)
 {
@@ -253,6 +254,22 @@ void RobotController::getFingerAxisFeedback(std::vector<double>& fingerAxisValue
         fingerAxisValues.push_back(Temp(i));
     }
 }
+void RobotController::getFingerAxisVelocityFeedback(yarp::sig::Vector& fingerAxisVelocityFeedback)
+{
+    fingerAxisVelocityFeedback.clear();
+    fingerAxisVelocityFeedback = controlHelper()->jointEncodersSpeed();
+}
+
+void RobotController::getFingerAxisVelocityFeedback(std::vector<double>& fingerAxisVelocityFeedback)
+{
+    fingerAxisVelocityFeedback.clear();
+    yarp::sig::Vector Temp = controlHelper()->jointEncodersSpeed();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        fingerAxisVelocityFeedback.push_back(Temp(i));
+    }
+
+}
 void RobotController::getFingerJointsFeedback(yarp::sig::Vector& fingerJointsValues)
 {
     fingerJointsValues.clear();
@@ -285,6 +302,23 @@ void RobotController::getMotorCurrentFeedback(std::vector<double>& motorCurrentF
     }
 
 }
+
+void RobotController::getMotorCurrentReference(yarp::sig::Vector& motorCurrentReference)
+{
+    motorCurrentReference.clear();
+    motorCurrentReference = controlHelper()->motorCurrentReference();
+}
+
+void RobotController::getMotorCurrentReference(std::vector<double>& motorCurrentReference)
+{
+    motorCurrentReference.clear();
+    yarp::sig::Vector Temp = controlHelper()->motorCurrentReference();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        motorCurrentReference.push_back(Temp(i));
+    }
+}
+
 
 
 bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingRandom(

@@ -100,6 +100,18 @@ public:
     void getFingerAxisFeedback(std::vector<double>& fingerValues);
 
     /**
+     * Get the fingers axis velocity feedback values
+     * @param fingerAxisVelocityFeedback get the finger motor velocity feedback
+     */
+    void getFingerAxisVelocityFeedback(yarp::sig::Vector& fingerAxisVelocityFeedback);
+
+    /**
+     * Get the fingers axis velocity feedback values
+     * @param fingerAxisVelocityFeedback get the finger motor velocity feedback
+     */
+    void getFingerAxisVelocityFeedback(std::vector<double>& fingerAxisVelocityFeedback);
+
+    /**
      * Get the fingers joint velocities or values
      * @param fingerValue get the finger joint velocity or value
      */
@@ -124,16 +136,28 @@ public:
     void getMotorCurrentFeedback(yarp::sig::Vector& motorCurrentFeedback);
 
     /**
-     * Get the fingers joint reference values
-     * @param fingerJointsReference get the finger joint velocity or value
+     * Get the motor current values
+     * @param motorCurrentFeedback get the motor current feedback values
      */
-    void getFingerAxisReference(yarp::sig::Vector& fingerAxisReference);
+    void getMotorCurrentReference(std::vector<double>& motorCurrentReference);
+
+    /**
+     * Get the motor current values
+     * @param motorCurrentFeedback get the motor current feedback values
+     */
+    void getMotorCurrentReference(yarp::sig::Vector& motorCurrentReference);
 
     /**
      * Get the fingers joint reference values
      * @param fingerJointsReference get the finger joint velocity or value
      */
-    void getFingerAxisReference(std::vector<double>& fingerAxisReference);
+    void getFingerAxisValueReference(yarp::sig::Vector& fingerAxisReference);
+
+    /**
+     * Get the fingers joint reference values
+     * @param fingerJointsReference get the finger joint velocity or value
+     */
+    void getFingerAxisValueReference(std::vector<double>& fingerAxisReference);
 
     /**
      * Get the fingers joint velocities or values

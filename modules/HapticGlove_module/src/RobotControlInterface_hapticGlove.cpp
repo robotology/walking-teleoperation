@@ -237,7 +237,11 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     m_desiredJointValue.resize(m_actuatedDOFs);
     m_encoderPositionFeedbackInDegrees.resize(m_actuatedDOFs);
     m_encoderPositionFeedbackInRadians.resize(m_actuatedDOFs);
+    m_encoderVelocityFeedbackInDegrees.resize(m_actuatedDOFs);
+    m_encoderVelocityFeedbackInRadians.resize(m_actuatedDOFs);
+
     m_desiredCurrent.resize(m_actuatedDOFs);
+    m_desiredCurrentInterface.resize(m_actuatedDOFs);
     m_currentFeedback.resize(m_actuatedDOFs);
 
     // check if the robot is alive
@@ -432,6 +436,18 @@ bool RobotControlInterface::getFeedback()
     yInfo() << "m_encoderPositionFeedbackInDegrees" << m_encoderPositionFeedbackInDegrees.toString();
     yInfo() << "m_encoderPositionFeedbackInRadians" << m_encoderPositionFeedbackInRadians.toString();
 
+    if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get Axis velocity feedback";
+        return false;
+    }
+
+    for (unsigned j = 0; j < m_actuatedDOFs; ++j)
+        m_encoderVelocityFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
+    yInfo() << "m_encoderVelocityFeedbackInDegrees" << m_encoderVelocityFeedbackInDegrees.toString();
+    yInfo() << "m_encoderVelocityFeedbackInRadians" << m_encoderVelocityFeedbackInRadians.toString();
+
+
 
     if (!(m_AnalogSensorInterface->read(m_analogSensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
     {
@@ -458,6 +474,11 @@ bool RobotControlInterface::getFeedback()
         return false;
     }
 
+    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired current from the interface";
+        return false;
+    }
     return true;
 }
 
@@ -509,6 +530,11 @@ const yarp::sig::Vector& RobotControlInterface::jointEncoders() const
     return m_encoderPositionFeedbackInRadians;
 }
 
+const yarp::sig::Vector& RobotControlInterface::jointEncodersSpeed() const
+{
+    return m_encoderVelocityFeedbackInRadians;
+}
+
 const yarp::sig::Vector& RobotControlInterface::analogSensors() const
 {
     return m_analogSensorFeedbackInRadians;
@@ -522,6 +548,11 @@ const yarp::sig::Vector& RobotControlInterface::allSensors() const
 const yarp::sig::Vector& RobotControlInterface::motorCurrents() const
 {
     return m_currentFeedback;
+}
+
+const yarp::sig::Vector& RobotControlInterface::motorCurrentReference() const
+{
+    return m_desiredCurrentInterface;
 }
 
 void RobotControlInterface::close()
