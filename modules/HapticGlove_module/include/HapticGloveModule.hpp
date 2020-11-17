@@ -54,15 +54,16 @@ private:
     yarp::sig::Vector m_icubRightFingerAxisReference, m_icubRightFingerAxisFeedback;
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
-    yarp::sig::Vector m_gloveRightBuzzMotorReference;
-    yarp::sig::Vector m_gloveRightForceFeedbackReference;
+    yarp::sig::Vector m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
+    yarp::sig::Vector m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
 
 
     double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 
-    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_axisErrorRightSmoother{nullptr};
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_axisErrorRightSmoother{nullptr}, m_axisErrorLeftSmoother{nullptr};
 
     yarp::sig::Vector m_icubRightFingerAxisError, m_icubRightFingerAxisErrorSmoothed;
+    yarp::sig::Vector m_icubLeftFingerAxisError, m_icubLeftFingerAxisErrorSmoothed;
 
 
     /** Haptic Glove Finite state machine */
