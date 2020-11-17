@@ -254,6 +254,9 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_useXsens = generalOptions.check("useXsens", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses Xsens: " << m_useXsens;
 
+    m_useSenseGlove = generalOptions.check("useSenseGlove", yarp::os::Value(false)).asBool();
+    yInfo() << "Teleoperation uses SenseGlove: " << m_useSenseGlove;
+
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
     {
@@ -287,23 +290,28 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
     yInfo() << "[OculusModule::configure] finish the torso!";
 
-    // configure fingers retargeting
-    m_leftHandFingers = std::make_unique<FingersRetargeting>();
-    yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
-    leftFingersOptions.append(generalOptions);
-    if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
+    if (!m_useSenseGlove)
     {
-        yError() << "[OculusModule::configure] Unable to initialize the left fingers retargeting.";
-        return false;
-    }
+        // configure fingers retargeting
+        m_leftHandFingers = std::make_unique<FingersRetargeting>();
+        yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
+        leftFingersOptions.append(generalOptions);
+        if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
+        {
+            yError()
+                << "[OculusModule::configure] Unable to initialize the left fingers retargeting.";
+            return false;
+        }
 
-    m_rightHandFingers = std::make_unique<FingersRetargeting>();
-    yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
-    rightFingersOptions.append(generalOptions);
-    if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
-    {
-        yError() << "[OculusModule::configure] Unable to initialize the right fingers retargeting.";
-        return false;
+        m_rightHandFingers = std::make_unique<FingersRetargeting>();
+        yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
+        rightFingersOptions.append(generalOptions);
+        if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
+        {
+            yError()
+                << "[OculusModule::configure] Unable to initialize the right fingers retargeting.";
+            return false;
+        }
     }
 
     // configure hands retargeting
@@ -430,8 +438,12 @@ bool OculusModule::close()
 
     // close devices
     m_head->controlHelper()->close();
-    m_rightHandFingers->controlHelper()->close();
-    m_leftHandFingers->controlHelper()->close();
+
+    if (!m_useSenseGlove)
+    {
+        m_rightHandFingers->controlHelper()->close();
+        m_leftHandFingers->controlHelper()->close();
+    }
 
     if (m_useXsens)
     {
@@ -693,37 +705,40 @@ bool OculusModule::updateModule()
             locCmd.push_back(y);
         }
 
-        // left fingers
-        double leftFingersVelocity
-            = evaluateDesiredFingersVelocity(m_squeezeLeftIndex, m_releaseLeftIndex);
-        if (!m_leftHandFingers->setFingersVelocity(leftFingersVelocity))
+        if (!m_useSenseGlove)
         {
-            yError() << "[OculusModule::updateModule] Unable to set the left finger velocity.";
-            return false;
-        }
-        if (m_moveRobot)
-        {
-            if (!m_leftHandFingers->move())
+            // left fingers
+            double leftFingersVelocity
+                = evaluateDesiredFingersVelocity(m_squeezeLeftIndex, m_releaseLeftIndex);
+            if (!m_leftHandFingers->setFingersVelocity(leftFingersVelocity))
             {
-                yError() << "[OculusModule::updateModule] Unable to move the left finger";
+                yError() << "[OculusModule::updateModule] Unable to set the left finger velocity.";
                 return false;
             }
-        }
-
-        // right fingers
-        double rightFingersVelocity
-            = evaluateDesiredFingersVelocity(m_squeezeRightIndex, m_releaseRightIndex);
-        if (!m_rightHandFingers->setFingersVelocity(rightFingersVelocity))
-        {
-            yError() << "[OculusModule::updateModule] Unable to set the right finger velocity.";
-            return false;
-        }
-        if (m_moveRobot)
-        {
-            if (!m_rightHandFingers->move())
+            if (m_moveRobot)
             {
-                yError() << "[OculusModule::updateModule] Unable to move the right finger";
+                if (!m_leftHandFingers->move())
+                {
+                    yError() << "[OculusModule::updateModule] Unable to move the left finger";
+                    return false;
+                }
+            }
+
+            // right fingers
+            double rightFingersVelocity
+                = evaluateDesiredFingersVelocity(m_squeezeRightIndex, m_releaseRightIndex);
+            if (!m_rightHandFingers->setFingersVelocity(rightFingersVelocity))
+            {
+                yError() << "[OculusModule::updateModule] Unable to set the right finger velocity.";
                 return false;
+            }
+            if (m_moveRobot)
+            {
+                if (!m_rightHandFingers->move())
+                {
+                    yError() << "[OculusModule::updateModule] Unable to move the right finger";
+                    return false;
+                }
             }
         }
 
