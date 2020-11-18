@@ -8,13 +8,6 @@
 set(EXE_TARGET_NAME VirtualizerModule)
 
 
-find_package(CybSDK REQUIRED)
-if(NOT CybSDK_FOUND)
-  message( WARNING "${EXE_TARGET_NAME}: CybSDK Library is not found." )
-  return()
-endif()
-
-
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 mark_as_advanced(ENABLE_RPATH)
 include(AddInstallRPATHSupport)

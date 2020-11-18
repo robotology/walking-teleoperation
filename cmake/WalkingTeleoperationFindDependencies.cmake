@@ -120,4 +120,8 @@ endmacro()
 find_package(HumanDynamicsEstimation QUIET)
 checkandset_dependency(HumanDynamicsEstimation)
 
+find_package(CybSDK QUIET)
+checkandset_dependency(CybSDK)
+
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
+WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
