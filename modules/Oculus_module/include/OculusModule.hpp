@@ -176,6 +176,14 @@ private:
     bool configureJoypad(const yarp::os::Searchable& config);
 
     /**
+     * @brief Reset a robot camera to its default settings.
+     * @param cameraPort The remote port to the camera
+     * @param localPort The local port needed for the driver to open
+     * @return true in case of success and false otherwise.
+     */
+    bool resetCamera(const std::string& cameraPort, const std::string& localPort);
+
+    /**
      * Get all the feedback signal from the interfaces
      * @return true in case of success and false otherwise.
      */

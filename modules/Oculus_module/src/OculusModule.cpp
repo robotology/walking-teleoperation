@@ -194,6 +194,41 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     return true;
 }
 
+bool OculusModule::resetCamera(const std::string &cameraPort, const std::string &localPort)
+{
+    yarp::dev::PolyDriver grabberDriver;
+
+    yarp::os::Property config;
+    config.put("device", "remote_grabber");
+    config.put("remote", cameraPort);
+    config.put("local", localPort);
+
+    bool opened = grabberDriver.open(config);
+    if(!opened)
+    {
+        yError() << "[OculusModule::configure] Cannot open remote_grabber device on port " << cameraPort <<".";
+        return false;
+    }
+
+    yarp::dev::IFrameGrabberControlsDC1394 *grabberInterface;
+
+    if(!grabberDriver.view(grabberInterface) || !grabberInterface)
+    {
+        yError() << "[OculusModule::configure] RemoteGrabber does not have IFrameGrabberControlDC1394 interface, please update yarp.";
+        return false;
+    }
+
+    if(!grabberInterface->setResetDC1394())
+    {
+        yError() << "[OculusModule::configure] Failed to reset the camera on port " << cameraPort << ".";
+        return false;
+    }
+
+    grabberDriver.close();
+
+    return true;
+};
+
 bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 {
     if (!configureTranformClient(config))
@@ -423,61 +458,27 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     yInfo() << "[OculusModule::configure] Reset camera: " << resetCameras;
     if (resetCameras)
     {
-        auto cameraReset = [](const std::string& cameraPort, const std::string& localPort) -> bool
+
+        std::string leftCameraPort, rightCameraPort;
+        if (!YarpHelper::getStringFromSearchable(generalOptions, "leftCameraPort", leftCameraPort))
         {
-            yarp::dev::PolyDriver grabberDriver;
-
-            yarp::os::Property config;
-            config.put("device", "remote_grabber");
-            config.put("remote", cameraPort);
-            config.put("local", localPort);
-
-            bool opened = grabberDriver.open(config);
-            if(!opened)
-            {
-                yError() << "[OculusModule::configure] Cannot open remote_grabber device on port " << cameraPort <<".";
-                return false;
-            }
-
-            yarp::dev::IFrameGrabberControlsDC1394 *grabberInterface;
-
-            if(!grabberDriver.view(grabberInterface) || !grabberInterface)
-            {
-                yWarning() << "[OculusModule::configure] RemoteGrabber does not have IFrameGrabberControlDC1394 interface, please update yarp.";
-                return false;
-            }
-
-            if(!grabberInterface->setResetDC1394())
-            {
-                yWarning() << "[OculusModule::configure] Failed to reset the camera on port " << cameraPort << ".";
-                return false;
-            }
-
-            grabberDriver.close();
-
-            return true;
-        };
-
-        std::string leftCamera, rightCamera;
-        if (!YarpHelper::getStringFromSearchable(generalOptions, "leftCameraPort", leftCamera))
-        {
-            yError() << "[OculusModule::configure] resetCameras is non-zero, but no leftCameraPort is provided.";
+            yError() << "[OculusModule::configure] resetCameras is true, but leftCameraPort is not provided.";
             return false;
         }
 
-        if (!YarpHelper::getStringFromSearchable(generalOptions, "rightCameraPort", rightCamera))
+        if (!YarpHelper::getStringFromSearchable(generalOptions, "rightCameraPort", rightCameraPort))
         {
-            yError() << "[OculusModule::configure] resetCameras is non-zero, but no rightCameraPort is provided.";
+            yError() << "[OculusModule::configure] resetCameras is true, but rightCameraPort is not provided.";
             return false;
         }
 
-        if (!cameraReset(leftCamera,"/walking-teleoperation/camera-reset/left"))
+        if (!resetCamera(leftCameraPort,"/walking-teleoperation/camera-reset/left"))
         {
             yError() << "[OculusModule::configure] Failed to reset left camera.";
             return false;
         }
 
-        if (!cameraReset(rightCamera,"/walking-teleoperation/camera-reset/right"))
+        if (!resetCamera(rightCameraPort,"/walking-teleoperation/camera-reset/right"))
         {
             yError() << "[OculusModule::configure] Failed to reset right camera.";
             return false;
