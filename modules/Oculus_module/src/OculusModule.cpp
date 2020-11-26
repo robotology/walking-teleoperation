@@ -12,6 +12,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/dev/FrameGrabberInterfaces.h>
 
 #include <iDynTree/Core/EigenHelpers.h>
 #include <iDynTree/yarp/YARPConversions.h>
@@ -19,6 +20,9 @@
 
 #include <OculusModule.hpp>
 #include <Utils.hpp>
+
+#include <functional>
+
 struct OculusModule::Impl
 {
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
@@ -190,6 +194,41 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     return true;
 }
 
+bool OculusModule::resetCamera(const std::string &cameraPort, const std::string &localPort)
+{
+    yarp::dev::PolyDriver grabberDriver;
+
+    yarp::os::Property config;
+    config.put("device", "remote_grabber");
+    config.put("remote", cameraPort);
+    config.put("local", localPort);
+
+    bool opened = grabberDriver.open(config);
+    if(!opened)
+    {
+        yError() << "[OculusModule::configure] Cannot open remote_grabber device on port " << cameraPort <<".";
+        return false;
+    }
+
+    yarp::dev::IFrameGrabberControlsDC1394 *grabberInterface;
+
+    if(!grabberDriver.view(grabberInterface) || !grabberInterface)
+    {
+        yError() << "[OculusModule::configure] RemoteGrabber does not have IFrameGrabberControlDC1394 interface, please update yarp.";
+        return false;
+    }
+
+    if(!grabberInterface->setResetDC1394())
+    {
+        yError() << "[OculusModule::configure] Failed to reset the camera on port " << cameraPort << ".";
+        return false;
+    }
+
+    grabberDriver.close();
+
+    return true;
+};
+
 bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 {
     if (!configureTranformClient(config))
@@ -214,8 +253,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 #else
     yInfo() << "[OculusModule::configure] matlogger2 is disabled!";
 #endif
-
-    yarp::os::Value* value;
 
     // check if the configuration file is empty
     if (rf.isNull())
@@ -415,6 +452,39 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         }
     }
     m_oculusHeadsetPoseInertial.resize(6, 0.0);
+
+    //Reset the cameras if necessary
+    bool resetCameras = generalOptions.check("resetCameras", yarp::os::Value(false)).asBool();
+    yInfo() << "[OculusModule::configure] Reset camera: " << resetCameras;
+    if (resetCameras)
+    {
+
+        std::string leftCameraPort, rightCameraPort;
+        if (!YarpHelper::getStringFromSearchable(generalOptions, "leftCameraPort", leftCameraPort))
+        {
+            yError() << "[OculusModule::configure] resetCameras is true, but leftCameraPort is not provided.";
+            return false;
+        }
+
+        if (!YarpHelper::getStringFromSearchable(generalOptions, "rightCameraPort", rightCameraPort))
+        {
+            yError() << "[OculusModule::configure] resetCameras is true, but rightCameraPort is not provided.";
+            return false;
+        }
+
+        if (!resetCamera(leftCameraPort,"/walking-teleoperation/camera-reset/left"))
+        {
+            yError() << "[OculusModule::configure] Failed to reset left camera.";
+            return false;
+        }
+
+        if (!resetCamera(rightCameraPort,"/walking-teleoperation/camera-reset/right"))
+        {
+            yError() << "[OculusModule::configure] Failed to reset right camera.";
+            return false;
+        }
+        yInfo() << "[OculusModule::configure] Cameras have been reset.";
+    }
 
     m_state = OculusFSM::Configured;
 

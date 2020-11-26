@@ -54,6 +54,8 @@
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
+      <port timeout="5.0">/icub/cam/left</port>
+      <port timeout="5.0">/icub/cam/right</port>
     </dependencies>
   </module>
 
