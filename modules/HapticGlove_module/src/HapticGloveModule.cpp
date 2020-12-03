@@ -95,6 +95,23 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
                        "helper.";
             return false;
         }
+
+        if(!YarpHelper::getYarpVectorFromSearchable(leftFingersOptions, "K_GainTotal", m_leftTotalGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainTotal vector of the left hand.";
+            return false;
+        }
+        if(!YarpHelper::getYarpVectorFromSearchable(leftFingersOptions, "K_GainVelocity", m_leftVelocityGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainVelocity vector of the left hand.";
+            return false;
+        }
+
+        if(!YarpHelper::getYarpVectorFromSearchable(leftFingersOptions, "K_GainBuzzMotors", m_leftBuzzMotorsGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the left hand.";
+            return false;
+        }
     }
     if (m_useRightHand)
     {
@@ -118,57 +135,96 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
                        "helper.";
             return false;
         }
+
+        if(!YarpHelper::getYarpVectorFromSearchable(rightFingersOptions, "K_GainTotal", m_rightTotalGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainTotal vector of the right hand.";
+            return false;
+        }
+        if(!YarpHelper::getYarpVectorFromSearchable(rightFingersOptions, "K_GainVelocity", m_rightVelocityGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainVelocity vector of the right hand.";
+            return false;
+        }
+
+        if(!YarpHelper::getYarpVectorFromSearchable(rightFingersOptions, "K_GainBuzzMotors", m_rightBuzzMotorsGain))
+        {
+            yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the right hand.";
+            return false;
+        }
+
     }
     std::cerr << "conf 05 \n";
 
     if (m_useLeftHand)
     {
-        m_icubLeftFingerAxisReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
-        m_icubLeftFingerAxisFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
-        m_icubLeftFingerJointsReference.resize(
-                    m_robotLeftHand->controlHelper()->getNumberOfJoints());
-        m_icubLeftFingerJointsFeedback.resize(
-                    m_robotLeftHand->controlHelper()->getNumberOfJoints());
+        //ROBOT
 
+         m_icubLeftFingerJointsReference.resize(
+                     m_robotLeftHand->controlHelper()->getNumberOfJoints());
+         m_icubLeftFingerJointsFeedback.resize(
+                     m_robotLeftHand->controlHelper()->getNumberOfJoints());
+
+         m_icubLeftFingerAxisValueReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
+         m_icubLeftFingerAxisValueFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
+
+         m_icubLeftFingerAxisVelocityReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+         m_icubLeftFingerAxisVelocityFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+
+         m_icubLeftFingerAxisValueError.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+         m_icubLeftFingerAxisValueErrorSmoothed.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+         m_icubLeftFingerAxisVelocityError.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+         m_icubLeftFingerAxisVelocityErrorSmoothed.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
+
+         yarp::sig::Vector buff(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
+         m_leftAxisValueErrorSmoother
+                 = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotLeftHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
+         m_leftAxisValueErrorSmoother->init(buff);
+
+         m_leftAxisVelocityErrorSmoother
+                 = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotLeftHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
+         m_leftAxisVelocityErrorSmoother->init(buff);
+
+        // HUMAN
         m_gloveLeftBuzzMotorReference.resize(m_gloveLeftHand->getNoOfBuzzMotors(), 0.0);
         m_gloveLeftForceFeedbackReference.resize(m_gloveLeftHand->getNoOfForceFeedback(), 0.0);
-
-        m_axisErrorLeftSmoother
-                = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotLeftHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
-        yarp::sig::Vector buff(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
-
-        m_axisErrorLeftSmoother->init(buff);
-
-        //Axis
-        m_icubLeftFingerAxisError.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
-        m_icubLeftFingerAxisErrorSmoothed.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
-
     }
     std::cerr << "conf 06 \n";
     if (m_useRightHand)
     {
-        m_icubRightFingerAxisReference.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
-        m_icubRightFingerAxisFeedback.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+        //ROBOT
         m_icubRightFingerJointsReference.resize(
                     m_robotRightHand->controlHelper()->getNumberOfJoints());
         m_icubRightFingerJointsFeedback.resize(
                     m_robotRightHand->controlHelper()->getNumberOfJoints());
 
+        m_icubRightFingerAxisValueReference.resize(
+                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+        m_icubRightFingerAxisValueFeedback.resize(
+                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+        m_icubRightFingerAxisVelocityReference.resize(
+                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+        m_icubRightFingerAxisVelocityFeedback.resize(
+                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+
+        m_icubRightFingerAxisValueError.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
+        m_icubRightFingerAxisValueErrorSmoothed.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
+        m_icubRightFingerAxisVelocityError.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);;
+        m_icubRightFingerAxisVelocityErrorSmoothed.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
+
+        yarp::sig::Vector buff(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
+        m_rightAxisValueErrorSmoother
+                = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotRightHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
+        m_rightAxisValueErrorSmoother->init(buff);
+        m_rightAxisVelocityErrorSmoother
+                = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotRightHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
+        m_rightAxisVelocityErrorSmoother->init(buff);
+
+        //HUMAN
         m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
         m_gloveRightForceFeedbackReference.resize(m_gloveRightHand->getNoOfForceFeedback(), 0.0);
-
-        m_axisErrorRightSmoother
-                = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_robotRightHand->controlHelper()->getActuatedDoFs(), m_dT, smoothingTime);
-        yarp::sig::Vector buff(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
-
-        m_axisErrorRightSmoother->init(buff);
-
-        //Axis
-        m_icubRightFingerAxisError.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
-        m_icubRightFingerAxisErrorSmoothed.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
-
     }
 
     m_timePreparationStarting = 0.0;
@@ -250,8 +306,9 @@ bool HapticGloveModule::getFeedbacks()
                     << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                        "the left hand fingers.";
         }
-        m_robotLeftHand->getFingerAxisFeedback(m_icubLeftFingerAxisFeedback);
-        m_robotLeftHand->getFingerAxisValueReference(m_icubLeftFingerAxisReference);
+        m_robotLeftHand->getFingerAxisFeedback(m_icubLeftFingerAxisValueFeedback);
+        m_robotLeftHand->getFingerAxisValueReference(m_icubLeftFingerAxisValueReference);
+        m_robotLeftHand->getFingerAxisVelocityFeedback( m_icubLeftFingerAxisVelocityFeedback);
 
         m_robotLeftHand->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
         // yInfo() << "left fingers axis: " << m_icubLeftFingerAxisFeedback.toString();
@@ -267,12 +324,13 @@ bool HapticGloveModule::getFeedbacks()
                     << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                        "the right hand fingers.";
         }
-        m_robotRightHand->getFingerAxisFeedback(m_icubRightFingerAxisFeedback);
-        m_robotRightHand->getFingerAxisValueReference(m_icubRightFingerAxisReference);
+        m_robotRightHand->getFingerAxisFeedback(m_icubRightFingerAxisValueFeedback);
+        m_robotRightHand->getFingerAxisValueReference(m_icubRightFingerAxisValueReference);
+        m_robotRightHand->getFingerAxisVelocityFeedback( m_icubRightFingerAxisVelocityFeedback);
 
         m_robotRightHand->getFingerJointsFeedback(m_icubRightFingerJointsFeedback);
-        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisFeedback.toString();
-        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisReference.toString();
+        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisValueFeedback.toString();
+        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
         yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
     }
 
@@ -520,40 +578,115 @@ bool HapticGloveModule::updateModule()
         /*** COMPUTE FORCE FEEDBACK***/
         if (m_useLeftHand)
         {
-            //            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
 
-
-            for (int i=0; i<m_icubLeftFingerAxisReference.size();i++)
+            for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
             {
-                m_icubLeftFingerAxisError(i)= std::abs(m_icubLeftFingerAxisFeedback(i) - m_icubLeftFingerAxisReference(i));
+                m_icubLeftFingerAxisValueError(i)= m_icubLeftFingerAxisValueReference(i) - m_icubLeftFingerAxisValueFeedback(i);
+                m_icubLeftFingerAxisVelocityError(i)= m_icubLeftFingerAxisVelocityReference(i) - m_icubLeftFingerAxisVelocityFeedback(i);
             }
 
-            m_axisErrorLeftSmoother->computeNextValues(m_icubLeftFingerAxisError);
-            m_icubLeftFingerAxisErrorSmoothed = m_axisErrorLeftSmoother->getPos();
+            m_leftAxisValueErrorSmoother->computeNextValues(m_icubLeftFingerAxisValueError);
+            m_icubLeftFingerAxisValueErrorSmoothed = m_leftAxisValueErrorSmoother->getPos();
+
+            m_leftAxisVelocityErrorSmoother->computeNextValues(m_icubLeftFingerAxisVelocityError);
+            m_icubLeftFingerAxisVelocityErrorSmoothed = m_leftAxisVelocityErrorSmoother->getPos();
+
+
+            // FILTERS
+            for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
+            {
+                // the robot cannot mechnically go below zero, so if this is the case then we set the error to zero
+                if(m_icubLeftFingerAxisValueReference(i) <0)
+                {
+                    m_icubLeftFingerAxisValueErrorSmoothed(i)=0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed(i)= 0.0;
+                }
+            }
+            double velocity_threshold_transient= 0.35;
+            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
+                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this thumb
+                m_icubLeftFingerAxisVelocityErrorSmoothed(1)=0.0;
+                m_icubLeftFingerAxisVelocityErrorSmoothed(2)=0.0;
+
+                m_icubLeftFingerAxisValueErrorSmoothed(1)=0.0;
+                m_icubLeftFingerAxisValueErrorSmoothed(2)=0.0;
+            }
+
+            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
+                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this index
+                m_icubLeftFingerAxisVelocityErrorSmoothed(3)=0.0;
+                m_icubLeftFingerAxisVelocityErrorSmoothed(4)=0.0;
+
+                m_icubLeftFingerAxisValueErrorSmoothed(3)=0.0;
+                m_icubLeftFingerAxisValueErrorSmoothed(4)=0.0;
+            }
+
+            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
+                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this ring
+                m_icubLeftFingerAxisVelocityErrorSmoothed(5)=0.0;
+                m_icubLeftFingerAxisVelocityErrorSmoothed(6)=0.0;
+
+                m_icubLeftFingerAxisValueErrorSmoothed(5)=0.0;
+                m_icubLeftFingerAxisValueErrorSmoothed(6)=0.0;
+            }
+
+            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this pinky
+                m_icubLeftFingerAxisVelocityErrorSmoothed(7)=0.0;
+                m_icubLeftFingerAxisValueErrorSmoothed(7)=0.0;
+            }
+
 
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
             // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
-            yInfo()<<"Left Axis thumb: "<<m_icubLeftFingerAxisErrorSmoothed(2)<<" , "
-                  << m_icubLeftFingerAxisErrorSmoothed(1)<<" , " <<
-                     m_icubLeftFingerAxisErrorSmoothed(0);
-            yInfo()<<"Left Axis index: "<<m_icubLeftFingerAxisErrorSmoothed(4)<< " , "
-                  << m_icubLeftFingerAxisErrorSmoothed(3);
-            yInfo()<<"Left Axis middle: "<<m_icubLeftFingerAxisErrorSmoothed(6)<< " , "
-                  << m_icubLeftFingerAxisErrorSmoothed(5);
-            yInfo()<<"Left Axis springy: "<<m_icubLeftFingerAxisErrorSmoothed(7);
+            yInfo()<<"Left Axis thumb: "<<m_icubLeftFingerAxisValueErrorSmoothed(2)<<" , "
+                  << m_icubLeftFingerAxisValueErrorSmoothed(1)<<" , " <<
+                     m_icubLeftFingerAxisValueErrorSmoothed(0);
+            yInfo()<<"Left Axis index: "<<m_icubLeftFingerAxisValueErrorSmoothed(4)<< " , "
+                  << m_icubLeftFingerAxisValueErrorSmoothed(3);
+            yInfo()<<"Left Axis middle: "<<m_icubLeftFingerAxisValueErrorSmoothed(6)<< " , "
+                  << m_icubLeftFingerAxisValueErrorSmoothed(5);
+            yInfo()<<"Left Axis springy: "<<m_icubLeftFingerAxisValueErrorSmoothed(7);
 
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
-            m_gloveLeftForceFeedbackReference(0)=150*(m_icubLeftFingerAxisErrorSmoothed(2)
-                                                      + m_icubLeftFingerAxisErrorSmoothed(1));
+            m_gloveLeftForceFeedbackReference(0)=
+                    m_leftTotalGain(0)* (m_icubLeftFingerAxisValueErrorSmoothed(0) + m_leftVelocityGain(0)*m_icubLeftFingerAxisVelocityErrorSmoothed(0)) +
+                    m_leftTotalGain(1)* (m_icubLeftFingerAxisValueErrorSmoothed(1) + m_leftVelocityGain(1)*m_icubLeftFingerAxisVelocityErrorSmoothed(1)) +
+                    m_leftTotalGain(2)* (m_icubLeftFingerAxisValueErrorSmoothed(2) + m_leftVelocityGain(2)*m_icubLeftFingerAxisVelocityErrorSmoothed(2)) ;
+
+            m_gloveLeftForceFeedbackReference(1)=
+                    m_leftTotalGain(3)* (m_icubLeftFingerAxisValueErrorSmoothed(3) + m_leftVelocityGain(3)*m_icubLeftFingerAxisVelocityErrorSmoothed(3)) +
+                    m_leftTotalGain(4)* (m_icubLeftFingerAxisValueErrorSmoothed(4) + m_leftVelocityGain(4)*m_icubLeftFingerAxisVelocityErrorSmoothed(4)) ;
+
+            m_gloveLeftForceFeedbackReference(2)=
+                    m_leftTotalGain(5)* (m_icubLeftFingerAxisValueErrorSmoothed(5) + m_leftVelocityGain(5)*m_icubLeftFingerAxisVelocityErrorSmoothed(5)) +
+                    m_leftTotalGain(6)* (m_icubLeftFingerAxisValueErrorSmoothed(6) + m_leftVelocityGain(6)*m_icubLeftFingerAxisVelocityErrorSmoothed(6)) ;
+
+
+            m_gloveLeftForceFeedbackReference(3)=
+                    m_leftTotalGain(7)* (m_icubLeftFingerAxisValueErrorSmoothed(7) + m_leftVelocityGain(7)*m_icubLeftFingerAxisVelocityErrorSmoothed(7));
+
+            m_gloveLeftForceFeedbackReference(4)=
+                    m_leftTotalGain(7)* (m_icubLeftFingerAxisValueErrorSmoothed(7) + m_leftVelocityGain(7)*m_icubLeftFingerAxisVelocityErrorSmoothed(7));
+
+//                    (m_icubLeftFingerAxisValueErrorSmoothed(2)
+//                                                      + m_icubLeftFingerAxisValueErrorSmoothed(1));
             //                    + std::abs(icubRightFingerAxisFeedback[0]-icubRightFingerAxisReference[0])
-            m_gloveLeftForceFeedbackReference(1)=150*(m_icubLeftFingerAxisErrorSmoothed(4)
-                                                      + m_icubLeftFingerAxisErrorSmoothed(3));
-            m_gloveLeftForceFeedbackReference(2)=50*(m_icubLeftFingerAxisErrorSmoothed(6)
-                                                     + m_icubLeftFingerAxisErrorSmoothed(5));
-            m_gloveLeftForceFeedbackReference(3)=100*(m_icubLeftFingerAxisErrorSmoothed(7));
-            m_gloveLeftForceFeedbackReference(4)=100*std::abs(m_icubLeftFingerAxisErrorSmoothed(7));
+//            m_gloveLeftForceFeedbackReference(1)=150*(m_icubLeftFingerAxisValueErrorSmoothed(4)
+//                                                      + m_icubLeftFingerAxisValueErrorSmoothed(3));
+//            m_gloveLeftForceFeedbackReference(2)=50*(m_icubLeftFingerAxisValueErrorSmoothed(6)
+//                                                     + m_icubLeftFingerAxisValueErrorSmoothed(5));
+//            m_gloveLeftForceFeedbackReference(3)=100*(m_icubLeftFingerAxisValueErrorSmoothed(7));
+//            m_gloveLeftForceFeedbackReference(4)=100*std::abs(m_icubLeftFingerAxisValueErrorSmoothed(7));
 
             yInfo()<<"Hand Feedback Finger 0: "<<m_gloveLeftForceFeedbackReference(0);
             yInfo()<<"Hand Feedback Finger 1: "<<m_gloveLeftForceFeedbackReference(1);
@@ -562,7 +695,9 @@ bool HapticGloveModule::updateModule()
             yInfo()<<"Hand Feedback Finger 4: "<<m_gloveLeftForceFeedbackReference(4);
 
             for (int i = 0; i < 5; i++)
-                m_gloveLeftBuzzMotorReference(i) = m_gloveLeftForceFeedbackReference(i);
+            {
+                m_gloveLeftBuzzMotorReference(i) = m_leftBuzzMotorsGain(i)* m_gloveLeftForceFeedbackReference(i);
+            }
 
 
         }
@@ -571,37 +706,120 @@ bool HapticGloveModule::updateModule()
             //            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
 
 
-            for (int i=0; i<m_icubRightFingerAxisReference.size();i++)
+            for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
             {
-                m_icubRightFingerAxisError(i)= std::abs(m_icubRightFingerAxisFeedback(i) - m_icubRightFingerAxisReference(i));
+                m_icubRightFingerAxisValueError(i)=  m_icubRightFingerAxisValueReference(i)- m_icubRightFingerAxisValueFeedback(i);
+                m_icubRightFingerAxisVelocityError(i)=  m_icubRightFingerAxisVelocityReference(i)- m_icubRightFingerAxisVelocityFeedback(i);
+
             }
 
-            m_axisErrorRightSmoother->computeNextValues(m_icubRightFingerAxisError);
-            m_icubRightFingerAxisErrorSmoothed = m_axisErrorRightSmoother->getPos();
+            m_rightAxisValueErrorSmoother->computeNextValues(m_icubRightFingerAxisValueError);
+            m_icubRightFingerAxisValueErrorSmoothed = m_rightAxisValueErrorSmoother->getPos();
+
+            m_rightAxisVelocityErrorSmoother->computeNextValues(m_icubRightFingerAxisVelocityError);
+            m_icubRightFingerAxisVelocityErrorSmoothed = m_rightAxisVelocityErrorSmoother->getPos();
+
+
+            // FILTERS
+            for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
+            {
+                // the robot cannot mechnically go below zero, so if this is the case then we set the error to zero
+                if(m_icubRightFingerAxisValueReference(i) <0)
+                {
+                    m_icubRightFingerAxisValueErrorSmoothed(i)=0.0;
+                    m_icubRightFingerAxisVelocityErrorSmoothed(i)= 0.0;
+                }
+            }
+            double velocity_threshold_transient= 0.35;
+            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
+                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this thumb
+                m_icubRightFingerAxisVelocityErrorSmoothed(1)=0.0;
+                m_icubRightFingerAxisVelocityErrorSmoothed(2)=0.0;
+
+                m_icubRightFingerAxisValueErrorSmoothed(1)=0.0;
+                m_icubRightFingerAxisValueErrorSmoothed(2)=0.0;
+            }
+
+            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
+                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this index
+                m_icubRightFingerAxisVelocityErrorSmoothed(3)=0.0;
+                m_icubRightFingerAxisVelocityErrorSmoothed(4)=0.0;
+
+                m_icubRightFingerAxisValueErrorSmoothed(3)=0.0;
+                m_icubRightFingerAxisValueErrorSmoothed(4)=0.0;
+            }
+
+            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
+                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this ring
+                m_icubRightFingerAxisVelocityErrorSmoothed(5)=0.0;
+                m_icubRightFingerAxisVelocityErrorSmoothed(6)=0.0;
+
+                m_icubRightFingerAxisValueErrorSmoothed(5)=0.0;
+                m_icubRightFingerAxisValueErrorSmoothed(6)=0.0;
+            }
+
+            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
+            {
+                // we are in transient phase for this pinky
+                m_icubRightFingerAxisVelocityErrorSmoothed(7)=0.0;
+                m_icubRightFingerAxisValueErrorSmoothed(7)=0.0;
+            }
+
+
+
 
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
             // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
-            yInfo()<<"Right Axis thumb: "<<m_icubRightFingerAxisErrorSmoothed(2)<<" , "
-                  << m_icubRightFingerAxisErrorSmoothed(1)<<" , " <<
-                     m_icubRightFingerAxisErrorSmoothed(0);
-            yInfo()<<"Right Axis index: "<<m_icubRightFingerAxisErrorSmoothed(4)<< " , "
-                  << m_icubRightFingerAxisErrorSmoothed(3);
-            yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisErrorSmoothed(6)<< " , "
-                  << m_icubRightFingerAxisErrorSmoothed(5);
-            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisErrorSmoothed(7);
+            yInfo()<<"Right Axis thumb: "<<m_icubRightFingerAxisValueErrorSmoothed(2)<<" , "
+                  << m_icubRightFingerAxisValueErrorSmoothed(1)<<" , " <<
+                     m_icubRightFingerAxisValueErrorSmoothed(0);
+            yInfo()<<"Right Axis index: "<<m_icubRightFingerAxisValueErrorSmoothed(4)<< " , "
+                  << m_icubRightFingerAxisValueErrorSmoothed(3);
+            yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisValueErrorSmoothed(6)<< " , "
+                  << m_icubRightFingerAxisValueErrorSmoothed(5);
+            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisValueErrorSmoothed(7);
 
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
-            m_gloveRightForceFeedbackReference(0)=150*(m_icubRightFingerAxisErrorSmoothed(2)
-                                                       + m_icubRightFingerAxisErrorSmoothed(1));
-            //                    + std::abs(icubRightFingerAxisFeedback[0]-icubRightFingerAxisReference[0])
-            m_gloveRightForceFeedbackReference(1)=150*(m_icubRightFingerAxisErrorSmoothed(4)
-                                                       + m_icubRightFingerAxisErrorSmoothed(3));
-            m_gloveRightForceFeedbackReference(2)=50*(m_icubRightFingerAxisErrorSmoothed(6)
-                                                      + m_icubRightFingerAxisErrorSmoothed(5));
-            m_gloveRightForceFeedbackReference(3)=100*(m_icubRightFingerAxisErrorSmoothed(7));
-            m_gloveRightForceFeedbackReference(4)=100*std::abs(m_icubRightFingerAxisErrorSmoothed(7));
+
+            m_gloveRightForceFeedbackReference(0)=
+                    m_rightTotalGain(0)* (m_icubRightFingerAxisValueErrorSmoothed(0) + m_rightVelocityGain(0)*m_icubRightFingerAxisVelocityErrorSmoothed(0)) +
+                    m_rightTotalGain(1)* (m_icubRightFingerAxisValueErrorSmoothed(1) + m_rightVelocityGain(1)*m_icubRightFingerAxisVelocityErrorSmoothed(1)) +
+                    m_rightTotalGain(2)* (m_icubRightFingerAxisValueErrorSmoothed(2) + m_rightVelocityGain(2)*m_icubRightFingerAxisVelocityErrorSmoothed(2)) ;
+
+            m_gloveRightForceFeedbackReference(1)=
+                    m_rightTotalGain(3)* (m_icubRightFingerAxisValueErrorSmoothed(3) + m_rightVelocityGain(3)*m_icubRightFingerAxisVelocityErrorSmoothed(3)) +
+                    m_rightTotalGain(4)* (m_icubRightFingerAxisValueErrorSmoothed(4) + m_rightVelocityGain(4)*m_icubRightFingerAxisVelocityErrorSmoothed(4)) ;
+
+            m_gloveRightForceFeedbackReference(2)=
+                    m_rightTotalGain(5)* (m_icubRightFingerAxisValueErrorSmoothed(5) + m_rightVelocityGain(5)*m_icubRightFingerAxisVelocityErrorSmoothed(5)) +
+                    m_rightTotalGain(6)* (m_icubRightFingerAxisValueErrorSmoothed(6) + m_rightVelocityGain(6)*m_icubRightFingerAxisVelocityErrorSmoothed(6)) ;
+
+
+            m_gloveRightForceFeedbackReference(3)=
+                    m_rightTotalGain(7)* (m_icubRightFingerAxisValueErrorSmoothed(7) + m_rightVelocityGain(7)*m_icubRightFingerAxisVelocityErrorSmoothed(7));
+
+            m_gloveRightForceFeedbackReference(4)=
+                    m_rightTotalGain(7)* (m_icubRightFingerAxisValueErrorSmoothed(7) + m_rightVelocityGain(7)*m_icubRightFingerAxisVelocityErrorSmoothed(7));
+
+
+
+//            m_gloveRightForceFeedbackReference(0)=150*(m_icubRightFingerAxisValueErrorSmoothed(2)
+//                                                       + m_icubRightFingerAxisValueErrorSmoothed(1));
+//            //                    + std::abs(icubRightFingerAxisFeedback[0]-icubRightFingerAxisReference[0])
+//            m_gloveRightForceFeedbackReference(1)=150*(m_icubRightFingerAxisValueErrorSmoothed(4)
+//                                                       + m_icubRightFingerAxisValueErrorSmoothed(3));
+//            m_gloveRightForceFeedbackReference(2)=50*(m_icubRightFingerAxisValueErrorSmoothed(6)
+//                                                      + m_icubRightFingerAxisValueErrorSmoothed(5));
+//            m_gloveRightForceFeedbackReference(3)=100*(m_icubRightFingerAxisValueErrorSmoothed(7));
+//            m_gloveRightForceFeedbackReference(4)=100*std::abs(m_icubRightFingerAxisValueErrorSmoothed(7));
 
             yInfo()<<"Hand Feedback Finger 0: "<<m_gloveRightForceFeedbackReference(0);
             yInfo()<<"Hand Feedback Finger 1: "<<m_gloveRightForceFeedbackReference(1);
@@ -610,10 +828,7 @@ bool HapticGloveModule::updateModule()
             yInfo()<<"Hand Feedback Finger 4: "<<m_gloveRightForceFeedbackReference(4);
 
             for (int i = 0; i < 5; i++)
-                m_gloveRightBuzzMotorReference(i) = m_gloveRightForceFeedbackReference(i);
-
-
-
+            {m_gloveRightBuzzMotorReference(i) = m_rightBuzzMotorsGain(i)* m_gloveRightForceFeedbackReference(i);}
         }
 
         if (m_useLeftHand)
@@ -796,8 +1011,8 @@ void HapticGloveModule::logData()
 
             for (int i =0; i<m_robotLeftHand->controlHelper()->getActuatedDoFs(); i++)
             {
-                icubLeftFingerAxisError[i]=m_icubLeftFingerAxisError(i);
-                icubLeftFingerAxisErrorSmoothed[i]=m_icubLeftFingerAxisErrorSmoothed(i);
+                icubLeftFingerAxisError[i]=m_icubLeftFingerAxisValueError(i);
+                icubLeftFingerAxisErrorSmoothed[i]=m_icubLeftFingerAxisValueErrorSmoothed(i);
             }
 
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisError",
@@ -869,8 +1084,8 @@ void HapticGloveModule::logData()
 
             for (int i =0; i<m_robotRightHand->controlHelper()->getActuatedDoFs(); i++)
             {
-                icubRightFingerAxisError[i]=m_icubRightFingerAxisError(i);
-                icubRightFingerAxisErrorSmoothed[i]=m_icubRightFingerAxisErrorSmoothed(i);
+                icubRightFingerAxisError[i]=m_icubRightFingerAxisValueError(i);
+                icubRightFingerAxisErrorSmoothed[i]=m_icubRightFingerAxisValueErrorSmoothed(i);
             }
 
             m_logger->add(m_logger_prefix + "_icubRightFingerAxisError",
