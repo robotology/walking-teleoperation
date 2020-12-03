@@ -48,22 +48,31 @@ class HapticGloveModule : public yarp::os::RFModule
 private:
     double m_dT; /**< Module period. */
 
-    yarp::sig::Vector m_icubLeftFingerAxisReference, m_icubLeftFingerAxisFeedback;
+    yarp::sig::Vector m_icubLeftFingerAxisValueReference, m_icubLeftFingerAxisValueFeedback;
+    yarp::sig::Vector m_icubLeftFingerAxisVelocityReference, m_icubLeftFingerAxisVelocityFeedback;
     yarp::sig::Vector m_icubLeftFingerJointsReference, m_icubLeftFingerJointsFeedback;
 
-    yarp::sig::Vector m_icubRightFingerAxisReference, m_icubRightFingerAxisFeedback;
+    yarp::sig::Vector m_icubRightFingerAxisValueReference, m_icubRightFingerAxisValueFeedback;
+    yarp::sig::Vector m_icubRightFingerAxisVelocityReference, m_icubRightFingerAxisVelocityFeedback;
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
     yarp::sig::Vector m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
     yarp::sig::Vector m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
 
-
     double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
 
-    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_axisErrorRightSmoother{nullptr}, m_axisErrorLeftSmoother{nullptr};
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisValueErrorSmoother{nullptr}, m_leftAxisValueErrorSmoother{nullptr};
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisVelocityErrorSmoother{nullptr}, m_leftAxisVelocityErrorSmoother{nullptr};
 
-    yarp::sig::Vector m_icubRightFingerAxisError, m_icubRightFingerAxisErrorSmoothed;
-    yarp::sig::Vector m_icubLeftFingerAxisError, m_icubLeftFingerAxisErrorSmoothed;
+    yarp::sig::Vector m_icubRightFingerAxisValueError, m_icubRightFingerAxisValueErrorSmoothed;
+    yarp::sig::Vector m_icubLeftFingerAxisValueError, m_icubLeftFingerAxisValueErrorSmoothed;
+
+    yarp::sig::Vector m_icubRightFingerAxisVelocityError, m_icubRightFingerAxisVelocityErrorSmoothed;
+    yarp::sig::Vector m_icubLeftFingerAxisVelocityError, m_icubLeftFingerAxisVelocityErrorSmoothed;
+
+    yarp::sig::Vector m_leftTotalGain, m_rightTotalGain;
+    yarp::sig::Vector m_leftVelocityGain, m_rightVelocityGain;
+    yarp::sig::Vector m_leftBuzzMotorsGain, m_rightBuzzMotorsGain;
 
 
     /** Haptic Glove Finite state machine */
