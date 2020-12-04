@@ -433,8 +433,6 @@ bool RobotControlInterface::getFeedback()
 
     for (unsigned j = 0; j < m_actuatedDOFs; ++j)
         m_encoderPositionFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
-    yInfo() << "m_encoderPositionFeedbackInDegrees" << m_encoderPositionFeedbackInDegrees.toString();
-    yInfo() << "m_encoderPositionFeedbackInRadians" << m_encoderPositionFeedbackInRadians.toString();
 
     if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data()) && m_isMandatory)
     {
@@ -444,8 +442,6 @@ bool RobotControlInterface::getFeedback()
 
     for (unsigned j = 0; j < m_actuatedDOFs; ++j)
         m_encoderVelocityFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
-    yInfo() << "m_encoderVelocityFeedbackInDegrees" << m_encoderVelocityFeedbackInDegrees.toString();
-    yInfo() << "m_encoderVelocityFeedbackInRadians" << m_encoderVelocityFeedbackInRadians.toString();
 
 
 
@@ -493,9 +489,6 @@ bool RobotControlInterface::getCalibratedFeedback()
                                                 - m_sensors_min_boundary(j)); // TOCHECK
         m_analogSensorFeedbackInRadians(j) = iDynTree::deg2rad(m_analogSensorFeedbackInDegrees(j));
     }
-    yInfo() << "m_sensorFeedbackInDegrees" << m_analogSensorFeedbackInDegrees.toString();
-    yInfo() << "m_sensorFeedbackInRadians" << m_analogSensorFeedbackInRadians.toString();
-
 
     return true;
 }
@@ -509,8 +502,6 @@ bool RobotControlInterface::setAllJointsFeedback()
     {
         m_allSensorFeedbackInRadians(j+1)=m_analogSensorFeedbackInRadians(j);
     }
-
-    yInfo() << "m_allSensorFeedback" << m_allSensorFeedbackInRadians.toString();
 
     return true;
 }
@@ -566,8 +557,6 @@ void RobotControlInterface::close()
 
 int RobotControlInterface::getActuatedDoFs()
 {
-    std::cerr<<"[RobotControlInterface::getActuatedDoFs() "<<std::endl;
-    std::cerr<<"[RobotControlInterface::getActuatedDoFs() "<<m_actuatedDOFs<<std::endl;
     return m_actuatedDOFs;
 }
 

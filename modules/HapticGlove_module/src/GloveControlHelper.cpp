@@ -134,7 +134,6 @@ bool GloveControlHelper::getSensorData(std::vector<float>& measuredValues)
 }
 bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 {
-    yInfo() << "[GloveControlHelper::getHandPose]";
 
     SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
     SGCore::HandPose handPose;
@@ -170,7 +169,6 @@ bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 
 bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
 {
-    yInfo() << "[GloveControlHelper::getHandJointsAngles]";
 
     SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
     SGCore::HandPose handPose;
