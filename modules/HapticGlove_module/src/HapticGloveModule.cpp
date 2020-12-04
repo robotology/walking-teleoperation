@@ -96,6 +96,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
+        m_leftTotalGain.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
+        m_leftVelocityGain.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
+        m_leftBuzzMotorsGain.resize(m_gloveLeftHand->getNoOfBuzzMotors(), 0.0);
         if(!YarpHelper::getYarpVectorFromSearchable(leftFingersOptions, "K_GainTotal", m_leftTotalGain))
         {
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainTotal vector of the left hand.";
@@ -136,6 +139,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
+        m_rightTotalGain.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
+        m_rightVelocityGain.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
+        m_rightBuzzMotorsGain.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
         if(!YarpHelper::getYarpVectorFromSearchable(rightFingersOptions, "K_GainTotal", m_rightTotalGain))
         {
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainTotal vector of the right hand.";
@@ -161,12 +167,12 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         //ROBOT
 
          m_icubLeftFingerJointsReference.resize(
-                     m_robotLeftHand->controlHelper()->getNumberOfJoints());
+                     m_robotLeftHand->controlHelper()->getNumberOfJoints(), 0.0);
          m_icubLeftFingerJointsFeedback.resize(
-                     m_robotLeftHand->controlHelper()->getNumberOfJoints());
+                     m_robotLeftHand->controlHelper()->getNumberOfJoints(), 0.0);
 
-         m_icubLeftFingerAxisValueReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
-         m_icubLeftFingerAxisValueFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs());
+         m_icubLeftFingerAxisValueReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
+         m_icubLeftFingerAxisValueFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
 
          m_icubLeftFingerAxisVelocityReference.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
          m_icubLeftFingerAxisVelocityFeedback.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(),0.0);
@@ -195,19 +201,19 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
 
         //ROBOT
         m_icubRightFingerJointsReference.resize(
-                    m_robotRightHand->controlHelper()->getNumberOfJoints());
+                    m_robotRightHand->controlHelper()->getNumberOfJoints(), 0.0);
         m_icubRightFingerJointsFeedback.resize(
-                    m_robotRightHand->controlHelper()->getNumberOfJoints());
+                    m_robotRightHand->controlHelper()->getNumberOfJoints(),0.0);
 
         m_icubRightFingerAxisValueReference.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+                    m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_icubRightFingerAxisValueFeedback.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+                    m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
 
         m_icubRightFingerAxisVelocityReference.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+                    m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_icubRightFingerAxisVelocityFeedback.resize(
-                    m_robotRightHand->controlHelper()->getActuatedDoFs());
+                    m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
 
         m_icubRightFingerAxisValueError.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
         m_icubRightFingerAxisValueErrorSmoothed.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(),0.0);
@@ -484,8 +490,6 @@ bool HapticGloveModule::updateModule()
             m_gloveLeftHand->getSensorData(leftGloveSensors);
             m_gloveLeftHand->getHandJointsAngles(leftHandJointsAngles);
 
-            std::cout << "handJointsAngles: \n" << leftHandJointsAngles << std::endl;
-
             m_icubLeftFingerJointsReference.zero();
 
             int i = 0;
@@ -528,8 +532,6 @@ bool HapticGloveModule::updateModule()
             m_gloveRightHand->getSensorData(rightGloveSensors);
             m_gloveRightHand->getHandJointsAngles(rightHandJointsAngles);
 
-            std::cout << "right handJointsAngles: \n" << rightHandJointsAngles << std::endl;
-
             m_icubRightFingerJointsReference.zero();
 
             int i = 0;
@@ -563,14 +565,14 @@ bool HapticGloveModule::updateModule()
             m_icubRightFingerJointsReference(i + 8) = rightHandJointsAngles(10, 1);
 
             // ring (i+9:i+11)
-            m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
-            m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
-            m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
+//            m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
+//            m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
+//            m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
 
-            // pinkie (i+12:i+14)
-            m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
-            m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
-            m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
+//            // pinkie (i+12:i+14)
+//            m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
+//            m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
+//            m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
             yInfo() << "m_icubRightFingerJointsReference: "
                     << m_icubRightFingerJointsReference.toString();
         }
@@ -593,6 +595,8 @@ bool HapticGloveModule::updateModule()
 
 
             // FILTERS
+            double velocity_threshold_transient= 0.6;
+
             for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
             {
                 // the robot cannot mechnically go below zero, so if this is the case then we set the error to zero
@@ -601,47 +605,53 @@ bool HapticGloveModule::updateModule()
                     m_icubLeftFingerAxisValueErrorSmoothed(i)=0.0;
                     m_icubLeftFingerAxisVelocityErrorSmoothed(i)= 0.0;
                 }
-            }
-            double velocity_threshold_transient= 0.35;
-            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
-                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this thumb
-                m_icubLeftFingerAxisVelocityErrorSmoothed(1)=0.0;
-                m_icubLeftFingerAxisVelocityErrorSmoothed(2)=0.0;
 
-                m_icubLeftFingerAxisValueErrorSmoothed(1)=0.0;
-                m_icubLeftFingerAxisValueErrorSmoothed(2)=0.0;
+                if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(i)) > velocity_threshold_transient)
+                {
+                    m_icubLeftFingerAxisVelocityErrorSmoothed(i)=0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed(i)=0.0;
+                }
             }
 
-            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
-                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this index
-                m_icubLeftFingerAxisVelocityErrorSmoothed(3)=0.0;
-                m_icubLeftFingerAxisVelocityErrorSmoothed(4)=0.0;
+//            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
+//                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this thumb
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(1)=0.0;
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(2)=0.0;
 
-                m_icubLeftFingerAxisValueErrorSmoothed(3)=0.0;
-                m_icubLeftFingerAxisValueErrorSmoothed(4)=0.0;
-            }
+//                m_icubLeftFingerAxisValueErrorSmoothed(1)=0.0;
+//                m_icubLeftFingerAxisValueErrorSmoothed(2)=0.0;
+//            }
 
-            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
-                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this ring
-                m_icubLeftFingerAxisVelocityErrorSmoothed(5)=0.0;
-                m_icubLeftFingerAxisVelocityErrorSmoothed(6)=0.0;
+//            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
+//                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this index
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(3)=0.0;
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(4)=0.0;
 
-                m_icubLeftFingerAxisValueErrorSmoothed(5)=0.0;
-                m_icubLeftFingerAxisValueErrorSmoothed(6)=0.0;
-            }
+//                m_icubLeftFingerAxisValueErrorSmoothed(3)=0.0;
+//                m_icubLeftFingerAxisValueErrorSmoothed(4)=0.0;
+//            }
 
-            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this pinky
-                m_icubLeftFingerAxisVelocityErrorSmoothed(7)=0.0;
-                m_icubLeftFingerAxisValueErrorSmoothed(7)=0.0;
-            }
+//            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
+//                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this ring
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(5)=0.0;
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(6)=0.0;
+
+//                m_icubLeftFingerAxisValueErrorSmoothed(5)=0.0;
+//                m_icubLeftFingerAxisValueErrorSmoothed(6)=0.0;
+//            }
+
+//            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this pinky
+//                m_icubLeftFingerAxisVelocityErrorSmoothed(7)=0.0;
+//                m_icubLeftFingerAxisValueErrorSmoothed(7)=0.0;
+//            }
 
 
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
@@ -705,22 +715,24 @@ bool HapticGloveModule::updateModule()
         {
             //            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
 
-
+            std::cerr<<"101 \n";
             for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
             {
                 m_icubRightFingerAxisValueError(i)=  m_icubRightFingerAxisValueReference(i)- m_icubRightFingerAxisValueFeedback(i);
                 m_icubRightFingerAxisVelocityError(i)=  m_icubRightFingerAxisVelocityReference(i)- m_icubRightFingerAxisVelocityFeedback(i);
 
             }
-
+std::cerr<<"102 \n";
             m_rightAxisValueErrorSmoother->computeNextValues(m_icubRightFingerAxisValueError);
             m_icubRightFingerAxisValueErrorSmoothed = m_rightAxisValueErrorSmoother->getPos();
 
             m_rightAxisVelocityErrorSmoother->computeNextValues(m_icubRightFingerAxisVelocityError);
             m_icubRightFingerAxisVelocityErrorSmoothed = m_rightAxisVelocityErrorSmoother->getPos();
 
-
+std::cerr<<"103 \n";
             // FILTERS
+            double velocity_threshold_transient= 0.6;
+
             for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
             {
                 // the robot cannot mechnically go below zero, so if this is the case then we set the error to zero
@@ -729,47 +741,53 @@ bool HapticGloveModule::updateModule()
                     m_icubRightFingerAxisValueErrorSmoothed(i)=0.0;
                     m_icubRightFingerAxisVelocityErrorSmoothed(i)= 0.0;
                 }
+                if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(i)) > velocity_threshold_transient)
+                {
+                    // we are in transient phase for this thumb
+                    m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
+                    m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
+                }
             }
-            double velocity_threshold_transient= 0.35;
-            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
-                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this thumb
-                m_icubRightFingerAxisVelocityErrorSmoothed(1)=0.0;
-                m_icubRightFingerAxisVelocityErrorSmoothed(2)=0.0;
+std::cerr<<"104 \n";
+//            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
+//                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this thumb
+//                m_icubRightFingerAxisVelocityErrorSmoothed(1)=0.0;
+//                m_icubRightFingerAxisVelocityErrorSmoothed(2)=0.0;
 
-                m_icubRightFingerAxisValueErrorSmoothed(1)=0.0;
-                m_icubRightFingerAxisValueErrorSmoothed(2)=0.0;
-            }
+//                m_icubRightFingerAxisValueErrorSmoothed(1)=0.0;
+//                m_icubRightFingerAxisValueErrorSmoothed(2)=0.0;
+//            }
 
-            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
-                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this index
-                m_icubRightFingerAxisVelocityErrorSmoothed(3)=0.0;
-                m_icubRightFingerAxisVelocityErrorSmoothed(4)=0.0;
+//            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(3)) > velocity_threshold_transient ||
+//                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(4)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this index
+//                m_icubRightFingerAxisVelocityErrorSmoothed(3)=0.0;
+//                m_icubRightFingerAxisVelocityErrorSmoothed(4)=0.0;
 
-                m_icubRightFingerAxisValueErrorSmoothed(3)=0.0;
-                m_icubRightFingerAxisValueErrorSmoothed(4)=0.0;
-            }
+//                m_icubRightFingerAxisValueErrorSmoothed(3)=0.0;
+//                m_icubRightFingerAxisValueErrorSmoothed(4)=0.0;
+//            }
 
-            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
-                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this ring
-                m_icubRightFingerAxisVelocityErrorSmoothed(5)=0.0;
-                m_icubRightFingerAxisVelocityErrorSmoothed(6)=0.0;
+//            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(5)) > velocity_threshold_transient ||
+//                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(6)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this ring
+//                m_icubRightFingerAxisVelocityErrorSmoothed(5)=0.0;
+//                m_icubRightFingerAxisVelocityErrorSmoothed(6)=0.0;
 
-                m_icubRightFingerAxisValueErrorSmoothed(5)=0.0;
-                m_icubRightFingerAxisValueErrorSmoothed(6)=0.0;
-            }
+//                m_icubRightFingerAxisValueErrorSmoothed(5)=0.0;
+//                m_icubRightFingerAxisValueErrorSmoothed(6)=0.0;
+//            }
 
-            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
-            {
-                // we are in transient phase for this pinky
-                m_icubRightFingerAxisVelocityErrorSmoothed(7)=0.0;
-                m_icubRightFingerAxisValueErrorSmoothed(7)=0.0;
-            }
+//            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(7)) > velocity_threshold_transient)
+//            {
+//                // we are in transient phase for this pinky
+//                m_icubRightFingerAxisVelocityErrorSmoothed(7)=0.0;
+//                m_icubRightFingerAxisValueErrorSmoothed(7)=0.0;
+//            }
 
 
 
@@ -784,8 +802,8 @@ bool HapticGloveModule::updateModule()
                   << m_icubRightFingerAxisValueErrorSmoothed(3);
             yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisValueErrorSmoothed(6)<< " , "
                   << m_icubRightFingerAxisValueErrorSmoothed(5);
-            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisValueErrorSmoothed(7);
-
+//            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisValueErrorSmoothed(7);
+std::cerr<<"105 \n";
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
 
@@ -809,7 +827,7 @@ bool HapticGloveModule::updateModule()
             m_gloveRightForceFeedbackReference(4)=
                     m_rightTotalGain(7)* (m_icubRightFingerAxisValueErrorSmoothed(7) + m_rightVelocityGain(7)*m_icubRightFingerAxisVelocityErrorSmoothed(7));
 
-
+std::cerr<<"106 \n";
 
 //            m_gloveRightForceFeedbackReference(0)=150*(m_icubRightFingerAxisValueErrorSmoothed(2)
 //                                                       + m_icubRightFingerAxisValueErrorSmoothed(1));
@@ -830,16 +848,19 @@ bool HapticGloveModule::updateModule()
             for (int i = 0; i < 5; i++)
             {m_gloveRightBuzzMotorReference(i) = m_rightBuzzMotorsGain(i)* m_gloveRightForceFeedbackReference(i);}
         }
-
+std::cerr<<"107 \n";
         if (m_useLeftHand)
         {
             // set robot values
             m_robotLeftHand->setFingersJointReference(m_icubLeftFingerJointsReference);
+            std::cerr<<"108 \n";
             m_robotLeftHand->move();
-
+std::cerr<<"109 \n";
             // set glove values
             m_gloveLeftHand->setFingersForceReference(m_gloveLeftForceFeedbackReference);
+            std::cerr<<"110 \n";
             m_gloveLeftHand->setBuzzMotorsReference(m_gloveLeftBuzzMotorReference);
+            std::cerr<<"111 \n";
         }
 
         if (m_useRightHand)
@@ -859,9 +880,9 @@ bool HapticGloveModule::updateModule()
 
         // 4- Set the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
-
+std::cerr<<"112 \n";
         logData();
-
+std::cerr<<"113 \n";
         // yInfo() << "[HapticGloveModule::updateModule] <FSM::InPreparation> exiting ....";
         // exit(0);
 
