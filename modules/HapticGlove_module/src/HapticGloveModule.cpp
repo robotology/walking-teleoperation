@@ -948,14 +948,17 @@ std::cerr<<"113 \n";
             if (axisNumber >= m_robotLeftHand->controlHelper()->getActuatedDoFs())
             {
                 yInfo() << "******>>>> Data collected ...";
-                if (!m_robotLeftHand->trainCouplingMatrix())
+                if(!m_robotLeftHand->isRobotPrepared())
                 {
-                    yInfo()
-                            << "cannot claibrate the coupling matrix and find the coefficient matrix";
-                    return false;
+                    if (!m_robotLeftHand->trainCouplingMatrix() )
+                    {
+                        yInfo()
+                                << "cannot claibrate the coupling matrix and find the coefficient matrix";
+                        return false;
+                    }
                 }
-                m_timePreparationStarting = yarp::os::Time::now();
-                m_state = HapticGloveFSM::Running;
+//                m_timePreparationStarting = yarp::os::Time::now();
+//                m_state = HapticGloveFSM::Running;
 
             } else
             {
@@ -966,17 +969,20 @@ std::cerr<<"113 \n";
 
         if (m_useRightHand)
         {
-            if (axisNumber >= m_robotRightHand->controlHelper()->getActuatedDoFs())
+            if (axisNumber >= m_robotRightHand->controlHelper()->getActuatedDoFs() )
             {
                 yInfo() << "******>>>> Data collected ...";
-                if (!m_robotRightHand->trainCouplingMatrix())
+                if(!m_robotRightHand->isRobotPrepared())
                 {
-                    yInfo()
-                            << "cannot claibrate the coupling matrix and find the coefficient matrix";
-                    return false;
+                    if (!m_robotRightHand->trainCouplingMatrix())
+                    {
+                        yInfo()
+                                << "cannot claibrate the coupling matrix and find the coefficient matrix";
+                        return false;
+                    }
                 }
-                m_timePreparationStarting = yarp::os::Time::now();
-                m_state = HapticGloveFSM::Running;
+//                m_timePreparationStarting = yarp::os::Time::now();
+//                m_state = HapticGloveFSM::Running;
 
             } else
             {
@@ -984,6 +990,35 @@ std::cerr<<"113 \n";
                 m_robotRightHand->LogDataToCalibrateRobotMotorsJointsCouplingSin(time,
                                                                                  axisNumber);
             }
+        }
+
+        if(m_useLeftHand && m_useRightHand)
+        {
+            if(m_robotLeftHand->isRobotPrepared() && m_robotRightHand->isRobotPrepared())
+            {
+                m_state = HapticGloveFSM::Running;
+                m_timePreparationStarting = yarp::os::Time::now();
+            }
+        }
+        else if(m_useLeftHand && !m_useRightHand)
+        {
+            if(m_robotLeftHand->isRobotPrepared())
+            {
+                m_state = HapticGloveFSM::Running;
+                m_timePreparationStarting = yarp::os::Time::now();
+            }
+        }
+        else if(!m_useLeftHand && m_useRightHand)
+        {
+            if(m_robotRightHand->isRobotPrepared())
+            {
+                m_state = HapticGloveFSM::Running;
+            }
+        }
+        else
+        {
+            yError()<<"There is not robot hand enabled.";
+            return false;
         }
     }
 

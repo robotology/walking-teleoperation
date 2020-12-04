@@ -123,6 +123,7 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_jointsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfJoints());
     m_motorsData.resize(Eigen::NoChange, m_robotControlInterface->getActuatedDoFs());
 
+    m_robotPrepared=false;
     return true;
 }
 
@@ -484,5 +485,13 @@ bool RobotController::trainCouplingMatrix()
             << (m_A.transpose() * m_Q * m_A + m_R).determinant();
     yInfo() << "m_controlCoeff matrix:" << m_controlCoeff.rows() << m_controlCoeff.cols();
     std::cout << "m_controlCoeff matrix:\n" << m_controlCoeff << std::endl;
+
+    m_robotPrepared=true;
     return true;
 }
+
+bool RobotController::isRobotPrepared()
+{
+    return m_robotPrepared;
+}
+
