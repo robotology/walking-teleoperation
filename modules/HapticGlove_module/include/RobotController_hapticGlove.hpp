@@ -64,6 +64,8 @@ private:
 
     yarp::sig::Vector motorVelocityReference;
 
+    bool m_robotPrepared;
+
 public:
     /**
      * Configure the object.
@@ -196,6 +198,11 @@ public:
      * @return true if it could open the logger
      */
     bool trainCouplingMatrix();
+    /**
+     * check if the robot is prepared
+     * @return true if the robot is prepared
+     */
+    bool isRobotPrepared();
 };
 
 template <typename DynamicEigenMatrix, typename DynamicEigenVector>
