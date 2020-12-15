@@ -11,21 +11,6 @@
 #include <KalmanFilter.hpp>
 
 
-//Eigen_Mat m_M; /**< E[ (x(t)- x_bar(t))(x(t)- x_bar(t))^T ] : n*n positive matrix */
-//Eigen_Mat m_R; /**< E[ v(t) v(t)^T ] : p*p positive matrix */
-//Eigen_Mat m_P; /**< P_inv= M_inv + H^T R_inv H*/
-//Eigen_Mat m_K; /**< P H^T R_inv */
-
-//Eigen_Mat m_x_bar; /**< state estimation before using the measurements */
-//Eigen_Mat m_x_hat; /**< E[x(t)]  */
-//Eigen_Mat m_w_bar; /**< E[w(t)] */
-
-//size_t m_n; /**< size state vector (x)*/
-//size_t m_p; /**< Size of measure vecotr(z)*/
-//size_t m_m; /**< size of w vector*/
-//double m_dt;/**< sampling time*/
-
-
 KalmanFilter::KalmanFilter(const double dt,
                            const size_t n,
                            const size_t p,
@@ -47,7 +32,7 @@ KalmanFilter::KalmanFilter(const double dt,
 
 KalmanFilter::~KalmanFilter(){}
 
-bool KalmanFilter::init(const Eigen::MatrixXd& x0, const Eigen::MatrixXd& M0){
+bool KalmanFilter::Initialize(const Eigen::MatrixXd& x0, const Eigen::MatrixXd& M0){
     m_x_bar=x0;
     m_M= M0;
 
@@ -75,9 +60,29 @@ bool KalmanFilter::EstimateNextState(Eigen::MatrixXd& x_hat)
     return true;
 }
 
-bool KalmanFilter::GetInfo( Eigen::MatrixXd& x_hat, Eigen::MatrixXd& P){
+bool KalmanFilter::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+{
+
+    /*
+     * J= 1/2 [(x-x_bar) M^(-1)(x-x_bar) + (z-Hx) R^(-1)(z-Hx)]
+     */
+    m_z=z;
+
+    m_P =(m_M.inverse() + Ht_Rinv_H).inverse();
+    m_K = m_P * Ht_Rinv;
+    m_x_hat = m_x_bar + m_K * (m_z - m_H * m_x_bar);
+    m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
+    m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
 
     x_hat= m_x_hat;
-    P= m_P;
+    return true;
+}
+
+
+bool KalmanFilter::GetInfo( Eigen::VectorXd& x_hat, Eigen::VectorXd& P){
+
+
+    x_hat= Eigen::Map<Eigen::VectorXd>(m_x_hat.data(), m_x_hat.cols()*m_x_hat.rows());
+    P=Eigen::Map<Eigen::VectorXd>(m_P.data(), m_P.cols()*m_P.rows());
     return true;
 }
