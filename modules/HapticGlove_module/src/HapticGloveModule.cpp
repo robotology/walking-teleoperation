@@ -565,14 +565,14 @@ bool HapticGloveModule::updateModule()
             m_icubRightFingerJointsReference(i + 8) = rightHandJointsAngles(10, 1);
 
             // ring (i+9:i+11)
-//            m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
-//            m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
-//            m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
+            m_icubRightFingerJointsReference(i + 9) = rightHandJointsAngles(12, 1);
+            m_icubRightFingerJointsReference(i + 10) = rightHandJointsAngles(13, 1);
+            m_icubRightFingerJointsReference(i + 11) = rightHandJointsAngles(14, 1);
 
 //            // pinkie (i+12:i+14)
-//            m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
-//            m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
-//            m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
+            m_icubRightFingerJointsReference(i + 12) = rightHandJointsAngles(16, 1);
+            m_icubRightFingerJointsReference(i + 13) = rightHandJointsAngles(17, 1);
+            m_icubRightFingerJointsReference(i + 14) = rightHandJointsAngles(18, 1);
             yInfo() << "m_icubRightFingerJointsReference: "
                     << m_icubRightFingerJointsReference.toString();
         }

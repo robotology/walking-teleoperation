@@ -33,7 +33,7 @@ private:
 
 public:
 
-    MotorEstimation(const double dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q);
+    MotorEstimation(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q);
     ~MotorEstimation();
 
     bool Initialize(const Eigen::MatrixXd& z0);

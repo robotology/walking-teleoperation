@@ -24,6 +24,8 @@
 #include <iCub/ctrl/pids.h>
 
 #include <RobotControlHelper_hapticGlove.hpp>
+#include <RobotMotorsEstimation.hpp>
+
 
 using namespace yarp::math;
 
@@ -63,6 +65,9 @@ private:
                          number of observations (logged data), m: number of joints */
 
     yarp::sig::Vector motorVelocityReference;
+
+    std::unique_ptr<RobotMotorsEstimation> m_robotMotorFeedbackEstimator; /**< The KF estimated motor feedbacks*/
+    std::unique_ptr<RobotMotorsEstimation> m_robotMotorReferenceEstimator; /**< The KF estimated motor References*/
 
     bool m_robotPrepared;
 
