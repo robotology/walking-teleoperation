@@ -80,6 +80,8 @@ set(${EXE_TARGET_NAME}_SRC
   src/HapticGloveModule.cpp
   src/GloveControlHelper.cpp
   src/KalmanFilter.cpp
+  src/MotorEstimation.cpp
+  src/RobotMotorsEstimation.cpp
   )
 
 # set hpp files
@@ -90,6 +92,9 @@ set(${EXE_TARGET_NAME}_HDR
   include/HapticGloveModule.hpp
   include/GloveControlHelper.hpp
   include/KalmanFilter.hpp
+  include/MotorEstimation.hpp
+  include/RobotMotorsEstimation.hpp
+
   )
 
 # add include directories to the build.

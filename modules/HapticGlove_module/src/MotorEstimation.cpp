@@ -9,7 +9,7 @@
 
 #include <MotorEstimation.hpp>
 
-MotorEstimation::MotorEstimation(const double dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q){
+MotorEstimation::MotorEstimation(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q){
 
     m_n = 3;
     m_m = 3;
