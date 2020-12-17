@@ -123,6 +123,15 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_jointsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfJoints());
     m_motorsData.resize(Eigen::NoChange, m_robotControlInterface->getActuatedDoFs());
 
+
+//    m_robotMotorFeedbackEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
+//    m_robotMotorReferenceEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
+
+//    m_robotMotorFeedbackEstimator->configure(config, name);
+//    m_robotMotorReferenceEstimator->configure(config, name);
+
+
+
     m_robotPrepared=false;
     return true;
 }
