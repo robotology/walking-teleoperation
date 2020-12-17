@@ -16,7 +16,7 @@
   <module>
     <name>yarpdev</name>
     <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
-    <node>icub</node>
+    <node>icub-head</node>
   </module>
 
   <module>
@@ -47,13 +47,13 @@
   <connection>
     <from>/icub-virtualizer/microphone/audio:o</from>
     <to>/icub/speakers/audio:i</to>
-    <protocol>udp</protocol>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/icub/microphone/audio:o</from>
     <to>/icub-virtualizer/speakers/audio:i</to>
-    <protocol>udp</protocol>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 
