@@ -23,12 +23,16 @@ typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> E
 class RobotMotorsEstimation{
 private:
 
-    std::vector<std::unique_ptr<MotorEstimation>> m_motorEstimatorVector;
+    std::vector<MotorEstimation> m_motorEstimatorVector;
     yarp::sig::Vector m_motorValueMeasured;
     yarp::sig::Vector m_motorValueEstimation;
     yarp::sig::Vector m_motorVelocityEstimation;
     yarp::sig::Vector m_motorAccelerationEstimation;
     size_t m_numerOfMotors;
+
+    Eigen::MatrixXd z_mat;
+
+    bool m_isInitialized;
 
 public:
     RobotMotorsEstimation(const int noMotors);
@@ -38,10 +42,13 @@ public:
 
     bool estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat);
 
-    bool  getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P);
-    bool  getInfo(yarp::sig::Vector& x_hat, Eigen::VectorXd& P);
-    bool  getInfo(std::vector<double>& x_hat, Eigen::VectorXd& P);
+    bool estimateNextState(const yarp::sig::Vector z );
 
+    bool  getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::VectorXd& P);
+    bool  getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::VectorXd& P);
+    bool  getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::VectorXd& P);
+
+    bool isInitialized();
 
 };
 #endif // ROBOTMOTORSESTIMATION_HPP
