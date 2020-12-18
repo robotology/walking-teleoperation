@@ -8,12 +8,14 @@
 
 
 #include <MotorEstimation.hpp>
-
+#include <iostream>
 MotorEstimation::MotorEstimation(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q){
 
     m_n = 3;
     m_m = 3;
     m_p = 1;
+
+    m_dt= dt;
 
     m_F=Eigen::MatrixXd::Zero(m_n,m_n);
     m_F(0,1)=1.0;
@@ -22,13 +24,28 @@ MotorEstimation::MotorEstimation(const double& dt, const Eigen::MatrixXd& R, con
     m_H=Eigen::MatrixXd::Zero(m_p,m_n);
     m_H(0,0)=1.0;
 
+    m_R=R;
+    m_Q=Q;
 
-    m_kf= std::make_unique<KalmanFilter>(dt, m_n, m_p, m_m, m_F, m_G, m_H, R, Q);
+    m_kf= std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, R, Q);
+}
 
+MotorEstimation::MotorEstimation(const MotorEstimation& O){
+    m_n = O.m_n;
+    m_m = O.m_m;
+    m_p = O.m_p;
+    m_dt=O.m_dt;
+
+    m_F=O.m_F;
+    m_G=O.m_G;
+    m_H=O.m_H;
+
+    m_R=O.m_R;
+    m_Q=O.m_Q;
+
+    m_kf=std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, m_R, m_Q);
 }
-MotorEstimation::~MotorEstimation(){
-    m_kf->~KalmanFilter();
-}
+
 bool MotorEstimation::Initialize(const Eigen::MatrixXd& z0){
 
     Eigen::MatrixXd x0= m_H * z0;

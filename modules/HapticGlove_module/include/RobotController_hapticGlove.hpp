@@ -208,6 +208,25 @@ public:
      * @return true if the robot is prepared
      */
     bool isRobotPrepared();
+
+    /**
+     * initialize the estimator of the motors
+     * @return true if the robot motor estimator is initialized
+     */
+    bool initializeEstimator();
+
+    /**
+     * estimate the next states of the motor
+     * @return true if the robot motor estimator is done correctly
+     */
+    bool estimateNextMotorsState();
+
+    /**
+     * get motor estimated states
+     * @return true if the robot motor estimator is returned correctly
+     */
+    bool getEstimatedMotorsState(std::vector<double>& AxisValuesEstimationKF, std::vector<double>&  AxisVelocitiesEstimationKF, std::vector<double>&  AxisAccelrationEstimationKF,
+                                 std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF );
 };
 
 template <typename DynamicEigenMatrix, typename DynamicEigenVector>

@@ -16,25 +16,27 @@
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Eigen_Mat;
 
 class MotorEstimation{
-private:
-
-    std::unique_ptr<KalmanFilter> m_kf;
-
+public:
+    double m_dt;
     size_t m_n ; // number of states
     size_t m_m ; // number of input vector w
     size_t m_p ; // number of measures
+
 
     Eigen_Mat m_F; /**< LTI Continuous system dynamics Matrix Dx(t)= Fx(t)+ Gw(t), size: n*n */
     Eigen_Mat m_G; /**< LTI Continuous system input Matrix Dx(t)= Fx(t)+ Gw(t), size:  n*m */
     Eigen_Mat m_H; /**< Measurement Matrix Z(t)= Hx(t)+ v(t), size: p*n */
 
+
+    std::unique_ptr<KalmanFilter> m_kf;
+
+
     Eigen_Mat m_R; /**< E[ v(t) v(t)^T ], size:  p*p positive matrix */
     Eigen_Mat m_Q;  /**< E[ (w(t) -w_bar(t)) (w(t) -w_bar(t))^T ], size:  m*m positive matrix */
 
-public:
 
     MotorEstimation(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q);
-    ~MotorEstimation();
+    MotorEstimation(const MotorEstimation& O);
 
     bool Initialize(const Eigen::MatrixXd& z0);
 

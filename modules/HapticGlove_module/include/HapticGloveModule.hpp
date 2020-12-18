@@ -160,7 +160,6 @@ public:
      */
     void logData();
 
-
 };
 
 inline std::string getTimeDateMatExtension()
