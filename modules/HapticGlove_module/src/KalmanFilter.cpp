@@ -6,7 +6,7 @@
  * @date 2020
  */
 
-
+#include <iostream>
 
 #include <KalmanFilter.hpp>
 
@@ -22,12 +22,16 @@ KalmanFilter::KalmanFilter(const double dt,
                            const Eigen::MatrixXd& Q): m_dt(dt), m_n(n), m_p(p), m_m(m),
     m_F(F), m_G(G), m_H(H), m_R(R), m_Q(Q)
 {
+    std::cout<<"KalmanFilter::KalmanFilter\n";
+
 
     m_Phi = Eigen::MatrixXd::Identity(n,n) + m_F * m_dt;
     m_Gamma = m_G * m_dt;
     Ht_Rinv = m_H.transpose() * m_R.inverse();
     Ht_Rinv_H = m_H.transpose() * m_R.inverse() * m_H;
     Gamma_Q_GammaT = m_Gamma * m_Q * m_Gamma.transpose();
+    std::cout<<"KalmanFilter::KalmanFilter end \n";
+
 }
 
 KalmanFilter::~KalmanFilter(){}

@@ -124,11 +124,15 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_motorsData.resize(Eigen::NoChange, m_robotControlInterface->getActuatedDoFs());
 
 
-//    m_robotMotorFeedbackEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
-//    m_robotMotorReferenceEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
+    // Estimaotr
 
-//    m_robotMotorFeedbackEstimator->configure(config, name);
-//    m_robotMotorReferenceEstimator->configure(config, name);
+    m_robotMotorFeedbackEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
+    m_robotMotorReferenceEstimator= std::make_unique<RobotMotorsEstimation> (fingersNoOfAxis);
+
+    m_robotMotorFeedbackEstimator->configure(config, name);
+    m_robotMotorReferenceEstimator->configure(config, name);
+
+    std::cout<<"-- finish configuring m_robotMotorReferenceEstimator";
 
 
 
@@ -504,3 +508,48 @@ bool RobotController::isRobotPrepared()
     return m_robotPrepared;
 }
 
+bool RobotController::initializeEstimator(){
+    std::cout<<"RobotController::initializeEstimator() \n";
+    yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
+    getFingerAxisValueReference(axisReferenceVector);
+    getFingerAxisFeedback(axisFeedbackVector);
+
+    m_robotMotorFeedbackEstimator->initialize(axisFeedbackVector);
+    m_robotMotorReferenceEstimator->initialize(axisReferenceVector);
+
+    std::cout<<"RobotController::initializeEstimator() 2 \n";
+
+    return true;
+}
+
+bool RobotController::estimateNextMotorsState(){
+
+    yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
+    getFingerAxisValueReference(axisReferenceVector);
+    getFingerAxisFeedback(axisFeedbackVector);
+
+    if(m_robotMotorFeedbackEstimator->isInitialized()){
+        m_robotMotorFeedbackEstimator->estimateNextState(axisFeedbackVector);
+    }
+
+    if(m_robotMotorReferenceEstimator->isInitialized()){
+        m_robotMotorReferenceEstimator->estimateNextState(axisReferenceVector);
+    }
+
+    return true;
+}
+
+bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF,
+                                              std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF ){
+    Eigen::VectorXd P;
+
+    if(m_robotMotorFeedbackEstimator->isInitialized()){
+        m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  P );
+    }
+
+    if(m_robotMotorReferenceEstimator->isInitialized()){
+        m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  P );
+    }
+
+    return true;
+}
