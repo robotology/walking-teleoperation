@@ -28,12 +28,25 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 
-/**
- * RobotControlInterface is an helper class for controlling the robot.
- */
+
 namespace HapticGlove
 {
 
+
+/**
+ * Data structure the name of the all the sesnors (analog, encoders) assosiated with the axes list.
+ */
+struct axisSensorData
+{
+    std::string axisName;
+    bool useAnalog;
+    std::vector<int> relatedAnalogSensorsIndex; /**< The list of elements of the analog sensor associated axis name */
+
+};
+
+/**
+ * RobotControlInterface is an helper class for controlling the robot.
+ */
 class RobotControlInterface
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
@@ -44,7 +57,15 @@ class RobotControlInterface
     size_t m_noAllSensor; /**< Number of all the interested joints ( associated with the analog & encoders sensors) */
 
     std::vector<std::string>
-        m_axesList; /**< Vector containing the name of the controlled joints. */
+        m_axesList; /**< Vector containing the name of the controlled axes. */
+
+    std::vector<std::string>
+        m_activatedJointList; /**< Vector containing the names of the activated joints (activated joints are related to the axis that we are using). */
+
+
+
+    std::vector<axisSensorData>
+        m_axisInfoList; /**< Vector containing the data structure for controlled axis and the associated sensor list. */
 
     yarp::dev::IPreciselyTimed* m_timedInterface{nullptr};
     yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */
