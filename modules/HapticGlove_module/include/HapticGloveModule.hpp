@@ -31,6 +31,8 @@
 #include <GloveControlHelper.hpp>
 
 #include <iCub/ctrl/minJerkCtrl.h>
+#include <Retargeting.hpp>
+
 
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
@@ -46,6 +48,8 @@
 class HapticGloveModule : public yarp::os::RFModule
 {
 private:
+
+
     double m_dT; /**< Module period. */
 
     yarp::sig::Vector m_icubLeftFingerAxisValueReference, m_icubLeftFingerAxisValueFeedback;
@@ -99,6 +103,9 @@ private:
                                                                hand glove object. */
 
 
+    std::unique_ptr<Retargeting>m_retargetingLeftHand;
+
+    std::unique_ptr<Retargeting>m_retargetingRightHand;
 
     bool m_enableLogger; /**< log the data (if ON) */
     bool m_useLeftHand, m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/

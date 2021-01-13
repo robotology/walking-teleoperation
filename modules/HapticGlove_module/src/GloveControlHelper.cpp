@@ -40,6 +40,34 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     m_handJointsAngles = Eigen::MatrixXd::Zero(m_handNoLinks, 3);
 
+
+
+    yarp::os::Value* jointListYarp;
+    if (!config.check("human_joint_list", jointListYarp))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to find human_joint_list into config file.";
+        return false;
+    }
+    if (!YarpHelper::yarpListToStringVector(jointListYarp, m_humanJointList))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to convert human_joint_list list into a "
+                    "vector of strings.";
+        return false;
+    }
+
+    yarp::os::Value* fingerListYarp;
+    if (!config.check("human_finger_list", jointListYarp))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to find human_finger_list into config file.";
+        return false;
+    }
+    if (!YarpHelper::yarpListToStringVector(fingerListYarp, m_humanFingersList))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to convert human_finger_list list into a "
+                    "vector of strings.";
+        return false;
+    }
+
     return true;
 }
 
@@ -316,6 +344,19 @@ int GloveControlHelper::getNoSensors()
 {
     return m_NoSensors;
 }
+
+
+
+void GloveControlHelper::getHumanJointsList(std::vector<std::string>& jointList){
+    jointList = m_humanJointList;
+}
+
+void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList){
+    fingerList = m_humanFingersList;
+}
+
+
+
 ///// <summary> set the level(s) of force and vibrotactile feedback, with an optional thumper
 /// command
 ///// </summary>

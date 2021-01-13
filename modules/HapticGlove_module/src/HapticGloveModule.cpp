@@ -75,7 +75,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     // configure fingers retargeting
     if (m_useLeftHand)
     {
-        // initialize the retargeting class of the left hand
+        // ########
+        // ######## initialize the robot control class of the left hand
+        // ########
         m_robotLeftHand = std::make_unique<RobotController>();
         yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
         leftFingersOptions.append(generalOptions);
@@ -86,7 +88,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
-        // intialize the glove control helper of the left hand
+        // ########
+        // ######## intialize the glove control helper of the left hand
+        // ########
         m_gloveLeftHand = std::make_unique<HapticGlove::GloveControlHelper>();
         if (!m_gloveLeftHand->configure(generalOptions, getName(), false))
         {
@@ -115,10 +119,21 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the left hand.";
             return false;
         }
+
+        // ########
+        // ######## Retargeting configuration
+        // ########
+        m_retargetingLeftHand= std::make_unique<Retargeting>(*m_robotLeftHand,*m_gloveLeftHand);
+        m_retargetingLeftHand->configure(generalOptions, getName());
+
+
+
     }
     if (m_useRightHand)
     {
-        // initialize the retargeting class of the right hand
+        // ########
+        // ######## initialize the robot control class of the right hand
+        // ########
         m_robotRightHand = std::make_unique<RobotController>();
         yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
         rightFingersOptions.append(generalOptions);
@@ -129,7 +144,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
-        // intialize the glove control helper of the right hand
+        // ########
+        // ######## intialize the glove control helper of the right hand
+        // ########
         m_gloveRightHand = std::make_unique<HapticGlove::GloveControlHelper>();
         if (!m_gloveRightHand->configure(generalOptions, getName(), true))
         {
@@ -158,6 +175,13 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the right hand.";
             return false;
         }
+
+
+        // ########
+        // ######## Retargeting configuration
+        // ########
+        m_retargetingRightHand= std::make_unique<Retargeting>(*m_robotRightHand,*m_gloveRightHand);
+        m_retargetingRightHand->configure(generalOptions, getName());
 
     }
     std::cerr << "conf 05 \n";
@@ -237,6 +261,8 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     m_timeNow = 0.0;
     m_timeConfigurationStarting = 0.0;
     std::cerr << "conf 07 \n";
+
+
     // open the logger only if all the vecotos sizes are clear.
     if (m_enableLogger)
     {
