@@ -82,6 +82,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/KalmanFilter.cpp
   src/MotorEstimation.cpp
   src/RobotMotorsEstimation.cpp
+  src/Retargeting.cpp
   )
 
 # set hpp files
@@ -94,7 +95,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/KalmanFilter.hpp
   include/MotorEstimation.hpp
   include/RobotMotorsEstimation.hpp
-
+  include/Retargeting.hpp
   )
 
 # add include directories to the build.
