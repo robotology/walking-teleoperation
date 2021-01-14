@@ -38,7 +38,7 @@ class Retargeting{
     std::vector<double> m_humanJointAngles; //values
     yarp::sig::Vector m_robotRefJointAngles; //values
     yarp::sig::Vector m_fingerForceFeedback; //values
-    yarp::sig::Vector m_buzzFeedback; //values
+    yarp::sig::Vector m_fingerBuzzFeedback; //values
 
     std::vector<FingerAxisRelation>  m_fingerAxisRelation;
 
@@ -61,6 +61,11 @@ public:
 
 
     bool getRobotJointReferences(yarp::sig::Vector robotJointReference);
+
+    bool getForceFeedbackToHuman(yarp::sig::Vector forceFeedbackList);
+
+    bool getVibroTactileFeedbackToHuman(yarp::sig::Vector buzzFeedbackList);
+
 
 
 

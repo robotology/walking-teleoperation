@@ -707,6 +707,7 @@ bool HapticGloveModule::updateModule()
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
             // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
+            //TODEL-->START
             yInfo()<<"Left Axis thumb: "<<m_icubLeftFingerAxisValueErrorSmoothed(2)<<" , "
                   << m_icubLeftFingerAxisValueErrorSmoothed(1)<<" , " <<
                      m_icubLeftFingerAxisValueErrorSmoothed(0);
@@ -761,6 +762,12 @@ bool HapticGloveModule::updateModule()
             {
                 m_gloveLeftBuzzMotorReference(i) = m_leftBuzzMotorsGain(i)* m_gloveLeftForceFeedbackReference(i);
             }
+            //TODEL-->END
+
+            m_retargetingLeftHand->retargetHapticFeedbackFromRobotToHuman(m_icubLeftFingerAxisValueErrorSmoothed, m_icubLeftFingerAxisVelocityErrorSmoothed);
+            m_retargetingLeftHand->getForceFeedbackToHuman(m_gloveLeftForceFeedbackReference);
+            m_retargetingLeftHand->getVibroTactileFeedbackToHuman(m_gloveLeftBuzzMotorReference);
+
 
 
         }
@@ -860,6 +867,9 @@ std::cerr<<"105 \n";
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
 
+
+
+            //TODEL-->START
             m_gloveRightForceFeedbackReference(0)=
                     m_rightTotalGain(0)* (m_icubRightFingerAxisValueErrorSmoothed(0) + m_rightVelocityGain(0)*m_icubRightFingerAxisVelocityErrorSmoothed(0)) +
                     m_rightTotalGain(1)* (m_icubRightFingerAxisValueErrorSmoothed(1) + m_rightVelocityGain(1)*m_icubRightFingerAxisVelocityErrorSmoothed(1)) +
@@ -900,6 +910,16 @@ std::cerr<<"106 \n";
 
             for (int i = 0; i < 5; i++)
             {m_gloveRightBuzzMotorReference(i) = m_rightBuzzMotorsGain(i)* m_gloveRightForceFeedbackReference(i);}
+
+
+            //TODEL-->END
+
+            m_retargetingRightHand->retargetHapticFeedbackFromRobotToHuman(m_icubRightFingerAxisValueErrorSmoothed, m_icubRightFingerAxisVelocityErrorSmoothed);
+            m_retargetingRightHand->getForceFeedbackToHuman(m_gloveRightForceFeedbackReference);
+            m_retargetingRightHand->getVibroTactileFeedbackToHuman(m_gloveRightBuzzMotorReference);
+
+
+
         }
 std::cerr<<"107 \n";
         if (m_useLeftHand)
