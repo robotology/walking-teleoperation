@@ -52,9 +52,10 @@ class RobotControlInterface
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
     yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
 
-    int m_actuatedDOFs; /**< Number of the actuated DoF */
+    int m_noActuatedAxis; /**< Number of the actuated DoF */
     size_t m_noAnalogSensor; /**< Number of the joints ( associated with the analog sensors) */
-    size_t m_noAllSensor; /**< Number of all the interested joints ( associated with the analog & encoders sensors) */
+    size_t m_noAllJoints; /**< Number of all the interested joints ( associated with the analog & encoders sensors) */
+    size_t m_noAllAxis;
 
     std::vector<std::string>
         m_axesList; /**< Vector containing the name of the controlled axes. */
@@ -62,8 +63,7 @@ class RobotControlInterface
     std::vector<std::string>
         m_actuatedJointList; /**< Vector containing the names of the activated joints (activated joints are related to the axis that we are using). */
 
-
-
+    size_t m_noActuatedJoints;
     std::vector<axisSensorData>
         m_axisInfoList; /**< Vector containing the data structure for controlled axis and the associated sensor list. */
 
@@ -260,13 +260,20 @@ public:
      * Get the number of actuated degree of freedom (motors)
      * @return the number of actuated DoF
      */
-    const int getActuatedDoFs() const;
+    const int getNumberOfActuatedAxis() const;
+
+    const int getNumberOfAllAxis() const;
 
     /**
      * Get the number of joints
      * @return the number of joints
      */
-    const int getNumberOfJoints() const;
+    const int getNumberOfAllJoints() const;
+
+    const int getNumberOfActuatedJoints() const;
+
+
+
 
     void getActuatedJointNameList(std::vector<std::string>& robotActuatedJointNameList) const;
 
