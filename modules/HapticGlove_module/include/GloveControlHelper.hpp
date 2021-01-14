@@ -59,8 +59,8 @@ class GloveControlHelper
 
     yarp::sig::Vector m_jointsFeedbackInRadians; /**< Joint position [rad]. */
 
-    std::vector<std::string> m_humanJointList;
-    std::vector<std::string> m_humanFingersList;
+    std::vector<std::string> m_humanJointNameList;
+    std::vector<std::string> m_humanFingerNameList;
 
     SGCore::SG::SenseGlove m_glove;
 
@@ -99,6 +99,8 @@ public:
 
      bool getHandJointsAngles(Eigen::MatrixXd& measuredValue);
 
+     bool getHandJointsAngles(std::vector<double> & jointAngleList)const ;
+
     
     bool getGlovePose(Eigen::MatrixXd& measuredValue);
 
@@ -123,7 +125,7 @@ public:
 
     bool turnForceFeedback();
 
-    int getNoOfBuzzMotors();
+    const int getNoOfBuzzMotors() const;
 
     int getNoOfForceFeedback();
 
@@ -143,9 +145,9 @@ public:
     int getNoSensors();
 
     
-    void getHumanJointsList(std::vector<std::string>& jointList);
+    void getHumanJointsList(std::vector<std::string>& jointList)const ;
 
-    void getHumanFingersList(std::vector<std::string>& fingerList);
+    void getHumanFingersList(std::vector<std::string>& fingerList) const ;
 
 
 
