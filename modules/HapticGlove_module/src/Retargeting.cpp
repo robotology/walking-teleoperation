@@ -79,7 +79,7 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
     }
 
     m_fingerForceFeedback.resize(humanFingersList.size(),0.0);
-    m_buzzFeedback.resize(humanFingersList.size(),0.0);
+    m_fingerBuzzFeedback.resize(humanFingersList.size(),0.0);
 
     for (std::vector<std::string>::iterator it = humanFingersList.begin() ; it != humanFingersList.end(); ++it)
     {
@@ -152,7 +152,7 @@ bool Retargeting::retargetVibroTactileFeedbackFromRobotToHuman()
 
     for (size_t i=0; i<m_fingerAxisRelation.size();i++)
     {
-        m_buzzFeedback(i)=m_fingerForceFeedback(i)*m_fingerBuzzMotorsGain(i);
+        m_fingerBuzzFeedback(i)=m_fingerForceFeedback(i)*m_fingerBuzzMotorsGain(i);
     }
     return true;
 }
@@ -172,7 +172,17 @@ bool Retargeting::getRobotJointReferences(yarp::sig::Vector robotJointReference)
     return true;
 }
 
+bool Retargeting::getForceFeedbackToHuman(yarp::sig::Vector forceFeedbackList){
 
+    forceFeedbackList = m_fingerForceFeedback;
+    return true;
+}
+
+bool Retargeting::getVibroTactileFeedbackToHuman(yarp::sig::Vector buzzFeedbackList){
+
+    buzzFeedbackList = m_fingerBuzzFeedback;
+    return true;
+}
 
 
 
