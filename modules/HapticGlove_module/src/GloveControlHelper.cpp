@@ -21,6 +21,7 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
                                    const bool& rightHand)
 {
 
+    yInfo()<<"--> config: "<<config.toString();
     // robot name: used to connect to the robot
     std::string robot;
     robot = config.check("robot", yarp::os::Value("icubSim")).asString();

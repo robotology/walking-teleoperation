@@ -75,17 +75,19 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
     yInfo() << "m_noAnalogSensor " << m_noAnalogSensor;
 
-    m_noAllSensor = config.check("noAllSensor", yarp::os::Value(17)).asInt(); // 5*3 analog sensors+ 1 encoder thumb oppose + 1 encoder hand_finger
-    yInfo() << "m_noAllSensor " << m_noAllSensor;
+    m_noAllJoints = config.check("noAllJoints", yarp::os::Value(17)).asInt(); // 5*3 analog sensors+ 1 encoder thumb oppose + 1 encoder hand_finger
+    yInfo() << "noAllJoints " << m_noAllJoints;
 
-    m_noAllSensor=0;
+    m_noAllAxis= config.check("noAllAxis", yarp::os::Value(8)).asInt();
+    yInfo() << "noAllAxis: " << m_noAllAxis;
+
 
     m_analogSensorFeedbackRaw.resize(15); //ToFix
     m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
     m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
     m_analogSensorFeedbackSelected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
 
-    m_allSensorFeedbackInRadians.resize(m_noAllSensor);
+    m_allSensorFeedbackInRadians.resize(m_noAllJoints);
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
@@ -156,6 +158,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     {
         axisSensorData axisInfoObj;
         axisInfoObj.axisName=m_axesList[i];
+        axisInfoObj.useAnalog=false;
         yarp::os::Value* axisJointListYarp;
         if (!config.check(axisInfoObj.axisName, axisJointListYarp))
         {
@@ -171,7 +174,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
             return false;
         }
 
-        m_noAllSensor+=axisJointList.size(); // add the number of associated joint sensors to the total number of active sensors
+//        m_noAllJoints+=axisJointList.size(); // add the number of associated joint sensors to the total number of active sensors
 
 
         // *it: joint name related to the axisName
@@ -205,6 +208,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         }
         m_axisInfoList.push_back(axisInfoObj);
     }
+    m_noActuatedJoints=m_actuatedJointList.size();
 
 
     //
@@ -280,7 +284,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
             = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
     remoteControlBoardsOpts.put("writeStrict", "on");
 
-    m_actuatedDOFs = m_axesList.size();
+    m_noActuatedAxis = m_axesList.size();
 
     bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
     m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
@@ -341,15 +345,15 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    m_desiredJointValue.resize(m_actuatedDOFs);
-    m_encoderPositionFeedbackInDegrees.resize(m_actuatedDOFs);
-    m_encoderPositionFeedbackInRadians.resize(m_actuatedDOFs);
-    m_encoderVelocityFeedbackInDegrees.resize(m_actuatedDOFs);
-    m_encoderVelocityFeedbackInRadians.resize(m_actuatedDOFs);
+    m_desiredJointValue.resize(m_noActuatedAxis);
+    m_encoderPositionFeedbackInDegrees.resize(m_noActuatedAxis);
+    m_encoderPositionFeedbackInRadians.resize(m_noActuatedAxis);
+    m_encoderVelocityFeedbackInDegrees.resize(m_noActuatedAxis);
+    m_encoderVelocityFeedbackInRadians.resize(m_noActuatedAxis);
 
-    m_desiredCurrent.resize(m_actuatedDOFs);
-    m_desiredCurrentInterface.resize(m_actuatedDOFs);
-    m_currentFeedback.resize(m_actuatedDOFs);
+    m_desiredCurrent.resize(m_noActuatedAxis);
+    m_desiredCurrentInterface.resize(m_noActuatedAxis);
+    m_currentFeedback.resize(m_noActuatedAxis);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -384,7 +388,7 @@ bool RobotControlInterface::switchToControlMode(const int& controlMode)
     }
 
     // set the control interface
-    std::vector<int> controlModes(m_actuatedDOFs, controlMode);
+    std::vector<int> controlModes(m_noActuatedAxis, controlMode);
     if (!m_controlModeInterface->setControlModes(controlModes.data()) && m_isMandatory)
     {
         yError()
@@ -403,7 +407,7 @@ bool RobotControlInterface::setDirectPositionReferences(const yarp::sig::Vector&
         return false;
     }
 
-    if (desiredPosition.size() != m_actuatedDOFs)
+    if (desiredPosition.size() != m_noActuatedAxis)
     {
         yError() << "[RobotControlInterface::setDirectPositionReferences] Dimension mismatch between "
                     "desired position vector and the number of controlled joints.";
@@ -411,7 +415,7 @@ bool RobotControlInterface::setDirectPositionReferences(const yarp::sig::Vector&
     }
 
     // convert radiant to degree
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
 
     // set desired position
@@ -433,7 +437,7 @@ bool RobotControlInterface::setPositionReferences(const yarp::sig::Vector& desir
         return false;
     }
 
-    if (desiredPosition.size() != m_actuatedDOFs)
+    if (desiredPosition.size() != m_noActuatedAxis)
     {
         yError() << "[RobotControlInterface::setDirectPositionReferences] Dimension mismatch between "
                     "desired position vector and the number of controlled joints.";
@@ -441,7 +445,7 @@ bool RobotControlInterface::setPositionReferences(const yarp::sig::Vector& desir
     }
 
     // convert radiant to degree
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
 
     // set desired position
@@ -463,7 +467,7 @@ bool RobotControlInterface::setVelocityReferences(const yarp::sig::Vector& desir
         return false;
     }
 
-    if (desiredVelocity.size() != m_actuatedDOFs)
+    if (desiredVelocity.size() != m_noActuatedAxis)
     {
         yError() << "[RobotControlInterface::setVelocityReferences] Dimension mismatch between "
                     "desired velocity vector and the number of controlled joints.";
@@ -471,12 +475,12 @@ bool RobotControlInterface::setVelocityReferences(const yarp::sig::Vector& desir
     }
 
     // convert radiant/s  to degree/s
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
 
     // since the velocity interface use a minimum jerk trajectory a very high acceleration is set in
     // order to use it as velocity "direct" interface
-    yarp::sig::Vector dummy(m_actuatedDOFs, std::numeric_limits<double>::max());
+    yarp::sig::Vector dummy(m_noActuatedAxis, std::numeric_limits<double>::max());
     if (!m_velocityInterface->setRefAccelerations(dummy.data()) && m_isMandatory)
     {
         yError() << "[RobotControlInterface::setVelocityReferences] Error while setting the desired "
@@ -501,7 +505,7 @@ bool RobotControlInterface::setCurrentReferences(const yarp::sig::Vector& desire
         return false;
     }
 
-    if (desiredCurrent.size() != m_actuatedDOFs)
+    if (desiredCurrent.size() != m_noActuatedAxis)
     {
         yError() << "[RobotControlInterface::setCurrentReferences] Dimension mismatch between "
                     "desired current vector and the number of controlled joints.";
@@ -509,7 +513,7 @@ bool RobotControlInterface::setCurrentReferences(const yarp::sig::Vector& desire
     }
 
     // update the desired current values
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
         m_desiredCurrent(i) = desiredCurrent(i);
 
     // set desired current
@@ -538,7 +542,7 @@ bool RobotControlInterface::getFeedback()
         return false;
     }
 
-    for (unsigned j = 0; j < m_actuatedDOFs; ++j)
+    for (unsigned j = 0; j < m_noActuatedAxis; ++j)
         m_encoderPositionFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
 
     if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data()) && m_isMandatory)
@@ -547,7 +551,7 @@ bool RobotControlInterface::getFeedback()
         return false;
     }
 
-    for (unsigned j = 0; j < m_actuatedDOFs; ++j)
+    for (unsigned j = 0; j < m_noActuatedAxis; ++j)
         m_encoderVelocityFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
 
 
@@ -681,15 +685,25 @@ void RobotControlInterface::close()
         yError() << "[RobotControlInterface::close] Unable to close the device.";
 }
 
-const int RobotControlInterface::getActuatedDoFs() const
+const int RobotControlInterface::getNumberOfActuatedAxis() const
 {
-    return m_actuatedDOFs;
+    return m_noActuatedAxis;
 }
 
-const int RobotControlInterface::getNumberOfJoints() const
+const int RobotControlInterface::getNumberOfAllAxis() const
 {
-    //return m_noAnalogSensor;
-    return m_noAllSensor;
+    return m_noAllAxis;
+}
+
+const int RobotControlInterface::getNumberOfAllJoints() const
+{
+    return m_noAllJoints;
+
+}
+
+const int RobotControlInterface::getNumberOfActuatedJoints() const
+{
+    return m_noActuatedJoints;
 
 }
 
@@ -714,10 +728,10 @@ bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
     }
 
     // resize matrix
-    limits.resize(m_actuatedDOFs, 2);
+    limits.resize(m_noActuatedAxis, 2);
 
     double maxLimitInDegree, minLimitInDegree;
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
     {
         // get position limits
         if (!m_limitsInterface->getLimits(i, &minLimitInDegree, &maxLimitInDegree))
@@ -754,10 +768,10 @@ bool RobotControlInterface::getVelocityLimits(yarp::sig::Matrix& limits)
         return false;
     }
     // resize matrix
-    limits.resize(m_actuatedDOFs, 2);
+    limits.resize(m_noActuatedAxis, 2);
 
     double maxLimitInDegree, minLimitInDegree;
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (int i = 0; i < m_noActuatedAxis; i++)
     {
         // get position limits
         if (!m_limitsInterface->getVelLimits(i, &minLimitInDegree, &maxLimitInDegree))

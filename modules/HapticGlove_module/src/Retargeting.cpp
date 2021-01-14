@@ -11,8 +11,8 @@ m_gloveHand(&human)
 
 bool Retargeting::configure(const yarp::os::Searchable& config, const std::string& name){
 
-    m_totalGain.resize(m_robotHand->controlHelper()->getActuatedDoFs(), 0.0);
-    m_velocityGain.resize(m_robotHand->controlHelper()->getActuatedDoFs(), 0.0);
+    m_totalGain.resize(m_robotHand->controlHelper()->getNumberOfActuatedAxis(), 0.0);
+    m_velocityGain.resize(m_robotHand->controlHelper()->getNumberOfActuatedAxis(), 0.0);
 
     m_fingerBuzzMotorsGain.resize(m_gloveHand->getNoOfBuzzMotors(), 0.0);
 
