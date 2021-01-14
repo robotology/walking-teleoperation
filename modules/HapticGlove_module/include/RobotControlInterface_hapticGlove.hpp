@@ -60,7 +60,7 @@ class RobotControlInterface
         m_axesList; /**< Vector containing the name of the controlled axes. */
 
     std::vector<std::string>
-        m_activatedJointList; /**< Vector containing the names of the activated joints (activated joints are related to the axis that we are using). */
+        m_actuatedJointList; /**< Vector containing the names of the activated joints (activated joints are related to the axis that we are using). */
 
 
 
@@ -260,13 +260,17 @@ public:
      * Get the number of actuated degree of freedom (motors)
      * @return the number of actuated DoF
      */
-    int getActuatedDoFs();
+    const int getActuatedDoFs() const;
 
     /**
      * Get the number of joints
      * @return the number of joints
      */
-    int getNumberOfJoints();
+    const int getNumberOfJoints() const;
+
+    void getActuatedJointNameList(std::vector<std::string>& robotActuatedJointNameList) const;
+
+    void getActuatedAxisNameList(std::vector<std::string>& robotActuatedAxisNameList) const;
 
     /**
      * Close the helper

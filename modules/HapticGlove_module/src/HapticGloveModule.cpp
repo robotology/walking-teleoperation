@@ -100,6 +100,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
+        //TODEL-->START
         m_leftTotalGain.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_leftVelocityGain.resize(m_robotLeftHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_leftBuzzMotorsGain.resize(m_gloveLeftHand->getNoOfBuzzMotors(), 0.0);
@@ -119,6 +120,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the left hand.";
             return false;
         }
+        //TODEL-->END
 
         // ########
         // ######## Retargeting configuration
@@ -156,6 +158,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
+        //TODEL-->START
         m_rightTotalGain.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_rightVelocityGain.resize(m_robotRightHand->controlHelper()->getActuatedDoFs(), 0.0);
         m_rightBuzzMotorsGain.resize(m_gloveRightHand->getNoOfBuzzMotors(), 0.0);
@@ -175,6 +178,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             yError() << "[HapticGloveModule::configure] Initialization failed while reading K_GainBuzzMotors vector of the right hand.";
             return false;
         }
+        //TODEL-->END
 
 
         // ########
@@ -510,6 +514,8 @@ bool HapticGloveModule::updateModule()
         // 3- Set the reference joint valued for the iCub hand fingers
         // left hand
         //        m_leftHandFingers->setFingersAxisReference(m_icubLeftFingerAxisReference);
+
+        //TODEL--> START
         if (m_useLeftHand)
         {
             std::cerr << "Debug: 07 \n";
@@ -607,6 +613,19 @@ bool HapticGloveModule::updateModule()
             yInfo() << "m_icubRightFingerJointsReference: "
                     << m_icubRightFingerJointsReference.toString();
         }
+        //TODEL--> END
+
+        if (m_useLeftHand)
+        {
+            m_retargetingLeftHand->retargetHumanMotionToRobot();
+            m_retargetingLeftHand->getRobotJointReferences(m_icubLeftFingerJointsReference);
+        }
+        if (m_useRightHand)
+        {
+            m_retargetingRightHand->retargetHumanMotionToRobot();
+            m_retargetingRightHand->getRobotJointReferences(m_icubLeftFingerJointsReference);
+
+        }
 
         /*** COMPUTE FORCE FEEDBACK***/
         if (m_useLeftHand)
@@ -697,8 +716,11 @@ bool HapticGloveModule::updateModule()
                   << m_icubLeftFingerAxisValueErrorSmoothed(5);
             yInfo()<<"Left Axis springy: "<<m_icubLeftFingerAxisValueErrorSmoothed(7);
 
-            int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
+
+
+
+            m_retargetingLeftHand->retargetForceFeedbackFromRobotToHuman(m_icubLeftFingerAxisValueErrorSmoothed, m_icubLeftFingerAxisVelocityErrorSmoothed);
             m_gloveLeftForceFeedbackReference(0)=
                     m_leftTotalGain(0)* (m_icubLeftFingerAxisValueErrorSmoothed(0) + m_leftVelocityGain(0)*m_icubLeftFingerAxisVelocityErrorSmoothed(0)) +
                     m_leftTotalGain(1)* (m_icubLeftFingerAxisValueErrorSmoothed(1) + m_leftVelocityGain(1)*m_icubLeftFingerAxisVelocityErrorSmoothed(1)) +

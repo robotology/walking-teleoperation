@@ -48,7 +48,7 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
         yError() << "[GloveControlHelper::configure] Unable to find human_joint_list into config file.";
         return false;
     }
-    if (!YarpHelper::yarpListToStringVector(jointListYarp, m_humanJointList))
+    if (!YarpHelper::yarpListToStringVector(jointListYarp, m_humanJointNameList))
     {
         yError() << "[GloveControlHelper::configure] Unable to convert human_joint_list list into a "
                     "vector of strings.";
@@ -56,12 +56,12 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
     }
 
     yarp::os::Value* fingerListYarp;
-    if (!config.check("human_finger_list", jointListYarp))
+    if (!config.check("human_finger_list", fingerListYarp))
     {
         yError() << "[GloveControlHelper::configure] Unable to find human_finger_list into config file.";
         return false;
     }
-    if (!YarpHelper::yarpListToStringVector(fingerListYarp, m_humanFingersList))
+    if (!YarpHelper::yarpListToStringVector(fingerListYarp, m_humanFingerNameList))
     {
         yError() << "[GloveControlHelper::configure] Unable to convert human_finger_list list into a "
                     "vector of strings.";
@@ -226,6 +226,39 @@ bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
     return true;
 }
 
+bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)const
+{
+    jointAngleList.resize(m_humanFingerNameList.size(),0.0);
+
+    // thumb
+    jointAngleList[0]=m_handJointsAngles(0, 2);
+    jointAngleList[1]=m_handJointsAngles(1, 1);
+    jointAngleList[2]=m_handJointsAngles(2, 1);
+
+    // index (3:5)
+    jointAngleList[3]=m_handJointsAngles(4, 2);
+    jointAngleList[4]=m_handJointsAngles(5, 1);
+    jointAngleList[5]=m_handJointsAngles(6, 1);
+
+    // middle (6:8)
+    jointAngleList[6]=m_handJointsAngles(8, 1);
+    jointAngleList[7]=m_handJointsAngles(9, 1);
+    jointAngleList[8]=m_handJointsAngles(10, 1);
+
+    // ring (9:11)
+    jointAngleList[9]=m_handJointsAngles(12, 1);
+    jointAngleList[10]=m_handJointsAngles(13, 1);
+    jointAngleList[11]=m_handJointsAngles(14, 1);
+
+    // pinkie (9:11)
+    jointAngleList[12]=m_handJointsAngles(16, 1);
+    jointAngleList[13]=m_handJointsAngles(17, 1);
+    jointAngleList[14]=m_handJointsAngles(18, 1);
+
+    return true;
+}
+
+
 bool GloveControlHelper::isConnected()
 {
     return m_glove.IsConnected();
@@ -272,7 +305,7 @@ bool GloveControlHelper::turnForceFeedback()
     return true;
 
 }
-int GloveControlHelper::getNoOfBuzzMotors()
+const int GloveControlHelper::getNoOfBuzzMotors() const
 {
     return m_buzzDof;
 }
@@ -347,12 +380,12 @@ int GloveControlHelper::getNoSensors()
 
 
 
-void GloveControlHelper::getHumanJointsList(std::vector<std::string>& jointList){
-    jointList = m_humanJointList;
+void GloveControlHelper::getHumanJointsList( std::vector<std::string>& jointList)const {
+    jointList = m_humanJointNameList;
 }
 
-void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList){
-    fingerList = m_humanFingersList;
+void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList)const {
+    fingerList = m_humanFingerNameList;
 }
 
 
