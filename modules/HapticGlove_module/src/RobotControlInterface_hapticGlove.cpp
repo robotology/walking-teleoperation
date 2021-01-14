@@ -177,7 +177,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         // *it: joint name related to the axisName
         for (std::vector<std::string>::iterator it = axisJointList.begin() ; it != axisJointList.end(); ++it)
         {
-            m_activatedJointList.push_back(*it);
+            m_actuatedJointList.push_back(*it);
 
             auto elementJoint = std::find(std::begin(jointList), std::end(jointList), *it );
             if (elementJoint == std::end(jointList)) {
@@ -681,17 +681,29 @@ void RobotControlInterface::close()
         yError() << "[RobotControlInterface::close] Unable to close the device.";
 }
 
-int RobotControlInterface::getActuatedDoFs()
+const int RobotControlInterface::getActuatedDoFs() const
 {
     return m_actuatedDOFs;
 }
 
-int RobotControlInterface::getNumberOfJoints()
+const int RobotControlInterface::getNumberOfJoints() const
 {
     //return m_noAnalogSensor;
     return m_noAllSensor;
 
 }
+
+void RobotControlInterface::getActuatedJointNameList(std::vector<std::string>& robotActuatedJointNameList) const
+{
+    robotActuatedJointNameList=m_actuatedJointList;
+}
+
+void RobotControlInterface::getActuatedAxisNameList(std::vector<std::string>& robotActuatedAxisNameList) const
+{
+    robotActuatedAxisNameList=m_axesList;
+
+}
+
 
 bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
 {
