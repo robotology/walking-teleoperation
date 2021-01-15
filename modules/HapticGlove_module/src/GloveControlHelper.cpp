@@ -201,7 +201,7 @@ bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
     return true;
 }
 
-bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
+bool GloveControlHelper::getHandJointsAngles()
 {
 
     SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
@@ -211,7 +211,7 @@ bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
     if (!m_glove.GetHandPose(profile, solver, handPose))
     {
         yWarning() << "m_glove.GetHandPose return error.";
-        measuredValue = m_handJointsAngles;
+//        measuredValue = m_handJointsAngles;
         return true;
     }
 
@@ -223,21 +223,15 @@ bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
             m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
             m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
             m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
-            yInfo()<<"handPose.handAngles: "<<handPose.handAngles[i][j].x<< handPose.handAngles[i][j].y <<handPose.handAngles[i][j].z;
-
             count++;
         }
     }
-    yInfo()<<"m_handJointsAngles.data(): "<<m_handJointsAngles.data();
-    measuredValue = m_handJointsAngles;
-
     return true;
 }
 
-bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)const
+bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)
 {
-    Eigen::MatrixXd  measuredValue;
-    GloveControlHelper::getHandJointsAngles( measuredValue);
+    GloveControlHelper::getHandJointsAngles( );
     jointAngleList.resize(m_humanJointNameList.size(),0.0);
 
     // thumb
@@ -265,10 +259,13 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
     jointAngleList[13]=m_handJointsAngles(17, 1);
     jointAngleList[14]=m_handJointsAngles(18, 1);
 
-    std::cout<<"m_handJointsAngles: \n"<< m_handJointsAngles;
     yInfo()<<"jointAngleList: "<< jointAngleList;
 
     return true;
+}
+bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd measuredValue )
+{
+    measuredValue = m_handJointsAngles;
 }
 
 
