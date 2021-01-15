@@ -44,22 +44,22 @@ public:
 
     bool retargetHumanMotionToRobot(const std::vector<double> & humanJointAngles);
 
-    bool retargetForceFeedbackFromRobotToHuman(yarp::sig::Vector axisValueError,yarp::sig::Vector axisVelocityError );
+    bool retargetForceFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError );
 
     bool retargetVibroTactileFeedbackFromRobotToHuman();
 
-    bool retargetHapticFeedbackFromRobotToHuman(yarp::sig::Vector axisValueError,yarp::sig::Vector axisVelocityError );
+    bool retargetHapticFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError );
 
     bool mapFromHuman2Robot(std::vector<std::string> humanListName,
                             std::vector<std::string> robotListNames,
                             std::vector<unsigned>& humanToRobotMap);
 
 
-    bool getRobotJointReferences(yarp::sig::Vector robotJointReference);
+    bool getRobotJointReferences(yarp::sig::Vector& robotJointReference);
 
-    bool getForceFeedbackToHuman(yarp::sig::Vector forceFeedbackList);
+    bool getForceFeedbackToHuman(yarp::sig::Vector& forceFeedbackList);
 
-    bool getVibroTactileFeedbackToHuman(yarp::sig::Vector buzzFeedbackList);
+    bool getVibroTactileFeedbackToHuman(yarp::sig::Vector& buzzFeedbackList);
 
 
 

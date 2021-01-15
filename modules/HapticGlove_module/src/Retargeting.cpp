@@ -123,38 +123,35 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
 
 bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJointAngles){
 
-    yInfo()<<"joint anlges and names size: "<<humanJointAngles.size()<<m_humanJointNameList.size();
     if(humanJointAngles.size()!=m_humanJointNameList.size())
     {
         yError()<<"[Retargeting::retargetHumanMotionToRobot] the size of human joint name and angles are different.";
         return false;
     }
-    yInfo()<< "i<< m_humanToRobotMap[i] m_retargetingScaling(m_humanToRobotMap[i]) humanJointAngles[m_humanToRobotMap[i]] m_retargetingBias(m_humanToRobotMap[i]) ";
-   yInfo()<< m_robotActuatedJointNameList.size()<< m_robotActuatedJointNameList;
     for (size_t i= 0; i<m_robotActuatedJointNameList.size();++i)
     {
-        yInfo()<< i<< m_humanToRobotMap[i]<< m_retargetingScaling(m_humanToRobotMap[i])<<humanJointAngles[m_humanToRobotMap[i]]
-                << m_retargetingBias(m_humanToRobotMap[i]);
         m_robotRefJointAngles(i)=m_retargetingScaling(m_humanToRobotMap[i])*humanJointAngles[m_humanToRobotMap[i]] + m_retargetingBias(m_humanToRobotMap[i]);
     }
+
 
     return true;
 }
 
-bool Retargeting::retargetForceFeedbackFromRobotToHuman(yarp::sig::Vector axisValueError,yarp::sig::Vector axisVelocityError ){
+bool Retargeting::retargetForceFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError ){
 
 
     for (size_t i=0; i<m_fingerAxisRelation.size();i++)
     {
-
+        std::cout<<m_fingerAxisRelation[i].fingerName<<" ";
        m_fingerForceFeedback(i)=0.0;
-       size_t Index; // related actuated axis index
        for(int j=0; j <m_fingerAxisRelation[i].m_robotActuatedAxisIndex.size();j++)
        {
-           Index=m_fingerAxisRelation[i].m_robotActuatedAxisIndex[j];
+           // related actuated axis index
+           size_t Index=m_fingerAxisRelation[i].m_robotActuatedAxisIndex[j];
            m_fingerForceFeedback(i)+= m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
+           std::cout<<Index <<" "<<  m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
        }
-
+       std::cout<< "\n";
     }
     return true;
 }
@@ -169,7 +166,7 @@ bool Retargeting::retargetVibroTactileFeedbackFromRobotToHuman()
     return true;
 }
 
-bool Retargeting::retargetHapticFeedbackFromRobotToHuman(yarp::sig::Vector axisValueError,yarp::sig::Vector axisVelocityError )
+bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError )
 {
 
     retargetForceFeedbackFromRobotToHuman(axisValueError, axisVelocityError);
@@ -178,19 +175,18 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(yarp::sig::Vector axisV
     return true;
 }
 
-bool Retargeting::getRobotJointReferences(yarp::sig::Vector robotJointReference){
-
+bool Retargeting::getRobotJointReferences(yarp::sig::Vector& robotJointReference){
     robotJointReference = m_robotRefJointAngles;
     return true;
 }
 
-bool Retargeting::getForceFeedbackToHuman(yarp::sig::Vector forceFeedbackList){
+bool Retargeting::getForceFeedbackToHuman(yarp::sig::Vector& forceFeedbackList){
 
     forceFeedbackList = m_fingerForceFeedback;
     return true;
 }
 
-bool Retargeting::getVibroTactileFeedbackToHuman(yarp::sig::Vector buzzFeedbackList){
+bool Retargeting::getVibroTactileFeedbackToHuman(yarp::sig::Vector& buzzFeedbackList){
 
     buzzFeedbackList = m_fingerBuzzFeedback;
     return true;

@@ -653,7 +653,7 @@ bool HapticGloveModule::updateModule()
         {
             std::vector<double> humanJointAngles;
             m_gloveLeftHand->getHandJointsAngles(humanJointAngles);
-            yInfo()<<"humanJointAngles: "<<humanJointAngles;
+            yInfo()<<"humanJointAngles2: "<<humanJointAngles;
             if(!m_retargetingLeftHand->retargetHumanMotionToRobot(humanJointAngles))
             {
                 yError()<<"[HapticGloveModule::updateModule()] m_retargetingLeftHand->retargetHumanMotionToRobot returns false! ";
@@ -667,6 +667,7 @@ bool HapticGloveModule::updateModule()
         {
             std::vector<double> humanJointAngles;
             m_retargetingRightHand->retargetHumanMotionToRobot(humanJointAngles);
+            yInfo()<<"humanJointAngles2:  "<<humanJointAngles;
             m_retargetingRightHand->getRobotJointReferences(m_icubRightFingerJointsReference);
 
         }
@@ -808,9 +809,15 @@ bool HapticGloveModule::updateModule()
             }
             //TODEL-->END
 */
+            yInfo()<<"m_icubLeftFingerAxisValueErrorSmoothed "<<m_icubLeftFingerAxisValueErrorSmoothed.toString();
+            yInfo()<<"m_icubLeftFingerAxisVelocityErrorSmoothed "<<m_icubLeftFingerAxisVelocityErrorSmoothed.toString();
+            yInfo()<<"m_gloveLeftForceFeedbackReference "<< m_gloveLeftForceFeedbackReference.toString();
+
             m_retargetingLeftHand->retargetHapticFeedbackFromRobotToHuman(m_icubLeftFingerAxisValueErrorSmoothed, m_icubLeftFingerAxisVelocityErrorSmoothed);
             m_retargetingLeftHand->getForceFeedbackToHuman(m_gloveLeftForceFeedbackReference);
+            yInfo()<<"m_gloveLeftForceFeedbackReference2 "<< m_gloveLeftForceFeedbackReference.toString();
             m_retargetingLeftHand->getVibroTactileFeedbackToHuman(m_gloveLeftBuzzMotorReference);
+            yInfo()<<"m_gloveLeftBuzzMotorReference "<< m_gloveLeftBuzzMotorReference.toString();
 
 
 

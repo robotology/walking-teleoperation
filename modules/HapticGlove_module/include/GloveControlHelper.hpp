@@ -97,11 +97,13 @@ public:
     bool getHandPose(Eigen::MatrixXd& measuredValue);
 
 
-     bool getHandJointsAngles(Eigen::MatrixXd& measuredValue);
+     bool getHandJointsAngles();
 
-     bool getHandJointsAngles(std::vector<double> & jointAngleList)const ;
+     bool getHandJointsAngles(std::vector<double> & jointAngleList) ;
 
-    
+     bool getHandJointsAngles(Eigen::MatrixXd measuredValue);
+
+
     bool getGlovePose(Eigen::MatrixXd& measuredValue);
 
     bool getSensorData(std::vector<float>& measuredValues);
