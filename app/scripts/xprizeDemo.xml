@@ -45,20 +45,20 @@
 
   <module>
     <name>camCalibWithPose</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left --useIMU</parameters>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
     <node>icub-console</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right --useIMU</parameters>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
     <node>icub-console</node>
   </module>
 
   <!-- icub-virtualizer -->
   <module>
     <name>yarpdev</name>
-    <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --gui_elements 0</parameters>
+    <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --gui_elements 0 --userpose true</parameters>
     <node>icub-virtualizer</node>
   </module>
 
