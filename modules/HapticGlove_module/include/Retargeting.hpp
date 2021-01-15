@@ -4,13 +4,6 @@
 #include <vector>
 #include <yarp/sig/Vector.h>
 
-
-
-
-#include <RobotController_hapticGlove.hpp>
-#include <GloveControlHelper.hpp>
-
-
 struct FingerAxisRelation
 {
     std::string fingerName;
@@ -29,8 +22,9 @@ class Retargeting{
     yarp::sig::Vector m_retargetingBias;
 
 
-   const RobotController* m_robotHand;
-   const HapticGlove::GloveControlHelper * m_gloveHand;
+    size_t m_noAllAxis;
+    size_t m_noBuzzMotors;
+    std::vector<std::string>m_robotActuatedAxisNameList;
 
    std::vector<unsigned> m_humanToRobotMap;
    std::vector<std::string> m_humanJointNameList, m_robotActuatedJointNameList; //names
@@ -43,11 +37,12 @@ class Retargeting{
     std::vector<FingerAxisRelation>  m_fingerAxisRelation;
 
 public:
-    Retargeting(const RobotController & robot, const HapticGlove::GloveControlHelper& human);
+    Retargeting(const size_t noAllAxis,const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
+                const std::vector<std::string>& robotActuatedAxisNameList, const std::vector<std::string>& humanJointNameList);
 
     bool configure(const yarp::os::Searchable& config, const std::string& name);
 
-    bool retargetHumanMotionToRobot();
+    bool retargetHumanMotionToRobot(const std::vector<double> & humanJointAngles);
 
     bool retargetForceFeedbackFromRobotToHuman(yarp::sig::Vector axisValueError,yarp::sig::Vector axisVelocityError );
 

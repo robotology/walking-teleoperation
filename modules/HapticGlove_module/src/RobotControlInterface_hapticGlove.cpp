@@ -87,7 +87,6 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
     m_analogSensorFeedbackSelected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
 
-    m_allSensorFeedbackInRadians.resize(m_noAllJoints);
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
@@ -210,6 +209,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     }
     m_noActuatedJoints=m_actuatedJointList.size();
 
+    m_SensorActuatedJointFeedbackInRadians.resize(m_noActuatedJoints);
 
     //
     m_joints_min_boundary.resize(m_noAnalogSensor, 0.0);
@@ -616,13 +616,13 @@ bool RobotControlInterface::setAllJointsFeedback()
             // "it" is the pointer to ananlog Index
             for(std::vector<int>::iterator it = m_axisInfoList[i].relatedAnalogSensorsIndex.begin() ; it != m_axisInfoList[i].relatedAnalogSensorsIndex.end(); ++it)
             {
-                m_allSensorFeedbackInRadians(idx)=m_analogSensorFeedbackInRadians(*it);
+                m_SensorActuatedJointFeedbackInRadians(idx)=m_analogSensorFeedbackInRadians(*it);
                 idx++;
             }
         }
         else
         {
-            m_allSensorFeedbackInRadians(idx)=m_encoderPositionFeedbackInRadians(i);
+            m_SensorActuatedJointFeedbackInRadians(idx)=m_encoderPositionFeedbackInRadians(i);
             idx++;
         }
     }
@@ -663,7 +663,7 @@ const yarp::sig::Vector& RobotControlInterface::analogSensors() const
 
 const yarp::sig::Vector& RobotControlInterface::allSensors() const
 {
-    return m_allSensorFeedbackInRadians;
+    return m_SensorActuatedJointFeedbackInRadians;
 }
 
 const yarp::sig::Vector& RobotControlInterface::motorCurrents() const

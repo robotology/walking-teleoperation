@@ -21,7 +21,6 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
                                    const bool& rightHand)
 {
 
-    yInfo()<<"--> config: "<<config.toString();
     // robot name: used to connect to the robot
     std::string robot;
     robot = config.check("robot", yarp::os::Value("icubSim")).asString();
@@ -163,21 +162,25 @@ bool GloveControlHelper::getSensorData(std::vector<float>& measuredValues)
 }
 bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 {
-
+    yInfo()<<"getHandPose: 01";
     SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
+    yInfo()<<"getHandPose: 01-1";
     SGCore::HandPose handPose;
+    yInfo()<<"getHandPose: 01-2";
     SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
-
+    yInfo()<<"getHandPose: 02";
     if (!m_glove.GetHandPose(profile, solver, handPose))
     {
         yWarning() << "m_glove.GetHandPose return error.";
         measuredValue = m_handPose;
         return true;
     }
+        yInfo()<<"getHandPose: 03";
 
     int count = 0;
     for (int i = 0; i < handPose.jointPositions.size(); i++)
     {
+            yInfo()<<"getHandPose: 04";
         for (int j = 0; j < handPose.jointPositions[i].size(); j++)
         {
             m_handPose(count, 0) = handPose.jointPositions[i][j].x;
@@ -191,7 +194,9 @@ bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
             count++;
         }
     }
+        yInfo()<<"getHandPose: 05";
     measuredValue = m_handPose;
+    yInfo()<<"getHandPose: 06";
 
     return true;
 }
@@ -218,10 +223,12 @@ bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
             m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
             m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
             m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
+            yInfo()<<"handPose.handAngles: "<<handPose.handAngles[i][j].x<< handPose.handAngles[i][j].y <<handPose.handAngles[i][j].z;
 
             count++;
         }
     }
+    yInfo()<<"m_handJointsAngles.data(): "<<m_handJointsAngles.data();
     measuredValue = m_handJointsAngles;
 
     return true;
@@ -229,7 +236,9 @@ bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd& measuredValue)
 
 bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)const
 {
-    jointAngleList.resize(m_humanFingerNameList.size(),0.0);
+    Eigen::MatrixXd  measuredValue;
+    GloveControlHelper::getHandJointsAngles( measuredValue);
+    jointAngleList.resize(m_humanJointNameList.size(),0.0);
 
     // thumb
     jointAngleList[0]=m_handJointsAngles(0, 2);
@@ -255,6 +264,9 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
     jointAngleList[12]=m_handJointsAngles(16, 1);
     jointAngleList[13]=m_handJointsAngles(17, 1);
     jointAngleList[14]=m_handJointsAngles(18, 1);
+
+    std::cout<<"m_handJointsAngles: \n"<< m_handJointsAngles;
+    yInfo()<<"jointAngleList: "<< jointAngleList;
 
     return true;
 }
