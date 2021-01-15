@@ -87,7 +87,7 @@ class RobotControlInterface
     yarp::sig::Vector m_analogSensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
     yarp::sig::Vector m_analogSensorFeedbackSelected; /**< sensor info to read*/
-    yarp::sig::Vector m_allSensorFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
+    yarp::sig::Vector m_SensorActuatedJointFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
     yarp::sig::Vector m_currentFeedback;/**< motor current feedbacks*/
     yarp::sig::Vector m_desiredCurrent;/**< motor current reference*/
     yarp::sig::Vector m_desiredCurrentInterface;/**< motor current reference*/
