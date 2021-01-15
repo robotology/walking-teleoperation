@@ -1,20 +1,26 @@
 #include <Retargeting.hpp>
 #include <Utils.hpp>
+#include <algorithm>
 
-Retargeting::    Retargeting(const RobotController & robot, const HapticGlove::GloveControlHelper& human): m_robotHand(&robot),
-m_gloveHand(&human)
-{
+Retargeting::Retargeting(const size_t noAllAxis,const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
+                         const std::vector<std::string>& robotActuatedAxisNameList, const std::vector<std::string>& humanJointNameList) {
 
+m_noAllAxis= noAllAxis;
+m_robotActuatedJointNameList= robotActuatedJointNameList;
+m_robotActuatedAxisNameList= robotActuatedAxisNameList;
 
-
+m_noBuzzMotors=noBuzzMotors;
+m_humanJointNameList=humanJointNameList;
 }
 
 bool Retargeting::configure(const yarp::os::Searchable& config, const std::string& name){
 
-    m_totalGain.resize(m_robotHand->controlHelper()->getNumberOfActuatedAxis(), 0.0);
-    m_velocityGain.resize(m_robotHand->controlHelper()->getNumberOfActuatedAxis(), 0.0);
+    m_totalGain.resize(m_noAllAxis, 0.0);
+    m_velocityGain.resize(m_noAllAxis, 0.0);
+    m_retargetingScaling.resize(m_humanJointNameList.size(), 0.0);
+    m_retargetingBias.resize(m_humanJointNameList.size(), 0.);
+    m_fingerBuzzMotorsGain.resize(m_noBuzzMotors, 0.0);
 
-    m_fingerBuzzMotorsGain.resize(m_gloveHand->getNoOfBuzzMotors(), 0.0);
 
     if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainTotal", m_totalGain))
     {
@@ -36,7 +42,7 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
     // ****
     if(!YarpHelper::getYarpVectorFromSearchable(config, "human_to_robot_joint_anlges_scaling", m_retargetingScaling))
     {
-        yError() << "[Retargeting::configure] Initialization failed while reading m_retargetingScaling vector of the hand.";
+        yError() << "[Retargeting::configure] Initialization failed while reading human_to_robot_joint_anlges_scaling vector of the hand.";
         return false;
     }
 
@@ -46,23 +52,21 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
         return false;
     }
 
+    yInfo()<<"K_GainTotal "<< m_totalGain.toString();
+    yInfo()<<"K_GainVelocity "<< m_velocityGain.toString();
+    yInfo()<<"K_GainBuzzMotors "<< m_fingerBuzzMotorsGain.toString();
+    yInfo()<<"human_to_robot_joint_anlges_scaling "<< m_retargetingScaling.toString();
+    yInfo()<<"human_to_robot_joint_anlges_bias "<< m_retargetingBias.toString();
+
     /////////////
     ///////////// Get human and robot joint list and find the mapping between them
     /////////////
 
-    m_gloveHand->getHumanJointsList(m_humanJointNameList);
-
-    m_robotHand->controlHelper()->getActuatedJointNameList(m_robotActuatedJointNameList);
-
     mapFromHuman2Robot(m_humanJointNameList, m_robotActuatedJointNameList, m_humanToRobotMap);
 
-    m_humanJointAngles.resize(m_humanJointNameList.size(),0.0);
     m_robotRefJointAngles.resize(m_robotActuatedJointNameList.size(), 0.0); ;//.resize(m_humanJointNameList.size(),0.0);
 
     //////////
-
-    std::vector<std::string>robotActuatedAxisNameList;
-    m_robotHand->controlHelper()->getActuatedAxisNameList(robotActuatedAxisNameList);
 
     yarp::os::Value* humanFingersListYarp;
     std::vector<std::string> humanFingersList;
@@ -105,10 +109,10 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
         {
 
 
-            auto elementAxis = std::find(std::begin(robotActuatedAxisNameList), std::end(robotActuatedAxisNameList), *it_axis );
-            if (elementAxis != std::end(robotActuatedAxisNameList))
+            auto elementAxis = std::find(std::begin(m_robotActuatedAxisNameList), std::end(m_robotActuatedAxisNameList), *it_axis );
+            if (elementAxis != std::end(m_robotActuatedAxisNameList))
             {
-                size_t indexAxis= elementAxis-robotActuatedAxisNameList.begin();
+                size_t indexAxis= elementAxis-m_robotActuatedAxisNameList.begin();
                 tmpObj.m_robotActuatedAxisIndex.push_back(indexAxis);
             }
         }
@@ -117,13 +121,21 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
     return true;
 }
 
-bool Retargeting::retargetHumanMotionToRobot(){
+bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJointAngles){
 
-    m_gloveHand->getHandJointsAngles(m_humanJointAngles);
-
+    yInfo()<<"joint anlges and names size: "<<humanJointAngles.size()<<m_humanJointNameList.size();
+    if(humanJointAngles.size()!=m_humanJointNameList.size())
+    {
+        yError()<<"[Retargeting::retargetHumanMotionToRobot] the size of human joint name and angles are different.";
+        return false;
+    }
+    yInfo()<< "i<< m_humanToRobotMap[i] m_retargetingScaling(m_humanToRobotMap[i]) humanJointAngles[m_humanToRobotMap[i]] m_retargetingBias(m_humanToRobotMap[i]) ";
+   yInfo()<< m_robotActuatedJointNameList.size()<< m_robotActuatedJointNameList;
     for (size_t i= 0; i<m_robotActuatedJointNameList.size();++i)
     {
-        m_robotRefJointAngles(i)=m_retargetingScaling(m_humanToRobotMap[i])*m_humanJointAngles[m_humanToRobotMap[i]] + m_retargetingBias(m_humanToRobotMap[i]);
+        yInfo()<< i<< m_humanToRobotMap[i]<< m_retargetingScaling(m_humanToRobotMap[i])<<humanJointAngles[m_humanToRobotMap[i]]
+                << m_retargetingBias(m_humanToRobotMap[i]);
+        m_robotRefJointAngles(i)=m_retargetingScaling(m_humanToRobotMap[i])*humanJointAngles[m_humanToRobotMap[i]] + m_retargetingBias(m_humanToRobotMap[i]);
     }
 
     return true;
@@ -210,14 +222,14 @@ bool Retargeting::mapFromHuman2Robot( std::vector<std::string> humanListName,
         }
         if (!foundMatch)
         {
-            yError() << "[XsensRetargeting::impl::mapJointsHDE2CONTROLLER] not found match for: "
+            yError() << "[Retargeting::mapFromHuman2Robot] not found match for: "
                      << robotListNames[i] << " , " << i;
             return false;
         }
         foundMatch = false;
     }
 
-    yInfo() << "*** mapped joint names: ****";
+    yInfo() << "*** mapped joint names:  human --> robot ****";
     for (size_t i = 0; i < robotListNames.size(); i++)
     {
         yInfo() << "(" << i << ", " << humanToRobotMap[i] << "): " << robotListNames[i]
