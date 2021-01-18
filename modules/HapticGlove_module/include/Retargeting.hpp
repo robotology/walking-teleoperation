@@ -23,6 +23,7 @@ class Retargeting{
 
 
     size_t m_noAllAxis;
+    size_t m_noActuatedAxis;
     size_t m_noBuzzMotors;
     std::vector<std::string>m_robotActuatedAxisNameList;
 
@@ -37,7 +38,7 @@ class Retargeting{
     std::vector<FingerAxisRelation>  m_fingerAxisRelation;
 
 public:
-    Retargeting(const size_t noAllAxis,const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
+    Retargeting(const size_t noAllAxis, const size_t noActuatedAxis, const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
                 const std::vector<std::string>& robotActuatedAxisNameList, const std::vector<std::string>& humanJointNameList);
 
     bool configure(const yarp::os::Searchable& config, const std::string& name);
@@ -60,6 +61,11 @@ public:
     bool getForceFeedbackToHuman(yarp::sig::Vector& forceFeedbackList);
 
     bool getVibroTactileFeedbackToHuman(yarp::sig::Vector& buzzFeedbackList);
+
+    bool getCustomSetIndecies( const std::vector<std::string>& allListName,
+                               const std::vector<std::string>& customListNames,
+                               const yarp::sig::Vector& allListVector,
+                               yarp::sig::Vector& customListVector);
 
 
 
