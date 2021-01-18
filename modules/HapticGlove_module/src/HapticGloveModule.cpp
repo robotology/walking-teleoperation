@@ -129,6 +129,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         // ########
 
         size_t noRobotAllAxis = m_robotLeftHand->controlHelper()->getNumberOfAllAxis();
+        size_t noRobotActuatedAxis = m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis();
         std::vector<std::string> robotActuatedJointNameList;
         m_robotLeftHand->controlHelper()->getActuatedJointNameList(robotActuatedJointNameList);
         std::vector<std::string> robotActuatedAxisNameList;
@@ -138,7 +139,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> humanJointNameList;
         m_gloveLeftHand->getHumanJointsList(humanJointNameList);
 
-        m_retargetingLeftHand= std::make_unique<Retargeting>(noRobotAllAxis, noBuzzMotors, robotActuatedJointNameList,
+        m_retargetingLeftHand= std::make_unique<Retargeting>(noRobotAllAxis, noRobotActuatedAxis, noBuzzMotors, robotActuatedJointNameList,
                                                              robotActuatedAxisNameList, humanJointNameList );
         if(!m_retargetingLeftHand->configure(leftFingersOptions, getName()))
         {
@@ -205,6 +206,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         // ########
 
         size_t noRobotAllAxis = m_robotRightHand->controlHelper()->getNumberOfAllAxis();
+        size_t noRobotActuatedAxis = m_robotRightHand->controlHelper()->getNumberOfActuatedAxis();
         std::vector<std::string> robotActuatedJointNameList;
         m_robotRightHand->controlHelper()->getActuatedJointNameList(robotActuatedJointNameList);
         std::vector<std::string> robotActuatedAxisNameList;
@@ -214,7 +216,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> humanJointNameList;
         m_gloveRightHand->getHumanJointsList(humanJointNameList);
 
-        m_retargetingRightHand= std::make_unique<Retargeting>(noRobotAllAxis, noBuzzMotors, robotActuatedJointNameList,
+        m_retargetingRightHand= std::make_unique<Retargeting>(noRobotAllAxis,noRobotActuatedAxis, noBuzzMotors, robotActuatedJointNameList,
                                                               robotActuatedAxisNameList, humanJointNameList );
 
         if(!m_retargetingRightHand->configure(rightFingersOptions, getName()))
