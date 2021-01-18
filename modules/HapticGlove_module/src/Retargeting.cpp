@@ -2,10 +2,11 @@
 #include <Utils.hpp>
 #include <algorithm>
 
-Retargeting::Retargeting(const size_t noAllAxis,const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
+Retargeting::Retargeting(const size_t noAllAxis,const size_t noActuatedAxis, const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
                          const std::vector<std::string>& robotActuatedAxisNameList, const std::vector<std::string>& humanJointNameList) {
 
 m_noAllAxis= noAllAxis;
+m_noActuatedAxis= noActuatedAxis;
 m_robotActuatedJointNameList= robotActuatedJointNameList;
 m_robotActuatedAxisNameList= robotActuatedAxisNameList;
 
@@ -14,24 +15,56 @@ m_humanJointNameList=humanJointNameList;
 }
 
 bool Retargeting::configure(const yarp::os::Searchable& config, const std::string& name){
+    yarp::sig::Vector totalGainAllAxis,  velocityGainAllAxis;
+    totalGainAllAxis.resize(m_noAllAxis, 0.0);
+    velocityGainAllAxis.resize(m_noAllAxis, 0.0);
 
-    m_totalGain.resize(m_noAllAxis, 0.0);
-    m_velocityGain.resize(m_noAllAxis, 0.0);
+//    m_totalGain.resize(m_noActuatedAxis, 0.0);
+//    m_velocityGain.resize(m_noActuatedAxis, 0.0);
     m_retargetingScaling.resize(m_humanJointNameList.size(), 0.0);
     m_retargetingBias.resize(m_humanJointNameList.size(), 0.);
     m_fingerBuzzMotorsGain.resize(m_noBuzzMotors, 0.0);
 
+    yarp::os::Value* robotAllAxisNameListYarp;
+    yarp::os::Value* robotActuatedAxisNameListYarp;
+    std::vector<std::string> robotAllAxisNameList, robotActuatedAxisNameList;
+    if (!config.check("all_axis_list", robotAllAxisNameListYarp))
+    {
+        yError() << "[Retargeting::configure] Unable to find all_axis_list into config file.";
+        return false;
+    }
+    if (!YarpHelper::yarpListToStringVector(robotAllAxisNameListYarp, robotAllAxisNameList))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to convert all_axis_list list into a "
+                    "vector of strings.";
+        return false;
+    }
 
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainTotal", m_totalGain))
+    if (!config.check("axis_list", robotActuatedAxisNameListYarp))
+    {
+        yError() << "[Retargeting::configure] Unable to find axis_list into config file.";
+        return false;
+    }
+    if (!YarpHelper::yarpListToStringVector(robotActuatedAxisNameListYarp, robotActuatedAxisNameList))
+    {
+        yError() << "[GloveControlHelper::configure] Unable to convert axis_list list into a "
+                    "vector of strings.";
+        return false;
+    }
+
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainTotal", totalGainAllAxis))
     {
         yError() << "[Retargeting::configure] Initialization failed while reading K_GainTotal vector of the hand.";
         return false;
     }
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainVelocity", m_velocityGain))
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainVelocity", velocityGainAllAxis))
     {
         yError() << "[Retargeting::configure] Initialization failed while reading K_GainVelocity vector of the hand.";
         return false;
     }
+
+    getCustomSetIndecies(robotAllAxisNameList, robotActuatedAxisNameList, totalGainAllAxis, m_totalGain);
+    getCustomSetIndecies(robotAllAxisNameList, robotActuatedAxisNameList, velocityGainAllAxis, m_velocityGain);
 
     if(!YarpHelper::getYarpVectorFromSearchable(config, "K_GainBuzzMotors", m_fingerBuzzMotorsGain))
     {
@@ -139,17 +172,19 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJo
 
 bool Retargeting::retargetForceFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError ){
 
-
+    std::cout<<"force feedback\n";
     for (size_t i=0; i<m_fingerAxisRelation.size();i++)
     {
         std::cout<<m_fingerAxisRelation[i].fingerName<<" ";
        m_fingerForceFeedback(i)=0.0;
+       std::cout<< i<<":  ";
        for(int j=0; j <m_fingerAxisRelation[i].m_robotActuatedAxisIndex.size();j++)
        {
            // related actuated axis index
            size_t Index=m_fingerAxisRelation[i].m_robotActuatedAxisIndex[j];
+           std::cout<< " [ "<<Index<<" ] "<< m_totalGain(Index)<< " "<<  axisValueError(Index) << " "<<  m_velocityGain(Index) << " "<<  axisVelocityError(Index)<< " ";
            m_fingerForceFeedback(i)+= m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
-           std::cout<<Index <<" "<<  m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
+           std::cout<< " --> "<<  m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
        }
        std::cout<< "\n";
     }
@@ -236,3 +271,51 @@ bool Retargeting::mapFromHuman2Robot( std::vector<std::string> humanListName,
 }
 
 
+bool Retargeting::getCustomSetIndecies( const std::vector<std::string>& allListName,
+                                        const std::vector<std::string>& customListNames,
+                                        const yarp::sig::Vector& allListVector,
+                                        yarp::sig::Vector& customListVector)
+{
+    customListVector.clear();
+    if(allListName.empty())
+    {
+        yInfo()<< "[Retargeting::getCustomSetIndecies] all list name is empty.";
+        return false;
+    }
+
+    bool foundMatch = false;
+    for (unsigned i = 0; i < customListNames.size(); i++)
+    {
+        for (unsigned j = 0; j < allListName.size(); j++)
+        {
+
+            if (customListNames[i] == allListName[j])
+            {
+                foundMatch = true;
+                customListVector.push_back(allListVector[j]);
+                break;
+            }
+        }
+        if (!foundMatch)
+        {
+            yError() << "[Retargeting::getCustomSetIndecies] not found match for: "
+                     << customListNames[i] << " , " << i;
+            return false;
+        }
+        foundMatch = false;
+    }
+
+    if (customListNames.size()!=customListVector.size())
+    {
+        yError()<<"[Retargeting::getCustomSetIndecies] customListName and customListVector should have similar size";
+        return false;
+    }
+
+    yInfo() << "*** custom List Vector:****";
+    for (size_t i = 0; i < customListNames.size(); i++)
+    {
+        yInfo() << " (" << i << ", " << customListNames[i] << "): " << customListVector[i];
+    }
+
+    return true;
+}
