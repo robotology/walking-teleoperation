@@ -486,6 +486,10 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
     motorReference.resize(noAxis, 0.0); //0.0
 //    motorReference(0)=0.5;
     motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
+    if(axisNumber==7)
+    {
+        motorReference(axisNumber) = M_PI_2 + M_PI_2 * sin(time);
+    }
     setFingersAxisReference(motorReference);
     move();
     yInfo() << "m_motorsData.size() : " << m_motorsData.rows() << m_motorsData.cols();

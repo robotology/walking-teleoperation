@@ -664,9 +664,12 @@ bool HapticGloveModule::updateModule()
         {
             std::vector<double> humanJointAngles;
             m_gloveRightHand->getHandJointsAngles(humanJointAngles);
-            m_retargetingRightHand->retargetHumanMotionToRobot(humanJointAngles);
+            if(!m_retargetingRightHand->retargetHumanMotionToRobot(humanJointAngles))
+            {
+                yError()<<"[HapticGloveModule::updateModule()] m_retargetingRightHand->retargetHumanMotionToRobot returns false! ";
+                return false;
+            }
             m_retargetingRightHand->getRobotJointReferences(m_icubRightFingerJointsReference);
-
         }
 
         /*** COMPUTE FORCE FEEDBACK***/
@@ -970,10 +973,14 @@ std::cerr<<"106 \n";
         if (m_useRightHand)
         {
             // set robot values
+            yInfo()<<"m_icubRightFingerJointsReference\n"<<m_icubRightFingerJointsReference.toString();
             m_robotRightHand->setFingersJointReference(m_icubRightFingerJointsReference);
             m_robotRightHand->move();
 
             // set glove values
+            yInfo()<<"m_gloveRightForceFeedbackReference\n"<<m_gloveRightForceFeedbackReference.toString();
+            yInfo()<<"m_gloveRightBuzzMotorReference\n"<<m_gloveRightBuzzMotorReference.toString();
+
             m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
             m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
         }
