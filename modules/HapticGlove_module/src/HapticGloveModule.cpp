@@ -404,9 +404,9 @@ bool HapticGloveModule::getFeedbacks()
         m_robotRightHand->getFingerAxisVelocityFeedback( m_icubRightFingerAxisVelocityFeedback);
 
         m_robotRightHand->getFingerJointsFeedback(m_icubRightFingerJointsFeedback);
-        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisValueFeedback.toString();
-        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
-        yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
+//        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisValueFeedback.toString();
+//        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
+//        yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
 
         m_robotRightHand->estimateNextMotorsState();
 
@@ -430,7 +430,6 @@ bool HapticGloveModule::updateModule()
         yInfo() << " >>> STATUS: Running";
 
         m_timeNow = yarp::os::Time::now();
-        std::cerr << "Debug: 01 \n";
         if(false)
         {
             if (m_useLeftHand)
@@ -475,7 +474,6 @@ bool HapticGloveModule::updateModule()
             // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
             // m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
         }
-        std::cerr << "Debug: 05 \n";
         if (false)
         {
             std::cerr << "Debug: 06 \n";
@@ -655,21 +653,18 @@ bool HapticGloveModule::updateModule()
         {
             std::vector<double> humanJointAngles;
             m_gloveLeftHand->getHandJointsAngles(humanJointAngles);
-            yInfo()<<"humanJointAngles2: "<<humanJointAngles;
             if(!m_retargetingLeftHand->retargetHumanMotionToRobot(humanJointAngles))
             {
                 yError()<<"[HapticGloveModule::updateModule()] m_retargetingLeftHand->retargetHumanMotionToRobot returns false! ";
                 return false;
             }
             m_retargetingLeftHand->getRobotJointReferences(m_icubLeftFingerJointsReference);
-            yInfo()<<"m_icubLeftFingerJointsReference "<<m_icubLeftFingerJointsReference.size();
-            yInfo()<<"m_icubLeftFingerJointsReference "<<m_icubLeftFingerJointsReference.toString();
         }
         if (m_useRightHand)
         {
             std::vector<double> humanJointAngles;
+            m_gloveRightHand->getHandJointsAngles(humanJointAngles);
             m_retargetingRightHand->retargetHumanMotionToRobot(humanJointAngles);
-            yInfo()<<"humanJointAngles2:  "<<humanJointAngles;
             m_retargetingRightHand->getRobotJointReferences(m_icubRightFingerJointsReference);
 
         }
@@ -811,38 +806,28 @@ bool HapticGloveModule::updateModule()
             }
             //TODEL-->END
 */
-            yInfo()<<"m_icubLeftFingerAxisValueErrorSmoothed "<<m_icubLeftFingerAxisValueErrorSmoothed.toString();
-            yInfo()<<"m_icubLeftFingerAxisVelocityErrorSmoothed "<<m_icubLeftFingerAxisVelocityErrorSmoothed.toString();
-            yInfo()<<"m_gloveLeftForceFeedbackReference "<< m_gloveLeftForceFeedbackReference.toString();
 
             m_retargetingLeftHand->retargetHapticFeedbackFromRobotToHuman(m_icubLeftFingerAxisValueErrorSmoothed, m_icubLeftFingerAxisVelocityErrorSmoothed);
             m_retargetingLeftHand->getForceFeedbackToHuman(m_gloveLeftForceFeedbackReference);
-            yInfo()<<"m_gloveLeftForceFeedbackReference2 "<< m_gloveLeftForceFeedbackReference.toString();
             m_retargetingLeftHand->getVibroTactileFeedbackToHuman(m_gloveLeftBuzzMotorReference);
-            yInfo()<<"m_gloveLeftBuzzMotorReference "<< m_gloveLeftBuzzMotorReference.toString();
-
-
 
         }
         if (m_useRightHand)
         {
             //            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
 
-            std::cerr<<"101 \n";
             for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
             {
                 m_icubRightFingerAxisValueError(i)=  m_icubRightFingerAxisValueReference(i)- m_icubRightFingerAxisValueFeedback(i);
                 m_icubRightFingerAxisVelocityError(i)=  m_icubRightFingerAxisVelocityReference(i)- m_icubRightFingerAxisVelocityFeedback(i);
 
             }
-std::cerr<<"102 \n";
             m_rightAxisValueErrorSmoother->computeNextValues(m_icubRightFingerAxisValueError);
             m_icubRightFingerAxisValueErrorSmoothed = m_rightAxisValueErrorSmoother->getPos();
 
             m_rightAxisVelocityErrorSmoother->computeNextValues(m_icubRightFingerAxisVelocityError);
             m_icubRightFingerAxisVelocityErrorSmoothed = m_rightAxisVelocityErrorSmoother->getPos();
 
-std::cerr<<"103 \n";
             // FILTERS
             double velocity_threshold_transient= 0.6;
 
@@ -861,7 +846,6 @@ std::cerr<<"103 \n";
                     m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
                 }
             }
-std::cerr<<"104 \n";
 //            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
 //                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
 //            {
@@ -908,15 +892,14 @@ std::cerr<<"104 \n";
             // "r_thumb_oppose":0 , "r_thumb_proximal":1, "r_thumb_distal":2, "r_index_proximal":3,
             // "r_index-distal":4, "r_middle-proximal":5, "r_middle-distal":6, "r_little-fingers":7
 
-            yInfo()<<"Right Axis thumb: "<<m_icubRightFingerAxisValueErrorSmoothed(2)<<" , "
-                  << m_icubRightFingerAxisValueErrorSmoothed(1)<<" , " <<
-                     m_icubRightFingerAxisValueErrorSmoothed(0);
-            yInfo()<<"Right Axis index: "<<m_icubRightFingerAxisValueErrorSmoothed(4)<< " , "
-                  << m_icubRightFingerAxisValueErrorSmoothed(3);
-            yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisValueErrorSmoothed(6)<< " , "
-                  << m_icubRightFingerAxisValueErrorSmoothed(5);
+//            yInfo()<<"Right Axis thumb: "<<m_icubRightFingerAxisValueErrorSmoothed(2)<<" , "
+//                  << m_icubRightFingerAxisValueErrorSmoothed(1)<<" , " <<
+//                     m_icubRightFingerAxisValueErrorSmoothed(0);
+//            yInfo()<<"Right Axis index: "<<m_icubRightFingerAxisValueErrorSmoothed(4)<< " , "
+//                  << m_icubRightFingerAxisValueErrorSmoothed(3);
+//            yInfo()<<"Right Axis middle: "<<m_icubRightFingerAxisValueErrorSmoothed(6)<< " , "
+//                  << m_icubRightFingerAxisValueErrorSmoothed(5);
 //            yInfo()<<"Right Axis springy: "<<m_icubRightFingerAxisValueErrorSmoothed(7);
-std::cerr<<"105 \n";
             int k_gain=150;
             //            for (int i = 0; i < m_gloveRightForceFeedbackReference.size(); i++)
 
@@ -974,19 +957,14 @@ std::cerr<<"106 \n";
 
 
         }
-std::cerr<<"107 \n";
         if (m_useLeftHand)
         {
             // set robot values
             m_robotLeftHand->setFingersJointReference(m_icubLeftFingerJointsReference);
-            std::cerr<<"108 \n";
             m_robotLeftHand->move();
-std::cerr<<"109 \n";
             // set glove values
             m_gloveLeftHand->setFingersForceReference(m_gloveLeftForceFeedbackReference);
-            std::cerr<<"110 \n";
             m_gloveLeftHand->setBuzzMotorsReference(m_gloveLeftBuzzMotorReference);
-            std::cerr<<"111 \n";
         }
 
         if (m_useRightHand)
@@ -1006,9 +984,7 @@ std::cerr<<"109 \n";
 
         // 4- Set the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
-std::cerr<<"112 \n";
         logData();
-std::cerr<<"113 \n";
         // yInfo() << "[HapticGloveModule::updateModule] <FSM::InPreparation> exiting ....";
         // exit(0);
 
@@ -1172,7 +1148,6 @@ void HapticGloveModule::logData()
 
         if (m_useLeftHand)
         {
-            yInfo()<<"Logger: 01";
              /* LEFT HAND */
             /* Robot */
             // Axis
@@ -1184,28 +1159,19 @@ void HapticGloveModule::logData()
                           icubLeftFingerAxisFeedback);
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisReference",
                           icubLeftFingerAxisReference);
-            yInfo()<<"Logger: 02";
             std::vector<double> icubLeftHandMotorCurrentFeedback, icubLeftHandMotorCurrentReference;
             m_robotLeftHand->getMotorCurrentFeedback(icubLeftHandMotorCurrentFeedback);
-            yInfo()<<"Logger: 02-1";
 
             m_robotLeftHand->getMotorCurrentReference(icubLeftHandMotorCurrentReference);
-            yInfo()<<"m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis(): "<<m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis();
-            yInfo()<<"Logger: 02-2"<< icubLeftHandMotorCurrentFeedback.size();
-            yInfo()<<"Logger: 02-2"<< icubLeftHandMotorCurrentFeedback;
             m_logger->add(m_logger_prefix + "icubLeftHandMotorCurrnetFeedback",
                           icubLeftHandMotorCurrentFeedback);
-            yInfo()<<"Logger: 02-3";
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorCurrnetReference",
                           icubLeftHandMotorCurrentReference);
-            yInfo()<<"Logger: 02-4";
 
             std::vector<double> icubLeftFingerAxisVelocityFeedback;
             m_robotLeftHand->getFingerAxisVelocityFeedback(icubLeftFingerAxisVelocityFeedback);
-            yInfo()<<"Logger: 02-5";
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisVelocityFeedback",
                           icubLeftFingerAxisVelocityFeedback);
-            yInfo()<<"Logger: 03";
 
             std::vector<double> icubLeftFingerAxisError(m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis()),
                     icubLeftFingerAxisErrorSmoothed(m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
@@ -1220,21 +1186,18 @@ void HapticGloveModule::logData()
                           icubLeftFingerAxisError);
             m_logger->add(m_logger_prefix + "_icubLeftFingerAxisErrorSmoothed",
                           icubLeftFingerAxisErrorSmoothed);
-            yInfo()<<"Logger: 04";
             /* Axis Estimation KF */
             std::vector<double> axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF;
             std::vector<double> axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF;
 
             m_robotLeftHand->getEstimatedMotorsState(axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF,
                                                      axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF);
-            yInfo()<<"Logger: 05";
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisValuesFeedbackKF",
                              axisFeedbackValuesEstimationKF);
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisVelocitiesFeedbackKF",
                              axisFeedbackVelocitiesEstimationKF);
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisAccelerationFeedbackKF",
                              axisFeedbackAccelerationEstimationKF);
-            yInfo()<<"Logger: 06";
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisValuesReferenceKF",
                              axisReferenceValuesEstimationKF);
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisVelocitiesReferenceKF",
@@ -1242,7 +1205,6 @@ void HapticGloveModule::logData()
             m_logger->add(m_logger_prefix + "_icubLeftHandMotorAxisAccelerationReferenceKF",
                              axisReferenceAccelerationEstimationKF);
 
-            yInfo()<<"Logger: 07";
             // Joints
             std::vector<double> icubLeftFingerJointsReference, icubLeftFingerJointsFeedback;
             m_robotLeftHand->getFingerJointsFeedback(icubLeftFingerJointsFeedback);
@@ -1255,25 +1217,17 @@ void HapticGloveModule::logData()
             /* Glove*/
             Eigen::MatrixXd leftHandPose, leftGlovePose, leftHandJointsAngles;
             std::vector<float> leftGloveSensors;
-            yInfo()<<"Logger: 08";
             m_gloveLeftHand->getHandPose(leftHandPose);
-            yInfo()<<"Logger: 08-2";
             m_gloveLeftHand->getGlovePose(leftGlovePose);
-            yInfo()<<"Logger: 08-3";
             m_gloveLeftHand->getSensorData(leftGloveSensors);
-            yInfo()<<"Logger: 08-4";
             m_gloveLeftHand->getHandJointsAngles(leftHandJointsAngles);
-            yInfo()<<"Logger: 09";
             m_logger->add(m_logger_prefix + "_humanLeftHandPose", leftHandPose);
             m_logger->add(m_logger_prefix + "_humanLeftGlovePose", leftGlovePose);
-            yInfo()<<"leftGloveSensors size: "<< leftGloveSensors.size();
             m_logger->add(m_logger_prefix + "_gloveLeftSensors ", leftGloveSensors);
-            yInfo()<<"Logger: 10";
             std::vector<double> gloveLeftFingerForceFeedback(m_gloveLeftHand->getNoOfForceFeedback());
             for (int i=0;i < m_gloveLeftHand->getNoOfForceFeedback(); i++)
                 gloveLeftFingerForceFeedback[i]=m_gloveLeftForceFeedbackReference(i);
             m_logger->add(m_logger_prefix + "_gloveLeftForceFeedback", gloveLeftFingerForceFeedback);
-            yInfo()<<"Logger: 11";
         }
 
         if (m_useRightHand)
@@ -1388,10 +1342,8 @@ bool HapticGloveModule::openLogger()
     m_appender = XBot::MatAppender::MakeInstance();
     m_appender->add_logger(m_logger);
     m_appender->start_flush_thread();
-    std::cerr << "log 01 \n";
 
     m_logger->create(m_logger_prefix + "_time", 1);
-    std::cerr << "log 01-1 \n";
 
     if(m_useLeftHand){
         // Robot hand axis
@@ -1443,7 +1395,6 @@ bool HapticGloveModule::openLogger()
 
 
     }
-    std::cerr << "log 01-3 \n";
     if(m_useRightHand){
         // Robot hand axis
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisReference",
@@ -1458,18 +1409,18 @@ bool HapticGloveModule::openLogger()
                          m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
 
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisValuesFeedbackKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisVelocitiesFeedbackKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisAccelerationFeedbackKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
 
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisValuesReferenceKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisVelocitiesReferenceKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         m_logger->create(m_logger_prefix + "_icubRightHandMotorAxisAccelerationReferenceKF",
-                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
 
         // robot axis errors
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisError",

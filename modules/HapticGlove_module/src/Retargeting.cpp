@@ -19,8 +19,6 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
     totalGainAllAxis.resize(m_noAllAxis, 0.0);
     velocityGainAllAxis.resize(m_noAllAxis, 0.0);
 
-//    m_totalGain.resize(m_noActuatedAxis, 0.0);
-//    m_velocityGain.resize(m_noActuatedAxis, 0.0);
     m_retargetingScaling.resize(m_humanJointNameList.size(), 0.0);
     m_retargetingBias.resize(m_humanJointNameList.size(), 0.);
     m_fingerBuzzMotorsGain.resize(m_noBuzzMotors, 0.0);
@@ -158,7 +156,8 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJo
 
     if(humanJointAngles.size()!=m_humanJointNameList.size())
     {
-        yError()<<"[Retargeting::retargetHumanMotionToRobot] the size of human joint name and angles are different.";
+        yError()<<"[Retargeting::retargetHumanMotionToRobot] the size of human joint name and angles are different."
+               << humanJointAngles.size()<< m_humanJointNameList.size();
         return false;
     }
     for (size_t i= 0; i<m_robotActuatedJointNameList.size();++i)
@@ -172,21 +171,15 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJo
 
 bool Retargeting::retargetForceFeedbackFromRobotToHuman(const yarp::sig::Vector& axisValueError,const yarp::sig::Vector& axisVelocityError ){
 
-    std::cout<<"force feedback\n";
     for (size_t i=0; i<m_fingerAxisRelation.size();i++)
     {
-        std::cout<<m_fingerAxisRelation[i].fingerName<<" ";
        m_fingerForceFeedback(i)=0.0;
-       std::cout<< i<<":  ";
        for(int j=0; j <m_fingerAxisRelation[i].m_robotActuatedAxisIndex.size();j++)
        {
            // related actuated axis index
            size_t Index=m_fingerAxisRelation[i].m_robotActuatedAxisIndex[j];
-           std::cout<< " [ "<<Index<<" ] "<< m_totalGain(Index)<< " "<<  axisValueError(Index) << " "<<  m_velocityGain(Index) << " "<<  axisVelocityError(Index)<< " ";
            m_fingerForceFeedback(i)+= m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
-           std::cout<< " --> "<<  m_totalGain(Index) * ( axisValueError(Index) + m_velocityGain(Index) * axisVelocityError(Index) );
        }
-       std::cout<< "\n";
     }
     return true;
 }
