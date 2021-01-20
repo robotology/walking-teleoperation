@@ -58,7 +58,7 @@
   <!-- icub-virtualizer -->
   <module>
     <name>yarpdev</name>
-    <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --userpose true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5 --GUI_0::alpha 1.0</parameters>
+    <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --userpose true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5 --GUI_0::alpha 1.0 --hfov 59 --left-pitch-offset 0.0725 --left-yaw-offset -0.065 --right-pitch-offset 0.13 --right-yaw-offset 0.07</parameters>
     <node>icub-virtualizer</node>
   </module>
 
