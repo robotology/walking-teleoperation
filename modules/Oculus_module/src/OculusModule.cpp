@@ -189,6 +189,7 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     m_releaseRightIndex = 3;
 
     m_startWalkingIndex = 4; // X button
+    m_stopWalkingIndex = 5; // X button
     m_prepareWalkingIndex = 0; // A button
 
     return true;
@@ -812,6 +813,25 @@ bool OculusModule::updateModule()
             }
         }
 
+        // check if it is time to prepare or start walking
+        float buttonMapping;
+
+        // prepare robot (A button)
+        m_joypadControllerInterface->getButton(m_stopWalkingIndex, buttonMapping);
+        yarp::os::Bottle cmd, outcome;
+
+        if (buttonMapping > 0)
+        {
+            // TODO add a visual feedback for the user
+            if (m_moveRobot)
+            {
+                cmd.addString("stopWalking");
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
+            yInfo() << "[OculusModule::updateModule] stop";
+            return false;
+        }
+        
 #ifdef ENABLE_LOGGER
         if (m_enableLogger)
         {
