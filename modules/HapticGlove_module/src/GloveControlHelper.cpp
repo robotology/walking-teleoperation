@@ -82,10 +82,10 @@ bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desir
 
     for (size_t i = 0; i < m_forceFbDof; i++)
     {
-        if (desiredValue(i) > 0.0)
+//        if (desiredValue(i) > 0.0)
             m_desiredForceValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
-        else
-            m_desiredForceValues[i] = 0;
+//        else
+//            m_desiredForceValues[i] = 0;
     }
     if (!m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues)))
     {
@@ -226,8 +226,6 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
     GloveControlHelper::getHandJointsAngles( );
     jointAngleList.resize(m_humanJointNameList.size(),0.0);
 
-    std::cout<< "m_handJointsAngles: \n"<< m_handJointsAngles<<"\n";
-
     // thumb
     jointAngleList[0]=m_handJointsAngles(0, 2);
     jointAngleList[1]=m_handJointsAngles(0, 1);
@@ -258,7 +256,7 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
     jointAngleList[14]=m_handJointsAngles(17, 1);
     jointAngleList[15]=m_handJointsAngles(18, 1);
 
-    yInfo()<<"jointAngleList: "<< jointAngleList;
+//    yInfo()<<"jointAngleList: "<< jointAngleList;
 
     return true;
 }
@@ -283,10 +281,10 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     }
     for (size_t i = 0; i < m_buzzDof; i++)
     {
-        if (desiredValue(i) > 0.0)
+//        if (desiredValue(i) > 0.0)
             m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,desiredValue(i)));//(int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
-        else
-            m_desiredBuzzValues[i] = 0;
+//        else
+//            m_desiredBuzzValues[i] = 0;
     }
     // vibrate fingers at percetage intensity, between 0-100, integer numbers
     if (!m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)))
