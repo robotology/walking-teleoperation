@@ -303,6 +303,11 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     m_timeConfigurationStarting = 0.0;
     std::cerr << "conf 07 \n";
 
+    m_velocity_threshold_transient =3.5;
+    m_Value_error_threshold_transient=0.1;
+
+
+
 
     // open the logger only if all the vecotos sizes are clear.
     if (m_enableLogger)
@@ -672,11 +677,62 @@ bool HapticGloveModule::updateModule()
             m_retargetingRightHand->getRobotJointReferences(m_icubRightFingerJointsReference);
         }
 
+
+
         /*** COMPUTE FORCE FEEDBACK***/
         if (m_useLeftHand)
         {
 
+            std::vector<double> axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF;
+            std::vector<double> axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF;
+
+            m_robotLeftHand->getEstimatedMotorsState(axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF,
+                                                     axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF);
+
+
             for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
+            {
+                m_icubLeftFingerAxisValueError(i)= axisReferenceValuesEstimationKF[i] - axisFeedbackValuesEstimationKF[i];
+                m_icubLeftFingerAxisVelocityError(i)= axisReferenceVelocitiesEstimationKF[i] - axisFeedbackVelocitiesEstimationKF[i];
+
+                m_icubLeftFingerAxisValueErrorSmoothed(i)= m_icubLeftFingerAxisValueError(i);
+                m_icubLeftFingerAxisVelocityErrorSmoothed(i)=m_icubLeftFingerAxisVelocityError(i);
+            }
+
+
+
+            for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
+            {
+                // the robot cannot mechnically go below zero, so if this is the case then we set the error to zero
+                if(axisReferenceValuesEstimationKF[i] <0)
+                {
+                    m_icubLeftFingerAxisValueErrorSmoothed(i)=0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed(i)= 0.0;
+                }
+                bool isInContact=true;
+                isInContact=
+//                        (std::abs(axisFeedbackVelocitiesEstimationKF[i]) < m_velocity_threshold_transient) &&
+                        (std::abs(m_icubLeftFingerAxisValueErrorSmoothed[i]) > m_Value_error_threshold_transient)
+                        ;
+
+                if(!isInContact)
+                {
+                    m_icubLeftFingerAxisValueErrorSmoothed(i)=0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed(i)=0.0;
+                }
+                yInfo()<<"isInContact: "<<isInContact<< m_icubLeftFingerAxisVelocityErrorSmoothed(i) <<  m_icubLeftFingerAxisValueErrorSmoothed(i);
+
+            }
+            yInfo()<<"axisReferenceValuesEstimationKF: "<<axisReferenceValuesEstimationKF;
+            yInfo()<<"axisFeedbackValuesEstimationKF: "<<axisFeedbackValuesEstimationKF;
+            yInfo()<<"axisReferenceVelocitiesEstimationKF: "<<axisReferenceVelocitiesEstimationKF;
+            yInfo()<<"axisFeedbackVelocitiesEstimationKF: "<<axisFeedbackVelocitiesEstimationKF;
+            yInfo()<<"m_icubLeftFingerAxisValueErrorSmoothed: "<<m_icubLeftFingerAxisValueErrorSmoothed.toString();
+            yInfo()<<"m_icubLeftFingerAxisVelocityErrorSmoothed: "<<m_icubLeftFingerAxisVelocityErrorSmoothed.toString();
+
+
+            // Deleted to use KALMAN FILTER
+/*            for (int i=0; i<m_icubLeftFingerAxisValueReference.size();i++)
             {
                 m_icubLeftFingerAxisValueError(i)= m_icubLeftFingerAxisValueReference(i) - m_icubLeftFingerAxisValueFeedback(i);
                 m_icubLeftFingerAxisVelocityError(i)= m_icubLeftFingerAxisVelocityReference(i) - m_icubLeftFingerAxisVelocityFeedback(i);
@@ -707,6 +763,7 @@ bool HapticGloveModule::updateModule()
                     m_icubLeftFingerAxisVelocityErrorSmoothed(i)=0.0;
                 }
             }
+            */
 
 //            if(std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
 //                    std::abs(m_icubLeftFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
@@ -817,6 +874,23 @@ bool HapticGloveModule::updateModule()
         }
         if (m_useRightHand)
         {
+            std::vector<double> axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF;
+            std::vector<double> axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF;
+
+            m_robotRightHand->getEstimatedMotorsState(axisFeedbackValuesEstimationKF, axisFeedbackVelocitiesEstimationKF, axisFeedbackAccelerationEstimationKF,
+                                                     axisReferenceValuesEstimationKF, axisReferenceVelocitiesEstimationKF, axisReferenceAccelerationEstimationKF);
+
+
+            for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
+            {
+                m_icubRightFingerAxisValueError(i)= axisReferenceValuesEstimationKF[i] - axisFeedbackValuesEstimationKF[i];
+                m_icubRightFingerAxisVelocityError(i)= axisReferenceVelocitiesEstimationKF[i] - axisFeedbackVelocitiesEstimationKF[i];
+
+                m_icubRightFingerAxisValueErrorSmoothed(i)    = m_icubRightFingerAxisValueError(i);
+                m_icubRightFingerAxisVelocityErrorSmoothed(i) = m_icubRightFingerAxisVelocityError(i);
+            }
+
+
             //            std::vector<double> icubRightFingerAxisFeedback, icubRightFingerAxisReference;
 
             for (int i=0; i<m_icubRightFingerAxisValueReference.size();i++)
@@ -842,12 +916,27 @@ bool HapticGloveModule::updateModule()
                     m_icubRightFingerAxisValueErrorSmoothed(i)=0.0;
                     m_icubRightFingerAxisVelocityErrorSmoothed(i)= 0.0;
                 }
-                if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(i)) > velocity_threshold_transient)
+
+                bool isInContact=true;
+                isInContact=
+//                        (std::abs(axisFeedbackVelocitiesEstimationKF[i]) < m_velocity_threshold_transient) &&
+                        (std::abs(m_icubRightFingerAxisValueErrorSmoothed[i]) > m_Value_error_threshold_transient)
+                        ;
+
+                if(!isInContact)
                 {
-                    // we are in transient phase for this thumb
-                    m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
+                    m_icubRightFingerAxisValueErrorSmoothed(i)=0.0;
                     m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
                 }
+
+
+//                if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(i)) > velocity_threshold_transient)
+//                {
+//                    // we are in transient phase for this thumb
+//                    m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
+//                    m_icubRightFingerAxisVelocityErrorSmoothed(i)=0.0;
+//                }
+
             }
 //            if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(1)) > velocity_threshold_transient ||
 //                    std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(2)) > velocity_threshold_transient)
@@ -963,9 +1052,13 @@ std::cerr<<"106 \n";
         if (m_useLeftHand)
         {
             // set robot values
+            yInfo()<<"m_icubLeftFingerJointsReference\n"<<m_icubLeftFingerJointsReference.toString();
+
             m_robotLeftHand->setFingersJointReference(m_icubLeftFingerJointsReference);
             m_robotLeftHand->move();
             // set glove values
+            yInfo()<<"m_gloveLeftForceFeedbackReference\n"<<m_gloveLeftForceFeedbackReference.toString();
+            yInfo()<<"m_gloveLeftBuzzMotorReference\n"<<m_gloveLeftBuzzMotorReference.toString();
             m_gloveLeftHand->setFingersForceReference(m_gloveLeftForceFeedbackReference);
             m_gloveLeftHand->setBuzzMotorsReference(m_gloveLeftBuzzMotorReference);
         }

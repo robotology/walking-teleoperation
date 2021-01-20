@@ -160,10 +160,10 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJo
                << humanJointAngles.size()<< m_humanJointNameList.size();
         return false;
     }
-    yInfo()<<"Retargeting::retargetHumanMotionToRobot";
+//    yInfo()<<"Retargeting::retargetHumanMotionToRobot";
     for (size_t i= 0; i<m_robotActuatedJointNameList.size();++i)
     {
-        yInfo()<<i<<m_robotActuatedJointNameList[i]<<m_humanToRobotMap[i]<<m_retargetingScaling(m_humanToRobotMap[i]) <<humanJointAngles[m_humanToRobotMap[i]]<<m_retargetingBias(m_humanToRobotMap[i]);
+//        yInfo()<<i<<m_robotActuatedJointNameList[i]<<m_humanToRobotMap[i]<<m_retargetingScaling(m_humanToRobotMap[i]) <<humanJointAngles[m_humanToRobotMap[i]]<<m_retargetingBias(m_humanToRobotMap[i]);
         m_robotRefJointAngles(i)=m_retargetingScaling(m_humanToRobotMap[i])*humanJointAngles[m_humanToRobotMap[i]] + m_retargetingBias(m_humanToRobotMap[i]);
     }
 

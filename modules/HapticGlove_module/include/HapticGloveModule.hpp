@@ -78,6 +78,10 @@ private:
     yarp::sig::Vector m_leftVelocityGain, m_rightVelocityGain;
     yarp::sig::Vector m_leftBuzzMotorsGain, m_rightBuzzMotorsGain;
 
+    double m_velocity_threshold_transient;
+    double m_Value_error_threshold_transient;
+
+
 
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
