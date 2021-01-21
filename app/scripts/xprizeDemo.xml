@@ -112,6 +112,11 @@
     <node>icub-console-gui</node>
   </module>
 
+  <module>
+    <name>face-expressions-from-mic</name>
+    <node>icub-console-gui</node>
+  </module>
+
   <!-- Connections -->
   <connection>
     <from>/walking-coordinator/torsoYaw:o</from>
@@ -223,6 +228,16 @@
     <from>/visualizerImage</from>
     <to>/oculus/gui_0</to>
     <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub-virtualizer/microphone/audio:o</from>
+    <to>/face_expressions_from_mic/in</to>
+  </connection>
+
+  <connection>
+    <from>/face_expressions_from_mic/emotions:o</from>
+    <to>/icub/face/emotions/in</to>
   </connection>
 
 </application>
