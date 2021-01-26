@@ -15,9 +15,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   USE_LINK_PATH)
 
 # Find required package
-find_package(YARP REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(iDynTree REQUIRED)
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 include(FindPackageHandleStandardArgs)
 

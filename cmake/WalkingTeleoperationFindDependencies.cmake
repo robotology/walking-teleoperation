@@ -116,6 +116,11 @@ endmacro()
 ################################################################################
 # Find all packages
 
+find_package(YARP REQUIRED)
+find_package(YCM REQUIRED)
+find_package(ICUB REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(iDynTree REQUIRED)
 
 find_package(HumanDynamicsEstimation QUIET)
 checkandset_dependency(HumanDynamicsEstimation)
