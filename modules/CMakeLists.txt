@@ -12,3 +12,7 @@ endif (WALKING_TELEOPERATION_COMPILE_XsensModule)
 if(WALKING_TELEOPERATION_COMPILE_VirtualizerModule)
   add_subdirectory(Virtualizer_module)
 endif()
+
+if(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule)
+    add_subdirectory(FaceExpressions_module)
+endif()
