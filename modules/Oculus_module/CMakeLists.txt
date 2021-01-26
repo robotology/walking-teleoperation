@@ -17,9 +17,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   USE_LINK_PATH)
 
 # Find required package
-find_package(ICUB REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(iDynTree REQUIRED)
 if(ENABLE_LOGGER)
   add_definitions(-DENABLE_LOGGER)
   find_package(matlogger2 REQUIRED)
