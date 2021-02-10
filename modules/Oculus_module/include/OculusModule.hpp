@@ -74,6 +74,7 @@ private:
     unsigned int m_releaseRightIndex; /**< Index of the trigger used for releasing the right hand */
 
     unsigned int m_startWalkingIndex; /**< Index of the start walking button */
+    unsigned int m_stopWalkingIndex; /**< Index of the stop walking button */
     unsigned int m_prepareWalkingIndex; /**< Index of the prepare walking button */
 
     bool m_useVirtualizer; /**< True if the virtualizer is used in the retargeting */
