@@ -34,8 +34,8 @@ endif()
 #else()
 #  message(FATAL_ERROR  "The Sense Glove SDK is not supported for this operating system.")
 #endif()
-add_library(SenseGlove SHARED IMPORTED GLOBAL $ENV{SenseGlove_DIR}/SGCore.so)
-set_target_properties(SenseGlove PROPERTIES IMPORTED_LOCATION $ENV{SenseGlove_DIR}/SGCore.so)
+add_library(SenseGlove SHARED IMPORTED GLOBAL $ENV{SenseGlove_DIR}/libSGCoreCpp.so)
+set_target_properties(SenseGlove PROPERTIES IMPORTED_LOCATION $ENV{SenseGlove_DIR}/libSGCoreCpp.so)
 target_include_directories(SenseGlove INTERFACE $ENV{SenseGlove_INCLUDE_DIRS})
 
 

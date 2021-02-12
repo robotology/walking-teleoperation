@@ -87,12 +87,7 @@ bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desir
 //        else
 //            m_desiredForceValues[i] = 0;
     }
-    if (!m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues)))
-    {
-        yError() << "[GloveControlHelper::setFingersForceReference] unable the send the force "
-                    "feedback command";
-        return false;
-    }
+    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues));
 
     return true;
 }
@@ -159,10 +154,10 @@ bool GloveControlHelper::getSensorData(std::vector<float>& measuredValues)
 }
 bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 {
-    SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
+    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
     SGCore::HandPose handPose;
-    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
-    if (!m_glove.GetHandPose(profile, solver, handPose))
+//    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
+    if (!m_glove.GetHandPose(profile, handPose)) //(profile, solver, handPose)
     {
         yWarning() << "m_glove.GetHandPose return error.";
         measuredValue = m_handPose;
@@ -192,12 +187,10 @@ bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 
 bool GloveControlHelper::getHandJointsAngles()
 {
-
-    SGCore::SG::SG_HandProfile profile = SGCore::SG::SG_HandProfile::Default(m_glove.IsRight());
+    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
     SGCore::HandPose handPose;
-    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
 
-    if (!m_glove.GetHandPose(profile, solver, handPose))
+    if (!m_glove.GetHandPose(profile, handPose))
     {
         yWarning() << "m_glove.GetHandPose return error.";
 //        measuredValue = m_handJointsAngles;
@@ -287,11 +280,8 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
 //            m_desiredBuzzValues[i] = 0;
     }
     // vibrate fingers at percetage intensity, between 0-100, integer numbers
-    if (!m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues)))
-    {
-        yError() << "[GloveControlHelper::setBuzzMotorsReference] unable the send the Buzz command";
-        return false;
-    }
+    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
+
 
     return true;
 }
@@ -344,7 +334,7 @@ bool GloveControlHelper::setupGlove()
 
     yInfo() << "Activating " << m_glove.ToString();
 
-    SGCore::SG::SG_Model gloveModel = m_glove.GetGloveModel();
+    SGCore::SG::SG_GloveInfo gloveModel = m_glove.GetGloveModel();
     yInfo() << "glove model:" << gloveModel.ToString();
     yInfo() << "glove model:" << gloveModel.ToString(false);
     return true;
