@@ -201,10 +201,12 @@ bool GloveControlHelper::getHandJointsAngles()
     int count = 0;
     for (int i = 0; i < handPose.jointPositions.size(); i++)
     {
+
         // handPose.handAngles[i].size() --> size is 3 (3 joints each)
 
         for (int j = 0; j < handPose.jointPositions[i].size(); j++)
         {
+
             m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
             m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
             m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
@@ -256,6 +258,7 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
 bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd measuredValue )
 {
     measuredValue = m_handJointsAngles;
+    return true;
 }
 
 

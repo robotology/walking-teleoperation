@@ -82,7 +82,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     yInfo() << "noAllAxis: " << m_noAllAxis;
 
 
-    m_analogSensorFeedbackRaw.resize(15); //ToFix
+    m_analogSensorFeedbackRaw.resize(m_noAnalogSensor);
     m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
     m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
     m_analogSensorFeedbackSelected = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13};
@@ -175,7 +175,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
 
 //        m_noAllJoints+=axisJointList.size(); // add the number of associated joint sensors to the total number of active sensors
 
-
+        std::cout<< "axis name: "<< axisInfoObj.axisName<<" , associated joints: "<< axisJointList<<std::endl;
         // *it: joint name related to the axisName
         for (std::vector<std::string>::iterator it = axisJointList.begin() ; it != axisJointList.end(); ++it)
         {
@@ -555,7 +555,6 @@ bool RobotControlInterface::getFeedback()
         m_encoderVelocityFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
 
 
-
     if (!(m_AnalogSensorInterface->read(m_analogSensorFeedbackRaw) == yarp::dev::IAnalogSensor::AS_OK))
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get analog sensor data";
@@ -591,23 +590,24 @@ bool RobotControlInterface::getFeedback()
 
 bool RobotControlInterface::getCalibratedFeedback()
 {
+    yInfo()<<"getCalibratedFeedback(): "<< m_noAnalogSensor;
 
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
+
         m_analogSensorFeedbackInDegrees(j) = m_joints_min_boundary(j)
                 + m_sensors_raw2Degree_scaling(j)
-                * (m_analogSensorFeedbackRaw(m_analogSensorFeedbackSelected(j))
+                * (m_analogSensorFeedbackRaw(j)
                    - m_sensors_min_boundary(j)); // TOCHECK
+
         m_analogSensorFeedbackInRadians(j) = iDynTree::deg2rad(m_analogSensorFeedbackInDegrees(j));
     }
 
     return true;
 }
 
-bool RobotControlInterface::setAllJointsFeedback()
+bool RobotControlInterface::setAllJointsFeedback() // update this function later
 {
-
-
     size_t idx=0;
     for (size_t i =0; i< m_axisInfoList.size() ;++i)
     {
