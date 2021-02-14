@@ -464,7 +464,7 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
 
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[RobotController::setFingersVelocity] The integrator is not initialize "
+        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] The integrator is not initialize "
                     "please call configure() method";
         return false;
     }
@@ -500,11 +500,21 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
     yarp::sig::Vector motorReference;
     motorReference.resize(noAxis, 0.0); //0.0
 //    motorReference(0)=0.5;
-    motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
-    if(axisNumber==7)
+    yarp::sig::Matrix limits;
+    if(!m_robotControlInterface->getLimits( limits))
     {
-        motorReference(axisNumber) = M_PI_2 + M_PI_2 * sin(time);
+        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] Cannot get the axis limits. ";
     }
+    for(size_t i= 0;i<noAxis; i++)
+        motorReference(i)=limits(i,0);
+//    motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
+//    if(axisNumber==7)
+//    {
+//        motorReference(axisNumber) = M_PI_2 + M_PI_2 * sin(time);
+//    }
+    motorReference(axisNumber) = limits(axisNumber, 0) +
+            (limits(axisNumber, 1) - limits(axisNumber, 0))* sin(time);
+
     setFingersAxisReference(motorReference);
     move();
     yInfo() << "m_motorsData.size() : " << m_motorsData.rows() << m_motorsData.cols();
