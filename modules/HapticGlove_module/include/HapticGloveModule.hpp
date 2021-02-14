@@ -51,6 +51,8 @@ private:
 
 
     double m_dT; /**< Module period. */
+    std::string m_robot; /**< robot name. */
+
 
     yarp::sig::Vector m_icubLeftFingerAxisValueReference, m_icubLeftFingerAxisValueFeedback;
     yarp::sig::Vector m_icubLeftFingerAxisVelocityReference, m_icubLeftFingerAxisVelocityFeedback;

@@ -47,7 +47,7 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     // check if we need to do calibraition
     m_doCalibration = config.check("doCalibration", yarp::os::Value(0))
                           .asBool(); /**<  true if the motors and joints of the robot are coupled*/
-    yInfo() << "[RobotController::configure] We have to do calibration to find the coupling "
+    yInfo() << "[RobotController::configure] to find the coupling "
                "between motors and joints "
             << m_motorJointsCoupled;
 
@@ -129,19 +129,28 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_Q = Eigen::MatrixXd::Identity(noActuatedJoints, noActuatedJoints)*q;
     m_R = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis)*r;
 
-
     m_desiredMotorValue.resize(noActuatedAxis);
     m_desiredJointValue.resize(m_robotControlInterface->getNumberOfActuatedJoints());
     yarp::sig::Vector buff(noActuatedAxis, 0.0);
 
-    updateFeedback();
+    if(!updateFeedback())
+    {
+        yError()<<"[RobotController::configure] Unable to get feedback: first trial";
+        if(!updateFeedback())
+        {
+            yError()<<"[RobotController::configure] Unable to get feedback: second trial";
+            return false;
+        }
+    }
     getFingerAxisFeedback(buff);
+
     yarp::sig::Matrix limits(noActuatedAxis, 2);
     if (!m_robotControlInterface->getLimits(limits))
     {
         yError() << "[RobotController::configure] Unable to get the joint limits.";
         return false;
     }
+
     m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
 
     m_jointsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfActuatedJoints());
@@ -149,14 +158,20 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
 
 
     // Estimaotr
+    std::cout<<"Estimators ... \n";
+
 
     m_robotMotorFeedbackEstimator= std::make_unique<RobotMotorsEstimation> (noActuatedAxis);
     m_robotMotorReferenceEstimator= std::make_unique<RobotMotorsEstimation> (noActuatedAxis);
 
-    m_robotMotorFeedbackEstimator->configure(config, name);
+    std::cout<<"Initializing the motor feedback estimators ... \n";
+
+    m_robotMotorFeedbackEstimator->configure(config, name);    
+    std::cout<<"Initializing the motor reference estimators ... \n";
+
     m_robotMotorReferenceEstimator->configure(config, name);
 
-    std::cout<<"-- finish configuring m_robotMotorReferenceEstimator";
+    std::cout<<"Estimators: Configued";
 
 
 
@@ -541,21 +556,15 @@ bool RobotController::initializeEstimator(){
     yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
     getFingerAxisValueReference(axisReferenceVector);
     getFingerAxisFeedback(axisFeedbackVector);
-
     m_robotMotorFeedbackEstimator->initialize(axisFeedbackVector);
     m_robotMotorReferenceEstimator->initialize(axisReferenceVector);
-
-    std::cout<<"RobotController::initializeEstimator() 2 \n";
-
     return true;
 }
 
 bool RobotController::estimateNextMotorsState(){
-
     yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
     getFingerAxisValueReference(axisReferenceVector);
     getFingerAxisFeedback(axisFeedbackVector);
-
     if(m_robotMotorFeedbackEstimator->isInitialized()){
         m_robotMotorFeedbackEstimator->estimateNextState(axisFeedbackVector);
     }
@@ -563,7 +572,6 @@ bool RobotController::estimateNextMotorsState(){
     if(m_robotMotorReferenceEstimator->isInitialized()){
         m_robotMotorReferenceEstimator->estimateNextState(axisReferenceVector);
     }
-
     return true;
 }
 
@@ -572,10 +580,12 @@ bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisV
     Eigen::VectorXd P;
 
     if(m_robotMotorFeedbackEstimator->isInitialized()){
+
         m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  P );
     }
 
     if(m_robotMotorReferenceEstimator->isInitialized()){
+
         m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  P );
     }
 
