@@ -303,9 +303,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         m_gloveRightForceFeedbackReference.resize(m_gloveRightHand->getNoOfForceFeedback(), 0.0);
     }
 
-    m_timePreparationStarting = 0.0;
+    m_timePreparation = 0.0;
     m_timeNow = 0.0;
-    m_timeConfigurationStarting = 0.0;
+    m_timeConfigurationEnding = 0.0;
     std::cerr << "conf 07 \n";
 
     m_velocity_threshold_transient =3.5;
@@ -455,22 +455,22 @@ bool HapticGloveModule::updateModule()
                 {
                     //            m_icubLeftFingerAxisReference(i)
                     m_icubLeftFingerJointsReference(i)
-                            = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparationStarting) - M_PI_2);
+                            = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparation) - M_PI_2);
                     //            m_icubRightFingerAxisReference(i) = m_icubLeftFingerAxisReference(i);
                     //            m_icubLeftFingerJointsReference(i) = m_icubLeftFingerAxisReference(i);
                 }
             }
             double tmp_buzzVal;
-            if ((m_timeNow - m_timePreparationStarting) < (50 * M_PI))
+            if ((m_timeNow - m_timePreparation) < (50 * M_PI))
             {
                 yInfo() << "give buzz ref value higher than zero, time: "
-                        << m_timeNow - m_timePreparationStarting;
+                        << m_timeNow - m_timePreparation;
                 tmp_buzzVal = 85;
                 // 0 + 20.0 * sin((m_timeNow - m_timePreparationStarting) / 4.0 - M_PI_2);
             } else
             {
                 yInfo() << "give buzz ref value equal to zero, time: "
-                        << m_timeNow - m_timePreparationStarting;
+                        << m_timeNow - m_timePreparation;
                 tmp_buzzVal = 0.0;
             }
             for (int i = 0; i < 5; i++)
@@ -484,11 +484,11 @@ bool HapticGloveModule::updateModule()
         }
         if (false)
         {
-            if (m_timeNow - m_timePreparationStarting < 10.0)
+            if (m_timeNow - m_timePreparation < 10.0)
             {
                 // m_timePreparationStarting = m_timeNow;
                 yInfo() << "++++++++++++++++++++++++ time: "
-                        << m_timeNow - m_timePreparationStarting << " give force feedback command";
+                        << m_timeNow - m_timePreparation << " give force feedback command";
                 //  m_gloveRightHand->setPalmFeedbackThumper(0);
                 m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
             }
@@ -505,10 +505,10 @@ bool HapticGloveModule::updateModule()
             else
             {
                 yInfo() << "----------------------------- time: "
-                        << m_timeNow - m_timePreparationStarting << " stop command";
+                        << m_timeNow - m_timePreparation << " stop command";
 
                 m_gloveRightHand->stopFeedback();
-                m_timePreparationStarting = m_timeNow;
+                m_timePreparation = m_timeNow;
             }
         }
         // if (((int)tmp_buzzVal)%4==0)
@@ -1125,14 +1125,14 @@ std::cerr<<"106 \n";
             }
         }
 
-        m_timeConfigurationStarting = yarp::os::Time::now();
+        m_timeConfigurationEnding = yarp::os::Time::now();
         m_state = HapticGloveFSM::InPreparation;
         yInfo()<<"the state changed from HapticGloveFSM::Configured to HapticGloveFSM::InPreparation";
     } else if (m_state == HapticGloveFSM::InPreparation)
     {
         yInfo() << " >>> STATUS: InPreparation";
 
-        m_timePreparationStarting = yarp::os::Time::now();
+        m_timePreparation = yarp::os::Time::now();
 
         // TODO
         //        if (m_timePreparationStarting - m_timeConfigurationStarting > 10.0)
@@ -1155,9 +1155,14 @@ std::cerr<<"106 \n";
         //            }
         //        }
         yInfo() << "time collecting data:"
-                << m_timePreparationStarting - m_timeConfigurationStarting;
-        int dTime = int((m_timePreparationStarting - m_timeConfigurationStarting) / m_dT);
-        int axisNumber = dTime / 500;
+                << m_timePreparation - m_timeConfigurationEnding;
+        int dTime = int((m_timePreparation - m_timeConfigurationEnding) / m_dT);
+        int CouplingConstant=(int)(m_calibrationTimePeriod/m_dT);
+
+
+        int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
+//        axisNumber = dTime / 500;
+
         if (m_useLeftHand)
         {
             if (axisNumber >= m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis())
@@ -1177,7 +1182,10 @@ std::cerr<<"106 \n";
 
             } else
             {
-                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
+                double time = double(dTime % CouplingConstant)* m_dT
+                        * (M_PI / m_calibrationTimePeriod);
+//                time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
+
                 m_robotLeftHand->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
             }
         }
@@ -1201,7 +1209,9 @@ std::cerr<<"106 \n";
 
             } else
             {
-                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
+                double time = double(dTime % CouplingConstant)* m_dT
+                        * (M_PI / m_calibrationTimePeriod);
+//                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
                 m_robotRightHand->LogDataToCalibrateRobotMotorsJointsCouplingSin(time,
                                                                                  axisNumber);
             }
@@ -1212,7 +1222,7 @@ std::cerr<<"106 \n";
             if(m_robotLeftHand->isRobotPrepared() && m_robotRightHand->isRobotPrepared())
             {
                 m_state = HapticGloveFSM::Running;
-                m_timePreparationStarting = yarp::os::Time::now();
+                m_timePreparation = yarp::os::Time::now();
             }
         }
         else if(m_useLeftHand && !m_useRightHand)
@@ -1220,7 +1230,7 @@ std::cerr<<"106 \n";
             if(m_robotLeftHand->isRobotPrepared())
             {
                 m_state = HapticGloveFSM::Running;
-                m_timePreparationStarting = yarp::os::Time::now();
+                m_timePreparation = yarp::os::Time::now();
             }
         }
         else if(!m_useLeftHand && m_useRightHand)

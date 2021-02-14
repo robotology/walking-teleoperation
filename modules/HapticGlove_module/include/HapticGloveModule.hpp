@@ -65,7 +65,7 @@ private:
     yarp::sig::Vector m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
     yarp::sig::Vector m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
 
-    double m_timePreparationStarting, m_timeConfigurationStarting, m_timeNow;
+    double m_timePreparation, m_timeConfigurationEnding, m_timeNow;
 
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisValueErrorSmoother{nullptr}, m_leftAxisValueErrorSmoother{nullptr};
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisVelocityErrorSmoother{nullptr}, m_leftAxisVelocityErrorSmoother{nullptr};
