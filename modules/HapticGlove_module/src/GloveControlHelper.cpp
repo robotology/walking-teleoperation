@@ -87,6 +87,8 @@ bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desir
 //        else
 //            m_desiredForceValues[i] = 0;
     }
+    std::cout<<"Force Feedback \n"<<m_desiredForceValues<<std::endl;
+
     m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues));
 
     return true;
@@ -278,11 +280,13 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     for (size_t i = 0; i < m_buzzDof; i++)
     {
 //        if (desiredValue(i) > 0.0)
-            m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,desiredValue(i)));//(int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
+//            m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,desiredValue(i)));//(int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
+            m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 100.0)));
 //        else
 //            m_desiredBuzzValues[i] = 0;
     }
     // vibrate fingers at percetage intensity, between 0-100, integer numbers
+    std::cout<<"Vibrotactile Feedback \n"<<m_desiredBuzzValues<<std::endl;
     m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
 
 
