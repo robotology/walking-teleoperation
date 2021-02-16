@@ -394,8 +394,8 @@ bool HapticGloveModule::getFeedbacks()
         m_robotLeftHand->getFingerAxisVelocityFeedback( m_icubLeftFingerAxisVelocityFeedback);
 
         m_robotLeftHand->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
-        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
-        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
+//        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
+//        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
 
         m_robotLeftHand->estimateNextMotorsState();
     }
@@ -660,7 +660,7 @@ bool HapticGloveModule::updateModule()
         {
             std::vector<double> humanJointAngles;
             m_gloveLeftHand->getHandJointsAngles(humanJointAngles);
-            yInfo()<<"human joint angles: "<<humanJointAngles;
+//            yInfo()<<"human joint angles: "<<humanJointAngles;
             if(!m_retargetingLeftHand->retargetHumanMotionToRobot(humanJointAngles))
             {
                 yError()<<"[HapticGloveModule::updateModule()] m_retargetingLeftHand->retargetHumanMotionToRobot returns false! ";
@@ -721,8 +721,6 @@ bool HapticGloveModule::updateModule()
                     m_icubLeftFingerAxisValueErrorSmoothed(i)=0.0;
                     m_icubLeftFingerAxisVelocityErrorSmoothed(i)=0.0;
                 }
-                yInfo()<<"isInContact: "<<isInContact<< m_icubLeftFingerAxisVelocityErrorSmoothed(i) <<  m_icubLeftFingerAxisValueErrorSmoothed(i);
-
             }
             yInfo()<<"axisReferenceValuesEstimationKF: "<<axisReferenceValuesEstimationKF;
             yInfo()<<"axisFeedbackValuesEstimationKF: "<<axisFeedbackValuesEstimationKF;
