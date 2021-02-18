@@ -83,6 +83,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/MotorEstimation.cpp
   src/RobotMotorsEstimation.cpp
   src/Retargeting.cpp
+  src/LinearRegression.cpp
   )
 
 # set hpp files
@@ -96,6 +97,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/MotorEstimation.hpp
   include/RobotMotorsEstimation.hpp
   include/Retargeting.hpp
+  include/LinearRegression.hpp
   )
 
 # add include directories to the build.
