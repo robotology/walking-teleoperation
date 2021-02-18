@@ -174,6 +174,9 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     std::cout<<"Estimators: Configued";
 
 
+    m_linearRegressor =std::make_unique<LinearRegression>();
+
+
 
     m_robotPrepared=false;
     return true;
@@ -538,12 +541,18 @@ bool RobotController::trainCouplingMatrix()
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> coeff
         = ((m_motorsData.transpose() * m_motorsData).inverse()) * m_motorsData.transpose(); // m X o
 
-    for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedJoints(); i++)
-    {
-        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> tetha_i
-            = coeff * m_jointsData.col(i); // m X 1
-        push_back_row(m_A, tetha_i.transpose());
-    }
+    yInfo()<<"m_motorsData.size(): "<<m_motorsData.rows()<<m_motorsData.cols();
+    yInfo()<<"Number of Actuated Joints(): "<<m_robotControlInterface->getNumberOfActuatedJoints();
+
+//    for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedJoints(); i++)
+//    {
+//        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> tetha_i;
+////            = coeff * m_jointsData.col(i); // m X 1
+//        m_linearRegressor->LearnOneShot(m_motorsData, m_jointsData.col(i), tetha_i);
+//        push_back_row(m_A, tetha_i.transpose());
+//    }
+    m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
+
     yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
     std::cout << "m_A matrix:\n" << m_A << std::endl;
     m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;

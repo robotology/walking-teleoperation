@@ -25,7 +25,7 @@
 
 #include <RobotControlHelper_hapticGlove.hpp>
 #include <RobotMotorsEstimation.hpp>
-
+#include <LinearRegression.hpp>
 
 using namespace yarp::math;
 
@@ -62,14 +62,17 @@ private:
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_jointsData; /**< The logged data for calibration; joints values; Dimension <o, n> o:
-                         number of observations (logged data), m: number of joints */
+                         number of observations (logged data), n: number of joints */
 
     yarp::sig::Vector motorVelocityReference;
 
     std::unique_ptr<RobotMotorsEstimation> m_robotMotorFeedbackEstimator; /**< The KF estimated motor feedbacks*/
     std::unique_ptr<RobotMotorsEstimation> m_robotMotorReferenceEstimator; /**< The KF estimated motor References*/
 
+    std::unique_ptr<LinearRegression> m_linearRegressor;
+
     bool m_robotPrepared;
+
 
 public:
     /**
@@ -229,24 +232,4 @@ public:
                                  std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF );
 };
 
-template <typename DynamicEigenMatrix, typename DynamicEigenVector>
-bool push_back_row(DynamicEigenMatrix& m, const DynamicEigenVector& values)
-{
-    if (m.size() != 0)
-    {
-        if (m.cols() != values.cols())
-        {
-
-            std::cerr << "[push_back_row]: the number of columns in matrix and vactor are not "
-                         "equal; m.cols(): "
-                      << m.cols() << ", values.cols():" << values.cols() << std::endl;
-            return false;
-        }
-    }
-    Eigen::Index row = m.rows();
-    m.conservativeResize(row + 1, values.cols());
-    for (int i = 0; i < values.cols(); i++)
-        m(row, i) = values(0, i);
-    return true;
-}
 #endif
