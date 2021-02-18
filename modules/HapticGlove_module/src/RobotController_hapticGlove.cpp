@@ -498,23 +498,17 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
     if (!push_back_row(m_jointsData, fingerJointsValuesEigen))
         return false;
 
-    //    std::cout << "motor values:\n" << m_motorsData << std::endl;
-    //    std::cout << "joint values:\n" << m_jointsData << std::endl;
     yarp::sig::Vector motorReference;
     motorReference.resize(noAxis, 0.0); //0.0
-//    motorReference(0)=0.5;
     yarp::sig::Matrix limits;
     if(!m_robotControlInterface->getLimits( limits))
     {
         yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] Cannot get the axis limits. ";
     }
     for(size_t i= 0;i<noAxis; i++)
+    {
         motorReference(i)=limits(i,0);
-//    motorReference(axisNumber) = M_PI_4 + M_PI_4 * sin(time);
-//    if(axisNumber==7)
-//    {
-//        motorReference(axisNumber) = M_PI_2 + M_PI_2 * sin(time);
-//    }
+    }
     motorReference(axisNumber) = limits(axisNumber, 0) +
             (limits(axisNumber, 1) - limits(axisNumber, 0))* sin(time);
 
@@ -530,36 +524,15 @@ bool RobotController::trainCouplingMatrix()
 {
     yInfo() << "[RobotController::trainCouplingMatrix()]";
 
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> xT_x
-        = (m_motorsData.transpose() * m_motorsData);
-    yInfo() << "xT_x: " << xT_x.rows() << xT_x.cols();
-    yInfo() << "xT_x.determinant(): " << xT_x.determinant();
-    Eigen::FullPivLU<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> lu(
-        xT_x);
-    yInfo() << "lu.rank(): " << lu.rank();
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> coeff
-        = ((m_motorsData.transpose() * m_motorsData).inverse()) * m_motorsData.transpose(); // m X o
-
-    yInfo()<<"m_motorsData.size(): "<<m_motorsData.rows()<<m_motorsData.cols();
-    yInfo()<<"Number of Actuated Joints(): "<<m_robotControlInterface->getNumberOfActuatedJoints();
-
-//    for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedJoints(); i++)
-//    {
-//        Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> tetha_i;
-////            = coeff * m_jointsData.col(i); // m X 1
-//        m_linearRegressor->LearnOneShot(m_motorsData, m_jointsData.col(i), tetha_i);
-//        push_back_row(m_A, tetha_i.transpose());
-//    }
     m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
 
     yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
     std::cout << "m_A matrix:\n" << m_A << std::endl;
+
     m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
-    yInfo() << "(m_A.transpose() * m_Q *m_A + m_R) matrix:"
-            << (m_A.transpose() * m_Q * m_A + m_R).determinant();
+
     yInfo() << "m_controlCoeff matrix:" << m_controlCoeff.rows() << m_controlCoeff.cols();
-    std::cout << "m_controlCoeff matrix:\n" << m_controlCoeff << std::endl;
+    std::cout << " control coefficient matrix:\n" << m_controlCoeff << std::endl;
 
     m_robotPrepared=true;
     return true;
