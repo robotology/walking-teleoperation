@@ -14,12 +14,18 @@ struct FingerAxisRelation
 class Retargeting{
 
 
+    bool m_getHumanMotionRange;
     yarp::sig::Vector m_totalGain;
     yarp::sig::Vector m_velocityGain;
     yarp::sig::Vector m_fingerBuzzMotorsGain;
 
     yarp::sig::Vector m_retargetingScaling;
     yarp::sig::Vector m_retargetingBias;
+
+    yarp::sig::Vector m_robotJointsRangeMax;
+    yarp::sig::Vector m_robotJointsRangeMin;
+
+
 
 
     size_t m_noAllAxis;
@@ -66,6 +72,8 @@ public:
                                const std::vector<std::string>& customListNames,
                                const yarp::sig::Vector& allListVector,
                                yarp::sig::Vector& customListVector);
+
+    bool computeJointAngleRetargetingParams( const std::vector<double> humanHandJointRangeMin, const std::vector<double> humanHandJointRangeMax);
 
 
 

@@ -52,7 +52,7 @@ private:
 
     double m_dT; /**< Module period. */
     std::string m_robot; /**< robot name. */
-
+    bool m_getHumanMotionRange; /**< get the motion range of the human joints*/
 
     yarp::sig::Vector m_icubLeftFingerAxisValueReference, m_icubLeftFingerAxisValueFeedback;
     yarp::sig::Vector m_icubLeftFingerAxisVelocityReference, m_icubLeftFingerAxisVelocityFeedback;

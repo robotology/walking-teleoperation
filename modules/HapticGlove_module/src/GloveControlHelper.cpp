@@ -67,6 +67,8 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
                     "vector of strings.";
         return false;
     }
+    m_jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
+    m_jointRangeMax.resize(m_humanJointNameList.size(), 0.0);
 
     return true;
 }
@@ -344,6 +346,15 @@ bool GloveControlHelper::setupGlove()
     SGCore::SG::SG_GloveInfo gloveModel = m_glove.GetGloveModel();
     yInfo() << "glove model:" << gloveModel.ToString();
     yInfo() << "glove model:" << gloveModel.ToString(false);
+
+    std::vector<double> jointAngleList;
+    getHandJointsAngles(jointAngleList);
+    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    {
+        m_jointRangeMin[i]=    jointAngleList[i];
+        m_jointRangeMax[i]=    jointAngleList[i];
+    }
+
     return true;
 }
 
@@ -388,6 +399,35 @@ void GloveControlHelper::getHumanJointsList( std::vector<std::string>& jointList
 
 void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList)const {
     fingerList = m_humanFingerNameList;
+}
+
+bool GloveControlHelper::findHumanMotionRange(){
+
+    std::vector<double> jointAngleList;
+    getHandJointsAngles(jointAngleList);
+
+    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    {
+        m_jointRangeMin[i]=std::min(m_jointRangeMin[i], jointAngleList[i]);
+        m_jointRangeMax[i]=std::max(m_jointRangeMax[i], jointAngleList[i]);
+    }
+
+    yarp::sig::Vector desiredValue;
+    desiredValue.resize(m_buzzDof,40);
+    setBuzzMotorsReference(desiredValue);
+
+return true;
+}
+
+void GloveControlHelper::getHumanMotionRange( std::vector<double> jointRangeMin, std::vector<double> jointRangeMax)
+{
+    jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
+    jointRangeMax.resize(m_humanJointNameList.size(), 0.0);
+    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    {
+        jointRangeMax[i]=m_jointRangeMax[i];
+        jointRangeMin[i]=m_jointRangeMin[i];
+    }
 }
 
 
