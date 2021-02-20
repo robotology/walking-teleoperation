@@ -69,6 +69,8 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     // robot name:
     m_robot = generalOptions.check("robot", yarp::os::Value("icubSim")).asString();
 
+    // check if find the user motion range
+    m_getHumanMotionRange = generalOptions.check("getHumanMotionRange", yarp::os::Value(0)).asBool();
 
 
     // check which hand to use
@@ -1174,7 +1176,14 @@ std::cerr<<"106 \n";
                                 << "cannot claibrate the coupling matrix and find the coefficient matrix";
                         return false;
                     }
+                }                
+                if(m_getHumanMotionRange)
+                {
+                    std::vector<double> humanHandJointRangeMin, humanHandJointRangeMax;
+                    m_gloveLeftHand->getHumanMotionRange(humanHandJointRangeMin,humanHandJointRangeMax);
+                    m_retargetingLeftHand->computeJointAngleRetargetingParams(humanHandJointRangeMin,humanHandJointRangeMax);
                 }
+
 //                m_timePreparationStarting = yarp::os::Time::now();
 //                m_state = HapticGloveFSM::Running;
 
@@ -1185,7 +1194,12 @@ std::cerr<<"106 \n";
 //                time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
 
                 m_robotLeftHand->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
+                if(m_getHumanMotionRange)
+                {
+                    m_gloveLeftHand->findHumanMotionRange();
+                }
             }
+
         }
 
         if (m_useRightHand)
@@ -1201,9 +1215,16 @@ std::cerr<<"106 \n";
                                 << "cannot claibrate the coupling matrix and find the coefficient matrix";
                         return false;
                     }
+                    if(m_getHumanMotionRange)
+                    {
+                        std::vector<double> humanHandJointRangeMin, humanHandJointRangeMax;
+                        m_gloveLeftHand->getHumanMotionRange(humanHandJointRangeMin,humanHandJointRangeMax);
+                        m_retargetingLeftHand->computeJointAngleRetargetingParams(humanHandJointRangeMin,humanHandJointRangeMax);
+                    }
                 }
 //                m_timePreparationStarting = yarp::os::Time::now();
 //                m_state = HapticGloveFSM::Running;
+
 
             } else
             {
@@ -1212,7 +1233,12 @@ std::cerr<<"106 \n";
 //                double time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
                 m_robotRightHand->LogDataToCalibrateRobotMotorsJointsCouplingSin(time,
                                                                                  axisNumber);
+                if(m_getHumanMotionRange)
+                {
+                    m_gloveRightHand->findHumanMotionRange();
+                }
             }
+
         }
 
         if(m_useLeftHand && m_useRightHand)

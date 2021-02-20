@@ -21,6 +21,10 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
 
     m_retargetingScaling.resize(m_humanJointNameList.size(), 0.0);
     m_retargetingBias.resize(m_humanJointNameList.size(), 0.);
+
+    m_robotJointsRangeMin.resize(m_humanJointNameList.size(), 0.0);
+    m_robotJointsRangeMax.resize(m_humanJointNameList.size(), 0.0);
+
     m_fingerBuzzMotorsGain.resize(m_noBuzzMotors, 0.0);
 
     yarp::os::Value* robotAllAxisNameListYarp;
@@ -70,16 +74,35 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
         return false;
     }
 
+    yarp::os::Bottle& generalOptions = config.findGroup("GENERAL");
+    // get the period
+    m_getHumanMotionRange = generalOptions.check("getHumanMotionRange", yarp::os::Value(0)).asBool();
+
     // ****
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "human_to_robot_joint_anlges_scaling", m_retargetingScaling))
+    if(!m_getHumanMotionRange)
     {
-        yError() << "[Retargeting::configure] Initialization failed while reading human_to_robot_joint_anlges_scaling vector of the hand.";
+        if(!YarpHelper::getYarpVectorFromSearchable(config, "human_to_robot_joint_anlges_scaling", m_retargetingScaling))
+        {
+            yError() << "[Retargeting::configure] Initialization failed while reading human_to_robot_joint_anlges_scaling vector of the hand.";
+            return false;
+        }
+
+        if(!YarpHelper::getYarpVectorFromSearchable(config, "human_to_robot_joint_anlges_bias", m_retargetingBias))
+        {
+            yError() << "[Retargeting::configure] Initialization failed while reading human_to_robot_joint_anlges_bias vector of the hand.";
+            return false;
+        }
+    }
+
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_min_boundary", m_robotJointsRangeMin))
+    {
+        yError() << "[Retargeting::configure] Initialization failed while reading joints_min_boundary vector of the hand.";
         return false;
     }
 
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "human_to_robot_joint_anlges_bias", m_retargetingBias))
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_max_boundary", m_robotJointsRangeMax))
     {
-        yError() << "[Retargeting::configure] Initialization failed while reading human_to_robot_joint_anlges_bias vector of the hand.";
+        yError() << "[Retargeting::configure] Initialization failed while reading joints_max_boundary vector of the hand.";
         return false;
     }
 
@@ -313,4 +336,19 @@ bool Retargeting::getCustomSetIndecies( const std::vector<std::string>& allListN
     }
 
     return true;
+}
+
+bool Retargeting::computeJointAngleRetargetingParams( const std::vector<double> humanHandJointRangeMin, const std::vector<double> humanHandJointRangeMax)
+{
+
+    for(size_t i=0; i<m_retargetingScaling.size(); i++)
+    {
+        m_retargetingScaling(i)= (m_robotJointsRangeMax[i]-m_robotJointsRangeMin[i])/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
+        m_retargetingBias(i)=(m_robotJointsRangeMax[i]+m_robotJointsRangeMin[i])/2.0 - m_retargetingScaling(i) * (humanHandJointRangeMax[i]+humanHandJointRangeMin[i])/2.0 ;
+    }
+    yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingScaling: "<<m_retargetingScaling.toString();
+    yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingBias: "<<m_retargetingBias.toString();
+
+return true;
+
 }
