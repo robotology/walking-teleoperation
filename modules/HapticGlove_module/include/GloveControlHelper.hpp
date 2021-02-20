@@ -62,6 +62,9 @@ class GloveControlHelper
     std::vector<std::string> m_humanJointNameList;
     std::vector<std::string> m_humanFingerNameList;
 
+    std::vector<double> m_jointRangeMin;
+    std::vector<double> m_jointRangeMax;
+
     SGCore::SG::SenseGlove m_glove;
 
 public:
@@ -152,7 +155,9 @@ public:
     void getHumanFingersList(std::vector<std::string>& fingerList) const ;
 
 
+    bool findHumanMotionRange();
 
+    void getHumanMotionRange( std::vector<double> jointRangeMin, std::vector<double> jointRangeMax);
 
     /**
      * Close the helper
