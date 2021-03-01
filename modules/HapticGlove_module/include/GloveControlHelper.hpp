@@ -157,7 +157,7 @@ public:
 
     bool findHumanMotionRange();
 
-    void getHumanMotionRange( std::vector<double> jointRangeMin, std::vector<double> jointRangeMax);
+    void getHumanMotionRange( std::vector<double>& jointRangeMin, std::vector<double>& jointRangeMax);
 
     /**
      * Close the helper

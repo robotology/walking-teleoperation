@@ -1,6 +1,7 @@
 #include <Retargeting.hpp>
 #include <Utils.hpp>
 #include <algorithm>
+#include <math.h>
 
 Retargeting::Retargeting(const size_t noAllAxis,const size_t noActuatedAxis, const size_t noBuzzMotors,  const std::vector<std::string>& robotActuatedJointNameList,
                          const std::vector<std::string>& robotActuatedAxisNameList, const std::vector<std::string>& humanJointNameList) {
@@ -94,17 +95,33 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
         }
     }
 
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_min_boundary", m_robotJointsRangeMin))
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_min_boundary_all", m_robotJointsRangeMin))
     {
         yError() << "[Retargeting::configure] Initialization failed while reading joints_min_boundary vector of the hand.";
         return false;
     }
 
-    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_max_boundary", m_robotJointsRangeMax))
+    if(!YarpHelper::getYarpVectorFromSearchable(config, "joints_max_boundary_all", m_robotJointsRangeMax))
     {
         yError() << "[Retargeting::configure] Initialization failed while reading joints_max_boundary vector of the hand.";
         return false;
     }
+    if(m_robotJointsRangeMin.size()!=m_robotJointsRangeMax.size())
+    {
+        yError()<<"[Retargeting::configure] the size of the m_robotJointsRangeMin and m_robotJointsRangeMax is not equal: "
+               <<m_robotJointsRangeMin.size()<<m_robotJointsRangeMax.size();
+        return false;
+    }
+
+    yInfo()<<"m_robotJointsRangeMax"<< m_robotJointsRangeMax.toString();
+
+    for (size_t i=0; i<m_robotJointsRangeMin.size();i++)
+    {
+        m_robotJointsRangeMin(i)=m_robotJointsRangeMin(i)*M_PI/180.0;
+        m_robotJointsRangeMax(i)=m_robotJointsRangeMax(i)*M_PI/180.0;
+    }
+    yInfo()<<"m_robotJointsRangeMax"<< m_robotJointsRangeMax.toString();
+
 
     yInfo()<<"K_GainTotal "<< m_totalGain.toString();
     yInfo()<<"K_GainVelocity "<< m_velocityGain.toString();
@@ -344,17 +361,33 @@ bool Retargeting::getCustomSetIndecies( const std::vector<std::string>& allListN
     return true;
 }
 
-bool Retargeting::computeJointAngleRetargetingParams( const std::vector<double> humanHandJointRangeMin, const std::vector<double> humanHandJointRangeMax)
+bool Retargeting::computeJointAngleRetargetingParams( const std::vector<double>& humanHandJointRangeMin, const std::vector<double>& humanHandJointRangeMax)
 {
+    yInfo()<<"Retargeting::computeJointAngleRetargetingParams";
+    yInfo()<<m_robotJointsRangeMax.size()<< m_robotJointsRangeMin.size();
+    yInfo()<<humanHandJointRangeMax.size()<< humanHandJointRangeMin.size();
+    yInfo()<<m_retargetingScaling.size()<< m_retargetingBias.size();
+
+
+    yInfo()<<"m_robotJointsRangeMax"<< m_robotJointsRangeMax.toString();
+    yInfo()<<"m_robotJointsRangeMin"<< m_robotJointsRangeMin.toString();
+
+    yInfo()<<"humanHandJointRangeMax"<< humanHandJointRangeMax;
+    yInfo()<<"humanHandJointRangeMin"<< humanHandJointRangeMin;
+
+    yInfo()<<"m_retargetingScaling"<< m_retargetingScaling.toString();
+    yInfo()<<"m_retargetingBias"<< m_retargetingBias.toString();
+
 
     for(size_t i=0; i<m_retargetingScaling.size(); i++)
     {
-        m_retargetingScaling(i)= (m_robotJointsRangeMax[i]-m_robotJointsRangeMin[i])/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
-        m_retargetingBias(i)=(m_robotJointsRangeMax[i]+m_robotJointsRangeMin[i])/2.0 - m_retargetingScaling(i) * (humanHandJointRangeMax[i]+humanHandJointRangeMin[i])/2.0 ;
+        m_retargetingScaling(i)= (m_robotJointsRangeMax(i)-m_robotJointsRangeMin(i))/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
+        m_retargetingBias(i)=(m_robotJointsRangeMax(i)+m_robotJointsRangeMin(i))/2.0 - m_retargetingScaling(i) * (humanHandJointRangeMax[i]+humanHandJointRangeMin[i])/2.0 ;
     }
     yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingScaling: "<<m_retargetingScaling.toString();
     yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingBias: "<<m_retargetingBias.toString();
 
+    exit(0);
 return true;
 
 }
