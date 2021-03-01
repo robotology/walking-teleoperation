@@ -73,7 +73,7 @@ public:
                                const yarp::sig::Vector& allListVector,
                                yarp::sig::Vector& customListVector);
 
-    bool computeJointAngleRetargetingParams( const std::vector<double> humanHandJointRangeMin, const std::vector<double> humanHandJointRangeMax);
+    bool computeJointAngleRetargetingParams( const std::vector<double>& humanHandJointRangeMin, const std::vector<double>& humanHandJointRangeMax);
 
 
 
