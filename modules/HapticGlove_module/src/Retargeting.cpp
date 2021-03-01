@@ -381,13 +381,21 @@ bool Retargeting::computeJointAngleRetargetingParams( const std::vector<double>&
 
     for(size_t i=0; i<m_retargetingScaling.size(); i++)
     {
-        m_retargetingScaling(i)= (m_robotJointsRangeMax(i)-m_robotJointsRangeMin(i))/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
+        if(m_retargetingScaling(i)>=0)
+        {
+            m_retargetingScaling(i)= (m_robotJointsRangeMax(i)-m_robotJointsRangeMin(i))/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
+        }
+        else
+        {
+            // when the axis of human and robot joint motions are inverse:
+            m_retargetingScaling(i)= -1.0* (m_robotJointsRangeMax(i)-m_robotJointsRangeMin(i))/(humanHandJointRangeMax[i]-humanHandJointRangeMin[i]);
+        }
+
         m_retargetingBias(i)=(m_robotJointsRangeMax(i)+m_robotJointsRangeMin(i))/2.0 - m_retargetingScaling(i) * (humanHandJointRangeMax[i]+humanHandJointRangeMin[i])/2.0 ;
     }
     yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingScaling: "<<m_retargetingScaling.toString();
     yInfo()<<"[Retargeting::computeJointAngleRetargetingParams] m_retargetingBias: "<<m_retargetingBias.toString();
 
-    exit(0);
 return true;
 
 }
