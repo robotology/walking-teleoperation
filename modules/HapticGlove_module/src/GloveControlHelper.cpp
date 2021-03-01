@@ -291,7 +291,6 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     std::cout<<"Vibrotactile Feedback \n"<<m_desiredBuzzValues<<std::endl;
     m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
 
-
     return true;
 }
 
@@ -414,8 +413,8 @@ bool GloveControlHelper::findHumanMotionRange(){
     }
 
     yarp::sig::Vector desiredValue;
-    desiredValue.resize(m_buzzDof,40);
-//    setBuzzMotorsReference(desiredValue);
+    desiredValue.resize(m_buzzDof,35);
+    setBuzzMotorsReference(desiredValue);
 
 return true;
 }
