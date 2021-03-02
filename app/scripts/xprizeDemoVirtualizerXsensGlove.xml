@@ -111,9 +111,9 @@
     <name>dyn-visualizer</name>
     <node>icub-console-gui</node>
   </module>
-<!-- This module can be preliminarily found at https://github.com/S-Dafarra/face_expressions_from_mic -->
+
   <module>
-    <name>face-expressions-from-mic</name>
+    <name>FaceExpressionsRetargetingModule</name>
     <node>icub-console-gui</node>
   </module>
 
