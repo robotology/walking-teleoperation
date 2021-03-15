@@ -20,6 +20,7 @@ The suite includes:
 * **Virtualizer_module**: this module allows using the Cyberith virtualizer as a joypad interface for walking commands.
 * **Utils_module**: a module that can be useful to implement some common functionality
 * **Xsens_module**: a module that gets joint values from [human state provider](https://github.com/robotology/human-dynamics-estimation/) and maps them to the [walking controller](https://github.com/robotology/walking-controllers) input
+* **FaceExpressions_module**: a module that detects a human voice from a microphone and commands the robot face expressions to mimic the lips moving.
 
 The technical description of the suit and the frame descriptions are documented [here](./docs/FrameDescriptions.md).
 
