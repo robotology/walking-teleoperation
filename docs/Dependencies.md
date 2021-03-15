@@ -167,3 +167,21 @@
        CybSDK_DIR= <path to the root of the cyberith sdk directory>
        Path=Path; <path to the root of the cyberith sdk directory>/x64
        ```
+       
+6. **FaceExpressions_module**: To allow the FaceExpressions_module detecting the human voice, you need to install the ``libfvad`` library. On Linux, you can install it as follows:
+   ```sh
+   sudo apt install autoconf libtool pkg-config #libfvad dependencies
+   git clone https://github.com/dpirch/libfvad
+   cd libfvad
+   autoreconf -i
+   mkdir build
+   cd build
+   ../configure --prefix=/path/to/install 
+   make
+   [sudo] make install
+   ```
+   You can avoid setting ``--prefix=/path/to/install``. In this case, it will install it in the ``/usr/local`` folder and the command ``make install`` will need ``sudo``.
+   In case you specified the prefix instead, in order to find this installation, you need to add the following to your ``.bashrc``:
+   ```bash
+   export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/path/to/install/lib/pkgconfig/
+   ```
