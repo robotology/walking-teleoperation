@@ -12,12 +12,17 @@
 
 #include <mutex>
 
+#include <deque>
+
 // YARP
 #include <yarp/os/Bottle.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/dev/PolyDriver.h>
+#include <yarp/dev/IEncoders.h>
+#include <yarp/dev/IControlMode.h>
 
 #include <CVirt.h>
 #include <CVirtDevice.h>
@@ -25,7 +30,7 @@
 #include <thrift/VirtualizerCommands.h>
 
 /**
- * RFModule useful to handle the Virtualizere
+ * RFModule useful to handle the Virtualizer
  */
 class VirtualizerModule : public yarp::os::RFModule, public VirtualizerCommands
 {
@@ -48,11 +53,33 @@ private:
 
     std::mutex m_mutex;
     CybSDK::VirtDevice* m_cvirtDeviceID = nullptr;
+
+    bool m_useRingVelocity;
+    unsigned int m_movingAverageWindowSize;
+    double m_velocityDeadzone;
+    double m_velocityScaling;
+    std::deque<double> m_movingAverage;
+
+    bool m_useHeadForTurning;
+    yarp::dev::PolyDriver m_headDevice; /**< Device to retrieve neck values. */
+    yarp::dev::IEncoders* m_encodersInterface{nullptr}; /**< Encoders interface. */
+    yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
+    int m_neckYawAxisIndex;
+    bool m_yawAxisPointsUp;
+    double m_neckYawScaling;
+    double m_neckYawDeadzone;
+    double m_isMovingDeadzone;
+
+
     /**
      * Establish the connection with the virtualizer.
      * @return true in case of success and false otherwise.
      */
     bool configureVirtualizer();
+
+    bool configureRingVelocity(const yarp::os::Bottle& ringVelocityGroup);
+
+    bool configureHeadControl(const yarp::os::Bottle& headControlGroup);
 
     /**
      * Standard threshold function.
@@ -60,6 +87,16 @@ private:
      * @return 0 if the abs(input) < abs(deadzone) otherwise return the input.
      */
     double threshold(const double& input);
+
+    /**
+     * Standard threshold function.
+     * @param input input
+     * @param deadzone The deadzone value
+     * @return 0 if the abs(input) < abs(deadzone) otherwise return the input.
+     */
+    double threshold(const double& input, double deadzone);
+
+    double filteredRingVelocity(double newVelocity);
 
 public:
     /**

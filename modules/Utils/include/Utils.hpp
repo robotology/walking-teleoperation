@@ -90,6 +90,39 @@ bool getDoubleFromSearchable(const yarp::os::Searchable& config,
                              double& number);
 
 /**
+ * Extract an int from a searchable object.
+ * @param config is the searchable object;
+ * @param key the name to check for;
+ * @param number is the int.
+ * @return true/false in case of success/failure
+ */
+bool getIntFromSearchable(const yarp::os::Searchable& config,
+                          const std::string& key,
+                          int& number);
+
+/**
+ * Extract an unsigned int from a searchable object.
+ * @param config is the searchable object;
+ * @param key the name to check for;
+ * @param number is the unsigned int.
+ * @return true/false in case of success/failure
+ */
+bool getUnsignedIntFromSearchable(const yarp::os::Searchable& config,
+                                  const std::string& key,
+                                  unsigned int& number);
+
+/**
+ * Extract a boolean from a searchable object.
+ * @param config is the searchable object;
+ * @param key the name to check for;
+ * @param value is the boolean.
+ * @return true/false in case of success/failure
+ */
+bool getBooleanFromSearchable(const yarp::os::Searchable& config,
+                              const std::string& key,
+                              bool& boolean);
+
+/**
  * Extract a vector from a searchable object.
  * @param config is the searchable object;
  * @param key the name to check for;

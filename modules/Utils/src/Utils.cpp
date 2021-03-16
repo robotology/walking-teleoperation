@@ -166,3 +166,61 @@ double Angles::shortestAngularDistance(const double& fromRad, const double& toRa
 {
     return normalizeAngle(toRad - fromRad);
 }
+
+bool YarpHelper::getIntFromSearchable(const yarp::os::Searchable &config, const std::string &key, int &number)
+{
+    yarp::os::Value* value;
+    if (!config.check(key, value))
+    {
+        yError() << "[getIntFromSearchable] Missing field " << key;
+        return false;
+    }
+
+    if (!value->isInt())
+    {
+        yError() << "[getIntFromSearchable] the value is not an int.";
+        return false;
+    }
+
+    number = value->asInt();
+    return true;
+}
+
+bool YarpHelper::getUnsignedIntFromSearchable(const yarp::os::Searchable &config, const std::string &key, unsigned int &number)
+{
+    int value;
+    if (!YarpHelper::getIntFromSearchable(config, key, value))
+    {
+        return false;
+    }
+
+    if (value > 0)
+    {
+        yError() << "[getUnsignedIntFromSearchable] the value is lower than zero.";
+        return false;
+    }
+
+    number = static_cast<unsigned int>(value);
+
+    return true;
+
+}
+
+bool YarpHelper::getBooleanFromSearchable(const yarp::os::Searchable &config, const std::string &key, bool &boolean)
+{
+    yarp::os::Value* value;
+    if (!config.check(key, value))
+    {
+        yError() << "[getBooleanFromSearchable] Missing field " << key;
+        return false;
+    }
+
+    if (!value->isBool())
+    {
+        yError() << "[getBooleanFromSearchable] the value is not a bool.";
+        return false;
+    }
+
+    boolean = value->asBool();
+    return true;
+}
