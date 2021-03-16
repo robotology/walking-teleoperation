@@ -14,6 +14,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
+#include <yarp/dev/IAxisInfo.h>
 
 #include "Utils.hpp"
 #include "VirtualizerModule.hpp"
@@ -43,14 +44,163 @@ bool VirtualizerModule::configureVirtualizer()
     return false;
 }
 
+bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVelocityGroup)
+{
+    if (ringVelocityGroup.isNull())
+    {
+        yError() << "y_use_ring_velocity is set to true but the RING_VELOCITY group is empty.";
+        return false;
+    }
+
+    if (!YarpHelper::getUnsignedIntFromSearchable(ringVelocityGroup, "moving_average_window", m_movingAverageWindowSize))
+    {
+        yError() << "Failed to read moving_average_window";
+        return false;
+    }
+
+    m_movingAverage.clear();
+    m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "velocity_deadzone", m_velocityDeadzone))
+    {
+        yError() << "Failed to read velocity_deadzone";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "velocity_scaling", m_velocityScaling))
+    {
+        yError() << "Failed to read velocity_scaling";
+        return false;
+    }
+
+    return true;
+}
+
+bool VirtualizerModule::configureHeadControl(const yarp::os::Bottle &headControlGroup)
+{
+    if (headControlGroup.isNull())
+    {
+        yError() << "use_head_for_turning is set to true but the HEAD_CONTROL group is empty.";
+        return false;
+    }
+
+    std::string robot;
+    if (!YarpHelper::getStringFromSearchable(headControlGroup, "robot", robot))
+    {
+        yError() << "Failed while reading robot parameter.";
+        return false;
+    }
+
+    std::string remoteControlBoard;
+    if (!YarpHelper::getStringFromSearchable(headControlGroup, "remote_control_board", remoteControlBoard))
+    {
+        yError() << "Failed while reading remote_control_board parameter.";
+        return false;
+    }
+
+    std::string neckYawName;
+    if (!YarpHelper::getStringFromSearchable(headControlGroup, "neck_yaw_name", neckYawName))
+    {
+        yError() << "Failed while reading neck_yaw_name parameter.";
+        return false;
+    }
+
+    if (!YarpHelper::getBooleanFromSearchable(headControlGroup, "yaw_axis_points_up", m_yawAxisPointsUp))
+    {
+        yError() << "Failed while reading yaw_axis_points_up parameter.";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(headControlGroup, "neck_yaw_scaling", m_neckYawScaling))
+    {
+        yError() << "Failed to read neck_yaw_scaling";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(headControlGroup, "neck_yaw_deadzone", m_neckYawDeadzone))
+    {
+        yError() << "Failed to read neck_yaw_deadzone";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(headControlGroup, "is_moving_tolerance", m_isMovingDeadzone))
+    {
+        yError() << "Failed to read is_moving_tolerance";
+        return false;
+    }
+
+    yarp::os::Property options;
+    options.put("device", "remote_controlboard");
+    options.put("local", "/" + getName() + "/neckControlBoard");
+    options.put("remote", "/" + robot + "/" + remoteControlBoard);
+
+    if (!m_headDevice.open(options))
+    {
+        yError() << "Failed to open device to get neck encoders.";
+        return false;
+    }
+
+    if (!m_headDevice.view(m_encodersInterface) || !m_encodersInterface)
+    {
+        yError() << "Failed to retrieve encoders interface.";
+        return false;
+    }
+
+    if (!m_headDevice.view(m_controlModeInterface) || !m_controlModeInterface)
+    {
+        yError() << "Failed to retrieve control mode interface.";
+        return false;
+    }
+
+    yarp::dev::IAxisInfo* axisInfo;
+
+    if (!m_headDevice.view(axisInfo) || !axisInfo)
+    {
+        yError() << "Failed to retrieve axis info.";
+        return false;
+    }
+
+    int numberOfAxes = 0;
+    if (!m_encodersInterface->getAxes(&numberOfAxes))
+    {
+        yError() << "Failed to get the number of axes";
+        return false;
+    }
+
+    int i = 0;
+    m_neckYawAxisIndex = -1;
+    std::string axisName;
+
+    while ((i < numberOfAxes) && (m_neckYawAxisIndex < 0))
+    {
+        if (!axisInfo->getAxisName(i, axisName))
+        {
+            yError() << "Failed to get the name of the axis with index " << i << ".";
+            return false;
+        }
+
+        if (axisName == neckYawName)
+        {
+            m_neckYawAxisIndex = i;
+        }
+        ++i;
+    }
+
+    if (m_neckYawAxisIndex < 0)
+    {
+        yError() << "Failed to find joint named " << neckYawName << ".";
+        return false;
+    }
+
+    return true;
+}
+
 bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
 {
-    yarp::os::Value* value;
-
     // check if the configuration file is empty
     if (rf.isNull())
     {
-        yError() << "[configure] Empty configuration for the force torque sensors.";
+        yError() << "[configure] Empty configuration.";
         return false;
     }
 
@@ -130,6 +280,28 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    m_useRingVelocity = rf.check("y_use_ring_velocity", yarp::os::Value(false)).asBool();
+
+    if (m_useRingVelocity)
+    {
+        if (!configureRingVelocity(rf.findGroup("RING_VELOCITY")))
+        {
+            yError() << "Failed to configure ring velocity control.";
+            return false;
+        }
+    }
+
+    m_useHeadForTurning = rf.check("use_head_for_turning", yarp::os::Value(false)).asBool();
+
+    if (m_useHeadForTurning)
+    {
+        if (!configureHeadControl(rf.findGroup("HEAD_CONTROL")))
+        {
+            yError() << "Failed to configure head control.";
+            return false;
+        }
+    }
+
     if (!configureVirtualizer())
     {
         yError() << "[configure] Unable to configure the virtualizer";
@@ -169,6 +341,10 @@ bool VirtualizerModule::close()
     // deallocate memory
     delete m_cvirtDeviceID;
 
+    m_headDevice.close();
+    m_encodersInterface = nullptr;
+    m_controlModeInterface = nullptr;
+
     return true;
 }
 
@@ -197,16 +373,13 @@ bool VirtualizerModule::updateModule()
         yError() << "Virtualizer misscalibrated or disconnected";
         return false;
     }
-    m_oldPlayerYaw = playerYaw;
-    // error between the robot orientation and the player orientation
-    double angulareError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
 
     // get the player speed
     double speedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
 
     double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
     double speedDirection = 1.0; // set the speed direction to forward by default.
-    
+
     if (std::abs(tmpSpeedDirection) < 0.01) // the "0" value means the user walking forward
         speedDirection = 1.0;
     else if (std::abs(tmpSpeedDirection + 1) < 0.01)  // the "-1" value means the user walking backward
@@ -218,11 +391,21 @@ bool VirtualizerModule::updateModule()
                  << tmpSpeedDirection;
         return false;
     }
-    // velocity_factor=2;
-    //   double x = speedData * cos(angulareError) * velocity_factor;
-    //   double y = speedData * sin(angulareError) * velocity_factor;
+
     double x = speedDirection * m_scale_X * speedData;
-    double y = m_scale_Y * angulareError;
+    double y = 0;
+    if (m_useRingVelocity)
+    {
+        double newVelocity = Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)/getPeriod();
+        double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        y = m_velocityScaling * filteredVelocity;
+    }
+    else
+    {
+        // error between the robot orientation and the player orientation
+        double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
+        y = m_scale_Y * angularError;
+    }
     yInfo() << "speed (x,y): " << x << " , " << y;
 
     // send data to the walking module
@@ -232,6 +415,9 @@ bool VirtualizerModule::updateModule()
     cmd.addDouble(-y); // because the virtualizer orientation value is CCW, therefore we put "-" to
                        // make it CW, same as the robot world.
     m_rpcPort.write(cmd, outcome);
+
+
+    m_oldPlayerYaw = playerYaw;
 
     // send the orientation of the player
     yarp::sig::Vector& playerOrientationVector = m_playerOrientationPort.prepare();
@@ -251,22 +437,45 @@ void VirtualizerModule::resetPlayerOrientation()
     m_oldPlayerYaw *= 360.0f;
     m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
     m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
+
+    m_movingAverage.clear();
+    m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
     return;
 }
 
 double VirtualizerModule::threshold(const double& input)
 {
+    return threshold(input, m_deadzone);
+}
+
+double VirtualizerModule::threshold(const double &input, double deadzone)
+{
     if (input >= 0)
     {
-        if (input > m_deadzone)
+        if (input > deadzone)
             return input;
         else
             return 0.0;
     } else
     {
-        if (input < -m_deadzone)
+        if (input < -deadzone)
             return input;
         else
             return 0.0;
     }
+}
+
+double VirtualizerModule::filteredRingVelocity(double newVelocity)
+{
+    m_movingAverage.pop_back();
+    m_movingAverage.push_front(newVelocity);
+
+    double summation = 0;
+
+    for (const double& value : m_movingAverage)
+    {
+        summation += value;
+    }
+
+    return summation/m_movingAverage.size();
 }
