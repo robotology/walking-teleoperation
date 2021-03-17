@@ -129,6 +129,12 @@ bool VirtualizerModule::configureHeadControl(const yarp::os::Bottle &headControl
         return false;
     }
 
+    if (!YarpHelper::getBooleanFromSearchable(headControlGroup, "use_only_head_to_turn", m_useOnlyHeadForTurning))
+    {
+        yError() << "Failed while reading yaw_axis_points_up parameter.";
+        return false;
+    }
+
     yarp::os::Property options;
     options.put("device", "remote_controlboard");
     options.put("local", "/" + getName() + "/neckControlBoard");

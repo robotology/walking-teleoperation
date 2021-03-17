@@ -69,7 +69,7 @@ private:
     double m_neckYawScaling;
     double m_neckYawDeadzone;
     double m_isMovingDeadzone;
-
+    bool m_useOnlyHeadForTurning;
 
     /**
      * Establish the connection with the virtualizer.
