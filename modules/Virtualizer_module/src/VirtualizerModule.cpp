@@ -402,7 +402,7 @@ bool VirtualizerModule::updateModule()
     {
         double newVelocity = Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)/getPeriod();
         double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
-        y = m_velocityScaling * filteredVelocity;
+        y = -m_velocityScaling * filteredVelocity; //The ring has the z axis pointing downward
     }
     else
     {
@@ -416,16 +416,49 @@ bool VirtualizerModule::updateModule()
 
         // error between the robot orientation and the player orientation
         double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
-        y = m_scale_Y * angularError;
+        y = -m_scale_Y * angularError; // because the virtualizer orientation value is CCW, therefore we put "-" to
+        // make it CW, same as the robot world.
     }
+
+    if (m_useHeadForTurning)
+    {
+        if (std::fabs(speedData) > m_isMovingDeadzone)
+        {
+            if (isNeckWorking())
+            {
+                if (m_useOnlyHeadForTurning)
+                {
+                    y = 0;
+                }
+
+                double neckSign = m_yawAxisPointsUp ? +1.0 : -1.0;
+
+                double neckValue;
+
+                if (m_encodersInterface->getEncoder(m_neckYawAxisIndex, &neckValue))
+                {
+                    double neckValueFiltered = threshold(neckValue, m_neckYawDeadzone);
+                    y += neckSign * m_neckYawScaling * neckValueFiltered;
+                }
+                else
+                {
+                    yWarning() << "Failed to read neck yaw encoder.";
+                }
+            }
+            else
+            {
+                yWarning() << "The head seems to have issues. Avoiding to use it to control the direction";
+            }
+        }
+    }
+
     yInfo() << "speed (x,y): " << x << " , " << y;
 
     // send data to the walking module
     yarp::os::Bottle cmd, outcome;
     cmd.addString("setGoal");
     cmd.addDouble(x);
-    cmd.addDouble(-y); // because the virtualizer orientation value is CCW, therefore we put "-" to
-                       // make it CW, same as the robot world.
+    cmd.addDouble(y);
     m_rpcPort.write(cmd, outcome);
 
 
@@ -490,4 +523,32 @@ double VirtualizerModule::filteredRingVelocity(double newVelocity)
     }
 
     return summation/m_movingAverage.size();
+}
+
+bool VirtualizerModule::isNeckWorking()
+{
+    if (m_controlModeInterface)
+    {
+        int mode;
+        if (!m_controlModeInterface->getControlMode(m_neckYawAxisIndex, &mode))
+        {
+            yWarning() << "Failed to get control mode.";
+            return false;
+        }
+
+        if ((mode == VOCAB_CM_IDLE) ||
+            (mode == VOCAB_CM_NOT_CONFIGURED) ||
+            (mode == VOCAB_CM_HW_FAULT) ||
+            (mode == VOCAB_CM_UNKNOWN))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        yWarning() << "Control mode interface not working.";
+        return false;
+    }
+
+    return true;
 }
