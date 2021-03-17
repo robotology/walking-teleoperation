@@ -400,7 +400,7 @@ bool VirtualizerModule::updateModule()
     double y = 0;
     if (m_useRingVelocity)
     {
-        double newVelocity = Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)/getPeriod();
+        double newVelocity = Angles::shortestAngularDistance(m_oldPlayerYaw, playerYaw)/getPeriod();
         double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
         y = -m_velocityScaling * filteredVelocity; //The ring has the z axis pointing downward
     }
