@@ -254,11 +254,6 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         yError() << "[configure] Unable to get a string from a searchable";
         return false;
     }
-    if (!m_robotOrientationPort.open("/" + getName() + portName))
-    {
-        yError() << "[configure] " << portName << " port already open.";
-        return false;
-    }
 
     if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
     {
@@ -287,6 +282,15 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         if (!configureRingVelocity(rf.findGroup("RING_VELOCITY")))
         {
             yError() << "Failed to configure ring velocity control.";
+            return false;
+        }
+    }
+    else
+    {
+        // We open the robot orientation port only if we are not using the ring velocity but its position
+        if (!m_robotOrientationPort.open("/" + getName() + portName))
+        {
+            yError() << "[configure] " << portName << " port already open.";
             return false;
         }
     }
@@ -361,13 +365,7 @@ bool VirtualizerModule::updateModule()
     playerYaw = Angles::normalizeAngle(playerYaw);
 
     yInfo() << "Current player yaw: " << playerYaw;
-    // get the robot orientation
-    yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
-    if (tmp != NULL)
-    {
-        auto vector = *tmp;
-        m_robotYaw = -Angles::normalizeAngle(vector[0]);
-    }
+
     if (std::fabs(Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)) > 0.15)
     {
         yError() << "Virtualizer misscalibrated or disconnected";
@@ -402,6 +400,14 @@ bool VirtualizerModule::updateModule()
     }
     else
     {
+        // get the robot orientation
+        yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
+        if (tmp != NULL)
+        {
+            auto vector = *tmp;
+            m_robotYaw = -Angles::normalizeAngle(vector[0]);
+        }
+
         // error between the robot orientation and the player orientation
         double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
         y = m_scale_Y * angularError;
