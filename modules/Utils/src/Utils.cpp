@@ -194,7 +194,7 @@ bool YarpHelper::getUnsignedIntFromSearchable(const yarp::os::Searchable &config
         return false;
     }
 
-    if (value > 0)
+    if (value < 0)
     {
         yError() << "[getUnsignedIntFromSearchable] the value is lower than zero.";
         return false;
