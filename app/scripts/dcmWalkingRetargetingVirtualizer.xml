@@ -53,7 +53,6 @@
   <module>
     <name>VirtualizerModule</name>
     <node>icub-virtualizer</node>
-    <parameters> --context virtualizerRetargeting </parameters>
   </module>
 
   <module>
