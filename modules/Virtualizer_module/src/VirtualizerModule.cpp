@@ -291,14 +291,11 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
     }
-    else
+
+    if (!m_robotOrientationPort.open("/" + getName() + portName))
     {
-        // We open the robot orientation port only if we are not using the ring velocity but its position
-        if (!m_robotOrientationPort.open("/" + getName() + portName))
-        {
-            yError() << "[configure] " << portName << " port already open.";
-            return false;
-        }
+        yError() << "[configure] " << portName << " port already open.";
+        return false;
     }
 
     m_useHeadForTurning = rf.check("use_head_for_turning", yarp::os::Value(false)).asBool();
