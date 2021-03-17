@@ -37,7 +37,7 @@ class VirtualizerModule : public yarp::os::RFModule, public VirtualizerCommands
 private:
     double m_dT; /**< RFModule period. */
     double m_deadzone; /**< Value of the deadzone. */
-    double m_robotYaw; /**<Robot orientation. */
+    double m_robotYaw; /**< Robot orientation. */
     double m_scale_X, m_scale_Y; /**< Linear and angular velocity scaling factor */
     double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
                               previous time step. */
@@ -51,25 +51,25 @@ private:
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort; /**< Used to get the robot
                                                                          orientation. */
 
-    std::mutex m_mutex;
-    CybSDK::VirtDevice* m_cvirtDeviceID = nullptr;
+    std::mutex m_mutex; /**< Internal mutex. */
+    CybSDK::VirtDevice* m_cvirtDeviceID = nullptr; /**< Virtualizer device. */
 
-    bool m_useRingVelocity;
-    unsigned int m_movingAverageWindowSize;
-    double m_velocityDeadzone;
-    double m_velocityScaling;
-    std::deque<double> m_movingAverage;
+    bool m_useRingVelocity;  /**< Flag to use the ring velocity instead of the position error. */
+    unsigned int m_movingAverageWindowSize; /**< Window size for the moving average that filters the ring velocity. */
+    double m_velocityDeadzone; /**< Absolute value below which the ring is considered still. */
+    double m_velocityScaling; /**< Scaling value from the encoder value to a reference point. */
+    std::deque<double> m_movingAverage; /**< Buffer to save velocity data. */
 
-    bool m_useHeadForTurning;
+    bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */
     yarp::dev::PolyDriver m_headDevice; /**< Device to retrieve neck values. */
     yarp::dev::IEncoders* m_encodersInterface{nullptr}; /**< Encoders interface. */
     yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
-    int m_neckYawAxisIndex;
-    bool m_yawAxisPointsUp;
-    double m_neckYawScaling;
-    double m_neckYawDeadzone;
-    double m_isMovingDeadzone;
-    bool m_useOnlyHeadForTurning;
+    int m_neckYawAxisIndex; /**< The index of the neck yaw angle. */
+    bool m_yawAxisPointsUp; /**< Flag for the direction of the neck yaw axis. */
+    double m_neckYawScaling; /**< Scaling from the neck yaw value to the desired point for the unicycle (the neck yaw is in degrees). */
+    double m_neckYawDeadzone; /**< Value below which the neck is considered straight (the value is in degrees). */
+    double m_isMovingDeadzone; /**< Value below which the person is considered still, hence avoiding to use the head to control the direction. */
+    bool m_useOnlyHeadForTurning; /**< Flag to use only the head to control the direction while walking. */
 
     /**
      * Establish the connection with the virtualizer.
@@ -77,8 +77,18 @@ private:
      */
     bool configureVirtualizer();
 
+    /**
+     * @brief Configure the parameters relative to the ring velocity estimation
+     * @param ringVelocityGroup The group containing the ring velocity parameters.
+     * @return True if successfull.
+     */
     bool configureRingVelocity(const yarp::os::Bottle& ringVelocityGroup);
 
+    /**
+     * @brief Configure the parameters relative to the use of the neck yaw to control the walking direction
+     * @param ringVelocityGroup The group containing the head control parameters.
+     * @return True if successfull.
+     */
     bool configureHeadControl(const yarp::os::Bottle& headControlGroup);
 
     /**
@@ -96,7 +106,18 @@ private:
      */
     double threshold(const double& input, double deadzone);
 
+    /**
+     * @brief Filter the ring velocity
+     * @param newVelocity The new velocity to be considered
+     * @return The filtered velocity
+     */
     double filteredRingVelocity(double newVelocity);
+
+    /**
+     * @brief Check if the neck is working fine.
+     * @return True if the neck is working fine, false otherwise.
+     */
+    bool isNeckWorking();
 
 public:
     /**
