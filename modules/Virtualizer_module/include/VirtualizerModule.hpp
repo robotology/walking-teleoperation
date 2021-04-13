@@ -36,7 +36,8 @@ class VirtualizerModule : public yarp::os::RFModule, public VirtualizerCommands
 {
 private:
     double m_dT; /**< RFModule period. */
-    double m_deadzone; /**< Value of the deadzone. */
+    double m_angleDeadzone; /**< Value of the deadzone. */
+    double m_speedDeadzone; /**< Value below which the person is considered still, hence avoiding to send a reference to the robot. */
     double m_robotYaw; /**< Robot orientation. */
     double m_scale_X, m_scale_Y; /**< Linear and angular velocity scaling factor */
     double m_oldPlayerYaw; /**< Player orientation (coming from the virtualizer) retrieved at the
@@ -68,7 +69,6 @@ private:
     bool m_yawAxisPointsUp; /**< Flag for the direction of the neck yaw axis. */
     double m_neckYawScaling; /**< Scaling from the neck yaw value to the desired point for the unicycle (the neck yaw is in degrees). */
     double m_neckYawDeadzone; /**< Value below which the neck is considered straight (the value is in degrees). */
-    double m_isMovingDeadzone; /**< Value below which the person is considered still, hence avoiding to use the head to control the direction. */
     bool m_useOnlyHeadForTurning; /**< Flag to use only the head to control the direction while walking. */
 
     /**
@@ -90,13 +90,6 @@ private:
      * @return True if successfull.
      */
     bool configureHeadControl(const yarp::os::Bottle& headControlGroup);
-
-    /**
-     * Standard threshold function.
-     * @param input input
-     * @return 0 if the abs(input) < abs(deadzone) otherwise return the input.
-     */
-    double threshold(const double& input);
 
     /**
      * Standard threshold function.
