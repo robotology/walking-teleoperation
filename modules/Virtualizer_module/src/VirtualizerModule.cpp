@@ -123,12 +123,6 @@ bool VirtualizerModule::configureHeadControl(const yarp::os::Bottle &headControl
         return false;
     }
 
-    if (!YarpHelper::getDoubleFromSearchable(headControlGroup, "is_moving_tolerance", m_isMovingDeadzone))
-    {
-        yError() << "Failed to read is_moving_tolerance";
-        return false;
-    }
-
     if (!YarpHelper::getBooleanFromSearchable(headControlGroup, "use_only_head_to_turn", m_useOnlyHeadForTurning))
     {
         yError() << "Failed while reading yaw_axis_points_up parameter.";
@@ -235,9 +229,15 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     // set deadzone
-    if (!YarpHelper::getDoubleFromSearchable(rf, "deadzone", m_deadzone))
+    if (!YarpHelper::getDoubleFromSearchable(rf, "angle_deadzone", m_angleDeadzone))
     {
         yError() << "[configure] Unable to get a double from a searchable";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(rf, "speed_deadzone", m_speedDeadzone))
+    {
+        yError() << "Failed to read speed_deadzone";
         return false;
     }
 
@@ -376,7 +376,7 @@ bool VirtualizerModule::updateModule()
     }
 
     // get the player speed
-    double speedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
+    double speedData = threshold((double)(m_cvirtDeviceID->GetMovementSpeed()), m_speedDeadzone);
 
     double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
     double speedDirection = 1.0; // set the speed direction to forward by default.
@@ -412,14 +412,14 @@ bool VirtualizerModule::updateModule()
         }
 
         // error between the robot orientation and the player orientation
-        double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw));
+        double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw), m_angleDeadzone);
         y = -m_scale_Y * angularError; // because the virtualizer orientation value is CCW, therefore we put "-" to
         // make it CW, same as the robot world.
     }
 
     if (m_useHeadForTurning)
     {
-        if (std::fabs(speedData) > m_isMovingDeadzone)
+        if (std::fabs(speedData) > 0.0) //We use the head for turning only if the operator is walking.
         {
             if (isNeckWorking())
             {
@@ -483,11 +483,6 @@ void VirtualizerModule::resetPlayerOrientation()
     m_movingAverage.clear();
     m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
     return;
-}
-
-double VirtualizerModule::threshold(const double& input)
-{
-    return threshold(input, m_deadzone);
 }
 
 double VirtualizerModule::threshold(const double &input, double deadzone)
