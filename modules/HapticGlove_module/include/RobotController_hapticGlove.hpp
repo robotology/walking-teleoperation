@@ -228,8 +228,10 @@ public:
      * get motor estimated states
      * @return true if the robot motor estimator is returned correctly
      */
-    bool getEstimatedMotorsState(std::vector<double>& AxisValuesEstimationKF, std::vector<double>&  AxisVelocitiesEstimationKF, std::vector<double>&  AxisAccelrationEstimationKF,
-                                 std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF );
+    bool getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF, Eigen::MatrixXd& feedbackAxisCovEstimationKF,
+                                 std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF, Eigen::MatrixXd& referenceAxisCovEstimationKF);
+
+
 };
 
 #endif
