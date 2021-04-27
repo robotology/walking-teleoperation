@@ -567,18 +567,17 @@ bool RobotController::estimateNextMotorsState(){
     return true;
 }
 
-bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF,
-                                              std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF ){
-    Eigen::VectorXd P;
+bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF, Eigen::MatrixXd& feedbackAxisCovEstimationKF,
+                                              std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF, Eigen::MatrixXd& referenceAxisCovEstimationKF ){
 
     if(m_robotMotorFeedbackEstimator->isInitialized()){
 
-        m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  P );
+        m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  feedbackAxisCovEstimationKF );
     }
 
     if(m_robotMotorReferenceEstimator->isInitialized()){
 
-        m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  P );
+        m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  referenceAxisCovEstimationKF );
     }
 
     return true;
