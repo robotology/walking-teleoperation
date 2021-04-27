@@ -117,45 +117,51 @@ bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z ){
     return true;
 }
 
-bool  RobotMotorsEstimation::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::VectorXd& P){
+bool  RobotMotorsEstimation::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
     estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
+    P.resize(m_numerOfMotors, 9);
+
     for(size_t i=0; i<m_numerOfMotors;i++)
     {
         Eigen::VectorXd x_hat;
-        Eigen::VectorXd P;
-        m_motorEstimatorVector[i].GetInfo(x_hat, P);
+        Eigen::VectorXd P_tmp;
+        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
 
         estimatedMotorValue[i]=x_hat[0];
         estimatedMotorVelocity[i]=x_hat[1];
         estimatedMotorAcceleration[i]=x_hat[2];
-
+        P.row(i)= P_tmp;
     }
 
 return true;
 }
 
-bool  RobotMotorsEstimation::getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::VectorXd& P){
+bool  RobotMotorsEstimation::getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
     estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
+    P.resize(m_numerOfMotors, 9);
+
     for(size_t i=0; i<m_numerOfMotors;i++)
     {
         Eigen::VectorXd x_hat;
-        Eigen::VectorXd P;
-        m_motorEstimatorVector[i].GetInfo(x_hat, P);
+        Eigen::VectorXd P_tmp;
+        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
 
         estimatedMotorValue(i)=x_hat[0];
         estimatedMotorVelocity(i)=x_hat[1];
         estimatedMotorAcceleration(i)=x_hat[2];
+        P.row(i)= P_tmp;
+
     }
 return true;
 }
 
-bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::VectorXd& P){
+bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.clear();
     estimatedMotorVelocity.clear();
@@ -164,16 +170,18 @@ bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, s
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
     estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
+    P.resize(m_numerOfMotors, 9);
 
     for(size_t i=0; i<m_numerOfMotors;i++)
     {
         Eigen::VectorXd x_hat;
-        Eigen::VectorXd P;
-        m_motorEstimatorVector[i].GetInfo(x_hat, P);
+        Eigen::VectorXd P_tmp;
+        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
 
         estimatedMotorValue[i]=x_hat[0];
         estimatedMotorVelocity[i]=x_hat[1];
         estimatedMotorAcceleration[i]=x_hat[2];
+        P.row(i)= P_tmp;
     }
     return true;
 }
@@ -181,4 +189,3 @@ bool RobotMotorsEstimation::isInitialized(){
 
     return m_isInitialized;
 }
-
