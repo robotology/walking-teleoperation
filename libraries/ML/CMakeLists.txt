@@ -12,9 +12,13 @@ set(${LIBRARY_TARGET_NAME}_SRC
 set(${LIBRARY_TARGET_NAME}_HDR
         include/${PROJECT_NAME}/ML/KMean.h )
 
+find_package(Eigen3 REQUIRED)
+
 # Adds a library target called ${LIBRARY_TARGET_NAME} to be built from the
 # source and header files listed in the command invocation.
 add_library(${LIBRARY_TARGET_NAME} ${${LIBRARY_TARGET_NAME}_SRC} ${${LIBRARY_TARGET_NAME}_HDR})
+
+target_link_libraries(${LIBRARY_TARGET_NAME} PRIVATE Eigen3::Eigen)
 
 add_library(${PROJECT_NAME}::${LIBRARY_TARGET_NAME} ALIAS ${LIBRARY_TARGET_NAME})
 
