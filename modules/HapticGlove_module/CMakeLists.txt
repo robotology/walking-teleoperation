@@ -125,6 +125,7 @@ if(ENABLE_LOGGER)
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
+    walking-teleoperation::ML
     )
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
@@ -134,6 +135,7 @@ else(ENABLE_LOGGER)
     SenseGlove
     ctrlLib
     UtilityLibrary
+    walking-teleoperation::ML
 )
 endif()
 
