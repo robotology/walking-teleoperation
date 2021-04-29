@@ -27,8 +27,8 @@ KalmanFilter::KalmanFilter(const double dt,
 
     m_Phi = Eigen::MatrixXd::Identity(n,n) + m_F * m_dt;
     m_Gamma = m_G * m_dt;
-    Ht_Rinv = m_H.transpose() * m_R.inverse();
-    Ht_Rinv_H = m_H.transpose() * m_R.inverse() * m_H;
+    m_Ht_Rinv = m_H.transpose() * m_R.inverse();
+    m_Ht_Rinv_H = m_H.transpose() * m_R.inverse() * m_H;
     Gamma_Q_GammaT = m_Gamma * m_Q * m_Gamma.transpose();
     std::cout<<"KalmanFilter::KalmanFilter end \n";
 
@@ -54,8 +54,8 @@ bool KalmanFilter::EstimateNextState(Eigen::MatrixXd& x_hat)
     /*
      * J= 1/2 [(x-x_bar) M^(-1)(x-x_bar) + (z-Hx) R^(-1)(z-Hx)]
      */
-    m_P =(m_M.inverse() + Ht_Rinv_H).inverse();
-    m_K = m_P * Ht_Rinv;
+    m_P =(m_M.inverse() + m_Ht_Rinv_H).inverse();
+    m_K = m_P * m_Ht_Rinv;
     m_x_hat = m_x_bar + m_K * (m_z - m_H * m_x_bar);
     m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
     m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
@@ -72,8 +72,8 @@ bool KalmanFilter::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& 
      */
     m_z=z;
 
-    m_P =(m_M.inverse() + Ht_Rinv_H).inverse();
-    m_K = m_P * Ht_Rinv;
+    m_P =(m_M.inverse() + m_Ht_Rinv_H).inverse();
+    m_K = m_P * m_Ht_Rinv;
     m_x_hat = m_x_bar + m_K * (m_z - m_H * m_x_bar);
     m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
     m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
