@@ -604,6 +604,12 @@ bool RobotController::isRobotPrepared()
 
 bool RobotController::initializeEstimators(){
     std::cout<<"RobotController::initializeEstimator() \n";
+    if(!isRobotPrepared())
+    {
+        yError()<<"[RobotController::initializeEstimators()] the robot should be prepared before initialization "
+                  "of the estimator";
+        return false;
+    }
     yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
     getFingerAxisValueReference(axisReferenceVector);
     getFingerAxisFeedback(axisFeedbackVector);
@@ -624,21 +630,23 @@ bool RobotController::estimateNextStates(){
     yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
     yarp::sig::Vector JointsExpectedVector, jointsFeedbackVector ;
 
-    getFingerAxisValueReference(axisReferenceVector);
-    getFingerAxisFeedback(axisFeedbackVector);
-    getFingerJointExpectedValue(JointsExpectedVector);
-    getFingerJointsFeedback(jointsFeedbackVector);
-
     if(m_robotMotorFeedbackEstimator->isInitialized()){
+        getFingerAxisFeedback(axisFeedbackVector);
         m_robotMotorFeedbackEstimator->estimateNextState(axisFeedbackVector);
     }
     if(m_robotMotorReferenceEstimator->isInitialized()){
+        getFingerAxisValueReference(axisReferenceVector);
+
         m_robotMotorReferenceEstimator->estimateNextState(axisReferenceVector);
     }
+
     if(m_robotJointFeedbackEstimator->isInitialized()){
+        getFingerJointsFeedback(jointsFeedbackVector);
         m_robotJointFeedbackEstimator->estimateNextState(jointsFeedbackVector);
     }
+
     if(m_robotJointExpectedEstimator->isInitialized()){
+        getFingerJointExpectedValue(JointsExpectedVector);
         m_robotJointExpectedEstimator->estimateNextState(JointsExpectedVector);
     }
 
@@ -649,12 +657,10 @@ bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisV
                                               std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF, Eigen::MatrixXd& referenceAxisCovEstimationKF ){
 
     if(m_robotMotorFeedbackEstimator->isInitialized()){
-
         m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  feedbackAxisCovEstimationKF );
     }
 
     if(m_robotMotorReferenceEstimator->isInitialized()){
-
         m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  referenceAxisCovEstimationKF );
     }
 

@@ -391,14 +391,13 @@ bool HapticGloveModule::getFeedbacks()
                     << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                        "the left hand fingers.";
         }
+
         m_robotLeftHand->getFingerAxisFeedback(m_icubLeftFingerAxisValueFeedback);
         m_robotLeftHand->getFingerAxisValueReference(m_icubLeftFingerAxisValueReference);
         m_robotLeftHand->getFingerAxisVelocityFeedback( m_icubLeftFingerAxisVelocityFeedback);
-
         m_robotLeftHand->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
 //        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
 //        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
-
         m_robotLeftHand->estimateNextStates();
     }
 
@@ -1103,12 +1102,6 @@ std::cerr<<"106 \n";
                 yError() << "[HapticGloveModule::updateModule()] cannot setup the left hand glove.";
                 return false;
             }
-
-            if (!m_robotLeftHand->initializeEstimators())
-            {
-                yError() << "[HapticGloveModule::updateModule()] cannot initialize the left robot hand.";
-                return false;
-            }
         }
 
         if (m_useRightHand)
@@ -1117,11 +1110,6 @@ std::cerr<<"106 \n";
             {
                 yError()
                         << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
-                return false;
-            }
-            if (!m_robotRightHand->initializeEstimators())
-            {
-                yError() << "[HapticGloveModule::updateModule()] cannot initialize the right robot hand.";
                 return false;
             }
         }
@@ -1269,6 +1257,26 @@ std::cerr<<"106 \n";
         {
             yError()<<"There is not robot hand enabled.";
             return false;
+        }
+
+        if(m_state == HapticGloveFSM::Running)
+        {
+            if(m_useLeftHand)
+            {
+                if (!m_robotLeftHand->initializeEstimators())
+                {
+                    yError() << "[HapticGloveModule::updateModule()] cannot initialize the left robot hand.";
+                    return false;
+                }
+            }
+            if(m_useRightHand)
+            {
+                if (!m_robotRightHand->initializeEstimators())
+                {
+                    yError() << "[HapticGloveModule::updateModule()] cannot initialize the right robot hand.";
+                    return false;
+                }
+            }
         }
     }
 
