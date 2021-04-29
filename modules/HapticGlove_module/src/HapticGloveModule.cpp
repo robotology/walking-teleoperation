@@ -399,7 +399,7 @@ bool HapticGloveModule::getFeedbacks()
 //        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
 //        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
 
-        m_robotLeftHand->estimateNextMotorsState();
+        m_robotLeftHand->estimateNextStates();
     }
 
     if (m_useRightHand)
@@ -420,7 +420,7 @@ bool HapticGloveModule::getFeedbacks()
         yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
         yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
 
-        m_robotRightHand->estimateNextMotorsState();
+        m_robotRightHand->estimateNextStates();
 
     }
     yInfo()<<"getFeedback success.";
@@ -1104,7 +1104,7 @@ std::cerr<<"106 \n";
                 return false;
             }
 
-            if (!m_robotLeftHand->initializeEstimator())
+            if (!m_robotLeftHand->initializeEstimators())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot initialize the left robot hand.";
                 return false;
@@ -1119,7 +1119,7 @@ std::cerr<<"106 \n";
                         << "[HapticGloveModule::updateModule()] cannot setup the right hand glove.";
                 return false;
             }
-            if (!m_robotRightHand->initializeEstimator())
+            if (!m_robotRightHand->initializeEstimators())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot initialize the right robot hand.";
                 return false;
