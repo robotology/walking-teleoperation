@@ -1177,7 +1177,7 @@ std::cerr<<"106 \n";
                                 << "cannot claibrate the coupling matrix and find the coefficient matrix";
                         return false;
                     }
-                }                
+                }
                 if(m_getHumanMotionRange)
                 {
                     std::vector<double> humanHandJointRangeMin, humanHandJointRangeMax;
@@ -1357,10 +1357,18 @@ void HapticGloveModule::logData()
             m_robotLeftHand->getFingerJointsFeedback(icubLeftFingerJointsFeedback);
             m_robotLeftHand->getFingerJointReference(icubLeftFingerJointsReference);
 
+            std::vector<double> feedbackJointValuesEstimationKF, expectedJointValuesEstimationKF;
+            m_robotLeftHand->getEstimatedJointState(feedbackJointValuesEstimationKF, expectedJointValuesEstimationKF);
+
             m_logger->add(m_logger_prefix + "_icubLeftFingerJointsReference",
                           icubLeftFingerJointsReference);
             m_logger->add(m_logger_prefix + "_icubLeftFingerJointsFeedback",
                           icubLeftFingerJointsFeedback);
+            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsExpectedKF",
+                             expectedJointValuesEstimationKF);
+            m_logger->add(m_logger_prefix + "_icubLeftFingerJointsFeedbackKF",
+                             feedbackJointValuesEstimationKF);
+
             /* Glove*/
             Eigen::MatrixXd leftHandPose, leftGlovePose, leftHandJointsAngles;
             std::vector<float> leftGloveSensors;
@@ -1458,10 +1466,20 @@ void HapticGloveModule::logData()
             m_robotRightHand->getFingerJointsFeedback(icubRightFingerJointsFeedback);
             m_robotRightHand->getFingerJointReference(icubRightFingerJointsReference);
 
+            std::vector<double> feedbackJointValuesEstimationKF, expectedJointValuesEstimationKF;
+            m_robotRightHand->getEstimatedJointState(feedbackJointValuesEstimationKF, expectedJointValuesEstimationKF);
+
             m_logger->add(m_logger_prefix + "_icubRightFingerJointsReference",
                           icubRightFingerJointsReference);
             m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedback",
                           icubRightFingerJointsFeedback);
+            m_logger->add(m_logger_prefix + "_icubRightFingerJointsExpectedKF",
+                             expectedJointValuesEstimationKF);
+            m_logger->add(m_logger_prefix + "_icubRightFingerJointsFeedbackKF",
+                             feedbackJointValuesEstimationKF);
+
+
+
             /* Glove*/
             Eigen::MatrixXd rightHandPose, rightGlovePose, rightHandJointsAngles;
             std::vector<float> rightGloveSensors;
@@ -1546,6 +1564,10 @@ bool HapticGloveModule::openLogger()
                          m_robotLeftHand->controlHelper()->getNumberOfActuatedJoints());
         m_logger->create(m_logger_prefix + "_icubLeftFingerJointsFeedback",
                          m_robotLeftHand->controlHelper()->getNumberOfActuatedJoints());
+        m_logger->create(m_logger_prefix + "_icubLeftFingerJointsExpectedKF",
+                         m_robotLeftHand->controlHelper()->getNumberOfActuatedJoints());
+        m_logger->create(m_logger_prefix + "_icubLeftFingerJointsFeedbackKF",
+                         m_robotLeftHand->controlHelper()->getNumberOfActuatedJoints());
 
 
         // Human info comming from Glove
@@ -1603,6 +1625,11 @@ bool HapticGloveModule::openLogger()
                          m_robotRightHand->controlHelper()->getNumberOfActuatedJoints());
         m_logger->create(m_logger_prefix + "_icubRightFingerJointsFeedback",
                          m_robotRightHand->controlHelper()->getNumberOfActuatedJoints());
+        m_logger->create(m_logger_prefix + "_icubRightFingerJointsExpectedKF",
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedJoints());
+        m_logger->create(m_logger_prefix + "_icubRightFingerJointsFeedbackKF",
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedJoints());
+
 
         // Human info comming from Glove
         m_logger->create(m_logger_prefix + "_humanRightHandPose", m_gloveRightHand->getNoHandLinks(), 7);

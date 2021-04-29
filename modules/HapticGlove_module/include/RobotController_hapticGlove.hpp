@@ -253,7 +253,14 @@ public:
      * @return true if the robot joints estimator is returned correctly
      */
     bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF, std::vector<double>&  feedbackJointVelocitiesEstimationKF, std::vector<double>&  feedbackJointAccelrationEstimationKF, Eigen::MatrixXd& feedbackJointCovEstimationKF,
-                                 std::vector<double>& referenceJointValuesEstimationKF, std::vector<double>&  referenceJointVelocitiesEstimationKF, std::vector<double>&  referenceJointAccelrationEstimationKF, Eigen::MatrixXd& referenceJointCovEstimationKF);
+                                 std::vector<double>& expectedJointValuesEstimationKF, std::vector<double>&  expectedJointVelocitiesEstimationKF, std::vector<double>&  expectedJointAccelrationEstimationKF, Eigen::MatrixXd& expectedJointCovEstimationKF);
+
+    /**
+     * get joints estimated states
+     * @return true if the robot joints estimator is returned correctly
+     */
+    bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
+                                 std::vector<double>& expectedJointValuesEstimationKF);
 
 };
 
