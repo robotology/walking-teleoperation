@@ -674,3 +674,21 @@ bool RobotController::getEstimatedJointState(std::vector<double>& feedbackJointV
     return true;
 }
 
+bool RobotController::getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
+                            std::vector<double>& expectedJointValuesEstimationKF){
+
+    std::vector<double> feedbackJointVelocitiesEstimationKF, feedbackJointAccelrationEstimationKF;
+    std::vector<double> expectedJointVelocitiesEstimationKF,expectedJointAccelrationEstimationKF;
+    Eigen::MatrixXd feedbackJointCovEstimationKF, expectedJointCovEstimationKF;
+
+        if(m_robotJointFeedbackEstimator->isInitialized()){
+            m_robotJointFeedbackEstimator->getInfo(feedbackJointValuesEstimationKF, feedbackJointVelocitiesEstimationKF,   feedbackJointAccelrationEstimationKF,  feedbackJointCovEstimationKF );
+        }
+
+        if(m_robotJointExpectedEstimator->isInitialized()){
+            m_robotJointExpectedEstimator->getInfo(expectedJointValuesEstimationKF, expectedJointVelocitiesEstimationKF,   expectedJointAccelrationEstimationKF,  expectedJointCovEstimationKF );
+        }
+        return true;
+}
+
+
