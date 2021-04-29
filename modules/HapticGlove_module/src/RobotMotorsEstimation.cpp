@@ -171,6 +171,7 @@ bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, s
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
     estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
     P.resize(m_numerOfMotors, 9);
+    P.setZero(m_numerOfMotors, 9);
 
     for(size_t i=0; i<m_numerOfMotors;i++)
     {
