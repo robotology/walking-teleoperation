@@ -50,8 +50,8 @@ private:
     Eigen_Mat m_w_bar; /**< E[w(t)], size: m*1 */
     Eigen_Mat m_z; /**< z(t) measurement vector, size: p*1 */
 
-    Eigen_Mat Ht_Rinv;/**< H^T R^(-1), size: n*p */
-    Eigen_Mat Ht_Rinv_H;/**< H^T R^(-1), size: n*n*/
+    Eigen_Mat m_Ht_Rinv;/**< H^T R^(-1), size: n*p */
+    Eigen_Mat m_Ht_Rinv_H;/**< H^T R^(-1), size: n*n*/
     Eigen_Mat Gamma_Q_GammaT;/**< Gamma Q Gamma^T, size: n*n */
 
 public:
