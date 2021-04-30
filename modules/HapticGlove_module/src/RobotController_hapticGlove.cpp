@@ -303,13 +303,13 @@ void RobotController::getFingerJointExpectedValue(yarp::sig::Vector& fingerJoint
     Eigen::VectorXd fingerJointsExpectedValueEigen, fingersMotorFeedbackEigen;
 
     fingerJointsExpectedValueEigen.resize(noJoints, 1);
-    fingersMotorFeedbackEigen.resize(noMotors, 1);
-
+    fingersMotorFeedbackEigen.resize(noMotors+1, 1);
+        fingersMotorFeedbackEigen(0)=1.0; // related to the bias term
     for (unsigned i = 0; i < noMotors; i++)
     {
-        fingersMotorFeedbackEigen(i) = fingerAxisValues(i);
+        fingersMotorFeedbackEigen(i+1) = fingerAxisValues(i);
     }
-    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen;
+    fingerJointsExpectedValueEigen = m_Bias_A * fingersMotorFeedbackEigen;
 
     for (unsigned i = 0; i < noJoints; i++)
     {
@@ -583,10 +583,27 @@ bool RobotController::trainCouplingMatrix()
 {
     yInfo() << "[RobotController::trainCouplingMatrix()]";
 
+    // adding bias term
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+        motorsData, jointsData, A;
+    motorsData.setOnes(m_motorsData.rows(),m_motorsData.cols()+1);
+    motorsData.block(0,1,m_motorsData.rows(),m_motorsData.cols())= m_motorsData;
+    A.resize(m_A.rows(),m_A.cols()+1);
+    jointsData=m_jointsData;
+
+    m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A);
+    m_Bias_A=A;
+
+    yInfo() << "(Bias+ A) matrix size:" << A.rows() << A.cols();
+    std::cout << "(Bias+ A) matrix:\n" << A << std::endl;
+
+    //
     m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
 
     yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
     std::cout << "m_A matrix:\n" << m_A << std::endl;
+
+
 
     m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
 
