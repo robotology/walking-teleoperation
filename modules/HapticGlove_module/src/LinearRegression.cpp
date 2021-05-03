@@ -43,6 +43,7 @@ bool LinearRegression::LearnOneShotMatrix(const Eigen::Matrix<double, Eigen::Dyn
                                     const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>&  ouputData,
                                     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& tetha){
 
+    tetha.resize(0,0);
     for (size_t i = 0; i < ouputData.cols(); i++)
     {
         Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> tetha_i;

@@ -41,11 +41,14 @@ private:
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m> n: number of
-                joints, m: number of motors; we have q= m_A x m where q is the joint values and m is
+                joints, m: number of motors; we have q= m_A x m + m_Bias where q is the joint values and m is
                 the motor values*/
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_Bias_A;
+        m_Bias; /**< Bias term of the coupling relationship from the motors to the joints; Dimension <n,1> n: number of
+                joints; we have q= m_A x m  m_Bias where q is the joint values and m is
+                the motor values*/
+
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_Q; // weight matrix for desired states
