@@ -54,18 +54,29 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     size_t noActuatedJoints=m_robotControlInterface->getNumberOfActuatedJoints();
     if (m_motorJointsCoupled)
     {
+        m_A.resize(noActuatedJoints, noActuatedAxis);
+        m_Bias.resize(noActuatedJoints,1);
 
         if (!m_doCalibration)
         {
             m_A.resize(noActuatedJoints, noActuatedAxis);
-            yarp::sig::Vector A_vector;
+            m_Bias.resize(noActuatedJoints,1);
+            yarp::sig::Vector A_vector, Bias_vector;
             A_vector.resize(noActuatedJoints* noActuatedAxis);
+            Bias_vector.resize(noActuatedJoints);
             if (!YarpHelper::getYarpVectorFromSearchable(config, "CouplingMatrix", A_vector))
             {
                 yError() << "[RobotController::configure] Initialization failed while reading "
                             "CouplingMatrix vector.";
                 return false;
             }
+            if (!YarpHelper::getYarpVectorFromSearchable(config, "CouplingBias", Bias_vector))
+            {
+                yError() << "[RobotController::configure] Initialization failed while reading "
+                            "CouplingBias vector.";
+                return false;
+            }
+
             for (size_t i = 0; i < noActuatedJoints; i++)
             {
                 for (size_t j = 0; j < noActuatedAxis; j++)
@@ -73,12 +84,16 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
                     size_t element = i * noActuatedAxis + j;
                     m_A(i, j) = A_vector(element);
                 }
+                m_Bias(i) = Bias_vector(i);
+
             }
         }
     } else
     {
         // in this case the mapping between the motors and joints are identity matrix
         m_A = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis);
+        m_Bias = Eigen::MatrixXd::Zero(noActuatedAxis, 1);
+
     }
 
     yInfo()<<"noActuatedJoints"<<noActuatedJoints;
@@ -206,8 +221,6 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
         m_desiredMotorValue(i) =  (1-k_gain)* motorFeedbackValue(i)+ k_gain* m_desiredMotorValue(i);
     }
 
-
-
     //    if (m_fingerIntegrator == nullptr)
     //    {
     //        yError() << "[RobotController::setFingersVelocity] The integrator is not initialize
@@ -246,7 +259,7 @@ bool RobotController::setFingersJointReference(const yarp::sig::Vector& fingersR
         fingersJointsRef(i, 0) = fingersReference(i);
         m_desiredJointValue(i) = fingersReference(i);
     }
-    fingersMotorRef = m_controlCoeff * fingersJointsRef;
+    fingersMotorRef = m_controlCoeff * (fingersJointsRef-m_Bias);
 
     yarp::sig::Vector fingersMotorsReference;
     fingersMotorsReference.resize(noMotors);
@@ -303,13 +316,12 @@ void RobotController::getFingerJointExpectedValue(yarp::sig::Vector& fingerJoint
     Eigen::VectorXd fingerJointsExpectedValueEigen, fingersMotorFeedbackEigen;
 
     fingerJointsExpectedValueEigen.resize(noJoints, 1);
-    fingersMotorFeedbackEigen.resize(noMotors+1, 1);
-        fingersMotorFeedbackEigen(0)=1.0; // related to the bias term
+    fingersMotorFeedbackEigen.resize(noMotors, 1);
     for (unsigned i = 0; i < noMotors; i++)
     {
-        fingersMotorFeedbackEigen(i+1) = fingerAxisValues(i);
+        fingersMotorFeedbackEigen(i) = fingerAxisValues(i);
     }
-    fingerJointsExpectedValueEigen = m_Bias_A * fingersMotorFeedbackEigen;
+    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen+ m_Bias;
 
     for (unsigned i = 0; i < noJoints; i++)
     {
@@ -335,7 +347,7 @@ void RobotController::getFingerJointExpectedValue(std::vector<double>& fingerJoi
     {
         fingersMotorFeedbackEigen(i) = fingerAxisValues(i);
     }
-    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen;
+    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen+ m_Bias;
 
     for (unsigned i = 0; i < noJoints; i++)
     {
@@ -585,25 +597,33 @@ bool RobotController::trainCouplingMatrix()
 
     // adding bias term
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        motorsData, jointsData, A;
+        motorsData, jointsData, A_Bias;
+    yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
     motorsData.setOnes(m_motorsData.rows(),m_motorsData.cols()+1);
     motorsData.block(0,1,m_motorsData.rows(),m_motorsData.cols())= m_motorsData;
-    A.resize(m_A.rows(),m_A.cols()+1);
+    A_Bias.resize(m_A.rows(),m_A.cols()+1);
     jointsData=m_jointsData;
-
-    m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A);
-    m_Bias_A=A;
-
-    yInfo() << "(Bias+ A) matrix size:" << A.rows() << A.cols();
-    std::cout << "(Bias+ A) matrix:\n" << A << std::endl;
-
-    //
-    m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
-
-    yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
-    std::cout << "m_A matrix:\n" << m_A << std::endl;
+    yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
 
 
+    m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A_Bias);
+
+    m_A     = A_Bias.block(0,1,m_A.rows(),m_A.cols());
+    m_Bias = A_Bias.block(0,0, m_Bias.rows(),1);
+
+    yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
+    yInfo() << "(m_A) matrix size:" << m_A.rows() << m_A.cols();
+    yInfo() << "(m_Bias) matrix size:" << m_Bias.rows() << m_Bias.cols();
+
+    std::cout << "(Bias+ A) matrix:\n" << A_Bias << std::endl;
+    std::cout << "(A) matrix:\n" << m_A << std::endl;
+    std::cout << "(Bias) matrix:\n" << m_Bias << std::endl;
+
+
+//    m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
+
+//    yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
+//    std::cout << "m_A matrix:\n" << m_A << std::endl;
 
     m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
 
