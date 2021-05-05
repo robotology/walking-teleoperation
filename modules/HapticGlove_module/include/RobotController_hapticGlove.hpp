@@ -145,28 +145,52 @@ public:
     void getFingerJointsFeedback(std::vector<double>& fingerValues);
 
     /**
-     * Get the motor current values
+     * Get the motor current Feedback values
      * @param motorCurrentFeedback get the motor current feedback values
      */
     void getMotorCurrentFeedback(std::vector<double>& motorCurrentFeedback);
 
     /**
-     * Get the motor current values
+     * Get the motor current Feedback values
      * @param motorCurrentFeedback get the motor current feedback values
      */
     void getMotorCurrentFeedback(yarp::sig::Vector& motorCurrentFeedback);
 
     /**
-     * Get the motor current values
-     * @param motorCurrentFeedback get the motor current feedback values
+     * Get the motor current Refernce values
+     * @param motorCurrentReference get the motor current reference values
      */
     void getMotorCurrentReference(std::vector<double>& motorCurrentReference);
 
     /**
-     * Get the motor current values
-     * @param motorCurrentFeedback get the motor current feedback values
+     * Get the motor current Refernce values
+     * @param motorReferenceFeedback get the motor current reference values
      */
     void getMotorCurrentReference(yarp::sig::Vector& motorCurrentReference);
+
+    /**
+     * Get the motor PWM values
+     * @param motorPWMtFeedback get the motor PWM feedback values
+     */
+    void getMotorPwmFeedback(std::vector<double>& motorPWMFeedback);
+
+    /**
+     * Get the motor PWM values
+     * @param motorPWMFeedback get the motor PWM feedback values
+     */
+    void getMotorPwmFeedback(yarp::sig::Vector& motorPWMFeedback);
+
+    /**
+     * Get the motor PWM Reference values
+     * @param motorPWMReference get the motor PWM reference values
+     */
+    void getMotorPwmReference(std::vector<double>& motorPWMReference);
+
+    /**
+     * Get the motor PWM Refernce values
+     * @param motorPWMReference get the motor PWM reference values
+     */
+    void getMotorPwmReference(yarp::sig::Vector& motorPWMReference);
 
     /**
      * Get the fingers joint reference values
