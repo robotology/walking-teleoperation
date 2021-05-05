@@ -432,7 +432,6 @@ void RobotController::getMotorCurrentFeedback(std::vector<double>& motorCurrentF
     {
         motorCurrentFeedback.push_back(Temp(i));
     }
-
 }
 
 void RobotController::getMotorCurrentReference(yarp::sig::Vector& motorCurrentReference)
@@ -451,7 +450,37 @@ void RobotController::getMotorCurrentReference(std::vector<double>& motorCurrent
     }
 }
 
+void RobotController::getMotorPwmFeedback(std::vector<double>& motorPWMFeedback)
+{
+    motorPWMFeedback.clear();
+    yarp::sig::Vector Temp = controlHelper()->motorPwm();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        motorPWMFeedback.push_back(Temp(i));
+    }
+}
 
+void RobotController::getMotorPwmFeedback(yarp::sig::Vector& motorPWMFeedback)
+{
+    motorPWMFeedback.clear();
+    motorPWMFeedback = controlHelper()->motorPwm();
+}
+
+void RobotController::getMotorPwmReference(std::vector<double>& motorPWMReference)
+{
+    motorPWMReference.clear();
+    yarp::sig::Vector Temp = controlHelper()->motorPwmReference();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        motorPWMReference.push_back(Temp(i));
+    }
+}
+
+void RobotController::getMotorPwmReference(yarp::sig::Vector& motorPWMReference)
+{
+    motorPWMReference.clear();
+    motorPWMReference = controlHelper()->motorPwmReference();
+}
 
 bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingRandom(
     const bool generateRandomVelocity)
