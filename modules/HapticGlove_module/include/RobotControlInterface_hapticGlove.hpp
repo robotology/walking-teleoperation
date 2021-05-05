@@ -22,6 +22,7 @@
 #include <yarp/dev/IPositionDirect.h>
 #include <yarp/dev/IVelocityControl.h>
 #include <yarp/dev/ICurrentControl.h>
+#include<yarp/dev/IPWMControl.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
@@ -77,6 +78,7 @@ class RobotControlInterface
     yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */
     yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /**< Sensor interface */
     yarp::dev::ICurrentControl* m_currentInterface{nullptr};/**< current control interface */
+    yarp::dev::IPWMControl* m_pwmInterface{nullptr}; /**< PWM control interface*/
 
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
     yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< Joint position [deg]. */
@@ -90,7 +92,10 @@ class RobotControlInterface
     yarp::sig::Vector m_SensorActuatedJointFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
     yarp::sig::Vector m_currentFeedback;/**< motor current feedbacks*/
     yarp::sig::Vector m_desiredCurrent;/**< motor current reference*/
-    yarp::sig::Vector m_desiredCurrentInterface;/**< motor current reference*/
+    yarp::sig::Vector m_desiredCurrentInterface;/**< motor current reference returned from the Current interface*/
+    yarp::sig::Vector m_pwmDesired;/**< motor PWM desires*/
+    yarp::sig::Vector m_pwmFeedback; /**< motor PWM feedbacks*/
+    yarp::sig::Vector m_pwmDesiredInterface; /**< motor PWM feedbacks returned from the PWM interface*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -141,6 +146,12 @@ class RobotControlInterface
     bool setCurrentReferences(const yarp::sig::Vector& desiredCurrent);
 
 
+    /**
+     * Set the desired motor PWM
+     * @param desiredPWM desired motor PWM
+     * @return true / false in case of success / failure
+     */
+    bool setPwmReferences(const yarp::sig::Vector& desiredPWM);
 
 
 
@@ -249,11 +260,22 @@ public:
     const yarp::sig::Vector& motorCurrents() const;
 
     /**
-     * Get all the intersted motor current References
+     * Get all the actuated motor current References
      * @return all the motor current References
      */
     const yarp::sig::Vector& motorCurrentReference() const;
 
+    /**
+     * Get all the actuated motor PWM values
+     * @return all the motor PWM values
+     */
+    const yarp::sig::Vector& motorPwm() const;
+
+    /**
+     * Get all the actuated motor PWM References
+     * @return all the motor PWM References
+     */
+    const yarp::sig::Vector& motorPwmReference() const;
 
 
     /**
