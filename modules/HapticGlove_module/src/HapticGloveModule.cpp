@@ -1306,14 +1306,26 @@ void HapticGloveModule::logData()
                           icubLeftFingerAxisReference);
             if(m_robot=="icub")
             {
+                // current
                 std::vector<double> icubLeftHandMotorCurrentFeedback, icubLeftHandMotorCurrentReference;
                 m_robotLeftHand->getMotorCurrentFeedback(icubLeftHandMotorCurrentFeedback);
-
                 m_robotLeftHand->getMotorCurrentReference(icubLeftHandMotorCurrentReference);
-                m_logger->add(m_logger_prefix + "icubLeftHandMotorCurrnetFeedback",
+
+                m_logger->add(m_logger_prefix + "_icubLeftHandMotorCurrnetFeedback",
                               icubLeftHandMotorCurrentFeedback);
                 m_logger->add(m_logger_prefix + "_icubLeftHandMotorCurrnetReference",
                               icubLeftHandMotorCurrentReference);
+
+                // pwm
+                std::vector<double> icubLeftHandMotorPWMFeedback, icubLeftHandMotorPWMReference;
+                m_robotLeftHand->getMotorPwmFeedback(icubLeftHandMotorPWMFeedback);
+                m_robotLeftHand->getMotorPwmReference(icubLeftHandMotorPWMReference);
+
+                m_logger->add(m_logger_prefix + "_icubLeftHandMotorPWMFeedback",
+                              icubLeftHandMotorPWMFeedback);
+                m_logger->add(m_logger_prefix + "_icubLeftHandMotorPWMReference",
+                              icubLeftHandMotorPWMReference);
+
             }
 
             std::vector<double> icubLeftFingerAxisVelocityFeedback;
@@ -1412,10 +1424,19 @@ void HapticGloveModule::logData()
                 m_robotRightHand->getMotorCurrentFeedback(icubRightHandMotorCurrentFeedback);
                 m_robotRightHand->getMotorCurrentReference(icubRightHandMotorCurrentReference);
 
-                m_logger->add(m_logger_prefix + "icubRightHandMotorCurrnetFeedback",
+                m_logger->add(m_logger_prefix + "_icubRightHandMotorCurrnetFeedback",
                               icubRightHandMotorCurrentFeedback);
                 m_logger->add(m_logger_prefix + "_icubRightHandMotorCurrnetReference",
                               icubRightHandMotorCurrentReference);
+
+                std::vector<double> icubRightHandMotorPWMFeedback, icubRightHandMotorPWMReference;
+                m_robotRightHand->getMotorPwmFeedback(icubRightHandMotorPWMFeedback);
+                m_robotRightHand->getMotorPwmReference(icubRightHandMotorPWMReference);
+
+                m_logger->add(m_logger_prefix + "_icubRightHandMotorPWMFeedback",
+                              icubRightHandMotorPWMFeedback);
+                m_logger->add(m_logger_prefix + "_icubRightHandMotorPWMReference",
+                              icubRightHandMotorPWMReference);
             }
 
             std::vector<double> icubRightFingerAxisVelocityFeedback;
@@ -1537,6 +1558,11 @@ bool HapticGloveModule::openLogger()
                              m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
             m_logger->create(m_logger_prefix + "_icubLeftHandMotorCurrnetReference",
                              m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+            m_logger->create(m_logger_prefix + "_icubLeftHandMotorPWMFeedback",
+                             m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+            m_logger->create(m_logger_prefix + "_icubLeftHandMotorPWMReference",
+                             m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+
         }
         m_logger->create(m_logger_prefix + "_icubLeftFingerAxisVelocityFeedback",
                          m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
@@ -1599,7 +1625,12 @@ bool HapticGloveModule::openLogger()
                              m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
             m_logger->create(m_logger_prefix + "_icubRightHandMotorCurrnetReference",
                              m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
+            m_logger->create(m_logger_prefix + "_icubRightHandMotorPWMFeedback",
+                             m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
+            m_logger->create(m_logger_prefix + "_icubRightHandMotorPWMReference",
+                             m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         }
+
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisVelocityFeedback",
                          m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
 
