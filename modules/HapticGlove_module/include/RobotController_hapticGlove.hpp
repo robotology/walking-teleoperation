@@ -82,6 +82,8 @@ private:
 
     bool m_robotPrepared;
 
+    double m_kGain;  /**< The gain of the exponential filter to set the robot reference position values */
+
 
 public:
     /**

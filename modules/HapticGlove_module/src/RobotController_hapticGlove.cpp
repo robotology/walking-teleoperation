@@ -51,6 +51,11 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
                "between motors and joints "
             << m_motorJointsCoupled;
 
+    m_kGain =  config.check("expFilterGain", yarp::os::Value(0.9))
+            .asDouble(); /**<  true if the motors and joints of the robot are coupled*/
+
+    yInfo() << "[RobotController::configure]  robot controller exponential filter gain: m_kGain"<< m_kGain;
+
     size_t noActuatedJoints=m_robotControlInterface->getNumberOfActuatedJoints();
     if (m_motorJointsCoupled)
     {
@@ -214,11 +219,11 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
     }
 
     yarp::sig::Vector motorFeedbackValue= controlHelper()->jointEncoders();
-    double k_gain= 0.9;
+//    m_kGain= 0.8;
     for (unsigned i = 0; i < fingersReference.size(); i++)
     {
         m_desiredMotorValue(i) = fingersReference(i) * m_fingersScaling(i);
-        m_desiredMotorValue(i) =  (1-k_gain)* motorFeedbackValue(i)+ k_gain* m_desiredMotorValue(i);
+        m_desiredMotorValue(i) =  (1-m_kGain)* motorFeedbackValue(i)+ m_kGain* m_desiredMotorValue(i);
     }
 
     //    if (m_fingerIntegrator == nullptr)
