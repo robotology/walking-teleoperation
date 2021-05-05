@@ -338,10 +338,16 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         yError() << "[RobotControlInterface::configure] Cannot obtain iTimed interface";
         return false;
     }
-    m_currentInterface;
+
     if (!m_robotDevice.view(m_currentInterface) || !m_currentInterface)
     {
         yError() << "[RobotControlInterface::configure] Cannot obtain ICurrentControl interface";
+        return false;
+    }
+
+    if (!m_robotDevice.view(m_pwmInterface) || !m_pwmInterface)
+    {
+        yError() << "[RobotControlInterface::configure] Cannot obtain IPWMControl interface";
         return false;
     }
 
@@ -354,6 +360,10 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     m_desiredCurrent.resize(m_noActuatedAxis);
     m_desiredCurrentInterface.resize(m_noActuatedAxis);
     m_currentFeedback.resize(m_noActuatedAxis);
+
+    m_pwmDesired.resize(m_noActuatedAxis);
+    m_pwmDesiredInterface.resize(m_noActuatedAxis);
+    m_pwmFeedback.resize(m_noActuatedAxis);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -526,6 +536,37 @@ bool RobotControlInterface::setCurrentReferences(const yarp::sig::Vector& desire
     return true;
 }
 
+bool RobotControlInterface::setPwmReferences(const yarp::sig::Vector& desiredPwm)
+{
+    if (m_pwmInterface== nullptr)
+    {
+        yError() << "[RobotControlInterface::setPwmReferences] PWM I/F not ready.";
+        return false;
+    }
+
+    if (desiredPwm.size() != m_noActuatedAxis)
+    {
+        yError() << "[RobotControlInterface::setPwmReferences] Dimension mismatch between "
+                    "desired current vector and the number of controlled joints.";
+        return false;
+    }
+
+    // update the desired PWM values
+    for (int i = 0; i < m_noActuatedAxis; i++)
+        m_pwmDesired(i) = desiredPwm(i);
+
+    // set desired PWM
+    if (!m_pwmInterface->setRefDutyCycles(m_pwmDesired.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::setPwmReferences] Error while setting the "
+                    "desired PWM.";
+        return false;
+    }
+    return true;
+
+}
+
+
 void RobotControlInterface::updateTimeStamp()
 {
     if (m_timedInterface)
@@ -585,6 +626,19 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired current from the interface";
         return false;
     }
+
+    if (!m_pwmInterface->getDutyCycles(m_pwmFeedback.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor PWM feedbacks";
+        return false;
+    }
+
+    if (!m_pwmInterface->getRefDutyCycles(m_pwmDesiredInterface.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired PWM from the interface";
+        return false;
+    }
+
     return true;
 }
 
@@ -674,6 +728,16 @@ const yarp::sig::Vector& RobotControlInterface::motorCurrents() const
 const yarp::sig::Vector& RobotControlInterface::motorCurrentReference() const
 {
     return m_desiredCurrentInterface;
+}
+
+const yarp::sig::Vector& RobotControlInterface::motorPwm() const
+{
+    return m_pwmFeedback;
+}
+
+const yarp::sig::Vector& RobotControlInterface::motorPwmReference() const
+{
+    return m_pwmDesiredInterface;
 }
 
 void RobotControlInterface::close()
