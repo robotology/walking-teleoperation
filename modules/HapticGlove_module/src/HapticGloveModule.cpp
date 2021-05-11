@@ -1403,6 +1403,10 @@ void HapticGloveModule::logData()
             for (int i=0;i < m_gloveLeftHand->getNoOfForceFeedback(); i++)
                 gloveLeftFingerForceFeedback[i]=m_gloveLeftForceFeedbackReference(i);
             m_logger->add(m_logger_prefix + "_gloveLeftForceFeedback", gloveLeftFingerForceFeedback);
+
+            std::vector<double> imuData;
+            m_gloveLeftHand->getGloveIMUData(imuData);
+            m_logger->add(m_logger_prefix + "_gloveLeftGloveIMU", imuData);
         }
 
         if (m_useRightHand)
@@ -1527,6 +1531,9 @@ void HapticGloveModule::logData()
                 gloveRightFingerForceFeedback[i]=m_gloveRightForceFeedbackReference(i);
             m_logger->add(m_logger_prefix + "_gloveRightForceFeedback", gloveRightFingerForceFeedback);
 
+            std::vector<double> imuData;
+            m_gloveRightHand->getGloveIMUData(imuData);
+            m_logger->add(m_logger_prefix + "_gloveRightGloveIMU", imuData);
         }
         m_logger->flush_available_data();
     }
@@ -1610,6 +1617,7 @@ bool HapticGloveModule::openLogger()
         m_logger->create(m_logger_prefix + "_humanLeftGlovePose", m_gloveLeftHand->getNoGloveLinks(), 7);
         m_logger->create(m_logger_prefix + "_gloveLeftSensors", m_gloveLeftHand->getNoSensors());
         m_logger->create(m_logger_prefix + "_gloveLeftForceFeedback", m_gloveLeftHand->getNoOfForceFeedback());
+        m_logger->create(m_logger_prefix + "_gloveLeftGloveIMU", 4);
 
 
     }
@@ -1676,6 +1684,7 @@ bool HapticGloveModule::openLogger()
         m_logger->create(m_logger_prefix + "_humanRightGlovePose", m_gloveRightHand->getNoGloveLinks(), 7);
         m_logger->create(m_logger_prefix + "_gloveRightSensors", m_gloveRightHand->getNoSensors());
         m_logger->create(m_logger_prefix + "_gloveRightForceFeedback", m_gloveRightHand->getNoOfForceFeedback());
+        m_logger->create(m_logger_prefix + "_gloveRightGloveIMU", 4);
 
     }
     yInfo() << "[HapticGloveModule::openLogger] Logging is active.";
