@@ -160,6 +160,13 @@ public:
     void getHumanMotionRange( std::vector<double>& jointRangeMin, std::vector<double>& jointRangeMax);
 
     /**
+     * Get the glove IMU data
+     * @param gloveImuData glove IMU data with the order x y z w
+     * @return true / false in case of success / failure
+     */
+    bool getGloveIMUData(std::vector<double>& gloveImuData);
+
+    /**
      * Close the helper
      */
     void close();

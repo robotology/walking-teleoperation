@@ -433,6 +433,22 @@ void GloveControlHelper::getHumanMotionRange( std::vector<double>& jointRangeMin
     std::cout<<"jointRangeMin"<<jointRangeMin<<std::endl;
 }
 
+bool GloveControlHelper::getGloveIMUData(std::vector<double>& gloveImuData)
+{
+    yInfo()<<"GloveControlHelper::getGloveIMUData";
+
+    SGCore::Kinematics::Quat imu;
+    bool tmp =m_glove.GetIMURotation(imu);
+    gloveImuData.resize(4, 0.0);
+
+    gloveImuData[0]= imu.x;
+    gloveImuData[1]= imu.y;
+    gloveImuData[2]= imu.z;
+    gloveImuData[3]= imu.w;
+
+    return tmp;
+}
+
 
 
 ///// <summary> set the level(s) of force and vibrotactile feedback, with an optional thumper
