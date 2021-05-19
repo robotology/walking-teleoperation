@@ -384,6 +384,8 @@ bool HapticGloveModule::getFeedbacks()
 
     if (m_useLeftHand)
     {
+        double time0= yarp::os::Time::now();
+
         // get feedback from the robot left hand values
         if (!m_robotLeftHand->updateFeedback())
         {
@@ -391,14 +393,34 @@ bool HapticGloveModule::getFeedbacks()
                     << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                        "the left hand fingers.";
         }
+        double time1= yarp::os::Time::now();
+        yInfo()<<"time D1:"<<time1-time0;
+
 
         m_robotLeftHand->getFingerAxisFeedback(m_icubLeftFingerAxisValueFeedback);
+        double time2= yarp::os::Time::now();
+        yInfo()<<"time D2:"<<time2-time1;
+
         m_robotLeftHand->getFingerAxisValueReference(m_icubLeftFingerAxisValueReference);
+        double time3= yarp::os::Time::now();
+        yInfo()<<"time D3:"<<time3-time2;
+
         m_robotLeftHand->getFingerAxisVelocityFeedback( m_icubLeftFingerAxisVelocityFeedback);
+        double time4= yarp::os::Time::now();
+        yInfo()<<"time D4:"<<time4-time3;
+
         m_robotLeftHand->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
+        double time5= yarp::os::Time::now();
+        yInfo()<<"time D5:"<<time5-time4;
+
+
 //        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
 //        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
         m_robotLeftHand->estimateNextStates();
+        double time6= yarp::os::Time::now();
+        yInfo()<<"time D6:"<<time6-time5;
+        yInfo()<<"total feedback time:"<<time6-time0;
+
     }
 
     if (m_useRightHand)
@@ -429,6 +451,7 @@ bool HapticGloveModule::getFeedbacks()
 
 bool HapticGloveModule::updateModule()
 {
+    double time0= yarp::os::Time::now();
     yInfo() << "********************************* [HapticGloveModule::updateModule()] "
                "*********************************";
     if (!getFeedbacks())
@@ -436,6 +459,8 @@ bool HapticGloveModule::updateModule()
         yError() << "[HapticGloveModule::updateModule] Unable to get the feedback";
         return false;
     }
+    double time1=yarp::os::Time::now();
+    yInfo()<<"[updateModule] time feedback:"<<time1-time0;
 
     if (m_state == HapticGloveFSM::Running)
     {
@@ -681,6 +706,9 @@ bool HapticGloveModule::updateModule()
             }
             m_retargetingRightHand->getRobotJointReferences(m_icubRightFingerJointsReference);
         }
+        double time2=yarp::os::Time::now();
+        yInfo()<<"[updateModule] time retargeting h->r: "<<time2-time1;
+
 
 
 
@@ -1050,6 +1078,9 @@ std::cerr<<"106 \n";
 
 
         }
+        double time3=yarp::os::Time::now();
+        yInfo()<<"[updateModule] time retargeting r->h: "<<time3-time2;
+
         if (m_useLeftHand)
         {
             // set robot values
@@ -1078,6 +1109,8 @@ std::cerr<<"106 \n";
             m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
             m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
         }
+        double time4=yarp::os::Time::now();
+        yInfo()<<"[updateModule] time setting values: "<<time4-time3;
 
         // right hand
         //        m_rightHandFingers->setFingersAxisReference(m_icubRightFingerAxisReference);
@@ -1086,8 +1119,13 @@ std::cerr<<"106 \n";
         // 4- Set the reference values for the haptic glove, including resistance force and
         // vibrotactile feedback
         logData();
+        double time5= yarp::os::Time::now();
+        yWarning()<<"[updateModule] time logger:"<< time5-time4;
+
         // yInfo() << "[HapticGloveModule::updateModule] <FSM::InPreparation> exiting ....";
         // exit(0);
+        yWarning()<<"[updateModule] time total update:"<< time5-time0;
+
 
     } else if (m_state == HapticGloveFSM::Configured)
     {
