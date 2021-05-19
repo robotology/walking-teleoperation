@@ -44,6 +44,9 @@ public:
 
     bool estimateNextState(const yarp::sig::Vector z );
 
+    bool estimateNextSteadyState(const yarp::sig::Vector z );
+
+
     bool  getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P);
     bool  getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P);
     bool  getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P);

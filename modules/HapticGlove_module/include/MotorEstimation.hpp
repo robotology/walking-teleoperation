@@ -42,6 +42,9 @@ public:
 
     bool EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
 
+    bool EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
+
+
     bool  GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P);
 
 };
