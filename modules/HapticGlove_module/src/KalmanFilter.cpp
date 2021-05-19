@@ -40,6 +40,12 @@ bool KalmanFilter::Initialize(const Eigen::MatrixXd& x0, const Eigen::MatrixXd& 
     m_x_bar=x0;
     m_M= M0;
 
+    m_P =(m_M.inverse() + m_Ht_Rinv_H).inverse();
+    m_K = m_P * m_Ht_Rinv;
+    m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
+
+
+
     return true;
 }
 
@@ -82,6 +88,20 @@ bool KalmanFilter::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& 
     return true;
 }
 
+bool KalmanFilter::EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+{
+
+    /*
+     * J= 1/2 [(x-x_bar) M^(-1)(x-x_bar) + (z-Hx) R^(-1)(z-Hx)]
+     */
+    m_z=z;
+
+    m_x_hat = m_x_bar + m_K * (m_z - m_H * m_x_bar);
+    m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
+
+    x_hat= m_x_hat;
+    return true;
+}
 
 bool KalmanFilter::GetInfo( Eigen::VectorXd& x_hat, Eigen::VectorXd& P){
 

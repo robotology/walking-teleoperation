@@ -117,6 +117,19 @@ bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z ){
     return true;
 }
 
+bool RobotMotorsEstimation::estimateNextSteadyState(const yarp::sig::Vector z )
+{
+
+    Eigen::MatrixXd x_hat_mat;
+    for(size_t i=0; i<m_numerOfMotors;i++)
+    {
+        z_mat(0,0)=z(i);
+        m_motorEstimatorVector[i].EstimateNextSteadyState(z_mat, x_hat_mat);
+    }
+    return true;
+}
+
+
 bool  RobotMotorsEstimation::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);

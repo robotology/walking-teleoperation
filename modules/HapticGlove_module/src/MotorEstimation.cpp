@@ -59,6 +59,12 @@ bool MotorEstimation::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixX
     return m_kf->EstimateNextState(z, x_hat);
 }
 
+bool MotorEstimation::EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+{
+    return m_kf->EstimateNextSteadyState(z, x_hat);
+
+}
+
 bool  MotorEstimation::GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P){
 
     return m_kf->GetInfo( x_hat, P);
