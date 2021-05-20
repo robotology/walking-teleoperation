@@ -1245,8 +1245,8 @@ std::cerr<<"106 \n";
                     if(m_getHumanMotionRange)
                     {
                         std::vector<double> humanHandJointRangeMin, humanHandJointRangeMax;
-                        m_gloveLeftHand->getHumanMotionRange(humanHandJointRangeMin,humanHandJointRangeMax);
-                        m_retargetingLeftHand->computeJointAngleRetargetingParams(humanHandJointRangeMin,humanHandJointRangeMax);
+                        m_gloveRightHand->getHumanMotionRange(humanHandJointRangeMin,humanHandJointRangeMax);
+                        m_retargetingRightHand->computeJointAngleRetargetingParams(humanHandJointRangeMin,humanHandJointRangeMax);
                     }
                 }
 //                m_timePreparationStarting = yarp::os::Time::now();
