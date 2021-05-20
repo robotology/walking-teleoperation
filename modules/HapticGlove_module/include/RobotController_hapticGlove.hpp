@@ -181,6 +181,18 @@ public:
     void getMotorPwmFeedback(yarp::sig::Vector& motorPWMFeedback);
 
     /**
+     * Get the motor pid outputs
+     * @param motorPidOutputs get the motor pid output values
+     */
+    void getMotorPidOutputs(std::vector<double>& motorPidOutputs);
+
+    /**
+     * Get the motor pid outputs
+     * @param motorPidOutputs get the motor pid output values
+     */
+    void getMotorPidOutputs(yarp::sig::Vector& motorPidOutputs);
+
+    /**
      * Get the motor PWM Reference values
      * @param motorPWMReference get the motor PWM reference values
      */
