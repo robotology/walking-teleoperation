@@ -23,6 +23,7 @@
 #include <yarp/dev/IVelocityControl.h>
 #include <yarp/dev/ICurrentControl.h>
 #include<yarp/dev/IPWMControl.h>
+#include<yarp/dev/IPidControl.h>
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
@@ -79,6 +80,7 @@ class RobotControlInterface
     yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /**< Sensor interface */
     yarp::dev::ICurrentControl* m_currentInterface{nullptr};/**< current control interface */
     yarp::dev::IPWMControl* m_pwmInterface{nullptr}; /**< PWM control interface*/
+    yarp::dev::IPidControl* m_pidInterface{nullptr}; /**< pid control interface*/
 
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
     yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< Joint position [deg]. */
@@ -96,6 +98,7 @@ class RobotControlInterface
     yarp::sig::Vector m_pwmDesired;/**< motor PWM desires*/
     yarp::sig::Vector m_pwmFeedback; /**< motor PWM feedbacks*/
     yarp::sig::Vector m_pwmDesiredInterface; /**< motor PWM feedbacks returned from the PWM interface*/
+    yarp::sig::Vector m_pidOutput; /**< low level pid controller output returned from the PID interface*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -109,6 +112,7 @@ class RobotControlInterface
     bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */
 
     yarp::conf::vocab32_t m_controlMode; /**< Used control mode. */
+    yarp::dev::PidControlTypeEnum m_pidControlMode;/**< Used pid control mode. */
 
     /**
      * Switch to control mode
@@ -270,6 +274,12 @@ public:
      * @return all the motor PWM values
      */
     const yarp::sig::Vector& motorPwm() const;
+
+    /**
+     * Get all the actuated motor low level pid outputs
+     * @return all the motor pid outputs
+     */
+    const yarp::sig::Vector& motorPidOutputs() const;
 
     /**
      * Get all the actuated motor PWM References
