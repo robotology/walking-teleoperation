@@ -1363,8 +1363,13 @@ void HapticGloveModule::logData()
                               icubLeftHandMotorPWMFeedback);
                 m_logger->add(m_logger_prefix + "_icubLeftHandMotorPWMReference",
                               icubLeftHandMotorPWMReference);
-
             }
+
+            //pid
+            std::vector<double> icubHandPidOutputs;
+            m_robotLeftHand->getMotorPidOutputs(icubHandPidOutputs);
+            m_logger->add(m_logger_prefix + "_icubLeftHandMotorPidOutputs",
+                          icubHandPidOutputs);
 
             std::vector<double> icubLeftFingerAxisVelocityFeedback;
             m_robotLeftHand->getFingerAxisVelocityFeedback(icubLeftFingerAxisVelocityFeedback);
@@ -1479,7 +1484,13 @@ void HapticGloveModule::logData()
                               icubRightHandMotorPWMFeedback);
                 m_logger->add(m_logger_prefix + "_icubRightHandMotorPWMReference",
                               icubRightHandMotorPWMReference);
+
             }
+            //pid
+            std::vector<double> icubHandPidOutputs;
+            m_robotRightHand->getMotorPidOutputs(icubHandPidOutputs);
+            m_logger->add(m_logger_prefix + "_icubRightHandMotorPidOutputs",
+                          icubHandPidOutputs);
 
             std::vector<double> icubRightFingerAxisVelocityFeedback;
             m_robotRightHand->getFingerAxisVelocityFeedback(icubRightFingerAxisVelocityFeedback);
@@ -1607,8 +1618,10 @@ bool HapticGloveModule::openLogger()
                              m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
             m_logger->create(m_logger_prefix + "_icubLeftHandMotorPWMReference",
                              m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
-
         }
+        m_logger->create(m_logger_prefix + "_icubLeftHandMotorPidOutputs",
+                         m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
+
         m_logger->create(m_logger_prefix + "_icubLeftFingerAxisVelocityFeedback",
                          m_robotLeftHand->controlHelper()->getNumberOfActuatedAxis());
 
@@ -1676,6 +1689,8 @@ bool HapticGloveModule::openLogger()
             m_logger->create(m_logger_prefix + "_icubRightHandMotorPWMReference",
                              m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
         }
+        m_logger->create(m_logger_prefix + "_icubRightHandMotorPidOutputs",
+                         m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());
 
         m_logger->create(m_logger_prefix + "_icubRightFingerAxisVelocityFeedback",
                          m_robotRightHand->controlHelper()->getNumberOfActuatedAxis());

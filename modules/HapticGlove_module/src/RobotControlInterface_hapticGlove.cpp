@@ -288,6 +288,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
 
     bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
     m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
+    m_pidControlMode= useVelocity ? yarp::dev::VOCAB_PIDTYPE_VELOCITY : yarp::dev::VOCAB_PIDTYPE_POSITION;
 
     // open the device
     if (!m_robotDevice.open(optionsRobotDevice) && m_isMandatory)
@@ -351,6 +352,13 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+
+    if (!m_robotDevice.view(m_pidInterface) || !m_pidInterface)
+    {
+        yError() << "[RobotControlInterface::configure] Cannot obtain IPidControl interface";
+        return false;
+    }
+
     m_desiredJointValue.resize(m_noActuatedAxis);
     m_encoderPositionFeedbackInDegrees.resize(m_noActuatedAxis);
     m_encoderPositionFeedbackInRadians.resize(m_noActuatedAxis);
@@ -364,6 +372,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
     m_pwmDesired.resize(m_noActuatedAxis);
     m_pwmDesiredInterface.resize(m_noActuatedAxis);
     m_pwmFeedback.resize(m_noActuatedAxis);
+    m_pidOutput.resize(m_noActuatedAxis);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -644,11 +653,11 @@ bool RobotControlInterface::getFeedback()
     yInfo()<<"time DD6:"<<time6-time5;
 
 // removing the getRefCurrents since it takes 0.04 seconds to read
-//    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) && m_isMandatory)
-//    {
-//        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired current from the interface";
-//        return false;
-//    }
+    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired current from the interface";
+        return false;
+    }
     double time7= yarp::os::Time::now();
     yInfo()<<"time DD7:"<<time7-time6;
 
@@ -667,6 +676,13 @@ bool RobotControlInterface::getFeedback()
 //        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired PWM from the interface";
 //        return false;
 //    }
+
+    if (!m_pidInterface->getPidOutputs(m_pidControlMode, m_pidOutput.data()) && m_isMandatory)
+    {
+        yError() << "[RobotControlInterface::getFeedbacks] Unable to get pid outputs";
+        return false;
+    }
+
     double time9= yarp::os::Time::now();
     yInfo()<<"time DD9:"<<time9-time8;
     yInfo()<<"total update time:"<<time9-time0;
@@ -767,6 +783,11 @@ const yarp::sig::Vector& RobotControlInterface::motorCurrentReference() const
 const yarp::sig::Vector& RobotControlInterface::motorPwm() const
 {
     return m_pwmFeedback;
+}
+
+const yarp::sig::Vector& RobotControlInterface::motorPidOutputs() const
+{
+    return m_pidOutput;
 }
 
 const yarp::sig::Vector& RobotControlInterface::motorPwmReference() const

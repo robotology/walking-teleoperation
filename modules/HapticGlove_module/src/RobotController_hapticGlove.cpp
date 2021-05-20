@@ -476,6 +476,23 @@ void RobotController::getMotorPwmReference(std::vector<double>& motorPWMReferenc
     }
 }
 
+void RobotController::getMotorPidOutputs(std::vector<double>& motorPidOutputs)
+{
+    motorPidOutputs.clear();
+    yarp::sig::Vector Temp = controlHelper()->motorPidOutputs();
+    for (size_t i = 0; i < Temp.size(); i++)
+    {
+        motorPidOutputs.push_back(Temp(i));
+    }
+}
+
+void RobotController::getMotorPidOutputs(yarp::sig::Vector& motorPidOutputs)
+{
+    motorPidOutputs.clear();
+    motorPidOutputs = controlHelper()->motorPidOutputs();
+
+}
+
 void RobotController::getMotorPwmReference(yarp::sig::Vector& motorPWMReference)
 {
     motorPWMReference.clear();
