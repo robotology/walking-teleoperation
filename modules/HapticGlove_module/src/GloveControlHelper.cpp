@@ -393,7 +393,9 @@ int GloveControlHelper::getNoSensors()
 
 
 void GloveControlHelper::getHumanJointsList( std::vector<std::string>& jointList)const {
-    jointList = m_humanJointNameList;
+    jointList.resize(m_humanJointNameList.size());
+    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+        jointList[i] = m_humanJointNameList[i];
 }
 
 void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList)const {
@@ -422,6 +424,7 @@ return true;
 void GloveControlHelper::getHumanMotionRange( std::vector<double>& jointRangeMin, std::vector<double>& jointRangeMax)
 {
     yInfo()<<"GloveControlHelper::getHumanMotionRange";
+
     jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
     jointRangeMax.resize(m_humanJointNameList.size(), 0.0);
     for(size_t i=0; i<m_humanJointNameList.size(); i++)
@@ -438,15 +441,33 @@ bool GloveControlHelper::getGloveIMUData(std::vector<double>& gloveImuData)
     yInfo()<<"GloveControlHelper::getGloveIMUData";
 
     SGCore::Kinematics::Quat imu;
-    bool tmp =m_glove.GetIMURotation(imu);
     gloveImuData.resize(4, 0.0);
+
+    if(!m_glove.GetIMURotation(imu))
+    {
+        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove IMU value";
+        return true; // to avoid crashing
+    }
+
+//    SGCore::SG::SG_SensorData sensorData;
+//    if(!m_glove.GetSensorData(sensorData))
+//    {
+//        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove sensory values";
+//        return true;
+//    }
+//    if(!sensorData.IMUParsed())
+//    {
+//        yError()<<"[GloveControlHelper::getGloveIMUData] Cannot pasre glove IMU value";
+//        return true;
+//    }
+//     SGCore::Kinematics::Quat imu= sensorData.imuValues;
 
     gloveImuData[0]= imu.x;
     gloveImuData[1]= imu.y;
     gloveImuData[2]= imu.z;
     gloveImuData[3]= imu.w;
 
-    return tmp;
+    return true;
 }
 
 
