@@ -261,6 +261,12 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    if (!m_robotOrientationPort.open("/" + getName() + portName))
+    {
+        yError() << "[configure] " << portName << " port already open.";
+        return false;
+    }
+
     if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
     {
         yError() << "[configure] Unable to get a string from a searchable";
@@ -290,12 +296,6 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
             yError() << "Failed to configure ring velocity control.";
             return false;
         }
-    }
-
-    if (!m_robotOrientationPort.open("/" + getName() + portName))
-    {
-        yError() << "[configure] " << portName << " port already open.";
-        return false;
     }
 
     m_useHeadForTurning = rf.check("use_head_for_turning", yarp::os::Value(false)).asBool();
