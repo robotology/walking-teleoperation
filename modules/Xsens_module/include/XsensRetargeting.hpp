@@ -75,12 +75,6 @@ private:
 public:
     XsensRetargeting();
     ~XsensRetargeting();
-    /*
-     * Configure the whole body retargeting retargeting.
-     * @param config reference to a resource finder object.
-     * @return true in case of success and false otherwise
-     */
-    bool configure(const yarp::os::Searchable& config, const std::string& name);
 
     bool getJointValues();
 
