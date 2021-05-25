@@ -31,7 +31,6 @@ set(${EXE_TARGET_NAME}_HDR
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-find_package(HumanDynamicsEstimation)
 
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR} )
