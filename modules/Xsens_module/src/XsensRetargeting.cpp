@@ -146,7 +146,7 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
 }
 bool XsensRetargeting::getJointValues()
 {
-    human::HumanState* desiredHumanStates = m_wholeBodyHumanJointsPort.read(false);
+    hde::msgs::HumanState* desiredHumanStates = m_wholeBodyHumanJointsPort.read(false);
 
     if (desiredHumanStates == NULL)
     {
@@ -157,7 +157,7 @@ bool XsensRetargeting::getJointValues()
     std::vector<double> newHumanjointsValues = desiredHumanStates->positions;
 
     // get the new CoM positions
-    human::Vector3 CoMValues = desiredHumanStates->CoMPositionWRTGlobal;
+    hde::msgs::Vector3 CoMValues = desiredHumanStates->CoMPositionWRTGlobal;
 
     m_CoMValues(0) = CoMValues.x;
     m_CoMValues(1) = CoMValues.y;

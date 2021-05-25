@@ -9,7 +9,7 @@
 #include <yarp/os/Bottle.h>
 
 // iCub-ctrl
-#include <HumanDynamicsEstimation/HumanState.h>
+#include <hde/msgs/HumanState.h>
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/IJoypadController.h>
@@ -50,7 +50,7 @@ private:
                                // different from the one we want to send to the controller
 
     /** Port used to retrieve the human whole body joint pose. */
-    yarp::os::BufferedPort<human::HumanState> m_wholeBodyHumanJointsPort;
+    yarp::os::BufferedPort<hde::msgs::HumanState> m_wholeBodyHumanJointsPort;
 
     /** Port used to provide the smoothed joint pose to the controller. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_wholeBodyHumanSmoothedJointsPort;
