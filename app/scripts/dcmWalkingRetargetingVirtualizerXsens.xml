@@ -21,13 +21,13 @@
 
   <module>
     <name>camCalibWithPose</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left --useIMU</parameters>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left </parameters>
     <node>icub30</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right --useIMU</parameters>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right </parameters>
     <node>icub30</node>
   </module>
 
