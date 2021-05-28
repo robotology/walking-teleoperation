@@ -303,30 +303,17 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     // configure head retargeting
-    m_head = std::make_unique<HeadRetargeting>();
-    yarp::os::Bottle& headOptions = rf.findGroup("HEAD_RETARGETING");
-    headOptions.append(generalOptions);
-    if (!m_head->configure(headOptions, getName()))
+    if(!m_useXsens)
     {
-        yError() << "[OculusModule::configure] Unable to initialize the head retargeting.";
-        return false;
-    }
-
-    // configure torso retargeting, iff we use Xsens
-
-    yInfo() << "[OculusModule::configure] initialize the torso!";
-    if (m_useXsens)
-    {
-        m_torso = std::make_unique<TorsoRetargeting>();
-        yarp::os::Bottle& torsoOptions = rf.findGroup("TORSO_RETARGETING");
-        torsoOptions.append(generalOptions);
-        if (!m_torso->configure(torsoOptions, getName()))
+        m_head = std::make_unique<HeadRetargeting>();
+        yarp::os::Bottle& headOptions = rf.findGroup("HEAD_RETARGETING");
+        headOptions.append(generalOptions);
+        if (!m_head->configure(headOptions, getName()))
         {
-            yError() << "[OculusModule::configure] Unable to initialize the torso retargeting.";
+            yError() << "[OculusModule::configure] Unable to initialize the head retargeting.";
             return false;
         }
     }
-    yInfo() << "[OculusModule::configure] finish the torso!";
 
     if (!m_useSenseGlove)
     {
@@ -508,17 +495,15 @@ bool OculusModule::close()
     // m_logger.reset();
 
     // close devices
-    m_head->controlHelper()->close();
+    if(!m_useXsens)
+    {
+        m_head->controlHelper()->close();
+    }
 
     if (!m_useSenseGlove)
     {
         m_rightHandFingers->controlHelper()->close();
         m_leftHandFingers->controlHelper()->close();
-    }
-
-    if (m_useXsens)
-    {
-        m_torso->controlHelper()->close();
     }
 
     m_joypadDevice.close();
@@ -647,24 +632,17 @@ bool OculusModule::getTransforms()
 bool OculusModule::getFeedbacks()
 {
 
-    if (m_useXsens)
+
+    if(!m_useXsens)
     {
-        if (!m_torso->controlHelper()->getFeedback())
+        if (!m_head->controlHelper()->getFeedback())
         {
             yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: "
-                        "TorsoRetargeting";
+                        "HeadRetargeting";
             return false;
         }
-        m_torso->controlHelper()->updateTimeStamp();
+        m_head->controlHelper()->updateTimeStamp();
     }
-
-    if (!m_head->controlHelper()->getFeedback())
-    {
-        yError() << "[OculusModule::getFeedbacks] Unable to get the joint encoders feedback: "
-                    "HeadRetargeting";
-        return false;
-    }
-    m_head->controlHelper()->updateTimeStamp();
 
     return true;
 }
@@ -925,13 +903,16 @@ bool OculusModule::updateModule()
         }
     } else if (m_state == OculusFSM::InPreparation)
     {
-        if (m_moveRobot)
+        if(!m_useXsens)
         {
-            m_head->initializeNeckJointValues();
-            if (!m_head->move())
+            if (m_moveRobot)
             {
-                yError() << "[updateModule::updateModule] unable to move the head";
-                return false;
+                m_head->initializeNeckJointValues();
+                if (!m_head->move())
+                {
+                    yError() << "[updateModule::updateModule] unable to move the head";
+                    return false;
+                }
             }
         }
 
@@ -963,44 +944,7 @@ bool OculusModule::updateModule()
             yInfo() << "[OculusModule::updateModule] Running ...";
         }
     }
-    yarp::os::Bottle& imagesOrientation = m_imagesOrientationPort.prepare();
-    imagesOrientation.clear();
 
-    double neckPitch, neckRoll, neckYaw;
-    yarp::sig::Vector neckEncoders = m_head->controlHelper()->jointEncoders();
-    neckPitch = neckEncoders(0);
-    neckRoll = neckEncoders(1);
-    neckYaw = neckEncoders(2);
-
-    iDynTree::Rotation chest_R_head
-        = HeadRetargeting::forwardKinematics(neckPitch, neckRoll, neckYaw);
-
-    iDynTree::Rotation root_R_chest = iDynTree::Rotation::Identity();
-    if (m_useXsens)
-    {
-        double torsoPitch, torsoRoll, torsoYaw;
-        yarp::sig::Vector torsoEncoders = m_torso->controlHelper()->jointEncoders();
-        torsoPitch = torsoEncoders(0);
-        torsoRoll = torsoEncoders(1);
-        torsoYaw = torsoEncoders(2);
-        root_R_chest = TorsoRetargeting::forwardKinematics(torsoPitch, torsoRoll, torsoYaw);
-    }
-    iDynTree::Rotation inertial_R_root = iDynTree::Rotation::RotZ(-m_playerOrientation);
-
-    // inertial_R_head is used to simulate an imu required by the cam calibration application
-    iDynTree::Rotation inertial_R_head = inertial_R_root * root_R_chest * chest_R_head;
-    iDynTree::Vector3 inertial_R_headRPY = inertial_R_head.asRPY();
-
-    imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(0)));
-    imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(1)));
-    imagesOrientation.addDouble(iDynTree::rad2deg(inertial_R_headRPY(2)));
-
-    // fake imu
-    for (int i = 3; i < 12; i++)
-        imagesOrientation.addDouble(0);
-
-    m_imagesOrientationPort.setEnvelope(m_head->controlHelper()->timeStamp());
-    m_imagesOrientationPort.write();
 
     return true;
 }
