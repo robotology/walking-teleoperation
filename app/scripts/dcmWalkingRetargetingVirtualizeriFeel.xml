@@ -1,17 +1,15 @@
-<!-- Copyright (C) 2020 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
 <!-- All Rights Reserved. -->
-<!-- Author: Kourosh Darvish <kourosh.darvish@iit.it> -->
+<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
 
 <application>
 
-  <name>DCM walking retargeting (Xsens SenseGlove)</name>
+  <name>DCM walking retargeting (Virtualizer iFeel)</name>
   <description>2D-DCM walking application.</description>
   <version>1.0</version>
   <authors>
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
-
-  <!-- Devices -->
 
   <module>
     <name>yarpdev</name>
@@ -38,18 +36,22 @@
   </module>
 
 
-
   <!-- Modules -->
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
-    <parameters>--from dcm_walking_joint_retargeting.ini</parameters>
+    <parameters>--from dcm_walking_joint_retargeting_ifeel.ini</parameters>
+  </module>
+
+  <module>
+    <name>VirtualizerModule</name>
+    <node>icub-virtualizer</node>
   </module>
 
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
-    <parameters> --GENERAL::useSenseGlove 1  --GENERAL::useXsens 1 --GENERAL::useiFeel 0</parameters>
+    <parameters> --OCULUS::move_icub_using_joypad 0</parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
@@ -58,23 +60,44 @@
     </dependencies>
   </module>
 
-  <!-- Hand Bilateral Retargeting using SenseGlove -->
-    <module>
-    <name>HapticGloveModule</name>
-    <node>icub30</node>
-    </module>
+  <!-- Whole Body Retargeting using Xsens-->
+   <module>
+     <name>XsensRetargetingModule</name>
+     <node>icub30</node>
+   </module>
 
- <!-- Whole Body Retargeting using Xsens-->
-  <module>
-    <name>XsensRetargetingModule</name>
-    <node>icub30</node>
-  </module>
 
   <!-- Connections -->
+
+  <!-- Virtualizer and Oculus -->
+  <connection>
+    <from>/walking-coordinator/torsoYaw:o</from>
+    <to>/virtualizer/robotOrientation:i</to>
+  </connection>
+
+  <connection>
+    <from>/walking-coordinator/torsoYaw:o</from>
+    <to>/oculusRetargeting/robotOrientation:i</to>
+  </connection>
 
   <connection>
     <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/oculusRetargeting/virtualizerRpc</from>
+    <to>/virtualizer/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/virtualizer/walkingRpc</from>
+    <to>/walking-coordinator/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/virtualizer/playerOrientation:o</from>
+    <to>/oculusRetargeting/playerOrientation:i</to>
   </connection>
 
   <!-- Camera-->
@@ -103,6 +126,20 @@
   </connection>
 
   <connection>
+    <!-- <from>/icub/inertial</from> -->
+    <from>/oculusRetargeting/imagesOrientation:o</from>
+    <to>/icub/camcalib/left/imu/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <!-- <from>/icub/inertial</from> -->
+    <from>/oculusRetargeting/imagesOrientation:o</from>
+    <to>/icub/camcalib/right/imu/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
     <from>/icub/camcalib/left/out</from>
     <to>/oculus/display/left:i</to>
     <protocol>mjpeg</protocol>
@@ -113,7 +150,6 @@
     <to>/oculus/display/right:i</to>
     <protocol>mjpeg</protocol>
   </connection>
-
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
