@@ -27,7 +27,6 @@
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
-#include <TorsoRetargeting.hpp>
 
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
@@ -107,8 +106,6 @@ private:
                                                      hand retargeting object. */
     std::unique_ptr<HandRetargeting> m_leftHand; /**< Pointer to the left hand
                                                     retargeting object. */
-
-    std::unique_ptr<TorsoRetargeting> m_torso; /**< Pointer to the torso retargeting object. */
 
     // ports
     yarp::os::BufferedPort<yarp::sig::Vector> m_leftHandPosePort; /**< Left hand port pose. */
