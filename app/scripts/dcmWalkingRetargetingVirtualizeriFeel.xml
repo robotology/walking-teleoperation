@@ -50,7 +50,7 @@
 
   <module>
     <name>OculusRetargetingModule</name>
-    <node>icub-head</node>
+    <node>icub30</node>
     <parameters> --OCULUS::move_icub_using_joypad 0</parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
@@ -101,6 +101,17 @@
     <to>/oculusRetargeting/playerOrientation:i</to>
   </connection>
 
+  <connection>
+    <from>/oculus/headpose/orientation:o</from>
+    <to>/oculusRetargeting/oculusOrientation:i</to>
+  </connection>
+
+  <connection>
+    <from>/oculus/headpose/position:o</from>
+    <to>/oculusRetargeting/oculusPosition:i</to>
+  </connection>
+
+  
   <!-- Camera-->
   <connection>
     <from>/icub/cam/left</from>
@@ -154,16 +165,16 @@
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
-    <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
+    <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
   </connection>
 
   <connection>
-    <from>/XsensRetargeting/jointPosition:o</from>
+    <from>/iFeelRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
   </connection>
 
   <connection>
-    <from>/XsensRetargeting/CoM:o</from>
+    <from>/iFeelRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
   </connection>
 
