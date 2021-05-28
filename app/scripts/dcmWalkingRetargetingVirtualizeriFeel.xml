@@ -63,6 +63,7 @@
   <!-- Whole Body Retargeting using Xsens-->
    <module>
      <name>XsensRetargetingModule</name>
+     <parameters>--from iFeelRetargetingWalking.ini</parameters>
      <node>icub30</node>
    </module>
 
