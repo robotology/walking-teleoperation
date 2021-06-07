@@ -4,7 +4,7 @@
 
 <application>
 
-  <name>DCM walking retargeting (Virtualizer iFeel)</name>
+  <name>Xprize_Demo (walking Virtualizer iFeel)</name>
   <description>2D-DCM walking application.</description>
   <version>1.0</version>
   <authors>
@@ -31,8 +31,13 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0 --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --userpose true --gui_elements 0 --hfov 60 --left-pitch-offset -0.02 --left-yaw-offset 0.0125 --right-pitch-offset 0.0575 --right-yaw-offset -0.245</parameters>
+    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --w 1024 --h 768 --stick_as_axis true --userpose true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5 --GUI_0::alpha 1.0 --hfov 59 --left-pitch-offset 0.0725 --left-yaw-offset -0.065 --right-pitch-offset 0.13 --right-yaw-offset 0.07</parameters>
     <node>icub-virtualizer</node>
+  </module>
+  
+  <module>
+     <name>idyntree-yarp-visualizer</name>
+     <node>icub-console-gui</node>
   </module>
 
 
@@ -42,6 +47,7 @@
     <node>icub-head</node>
     <parameters>--from dcm_walking_joint_retargeting_ifeel.ini</parameters>
   </module>
+  
 
   <module>
     <name>VirtualizerModule</name>
@@ -50,7 +56,7 @@
 
   <module>
     <name>OculusRetargetingModule</name>
-    <node>icub-console</node>
+    <node>icub-console-gui</node>
     <parameters> --OCULUS::move_icub_using_joypad 0</parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
@@ -64,7 +70,7 @@
    <module>
      <name>XsensRetargetingModule</name>
      <parameters>--from iFeelRetargetingWalking.ini</parameters>
-     <node>icub-console</node>
+     <node>icub-console-gui</node>
    </module>
 
 
@@ -160,6 +166,12 @@
   <connection>
     <from>/icub/camcalib/right/out</from>
     <to>/oculus/display/right:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+  
+  <connection>
+    <from>/idyntree-yarp-visualizer/image</from>
+    <to>/oculus/gui_0</to>
     <protocol>mjpeg</protocol>
   </connection>
 
