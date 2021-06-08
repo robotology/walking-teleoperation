@@ -9,4 +9,46 @@
 #ifndef SRANIPALMODULE_HPP
 #define SRANIPALMODULE_HPP
 
+#include <yarp/os/BufferedPort.h> /** Needed to open the input port. **/
+#include <yarp/os/RFModule.h> /** We inherit from this. **/
+#include <yarp/os/RpcClient.h> /** Needed to control the face expressions. **/
+#include <mutex> /** For mutex and lock_guard. **/
+#include <string> /** For string. **/
+
+class SRanipalModule : public yarp::os::RFModule
+{
+
+    char m_lipImage[800 * 400];
+    bool m_useEye;
+    bool m_useLip;
+    double m_period;
+    yarp::os::RpcClient m_emotionsOutputPort; /** The output port to control the face expressions. **/
+    std::mutex m_mutex;
+
+    const char * errorCodeToString(int error) const;
+
+public:
+
+    /**
+     * Inherited from RFModule.
+     */
+    virtual bool configure(yarp::os::ResourceFinder& rf) override;
+
+    /**
+     * Inherited from RFModule.
+     */
+    virtual double getPeriod() override;
+
+    /**
+     * Inherited from RFModule.
+     */
+    virtual bool updateModule() override;
+
+    /**
+     * Inherited from RFModule.
+     */
+    virtual bool close() override;
+
+};
+
 #endif // SRANIPALMODULE_HPP
