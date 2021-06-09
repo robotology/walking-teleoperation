@@ -89,12 +89,17 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     std::string name = rf.check("name", yarp::os::Value("SRanipalModule"), "The name of the module.").asString();
     setName(name.c_str());
 
-    std::string emotionsPortOut = rf.check("emotions_output_port_name", yarp::os::Value("/emotions:o"), "The name of the output port for the emotions.").asString();
-    m_emotionsOutputPort.open("/" + name + emotionsPortOut);
+    std::string emotionsPortOut = rf.check("emotionsOutputPortName", yarp::os::Value("/emotions:o"), "The name of the output port for the emotions.").asString();
+    if (!m_emotionsOutputPort.open("/" + name + emotionsPortOut))
+    {
+        yError() << "[SRanipalModule::configure] Failed to open /" + name + emotionsPortOut + " port.";
+        return false;
+    }
 
     m_useEye = !rf.check("noEye") || (!rf.find("noEye").asBool()); //True if noEye is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
     m_period = rf.check("period", yarp::os::Value(0.01)).asDouble();
+    m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.5)).asDouble();
 
     if (m_useEye)
     {
@@ -148,6 +153,13 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             yError("[SRanipalModule::configure] Failed to initialize Lip engine [%d - %s].", output, errorCodeToString(output));
             return false;
         }
+
+        std::string lipImageOutputPort = rf.check("lipImagePortName", yarp::os::Value("/lipImage:o"), "The name of the output port for the lip camera.").asString();
+        if (!m_lipImagePort.open("/" + name + lipImageOutputPort))
+        {
+            yError() << "[SRanipalModule::configure] Failed to open /" + name + lipImageOutputPort + " port.";
+            return false;
+        }
     }
 
     return true;
@@ -176,7 +188,34 @@ bool SRanipalModule::updateModule()
     if (m_useLip) {
         result = ViveSR::anipal::Lip::GetLipData_v2(&lip_data_v2);
         if (result == ViveSR::Error::WORK) {
-            //TODO
+            std::string mouthExpression = "neu";
+            using namespace ViveSR::anipal::Lip;
+            if ((lip_data_v2.prediction_data.blend_shape_weight[Jaw_Open] > m_lipExpressionThreshold) ||
+                (lip_data_v2.prediction_data.blend_shape_weight[Mouth_O_Shape] > m_lipExpressionThreshold))
+            {
+                mouthExpression = "sur";
+            }
+            else if ((lip_data_v2.prediction_data.blend_shape_weight[Mouth_Smile_Left] > m_lipExpressionThreshold) ||
+                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Smile_Right] > m_lipExpressionThreshold))
+            {
+                mouthExpression = "hap";
+            }
+            else if ((lip_data_v2.prediction_data.blend_shape_weight[Mouth_Sad_Left] > m_lipExpressionThreshold) ||
+                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Sad_Right] > m_lipExpressionThreshold))
+            {
+                mouthExpression = "sad";
+            }
+
+            yarp::os::Bottle cmd, reply;
+            cmd.addVocab(yarp::os::Vocab::encode("set"));
+            cmd.addVocab(yarp::os::Vocab::encode("mou"));
+            cmd.addVocab(yarp::os::Vocab::encode(mouthExpression));
+            m_emotionsOutputPort.write(cmd,reply);
+
+            yarp::sig::FlexImage& outputImage = m_lipImagePort.prepare();
+            outputImage.setPixelCode(VOCAB_PIXEL_MONO);
+            outputImage.setExternal(lip_data_v2.image, 800, 400);
+            m_lipImagePort.write();
         }
     }
 
