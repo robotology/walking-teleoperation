@@ -118,6 +118,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     m_period = rf.check("period", yarp::os::Value(0.1)).asDouble();
     m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asDouble();
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asDouble();
+    m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asDouble();
 
     if (m_useEye)
     {
@@ -180,6 +181,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             if (iCtrlLim)
             {
                 ok &= iCtrlLim->getLimits(0, &m_minEyeLid, &m_maxEyeLid);
+                m_maxEyeLid = 0.9 * m_maxEyeLid;
             }
             if (m_iPos)
             {
@@ -247,6 +249,20 @@ bool SRanipalModule::updateModule()
             sendFaceExpression("leb", leftEyeBrow);
             sendFaceExpression("reb", rightEyeBrow);
 
+            double eye_openess = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
+            int eye_open_level = eye_openess / m_eyeOpenPrecision;
+            double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
+
+            if (eye_open_level != m_eyeOpenLevel)
+            {
+                if (m_iPos)
+                {
+                    m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid)); // because min-> open, max->closed
+                }
+
+                yInfo() << "Setting eye openess:" << eye_openess_leveled;
+                m_eyeOpenLevel = eye_open_level;
+            }
         }
     }
 
