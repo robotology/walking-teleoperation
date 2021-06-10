@@ -18,9 +18,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   USE_LINK_PATH)
 
 # Find required package
-find_package(ICUB REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(iDynTree REQUIRED)
 if(ENABLE_LOGGER)
   add_definitions(-DENABLE_LOGGER)
   find_package(matlogger2 REQUIRED)
@@ -63,7 +60,7 @@ endif()
 #	message("SENSEGLOVE not FOUND!")
 #endif()
 ##########
-find_package(SenseGlove REQUIRED)
+#find_package(SenseGlove REQUIRED)
 if(SENSEGLOVE_FOUND)
 #  include_directories($SENSEGLOVE_INCLUDE_DIR)
    message(WARNING "${EXE_TARGET_NAME} SenseGlove is not found")
@@ -84,6 +81,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/RobotMotorsEstimation.cpp
   src/Retargeting.cpp
   src/LinearRegression.cpp
+  src/GloveWearable.cpp
   )
 
 # set hpp files
@@ -98,6 +96,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/RobotMotorsEstimation.hpp
   include/Retargeting.hpp
   include/LinearRegression.hpp
+  include/GloveWearable.hpp
   )
 
 # add include directories to the build.
@@ -126,6 +125,8 @@ if(ENABLE_LOGGER)
     UtilityLibrary
     matlogger2::matlogger2
     walking-teleoperation::ML
+    IWear::IWear
+
     )
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
@@ -136,6 +137,7 @@ else(ENABLE_LOGGER)
     ctrlLib
     UtilityLibrary
     walking-teleoperation::ML
+    IWear::IWear
 )
 endif()
 

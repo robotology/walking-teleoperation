@@ -462,10 +462,10 @@ bool GloveControlHelper::getGloveIMUData(std::vector<double>& gloveImuData)
 //    }
 //     SGCore::Kinematics::Quat imu= sensorData.imuValues;
 
-    gloveImuData[0]= imu.x;
-    gloveImuData[1]= imu.y;
-    gloveImuData[2]= imu.z;
-    gloveImuData[3]= imu.w;
+    gloveImuData[0]= imu.w;
+    gloveImuData[1]= imu.x;
+    gloveImuData[2]= imu.y;
+    gloveImuData[3]= imu.z;
 
     return true;
 }

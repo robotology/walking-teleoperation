@@ -122,6 +122,7 @@ find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(iDynTree REQUIRED)
 
+
 find_package(PkgConfig QUIET)
 if (PkgConfig_FOUND)
     pkg_check_modules(libfvad QUIET IMPORTED_TARGET libfvad)
@@ -137,7 +138,15 @@ checkandset_dependency(CybSDK)
 find_package(SRanipalSDK QUIET)
 checkandset_dependency(SRanipalSDK)
 
+find_package(SenseGlove QUIET)
+checkandset_dependency(SenseGlove)
+
+find_package(IWear QUIET)
+checkandset_dependency(IWear)
+
+
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)
+WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_HapticGlove "Compile Haptic Glove Module?" ON WALKING_TELEOPERATION_HAS_SenseGlove OFF)
