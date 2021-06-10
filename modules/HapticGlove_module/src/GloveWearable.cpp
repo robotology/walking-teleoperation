@@ -10,13 +10,17 @@
 #include <GloveWearable.hpp>
 #include <GloveControlHelper.hpp>
 #include <mutex>
+#include <yarp/os/LogStream.h>
+#include <yarp/dev/PolyDriver.h>
+
+
 
 
 using namespace wearable;
 using namespace wearable::devices;
 
 const std::string DeviceName = "HapticGlove";
-const std::string LogPrefix = DeviceName + wearable::Separator;
+const std::string LogPrefix = DeviceName + Separator;
 
 struct SenseGloveData
 {
@@ -35,6 +39,9 @@ public:
 
     WearableName wearableName;
     std::string portsPrefix;
+
+    TimeStamp timeStamp;
+
 
     // Number of sensors
     const int nSensors = 1;
@@ -71,79 +78,11 @@ bool Glove::SenseGloveImpl::Update(const std::vector<double>& imuData)
     gloveData.z=imuData[3];
     return true;
 }
-
-
-Glove::Glove(): pImpl(new SenseGloveImpl())
-{}
-
-
-Glove::~Glove() =default;
-
-
-WearableName Glove::getWearableName() const
-{
-    return pImpl->wearableName+ wearable::Separator;
-
-}
-
-WearStatus Glove::getStatus() const
-{
-    return WearStatus::Ok;
-}
-
-
-inline SensorPtr<const sensor::IOrientationSensor>
-Glove::getOrientationSensor(const sensor::SensorName /*name*/) const
-{
-    return nullptr;
-}
-
-bool Glove::open(yarp::os::Searchable& config)
-{
-
-    return true;
-}
-
-bool Glove::close()
-{
-    return false;
-}
-
-bool Glove::configure (const yarp::os::Searchable& config, const std::string& name)
-{
-
-    auto virtualLinkSensPrefix = getWearableName() + sensor::IVirtualLinkKinSensor::getPrefix();
-
-    pImpl->virtualLinkSensorPrefix =getWearableName() +sensor::IVirtualLinkKinSensor::getPrefix();
-    pImpl->senseGloveVirtualLinkKinSensor= SensorPtr<SenseGloveImpl::SenseGloveVirtualLinkKinSensor>{std::make_shared<SenseGloveImpl::SenseGloveVirtualLinkKinSensor>(pImpl.get(),
-                                                                                                                                                       pImpl->virtualLinkSensorPrefix + pImpl->virtualLinkSensorName) };
-    return true;
-}
-
-
-
-bool Glove::attach(yarp::dev::PolyDriver* poly)
-{
-
-}
-bool Glove::detach()
-{
-
-}
-
-
-bool Glove::update(const std::vector<double>& imuData)
-{
-
-    pImpl->Update(imuData);
-    return true;
-}
-
-
+//////
 // ****************** //
 // ****************** //
 
-class Glove::SenseGloveImpl::SenseGloveVirtualLinkKinSensor : public wearable::sensor::IVirtualLinkKinSensor
+class Glove::SenseGloveImpl::SenseGloveVirtualLinkKinSensor : public sensor::IVirtualLinkKinSensor
 {
 public:
     SenseGloveVirtualLinkKinSensor( Glove::SenseGloveImpl* gloveImplPtr,
@@ -187,7 +126,7 @@ public:
         return true;
     }
 
-    inline void setStatus(const wearable::sensor::SensorStatus& status)
+    inline void setStatus(const sensor::SensorStatus& status)
     {
         m_status = status;
     }
@@ -195,3 +134,120 @@ public:
 private:
     Glove::SenseGloveImpl* m_gloveImpl{nullptr};
 };
+
+//////
+
+Glove::Glove(): pImpl(new SenseGloveImpl())
+{}
+
+Glove::~Glove() =default;
+
+
+WearableName Glove::getWearableName() const
+{
+    return pImpl->wearableName+ Separator;
+
+}
+
+WearStatus Glove::getStatus() const
+{
+    return WearStatus::Ok;
+}
+
+TimeStamp Glove::getTimeStamp() const
+{
+    std::lock_guard<std::mutex> lock(pImpl->mutex);
+    return {pImpl->timeStamp.time, 0};
+}
+
+
+
+inline SensorPtr<const sensor::IOrientationSensor>
+Glove::getOrientationSensor(const sensor::SensorName /*name*/) const
+{
+    return nullptr;
+}
+
+//bool Glove::open(yarp::os::Searchable& config)
+//{
+
+//    return true;
+//}
+
+//bool Glove::close()
+//{
+//    return false;
+//}
+
+bool Glove::configure (const yarp::os::Searchable& config, const std::string& name)
+{
+
+    auto virtualLinkSensPrefix = getWearableName() + sensor::IVirtualLinkKinSensor::getPrefix();
+
+    pImpl->virtualLinkSensorPrefix =getWearableName() +sensor::IVirtualLinkKinSensor::getPrefix();
+    pImpl->senseGloveVirtualLinkKinSensor= SensorPtr<SenseGloveImpl::SenseGloveVirtualLinkKinSensor>{std::make_shared<SenseGloveImpl::SenseGloveVirtualLinkKinSensor>(pImpl.get(),
+                                                                                                                                                       pImpl->virtualLinkSensorPrefix + pImpl->virtualLinkSensorName) };
+
+//    // initialize iHumanState interface from remapper
+//        yarp::dev::PolyDriver wrapperDevice;
+//        hde::interfaces::IHumanState* iHumanState{nullptr};
+
+//        yarp::os::Property remapperOptions;
+//        remapperOptions.put("device", "human_state_remapper");
+//        remapperOptions.put("humanStateDataPort", humanStateDataPortName);
+
+
+    return true;
+}
+
+
+SensorPtr<const sensor::ISensor>
+Glove::getSensor(const sensor::SensorName name) const
+{
+    VectorOfSensorPtr<const sensor::ISensor> sensors = getAllSensors();
+    for (const auto& s : sensors) {
+        if (s->getSensorName() == name) {
+            return s;
+        }
+    }
+    yWarning() << LogPrefix << "User specified name <" << name << "> not found";
+    return nullptr;
+}
+
+VectorOfSensorPtr<const sensor::ISensor>
+Glove::getSensors(const sensor::SensorType aType) const
+{
+    VectorOfSensorPtr<const sensor::ISensor> outVec;
+    outVec.reserve(pImpl->nSensors);
+    switch (aType) {
+        case sensor::SensorType::VirtualLinkKinSensor: {
+//        SensorPtr<sensor::ISensor> sptr = static_cast<SensorPtr<sensor::ISensor>>(pImpl->senseGloveVirtualLinkKinSensor);
+            outVec.push_back(static_cast<SensorPtr<sensor::ISensor>>(pImpl->senseGloveVirtualLinkKinSensor));
+            break;
+        }
+        default: {
+            return {};
+        }
+    }
+
+    return outVec;
+}
+
+
+bool Glove::update(const std::vector<double>& imuData)
+{
+    pImpl->timeStamp.time = yarp::os::Time::now();
+    pImpl->Update(imuData);
+    // ...
+    return true;
+}
+
+//bool Glove::attach(yarp::dev::PolyDriver* poly)
+//{
+//    return true;
+//}
+//bool Glove::detach()
+//{
+//    return true;
+//}
+

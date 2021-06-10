@@ -126,7 +126,6 @@ if(ENABLE_LOGGER)
     matlogger2::matlogger2
     walking-teleoperation::ML
     IWear::IWear
-
     )
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC

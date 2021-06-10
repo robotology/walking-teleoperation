@@ -13,6 +13,7 @@
 #include <Wearable/IWear/IWear.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/Wrapper.h>
+#include <yarp/dev/PolyDriver.h>
 
 
 
@@ -23,8 +24,6 @@ namespace wearable {
 } // namespace wearable
 
 class wearable::devices::Glove :
-        public yarp::dev::DeviceDriver,
-        public yarp::dev::IWrapper,
         public wearable::IWear
 {
 private:
@@ -34,17 +33,26 @@ public:
     Glove();
     ~Glove() override;
 
-    // DeviceDriver
-    bool open(yarp::os::Searchable& config) override;
-    bool close() override;
+//    // DeviceDriver
+//    bool open(yarp::os::Searchable& config) override;
+//    bool close() override;
 
-    // IWrapper interface
-    bool attach(yarp::dev::PolyDriver* poly) override;
-    bool detach() override;
+//    // IWrapper interface
+//    bool attach(yarp::dev::PolyDriver* poly) override;
+//    bool detach() override;
 
     // IWear
     WearableName getWearableName() const override;
     WearStatus getStatus() const override;
+
+    TimeStamp getTimeStamp() const override;
+
+    SensorPtr<const sensor::ISensor> getSensor(const sensor::SensorName name) const override;
+
+    VectorOfSensorPtr<const sensor::ISensor> getSensors(const sensor::SensorType) const override;
+
+
+
 
     inline SensorPtr<const sensor::IOrientationSensor>
     getOrientationSensor(const sensor::SensorName /*name*/) const override;
