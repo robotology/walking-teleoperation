@@ -11,6 +11,7 @@
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
+  <!-- camera -->
   <module>
     <name>yarpdev</name>
     <parameters> --from camera/ServerGrabberDualDragon.ini --split true</parameters>
@@ -40,6 +41,40 @@
      <node>icub-console-gui</node>
   </module>
 
+  <!-- audio -->
+  
+    <module>
+    <name>yarpdev</name>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <node>icub-head</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
+    <node>icub-head</node>
+    <dependencies>
+      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000 --channels 1</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4</parameters>
+    <node>icub-virtualizer</node>
+    <dependencies>
+      <port timeout="5.0" request="start" reply="[ok]">/icub/microphone/rpc</port>
+    </dependencies>
+  </module>
+
+
+
 
   <!-- Modules -->
   <module>
@@ -57,7 +92,7 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-console-gui</node>
-    <parameters> --OCULUS::move_icub_using_joypad 0</parameters>
+    <parameters> --OCULUS::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
@@ -189,5 +224,18 @@
     <from>/iFeelRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
   </connection>
+  
+    <connection>
+    <from>/icub-virtualizer/microphone/audio:o</from>
+    <to>/icub/speakers/audio:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/microphone/audio:o</from>
+    <to>/icub-virtualizer/speakers/audio:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
 
 </application>
