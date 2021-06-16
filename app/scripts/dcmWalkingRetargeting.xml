@@ -61,7 +61,7 @@
       <port timeout="5.0">/icub/cam/left</port>
       <port timeout="5.0">/icub/cam/right</port>
     </dependencies>
-    <parameters> --GENERAL::useXsens 0 --GENERAL::humanHeight 1.76 --GENERAL::useSenseGlove 0</parameters>
+    <parameters> --GENERAL::useXsens 0 --GENERAL::useiFeel 0 --GENERAL::humanHeight 1.76 --GENERAL::useSenseGlove 0</parameters>
   </module>
 
   <!-- Connections -->

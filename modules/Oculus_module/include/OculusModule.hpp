@@ -78,6 +78,7 @@ private:
 
     bool m_useVirtualizer; /**< True if the virtualizer is used in the retargeting */
     bool m_useXsens; /**< True if the Xsens is used in the retargeting */
+    bool m_useIFeel; /**< True if the iFeel is used in the retargeting */
     bool m_useSenseGlove; /**< True if the SenseGlove is used in the retargeting */
     bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
                          (default :: true)*/

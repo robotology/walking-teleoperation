@@ -292,6 +292,9 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_useXsens = generalOptions.check("useXsens", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses Xsens: " << m_useXsens;
 
+    m_useIFeel = generalOptions.check("useiFeel", yarp::os::Value(false)).asBool();
+    yInfo() << "Teleoperation uses iFeel: " << m_useIFeel;
+
     m_useSenseGlove = generalOptions.check("useSenseGlove", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses SenseGlove: " << m_useSenseGlove;
 
@@ -596,6 +599,9 @@ bool OculusModule::getTransforms()
                 return false;
             }
         }
+    }
+    if (!m_useXsens && !m_useIFeel)
+    {
 
         if (!m_frameTransformInterface->frameExists(m_leftHandFrameName))
         {
@@ -693,6 +699,9 @@ bool OculusModule::updateModule()
                     return false;
                 }
             }
+        }
+        if (!m_useXsens && !m_useIFeel)
+        {
             // update left hand transformation values
             yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
             m_leftHand->setPlayerOrientation(m_playerOrientation);

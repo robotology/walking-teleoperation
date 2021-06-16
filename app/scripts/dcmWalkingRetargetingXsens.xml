@@ -51,6 +51,7 @@
   <module>
     <name>OculusRetargetingModule</name>
     <node>icub-head</node>
+    <parameters> --GENERAL::useXsens 1 --GENERAL::useiFeel 0</parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
