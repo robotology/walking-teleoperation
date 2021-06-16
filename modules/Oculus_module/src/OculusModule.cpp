@@ -644,6 +644,9 @@ bool OculusModule::getTransforms()
                     = iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
                       * iDynTree::toEigen(m_oculusRoot_T_headOculus);
             }
+
+            iDynTree::Rotation temp(getRotation(m_oculusRoot_T_headOculus));
+            temp.getRPY(m_oculusHeadsetPoseInertial[3], m_oculusHeadsetPoseInertial[4], m_oculusHeadsetPoseInertial[5]);
         }
     }
 
