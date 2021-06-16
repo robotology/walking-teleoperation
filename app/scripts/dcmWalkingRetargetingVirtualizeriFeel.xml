@@ -40,7 +40,7 @@
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
-    <parameters>--from dcm_walking_joint_retargeting_ifeel.ini</parameters>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
   </module>
 
   <module>
