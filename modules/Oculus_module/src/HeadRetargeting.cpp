@@ -137,6 +137,8 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
         headDoFs, samplingTime, preparationSmoothingTime, neckJointsFbk);
     pImpl->m_preparationJointReferenceValues = preparationJointReferenceValues;
 
+    m_oculusInertial_R_teleopFrame = iDynTree::Rotation::Identity();
+
     return true;
 }
 

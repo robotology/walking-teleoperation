@@ -639,19 +639,23 @@ bool OculusModule::getTransforms()
             }
 
             // if the vive is used m_frameTransformInterface->getTransform returns oculusInertial_T_headOculus
-            if (m_useVive)
-            {
-                iDynTree::toEigen(m_oculusRoot_T_headOculus)
-                    = iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
-                      * iDynTree::toEigen(m_oculusRoot_T_headOculus);
-            }
+            // if (m_useVive)
+            // {
+            //     iDynTree::toEigen(m_oculusRoot_T_headOculus)
+            //         = iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
+            //           * iDynTree::toEigen(m_oculusRoot_T_headOculus);
+            // }
 
-            iDynTree::Rotation temp(getRotation(m_oculusRoot_T_headOculus));
+            iDynTree::Rotation temp;
+            iDynTree::toEigen(temp) = iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3);
+
+            std::cout << "From transform server " <<  temp.asRPY().toString() << std::endl;
+
             temp.getRPY(m_oculusHeadsetPoseInertial[3], m_oculusHeadsetPoseInertial[4], m_oculusHeadsetPoseInertial[5]);
         }
     }
 
-    // m_oculusHeadsetPoseInertial is a 6d std::vector here I'm getting the first three elements
+    // // m_oculusHeadsetPoseInertial is a 6d std::vector here I'm getting the first three elements
     Eigen::Map<Eigen::Vector3d>(m_oculusHeadsetPoseInertial.data())
         = getPosition(m_oculusRoot_T_headOculus);
 
@@ -1011,16 +1015,16 @@ bool OculusModule::updateModule()
 
                 // get only the yaw axis
                 iDynTree::Rotation tempRot(getRotation(oculusInertial_T_oculusRoot));
-                double yaw = 0;
+                double pitch = 0;
                 double dummy = 0;
-                tempRot.getRPY(dummy, dummy, yaw);
+                tempRot.getRPY(dummy, pitch, dummy);
 
                 iDynTree::Transform tempTransform;
-                tempTransform.setRotation(iDynTree::Rotation::RotZ(yaw));
+                tempTransform.setRotation(iDynTree::Rotation::RotY(pitch));
                 tempTransform.setPosition(iDynTree::make_span(getPosition(oculusInertial_T_oculusRoot)));
 
-                iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
-                    = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+                // iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
+                //     = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
             }
 
             if (m_useVirtualizer)
