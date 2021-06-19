@@ -26,13 +26,13 @@
 Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>
 getRotation(yarp::sig::Matrix& m)
 {
-    assert(m.rows() == 4 && m.cols() = 4 && "getRotation expects a 4x4 matrix");
+
     return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topLeftCorner<3,3>();
 }
 
 auto getPosition(yarp::sig::Matrix& m)
 {
-    assert(m.rows() == 4 && m.cols() = 4 && "getPosition expects a 4x4 matrix");
+
     return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topRightCorner<3,1>();
 }
 
@@ -149,6 +149,7 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
     m_oculusRoot_T_lOculus = identitySE3();
     m_oculusRoot_T_rOculus = identitySE3();
     m_oculusRoot_T_headOculus = identitySE3();
+    m_oculusRoot_T_oculusInertial = identitySE3();
 
     return true;
 }
@@ -990,7 +991,7 @@ bool OculusModule::updateModule()
             {
                 if (!m_frameTransformInterface->frameExists(m_headFrameName))
                 {
-                    yError() << "[OculusModule::updateModule] The frame named " << m_rootFrameName
+                    yError() << "[OculusModule::updateModule] The frame named " << m_headFrameName
                              << " does not exist.";
                     yError() << "[OculusModule::updateModule] I will not start the walking. Please "
                                 "try to start again.";
