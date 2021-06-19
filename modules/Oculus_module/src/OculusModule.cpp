@@ -149,7 +149,13 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
     m_oculusRoot_T_lOculus = identitySE3();
     m_oculusRoot_T_rOculus = identitySE3();
     m_oculusRoot_T_headOculus = identitySE3();
-    m_oculusRoot_T_oculusInertial = identitySE3();
+    m_openXrInitialAlignement = identitySE3();
+    m_openXrCoordinatesTransform = identitySE3();
+    m_openXrCoordinatesTransform(0,2) = -1.0; //-z is forward
+    m_openXrCoordinatesTransform(1,0) = -1.0; //-x is left
+    m_openXrCoordinatesTransform(2,1) =  1.0; // +y is up
+    iDynTree::toEigen(m_openXrInverseCoordinatesTransform) =
+            iDynTree::toEigen(m_openXrCoordinatesTransform).inverse();
 
     return true;
 }
@@ -638,13 +644,14 @@ bool OculusModule::getTransforms()
                 return false;
             }
 
-            // if OpenXr is used m_frameTransformInterface->getTransform returns oculusInertial_T_headOculus
-            // if (m_useOpenXr)
-            // {
-            //     iDynTree::toEigen(m_oculusRoot_T_headOculus)
-            //         = iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
-            //           * iDynTree::toEigen(m_oculusRoot_T_headOculus);
-            // }
+             if (m_useOpenXr)
+             {
+                 iDynTree::toEigen(m_oculusRoot_T_headOculus)
+                     = iDynTree::toEigen(m_openXrInitialAlignement) //This is to remove any initial misplacement and rotations around gravity
+                       * iDynTree::toEigen(m_openXrCoordinatesTransform) //The left frame has the Z pointing up and the X forward, while the right frame has the Y pointing up and the Z backward
+                       * iDynTree::toEigen(m_oculusRoot_T_headOculus) //This is the transform coming from OpenXr
+                       * iDynTree::toEigen(m_openXrInverseCoordinatesTransform); //This is because also the head frame has the Y pointing up and Z backward, so we transform it to our convention.
+             }
 
             iDynTree::Rotation temp;
             iDynTree::toEigen(temp) = iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3);
@@ -1001,9 +1008,9 @@ bool OculusModule::updateModule()
                     return true;
                 }
 
-                yarp::sig::Matrix oculusInertial_T_oculusRoot = identitySE3();
+                yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
                 if (!m_frameTransformInterface->getTransform(
-                        m_headFrameName, m_rootFrameName, oculusInertial_T_oculusRoot))
+                        m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
                 {
                     yError() << "[OculusModule::updateModule] Unable to evaluate the "
                              << m_headFrameName << " to " << m_rootFrameName << "transformation";
@@ -1013,17 +1020,18 @@ bool OculusModule::updateModule()
                 }
 
                 // get only the yaw axis
-                iDynTree::Rotation tempRot(getRotation(oculusInertial_T_oculusRoot));
-                double pitch = 0;
+                iDynTree::Rotation tempRot;
+                iDynTree::toEigen(tempRot) = getRotation(m_openXrCoordinatesTransform) * getRotation(openXrHeadInitialTransform) * getRotation(m_openXrInverseCoordinatesTransform);
+                double yaw = 0;
                 double dummy = 0;
-                tempRot.getRPY(dummy, pitch, dummy);
+                tempRot.getRPY(dummy, dummy, yaw);
 
                 iDynTree::Transform tempTransform;
-                tempTransform.setRotation(iDynTree::Rotation::RotY(pitch));
-                tempTransform.setPosition(iDynTree::make_span(getPosition(oculusInertial_T_oculusRoot)));
+                tempTransform.setRotation(iDynTree::Rotation::RotZ(yaw)); //We remove only the initial rotation of the person head around gravity.
+                tempTransform.setPosition(iDynTree::make_span(getPosition(openXrHeadInitialTransform))); //We remove the initial position between the head and the reference frame.
 
-                // iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
-                //     = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+                 iDynTree::toEigen(m_openXrInitialAlignement)
+                     = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
             }
 
             if (m_useVirtualizer)
