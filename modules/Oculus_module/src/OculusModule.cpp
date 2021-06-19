@@ -322,12 +322,12 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_useSenseGlove = generalOptions.check("useSenseGlove", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses SenseGlove: " << m_useSenseGlove;
 
-    m_useVive = generalOptions.check("useVive", yarp::os::Value(false)).asBool();
-    yInfo() << "Teleoperation uses htc vive: " << m_useVive;
+    m_useOpenXr = generalOptions.check("useOpenXr", yarp::os::Value(false)).asBool();
+    yInfo() << "Teleoperation uses OpenXr: " << m_useOpenXr;
 
-    if(m_useVive && (!m_useIFeel && !m_useXsens))
+    if(m_useOpenXr && (!m_useIFeel && !m_useXsens))
     {
-        yError() << "[OculusModule::configure] You cannot use the vive without xsens of iFeel. "
+        yError() << "[OculusModule::configure] You cannot use OpenXr without xsens of iFeel. "
                     "This feature will be implemented in the future.";
         return false;
     }
@@ -578,9 +578,9 @@ bool OculusModule::getTransforms()
         if (!m_frameTransformInterface->frameExists(m_headFrameName))
         {
 
-            if (m_useVive)
+            if (m_useOpenXr)
             {
-                yError() << "[OculusModule::getTransforms] If the vive is used the head transform "
+                yError() << "[OculusModule::getTransforms] If OpenXr is used the head transform "
                             "must be provided by the transform server.";
                 return false;
             }
@@ -638,8 +638,8 @@ bool OculusModule::getTransforms()
                 return false;
             }
 
-            // if the vive is used m_frameTransformInterface->getTransform returns oculusInertial_T_headOculus
-            // if (m_useVive)
+            // if OpenXr is used m_frameTransformInterface->getTransform returns oculusInertial_T_headOculus
+            // if (m_useOpenXr)
             // {
             //     iDynTree::toEigen(m_oculusRoot_T_headOculus)
             //         = iDynTree::toEigen(m_oculusRoot_T_oculusInertial)
@@ -655,7 +655,7 @@ bool OculusModule::getTransforms()
         }
     }
 
-    // // m_oculusHeadsetPoseInertial is a 6d std::vector here I'm getting the first three elements
+    // m_oculusHeadsetPoseInertial is a 6d std::vector here I'm getting the first three elements
     Eigen::Map<Eigen::Vector3d>(m_oculusHeadsetPoseInertial.data())
         = getPosition(m_oculusRoot_T_headOculus);
 
@@ -747,7 +747,6 @@ bool OculusModule::updateModule()
         {
             m_head->setPlayerOrientation(m_playerOrientation);
             m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
-            m_head->evalueNeckJointValues();
             // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
             // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
             if (m_moveRobot)
@@ -991,7 +990,7 @@ bool OculusModule::updateModule()
 
         if (buttonMapping > 0)
         {
-            if (m_useVive)
+            if (m_useOpenXr)
             {
                 if (!m_frameTransformInterface->frameExists(m_headFrameName))
                 {

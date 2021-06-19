@@ -35,6 +35,7 @@ private:
 
     /** Minimum jerk trajectory smoother for the desired head joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
+    yarp::sig::Vector m_desiredNeckJointsBeforeSmoothing;
 
     // In order to understand the transform defined the following frames has to be defined
     // oculusInertial frame: it is the inertial frame of the oculus and it is placed in the
@@ -47,32 +48,6 @@ private:
     iDynTree::Rotation m_oculusInertial_R_teleopFrame;
     iDynTree::Rotation m_oculusInertial_R_headOculus;
     iDynTree::Rotation m_teleopFrame_R_headOculus;
-
-public:
-    HeadRetargeting();
-    ~HeadRetargeting() override;
-
-    /**
-     * Configure the object.
-     * @param config is the reference to a resource finder object.
-     * @param name is the name of the robot.
-     * @return true in case of success and false otherwise.
-     */
-    bool configure(const yarp::os::Searchable& config, const std::string& name) override;
-
-    /**
-     * Set the player orientation
-     * @param playerOrientation is the orientation of the player in radiant (positive angle
-     * correspond to a clockwise rotation)
-     */
-    void setPlayerOrientation(const double& playerOrientation);
-
-    /**
-     * Set the desired head orientation.
-     * @param oculusInertial_T_headOculus is the homogeneous transformation between the oculus
-     * inertial frame and the head oculus frame
-     */
-    void setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus);
 
     /**
      * Evaluate the inverse kinematics of the head
@@ -101,9 +76,35 @@ public:
     forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
 
     /**
-     * Evaluate the neck joints according to the desired head pose
+     * Smooth the neck joints before sending them to the robot
      */
-    void evalueNeckJointValues();
+    void smoothNeckJointValues();
+
+public:
+    HeadRetargeting();
+    ~HeadRetargeting() override;
+
+    /**
+     * Configure the object.
+     * @param config is the reference to a resource finder object.
+     * @param name is the name of the robot.
+     * @return true in case of success and false otherwise.
+     */
+    bool configure(const yarp::os::Searchable& config, const std::string& name) override;
+
+    /**
+     * Set the player orientation
+     * @param playerOrientation is the orientation of the player in radiant (positive angle
+     * correspond to a clockwise rotation)
+     */
+    void setPlayerOrientation(const double& playerOrientation);
+
+    /**
+     * Set the desired head orientation.
+     * @param oculusInertial_T_headOculus is the homogeneous transformation between the oculus
+     * inertial frame and the head oculus frame
+     */
+    void setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus);
 
     /**
      * Set the neck desired joints values

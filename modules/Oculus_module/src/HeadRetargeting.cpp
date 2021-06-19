@@ -139,6 +139,8 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
 
     m_oculusInertial_R_teleopFrame = iDynTree::Rotation::Identity();
 
+    m_desiredNeckJointsBeforeSmoothing.resize(3);
+
     return true;
 }
 
@@ -155,15 +157,6 @@ void HeadRetargeting::setDesiredHeadOrientation(
     // get the rotation matrix
     iDynTree::toEigen(m_oculusInertial_R_headOculus)
         = iDynTree::toEigen(oculusInertial_T_headOculus).block(0, 0, 3, 3);
-}
-
-bool HeadRetargeting::move()
-{
-    return RetargetingController::move();
-}
-
-void HeadRetargeting::evalueNeckJointValues()
-{
 
     m_teleopFrame_R_headOculus
         = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
@@ -172,13 +165,25 @@ void HeadRetargeting::evalueNeckJointValues()
     // desiredNeckJoint(0) = neckPitch
     // desiredNeckJoint(1) = neckRoll
     // desiredNeckJoint(2) = neckYaw
-    yarp::sig::Vector desiredNeckJoint(3);
     inverseKinematics(
-        m_teleopFrame_R_headOculus, desiredNeckJoint(0), desiredNeckJoint(1), desiredNeckJoint(2));
+        m_teleopFrame_R_headOculus, m_desiredNeckJointsBeforeSmoothing(0),
+                                    m_desiredNeckJointsBeforeSmoothing(1),
+                                    m_desiredNeckJointsBeforeSmoothing(2));
+
+    smoothNeckJointValues();
+}
+
+bool HeadRetargeting::move()
+{
+    return RetargetingController::move();
+}
+
+void HeadRetargeting::smoothNeckJointValues()
+{
 
     // Notice: this can generate problems when the inverse kinematics return angles
     // near the singularity. it would be nice to implement a smoother in SO(3).
-    m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
+    m_headTrajectorySmoother->computeNextValues(m_desiredNeckJointsBeforeSmoothing);
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
 }
 
