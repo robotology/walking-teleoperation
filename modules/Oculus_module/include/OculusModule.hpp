@@ -144,9 +144,9 @@ private:
 
     std::vector<double> m_oculusHeadsetPoseInertial;
 
-    double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
+    double m_playerOrientation{0}; /**< Player orientation (read by the Virtualizer)
                                    only yaw. */
-    double m_playerOrientationOld; /**< previous updated Player orientation (read by the
+    double m_playerOrientationOld{0}; /**< previous updated Player orientation (read by the
                                    Virtualizer) only yaw. */
     double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
