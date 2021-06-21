@@ -140,8 +140,6 @@ private:
     yarp::sig::Matrix m_oculusRoot_T_lOculus;
     yarp::sig::Matrix m_oculusRoot_T_rOculus;
     yarp::sig::Matrix m_oculusRoot_T_headOculus;
-    yarp::sig::Matrix m_openXrCoordinatesTransform;
-    yarp::sig::Matrix m_openXrInverseCoordinatesTransform;
     yarp::sig::Matrix m_openXrInitialAlignement;
 
     std::vector<double> m_oculusHeadsetPoseInertial;

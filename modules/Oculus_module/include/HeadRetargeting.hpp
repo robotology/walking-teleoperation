@@ -45,9 +45,10 @@ private:
     //               rigidly attached to the user. In details the oculusInertial frame and
     //               the teleoperation frame differs for a rotation along the Z axis.
     // headOculus frame: frame attached to the oculus head.
-    iDynTree::Rotation m_oculusInertial_R_teleopFrame;
     iDynTree::Rotation m_oculusInertial_R_headOculus;
     iDynTree::Rotation m_teleopFrame_R_headOculus;
+
+    double m_playerOrientation{0};
 
     /**
      * Evaluate the inverse kinematics of the head
@@ -62,6 +63,11 @@ private:
                                   double& neckPitch,
                                   double& neckRoll,
                                   double& neckYaw);
+
+    static void inverseKinematicsXZY(const iDynTree::Rotation& chest_R_head,
+                                     double& neckPitch,
+                                     double& neckRoll,
+                                     double& neckYaw);
 
     /**
      * Evaluate the forward kinematics of the head
@@ -105,6 +111,13 @@ public:
      * inertial frame and the head oculus frame
      */
     void setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus);
+
+    /**
+     * Set the desired head orientation from OpenXr.
+     * @param oculusInertial_T_headOculus is the homogeneous transformation between the OpenXR
+     * inertial frame and the OpenXr head frame
+     */
+    void setDesiredHeadOrientationFromOpenXr(const yarp::sig::Matrix& openXrInertial_T_headOpenXr);
 
     /**
      * Set the neck desired joints values
