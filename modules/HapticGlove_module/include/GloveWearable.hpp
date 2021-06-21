@@ -11,55 +11,51 @@
 
 
 #include <Wearable/IWear/IWear.h>
-#include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/Wrapper.h>
-#include <yarp/dev/PolyDriver.h>
+#include <yarp/sig/Vector.h>
+#include <vector>
 
 
 
-namespace wearable {
-    namespace devices {
-        class Glove;
-    } // namespace devices
-} // namespace wearable
-
-class wearable::devices::Glove :
-        public wearable::IWear
+class GloveWearableImpl
 {
 private:
-    class SenseGloveImpl;
-    std::unique_ptr<SenseGloveImpl> pImpl;
+
+    wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
+
+    std::string m_handLinkName;
+
+    std::vector<std::string> m_humanJointNameList;
+
+    std::vector<std::string> m_humanFingerNameList;
+
+    wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor> m_linkSensor;
+
+    std::vector<wearable::SensorPtr<const wearable::sensor::IVirtualJointKinSensor>> m_jointSensors;
+
+    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_ForceFeedbackActuators;
+
+    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_VibroTactileActuators;
+
 public:
-    Glove();
-    ~Glove() override;
 
-//    // DeviceDriver
-//    bool open(yarp::os::Searchable& config) override;
-//    bool close() override;
+    GloveWearableImpl();
 
-//    // IWrapper interface
-//    bool attach(yarp::dev::PolyDriver* poly) override;
-//    bool detach() override;
+    ~GloveWearableImpl();
 
-    // IWear
-    WearableName getWearableName() const override;
-    WearStatus getStatus() const override;
+    bool configure (const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
-    TimeStamp getTimeStamp() const override;
+    bool createWearableDataMap();
 
-    SensorPtr<const sensor::ISensor> getSensor(const sensor::SensorName name) const override;
-
-    VectorOfSensorPtr<const sensor::ISensor> getSensors(const sensor::SensorType) const override;
+    bool getSenseGloveHumanJointValues(std::vector<double> values);
 
 
+    bool getSenseGloveImuValues(std::vector<double> values);
 
 
-    inline SensorPtr<const sensor::IOrientationSensor>
-    getOrientationSensor(const sensor::SensorName /*name*/) const override;
+    bool setSenseGloveForceFeedbackValues( std::vector<double> values);
 
-    bool configure (const yarp::os::Searchable& config, const std::string& name);
+    bool setSenseGloveVibroTactileValues(std::vector<double> values);
 
-    bool update(const std::vector<double>& imuData);
 
 };
 
