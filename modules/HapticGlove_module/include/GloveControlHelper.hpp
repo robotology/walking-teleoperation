@@ -22,6 +22,7 @@
 // Sense Glove
 #include "DeviceList.h"
 #include "SenseGlove.h"
+#include "GloveWearable.hpp"
 /**
  * GloveControlHelper is an helper class for controlling the glove.
  */
@@ -46,8 +47,8 @@ class GloveControlHelper
     bool m_isRightHand; /**< true if the glove is the right hand*/
 
 
-    std::vector<int> m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
-    std::vector<int> m_desiredBuzzValues; /**< Joint position [deg]. */
+    std::vector<double> m_desiredForceValues; /**< Desired joint value [deg or deg/s]. */
+    std::vector<double> m_desiredBuzzValues; /**< Joint position [deg]. */
     std::vector<float> m_sensorData; /**< sensory data of the glove in degree */
     Eigen::MatrixXd m_glovePose; /**< sensory data of the glove poses*/
     Eigen::MatrixXd m_handPose; /**< sensory data of the hand link poses;  From thumb to pinky, proximal to distal;
@@ -65,7 +66,9 @@ class GloveControlHelper
     std::vector<double> m_jointRangeMin;
     std::vector<double> m_jointRangeMax;
 
-    SGCore::SG::SenseGlove m_glove;
+//    SGCore::SG::SenseGlove m_glove;
+
+    std::unique_ptr<GloveWearableImpl> m_pImp;  /**< Sense glove wearable interface impelemntation. */
 
 public:
     /**
@@ -105,7 +108,6 @@ public:
      bool getHandJointsAngles(std::vector<double> & jointAngleList) ;
 
      bool getHandJointsAngles(Eigen::MatrixXd measuredValue);
-
 
     bool getGlovePose(Eigen::MatrixXd& measuredValue);
 

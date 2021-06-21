@@ -113,21 +113,17 @@ bool GloveWearableImpl::configure (const yarp::os::Searchable& config, const std
         return false;
     }
 
-    if(!createWearableDataMap())
+    if(!createWearableDataVectors())
     {
         yError()<<LogPrefix<<"Unbale to create all the necessary Sense Glove Wearable Data maps";
         return false;
     }
 
     return true;
-
-    auto sensors= m_iWear->getAllSensors();
-    for (auto sensor :sensors)
-        sensor->getSensorName();
 }
 
 
-bool GloveWearableImpl::createWearableDataMap()
+bool GloveWearableImpl::createWearableDataVectors()
 {
     std::string wearablePrefix ="HapticGlove::";
     // create link sensors map
@@ -140,6 +136,7 @@ bool GloveWearableImpl::createWearableDataMap()
             return false;
         }
         m_linkSensor= sensor;
+        yInfo()<<LogPrefix<<"createWearableDataVectors: "<<m_linkSensor->getSensorName();
     }
     // create joints sensors map
     {
@@ -153,8 +150,11 @@ bool GloveWearableImpl::createWearableDataMap()
                 return false;
             }
             m_jointSensors.push_back(sensor);
+            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<sensor->getSensorName();
         }
     }
+    yInfo()<<LogPrefix<<"createWearableDataVectors: m_jointSensors.size() "<<m_jointSensors.size();
+
     // create link force feedback actuator map
     {
         for (auto fingerName : m_humanFingerNameList)
@@ -167,8 +167,11 @@ bool GloveWearableImpl::createWearableDataMap()
                 return false;
             }
             m_ForceFeedbackActuators.push_back(actuator);
+            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
         }
     }
+    yInfo()<<LogPrefix<<"createWearableDataVectors: m_ForceFeedbackActuators.size() "<<m_ForceFeedbackActuators.size();
+
 
     // create link vibro tactile feedback actuator map
     {
@@ -182,13 +185,17 @@ bool GloveWearableImpl::createWearableDataMap()
                 return false;
             }
             m_VibroTactileActuators.push_back(actuator);
+            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
+
         }
     }
-    return true;
+    yInfo()<<LogPrefix<<"createWearableDataVectors: m_VibroTactileActuators.size() "<<m_VibroTactileActuators.size();
+
+    return false;
 }
 
 
-bool GloveWearableImpl::getSenseGloveHumanJointValues(std::vector<double> values)
+bool GloveWearableImpl::getSenseGloveHumanJointValues(std::vector<double>& values)
 {
     values.clear();
     values.reserve(m_humanJointNameList.size());
@@ -202,7 +209,7 @@ bool GloveWearableImpl::getSenseGloveHumanJointValues(std::vector<double> values
 }
 
 
-bool GloveWearableImpl::getSenseGloveImuValues(std::vector<double> values)
+bool GloveWearableImpl::getSenseGloveImuValues(std::vector<double>& values)
 {
 
     values.clear();
@@ -215,7 +222,7 @@ bool GloveWearableImpl::getSenseGloveImuValues(std::vector<double> values)
     return true;
 }
 
-bool GloveWearableImpl::setSenseGloveForceFeedbackValues(std::vector<double> values)
+bool GloveWearableImpl::setSenseGloveForceFeedbackValues(std::vector<double>& values)
 {
     if (values.size()!=m_ForceFeedbackActuators.size())
     {
@@ -231,7 +238,7 @@ bool GloveWearableImpl::setSenseGloveForceFeedbackValues(std::vector<double> val
     return true;
 }
 
-bool GloveWearableImpl::setSenseGloveVibroTactileValues(std::vector<double> values)
+bool GloveWearableImpl::setSenseGloveVibroTactileValues(std::vector<double>& values)
 {
     if (values.size()!=m_VibroTactileActuators.size())
     {

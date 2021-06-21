@@ -11,6 +11,8 @@
 
 
 #include <Wearable/IWear/IWear.h>
+#include <thrift/WearableActuatorCommand.h>
+
 #include <yarp/sig/Vector.h>
 #include <vector>
 
@@ -44,17 +46,17 @@ public:
 
     bool configure (const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
-    bool createWearableDataMap();
+    bool createWearableDataVectors();
 
-    bool getSenseGloveHumanJointValues(std::vector<double> values);
-
-
-    bool getSenseGloveImuValues(std::vector<double> values);
+    bool getSenseGloveHumanJointValues(std::vector<double>& values);
 
 
-    bool setSenseGloveForceFeedbackValues( std::vector<double> values);
+    bool getSenseGloveImuValues(std::vector<double>& values);
 
-    bool setSenseGloveVibroTactileValues(std::vector<double> values);
+
+    bool setSenseGloveForceFeedbackValues( std::vector<double>& values);
+
+    bool setSenseGloveVibroTactileValues(std::vector<double>& values);
 
 
 };
