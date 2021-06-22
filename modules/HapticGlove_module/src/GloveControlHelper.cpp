@@ -240,42 +240,45 @@ bool GloveControlHelper::getHandJointsAngles()
 
 bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)
 {
-    GloveControlHelper::getHandJointsAngles( );
-//    jointAngleList.resize(m_humanJointNameList.size(),0.0);
+    //    GloveControlHelper::getHandJointsAngles( );
+    //    jointAngleList.resize(m_humanJointNameList.size(),0.0);
 
-    m_pImp->getSenseGloveHumanJointValues(jointAngleList);
+    if(!m_pImp->getSenseGloveHumanJointValues(jointAngleList))
+    {
+        yError()<< "getHandJointsAngles: error in geting new human joint angles.";
+        return false;
+    }
+    //    // thumb
+    //    jointAngleList[0]=m_handJointsAngles(0, 2);
+    //    jointAngleList[1]=m_handJointsAngles(0, 1);
+    //    jointAngleList[2]=m_handJointsAngles(1, 1);
+    //    jointAngleList[3]=m_handJointsAngles(2, 1);
 
-//    // thumb
-//    jointAngleList[0]=m_handJointsAngles(0, 2);
-//    jointAngleList[1]=m_handJointsAngles(0, 1);
-//    jointAngleList[2]=m_handJointsAngles(1, 1);
-//    jointAngleList[3]=m_handJointsAngles(2, 1);
+    //    // m_handJointsAngles(3, :)--> all of them are zero
+    //    // index (3:5)
+    //    jointAngleList[4]=m_handJointsAngles(4, 1);
+    //    jointAngleList[5]=m_handJointsAngles(5, 1);
+    //    jointAngleList[6]=m_handJointsAngles(6, 1);
 
-//    // m_handJointsAngles(3, :)--> all of them are zero
-//    // index (3:5)
-//    jointAngleList[4]=m_handJointsAngles(4, 1);
-//    jointAngleList[5]=m_handJointsAngles(5, 1);
-//    jointAngleList[6]=m_handJointsAngles(6, 1);
+    //    // m_handJointsAngles(7, :)--> all of them are zero
+    //    // middle (6:8)
+    //    jointAngleList[7]=m_handJointsAngles(8, 1);
+    //    jointAngleList[8]=m_handJointsAngles(9, 1);
+    //    jointAngleList[9]=m_handJointsAngles(10, 1);
 
-//    // m_handJointsAngles(7, :)--> all of them are zero
-//    // middle (6:8)
-//    jointAngleList[7]=m_handJointsAngles(8, 1);
-//    jointAngleList[8]=m_handJointsAngles(9, 1);
-//    jointAngleList[9]=m_handJointsAngles(10, 1);
+    //    // m_handJointsAngles(11, :)--> all of them are zero
+    //    // ring (9:11)
+    //    jointAngleList[10]=m_handJointsAngles(12, 1);
+    //    jointAngleList[11]=m_handJointsAngles(13, 1);
+    //    jointAngleList[12]=m_handJointsAngles(14, 1);
 
-//    // m_handJointsAngles(11, :)--> all of them are zero
-//    // ring (9:11)
-//    jointAngleList[10]=m_handJointsAngles(12, 1);
-//    jointAngleList[11]=m_handJointsAngles(13, 1);
-//    jointAngleList[12]=m_handJointsAngles(14, 1);
+    //    // m_handJointsAngles(15, :)--> all of them are zero
+    //    // pinkie (12:14)
+    //    jointAngleList[13]=m_handJointsAngles(16, 1);
+    //    jointAngleList[14]=m_handJointsAngles(17, 1);
+    //    jointAngleList[15]=m_handJointsAngles(18, 1);
 
-//    // m_handJointsAngles(15, :)--> all of them are zero
-//    // pinkie (12:14)
-//    jointAngleList[13]=m_handJointsAngles(16, 1);
-//    jointAngleList[14]=m_handJointsAngles(17, 1);
-//    jointAngleList[15]=m_handJointsAngles(18, 1);
-
-//    //    yInfo()<<"jointAngleList: "<< jointAngleList;
+    //    //    yInfo()<<"jointAngleList: "<< jointAngleList;
 
     return true;
 }
@@ -462,6 +465,11 @@ void GloveControlHelper::getHumanMotionRange( std::vector<double>& jointRangeMin
     }
     std::cout<<"jointRangeMax"<<jointRangeMax<<std::endl;
     std::cout<<"jointRangeMin"<<jointRangeMin<<std::endl;
+}
+
+bool GloveControlHelper::updateGloveWearableData()
+{
+    return m_pImp->updateDevice();
 }
 
 bool GloveControlHelper::getGloveIMUData(std::vector<double>& gloveImuData)

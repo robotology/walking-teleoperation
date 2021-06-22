@@ -144,6 +144,9 @@ checkandset_dependency(SenseGlove)
 find_package(IWear QUIET)
 checkandset_dependency(IWear)
 
+find_package(WearableActuators QUIET)
+checkandset_dependency(WearableActuators)
+
 
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)

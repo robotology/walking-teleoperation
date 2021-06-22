@@ -12,11 +12,14 @@
 
 #include <Wearable/IWear/IWear.h>
 #include <thrift/WearableActuatorCommand.h>
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/Network.h>
 
 #include <yarp/sig/Vector.h>
 #include <vector>
 
 
+using namespace yarp::os;
 
 class GloveWearableImpl
 {
@@ -24,7 +27,11 @@ private:
 
     wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
 
+    BufferedPort<wearable::msg::WearableActuatorCommand> m_iWearActuatorPort;
+
     std::string m_handLinkName;
+
+    std::string m_wearablePrefix;
 
     std::vector<std::string> m_humanJointNameList;
 
@@ -38,11 +45,14 @@ private:
 
     std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_VibroTactileActuators;
 
+
 public:
 
     GloveWearableImpl();
 
     ~GloveWearableImpl();
+
+    bool updateDevice();
 
     bool configure (const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 

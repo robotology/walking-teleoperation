@@ -168,6 +168,8 @@ public:
      */
     bool getGloveIMUData(std::vector<double>& gloveImuData);
 
+    bool updateGloveWearableData();
+
     /**
      * Close the helper
      */

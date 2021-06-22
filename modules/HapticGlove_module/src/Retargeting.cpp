@@ -207,10 +207,8 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double> & humanJo
         m_robotRefJointAngles(i)=m_retargetingScaling(m_humanToRobotMap[i])*humanJointAngles[m_humanToRobotMap[i]] + m_retargetingBias(m_humanToRobotMap[i]);
         // TO CHECK
         // saturate the references
-        yInfo()<<"[Retargeting::retargetHumanMotionToRobot] m_robotRefJointAngles(i): "<< m_robotRefJointAngles(i);
         m_robotRefJointAngles(i)=std::max(m_robotRefJointAngles(i), m_robotJointsRangeMin(m_humanToRobotMap[i]));
         m_robotRefJointAngles(i)=std::min(m_robotRefJointAngles(i), m_robotJointsRangeMax(m_humanToRobotMap[i]));
-        yInfo()<<"[Retargeting::retargetHumanMotionToRobot]"<< m_robotRefJointAngles(i) << m_robotJointsRangeMax(m_humanToRobotMap[i]) <<m_robotJointsRangeMin(m_humanToRobotMap[i]);
     }
 
 

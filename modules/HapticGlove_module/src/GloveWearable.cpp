@@ -25,12 +25,25 @@ GloveWearableImpl::GloveWearableImpl() { }
 GloveWearableImpl::~GloveWearableImpl() { }
 
 
+bool GloveWearableImpl::updateDevice()
+{
+    yInfo()<<"loveWearableImpl::updateDevice()";
+    if(m_iWear->getStatus()== wearable::WearStatus::Error)
+    {
+        yError()<<"Cannot update iWearRemapper";
+        return false;
+    }
+    return true;
+}
+
 bool GloveWearableImpl::configure (const yarp::os::Searchable& config, const std::string& name, const bool& rightHand)
 {
 
     bool m_isRightHand; /**< true if the glove is the right hand*/
 
     m_isRightHand=rightHand;
+
+    m_wearablePrefix ="HapticGlove::";
 
     // set Glove Joints List Names From Module
     if (!config.check("hand_link"))
@@ -104,12 +117,38 @@ bool GloveWearableImpl::configure (const yarp::os::Searchable& config, const std
 
     while (m_iWear->getStatus() == WearStatus::WaitingForFirstRead) {
         yInfo() << LogPrefix <<"(configure)IWear interface waiting for first data. Waiting...";
-        yarp::os::Time::delay(5);
+        yarp::os::Time::delay(0.1);
     }
 
     if (m_iWear->getStatus() != WearStatus::Ok) {
         yError() << LogPrefix <<"(configure) The status of the attached IWear interface is not ok ("
                  << static_cast<int>(m_iWear->getStatus()) << ")";
+        return false;
+    }
+
+    yInfo() << "Attached wearable device name : " << m_iWear->getWearableName();
+    std::string portNameOut, portNameIn;
+    if (!YarpHelper::getStringFromSearchable(config, "wearable_data_actuator_ports_out", portNameOut))
+    {
+        yError() << LogPrefix<< "Unable to get a string from a searchable: wearable_data_actuator_ports_out";
+        return false;
+    }
+
+    if (!YarpHelper::getStringFromSearchable(config, "wearable_data_actuator_ports_in", portNameIn))
+    {
+        yError() << LogPrefix<< "Unable to get a string from a searchable: wearable_data_actuator_ports_in";
+        return false;
+    }
+
+    if (!m_iWearActuatorPort.open(portNameOut))
+    {
+        yError() << LogPrefix  << portNameOut << " port already open.";
+        return false;
+    }
+
+    if (!Network::connect(portNameOut, portNameIn))
+    {
+        yError() << LogPrefix  << portNameOut<< portNameIn<< " unable to connect the ports.";
         return false;
     }
 
@@ -125,10 +164,10 @@ bool GloveWearableImpl::configure (const yarp::os::Searchable& config, const std
 
 bool GloveWearableImpl::createWearableDataVectors()
 {
-    std::string wearablePrefix ="HapticGlove::";
+
     // create link sensors map
     {
-        std::string wearableLinkSensorName= wearablePrefix+ wearable::sensor::IVirtualLinkKinSensor::getPrefix()+ m_handLinkName;
+        std::string wearableLinkSensorName= m_wearablePrefix+ wearable::sensor::IVirtualLinkKinSensor::getPrefix()+ m_handLinkName;
         auto sensor = m_iWear->getVirtualLinkKinSensor(wearableLinkSensorName);
         if(!sensor)
         {
@@ -139,59 +178,62 @@ bool GloveWearableImpl::createWearableDataVectors()
         yInfo()<<LogPrefix<<"createWearableDataVectors: "<<m_linkSensor->getSensorName();
     }
     // create joints sensors map
-    {
+
+    m_jointSensors.reserve(m_humanJointNameList.size());
         for (auto jointName : m_humanJointNameList)
         {
-            std::string wearableJointSensorName= wearablePrefix+ wearable::sensor::IVirtualJointKinSensor::getPrefix()+ jointName;
+            std::string wearableJointSensorName= m_wearablePrefix+ wearable::sensor::IVirtualJointKinSensor::getPrefix()+ jointName;
             auto sensor = m_iWear->getVirtualJointKinSensor(wearableJointSensorName);
             if(!sensor)
             {
                 yError() << LogPrefix << "Failed to find sensor associated to joint" << wearableJointSensorName<< "from the IWear interface";
                 return false;
             }
-            m_jointSensors.push_back(sensor);
+            m_jointSensors.push_back(m_iWear->getVirtualJointKinSensor(wearableJointSensorName));
             yInfo()<<LogPrefix<<"createWearableDataVectors: "<<sensor->getSensorName();
         }
-    }
+
     yInfo()<<LogPrefix<<"createWearableDataVectors: m_jointSensors.size() "<<m_jointSensors.size();
 
-    // create link force feedback actuator map
-    {
-        for (auto fingerName : m_humanFingerNameList)
-        {
-            std::string wearableFingerForceFeedbackActuatorName= wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::ForceFeedback";
-            auto actuator = m_iWear->getHapticActuator(wearableFingerForceFeedbackActuatorName);
-            if(!actuator)
-            {
-                yError() << LogPrefix << "Failed to find actuator associated to finger " << wearableFingerForceFeedbackActuatorName<< "from the IWear interface";
-                return false;
-            }
-            m_ForceFeedbackActuators.push_back(actuator);
-            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
-        }
-    }
-    yInfo()<<LogPrefix<<"createWearableDataVectors: m_ForceFeedbackActuators.size() "<<m_ForceFeedbackActuators.size();
 
 
-    // create link vibro tactile feedback actuator map
-    {
-        for (auto fingerName : m_humanFingerNameList)
-        {
-            std::string wearableFingerVibroTactileActuatorName= wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::VibroTactileFeedback";
-            auto actuator = m_iWear->getHapticActuator(wearableFingerVibroTactileActuatorName);
-            if(!actuator)
-            {
-                yError() << LogPrefix << "Failed to find actuator associated to finger " << wearableFingerVibroTactileActuatorName<< "from the IWear interface";
-                return false;
-            }
-            m_VibroTactileActuators.push_back(actuator);
-            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
+//    // create link force feedback actuator map
+//    {
+//        for (auto fingerName : m_humanFingerNameList)
+//        {
+//            std::string wearableFingerForceFeedbackActuatorName= wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::ForceFeedback";
+//            auto actuator = m_iWear->getHapticActuator(wearableFingerForceFeedbackActuatorName);
+//            if(!actuator)
+//            {
+//                yError() << LogPrefix << "Failed to find actuator associated to finger " << wearableFingerForceFeedbackActuatorName<< "from the IWear interface";
+//                return false;
+//            }
+//            m_ForceFeedbackActuators.push_back(actuator);
+//            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
+//        }
+//    }
+//    yInfo()<<LogPrefix<<"createWearableDataVectors: m_ForceFeedbackActuators.size() "<<m_ForceFeedbackActuators.size();
 
-        }
-    }
-    yInfo()<<LogPrefix<<"createWearableDataVectors: m_VibroTactileActuators.size() "<<m_VibroTactileActuators.size();
 
-    return false;
+//    // create link vibro tactile feedback actuator map
+//    {
+//        for (auto fingerName : m_humanFingerNameList)
+//        {
+//            std::string wearableFingerVibroTactileActuatorName= wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::VibroTactileFeedback";
+//            auto actuator = m_iWear->getHapticActuator(wearableFingerVibroTactileActuatorName);
+//            if(!actuator)
+//            {
+//                yError() << LogPrefix << "Failed to find actuator associated to finger " << wearableFingerVibroTactileActuatorName<< "from the IWear interface";
+//                return false;
+//            }
+//            m_VibroTactileActuators.push_back(actuator);
+//            yInfo()<<LogPrefix<<"createWearableDataVectors: "<<actuator->getActuatorName();
+
+//        }
+//    }
+//    yInfo()<<LogPrefix<<"createWearableDataVectors: m_VibroTactileActuators.size() "<<m_VibroTactileActuators.size();
+
+    return true;
 }
 
 
@@ -202,9 +244,17 @@ bool GloveWearableImpl::getSenseGloveHumanJointValues(std::vector<double>& value
     double jointPosition;
     for (auto sensor: m_jointSensors)
     {
+        if(sensor->getSensorStatus()!=wearable::sensor::SensorStatus::Ok)
+        {
+            std::string sName = sensor->getSensorName();
+                yError()<<LogPrefix<< "sensor status is not OK, sensor name: "<<sName;
+        }
         sensor->getJointPosition(jointPosition);
+        yInfo() << "Sensor name : " << sensor->getSensorName()<< jointPosition;
         values.push_back(jointPosition);
     }
+    yInfo()<<LogPrefix<<"joint name: "<<m_humanJointNameList;
+    yInfo()<<LogPrefix<<"joint values: "<<values;
     return true;
 }
 
@@ -224,33 +274,60 @@ bool GloveWearableImpl::getSenseGloveImuValues(std::vector<double>& values)
 
 bool GloveWearableImpl::setSenseGloveForceFeedbackValues(std::vector<double>& values)
 {
-    if (values.size()!=m_ForceFeedbackActuators.size())
+    // prepare the port
+
+    // Send haptic actuator command
+    // NOTE: Use strict flag true for writing all the commands without dropping any old commands
+
+
+    // set the daata
+//    if (values.size()!=m_ForceFeedbackActuators.size())
+//    {
+//        yError()<<LogPrefix<<"The size of force feedback and reference values are different.";
+//        return false;
+//    }
+    for (size_t i=0; i< values.size(); i++)
     {
-        yError()<<LogPrefix<<"The size of force feedback and reference values are different.";
-        return false;
-    }
-    size_t i=0;
-    for (auto actuator: m_ForceFeedbackActuators)
-    {
-        actuator->setHapticCommand(values[i]);
-        i++;
+        std::string fingerName = m_humanFingerNameList[i];
+
+        wearable::msg::WearableActuatorCommand& wearableActuatorCommand = m_iWearActuatorPort.prepare();
+
+        wearableActuatorCommand.value = values[i];
+        wearableActuatorCommand.info.name = m_wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::ForceFeedback";
+        wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
+        wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
+        wearableActuatorCommand.duration = 0;
+
+       m_iWearActuatorPort.write(true);
+
     }
     return true;
 }
 
 bool GloveWearableImpl::setSenseGloveVibroTactileValues(std::vector<double>& values)
 {
-    if (values.size()!=m_VibroTactileActuators.size())
+//    if (values.size()!=m_VibroTactileActuators.size())
+//    {
+//        yError()<<LogPrefix<<"The size of vibro tactile feedback and reference values are different.";
+//        return false;
+//    }
+
+    for (size_t i=0; i< values.size(); i++)
     {
-        yError()<<LogPrefix<<"The size of vibro tactile feedback and reference values are different.";
-        return false;
+
+        std::string fingerName = m_humanFingerNameList[i];
+
+        wearable::msg::WearableActuatorCommand& wearableActuatorCommand = m_iWearActuatorPort.prepare();
+
+        wearableActuatorCommand.value = values[i];
+        wearableActuatorCommand.info.name = m_wearablePrefix+ wearable::actuator::IHaptic::getPrefix()+ fingerName+ "::VibroTactileFeedback";
+        wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
+        wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
+        wearableActuatorCommand.duration = 0;
+
+        m_iWearActuatorPort.write(true);
     }
-    size_t i=0;
-    for (auto actuator: m_VibroTactileActuators)
-    {
-        actuator->setHapticCommand(values[i]);
-        i++;
-    }
+
     return true;
 }
 

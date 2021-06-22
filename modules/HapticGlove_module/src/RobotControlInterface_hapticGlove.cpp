@@ -597,19 +597,12 @@ bool RobotControlInterface::getFeedback()
     for (unsigned j = 0; j < m_noActuatedAxis; ++j)
         m_encoderPositionFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
 
-    double time1= yarp::os::Time::now();
-    yInfo()<<"time DD1:"<<time1-time0;
-
 
     if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data()) && m_isMandatory)
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get Axis velocity feedback";
         return false;
     }
-    double time2= yarp::os::Time::now();
-    yInfo()<<"time DD2:"<<time2-time1;
-
-
 
     for (unsigned j = 0; j < m_noActuatedAxis; ++j)
         m_encoderVelocityFeedbackInRadians(j) = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
@@ -620,8 +613,6 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get analog sensor data";
         return false;
     }
-    double time3= yarp::os::Time::now();
-    yInfo()<<"time DD3:"<<time3-time2;
 
 
     if (!getCalibratedFeedback())
@@ -630,8 +621,6 @@ bool RobotControlInterface::getFeedback()
                     "sensor data";
         return false;
     }
-    double time4= yarp::os::Time::now();
-    yInfo()<<"time DD4:"<<time4-time3;
 
 
     if(!setAllJointsFeedback())
@@ -640,8 +629,6 @@ bool RobotControlInterface::getFeedback()
                     "sensor data";
         return false;
     }
-    double time5= yarp::os::Time::now();
-    yInfo()<<"time DD5:"<<time5-time4;
 
 
     if (!m_currentInterface->getCurrents(m_currentFeedback.data()) && m_isMandatory)
@@ -649,8 +636,6 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor current feedbacks";
         return false;
     }
-    double time6= yarp::os::Time::now();
-    yInfo()<<"time DD6:"<<time6-time5;
 
 // removing the getRefCurrents since it takes 0.04 seconds to read
     if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) && m_isMandatory)
@@ -658,8 +643,6 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor desired current from the interface";
         return false;
     }
-    double time7= yarp::os::Time::now();
-    yInfo()<<"time DD7:"<<time7-time6;
 
 
     if (!m_pwmInterface->getDutyCycles(m_pwmFeedback.data()) && m_isMandatory)
@@ -667,8 +650,6 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor PWM feedbacks";
         return false;
     }
-    double time8= yarp::os::Time::now();
-    yInfo()<<"time DD8:"<<time8-time7;
 
     // removing the getRefDutyCycles since it takes 0.04 seconds to read
 //    if (!m_pwmInterface->getRefDutyCycles(m_pwmDesiredInterface.data()) && m_isMandatory)
@@ -682,12 +663,6 @@ bool RobotControlInterface::getFeedback()
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get pid outputs";
         return false;
     }
-
-    double time9= yarp::os::Time::now();
-    yInfo()<<"time DD9:"<<time9-time8;
-    yInfo()<<"total update time:"<<time9-time0;
-
-
 
     return true;
 }

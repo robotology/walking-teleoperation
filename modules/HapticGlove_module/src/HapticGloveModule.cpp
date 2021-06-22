@@ -384,7 +384,6 @@ bool HapticGloveModule::getFeedbacks()
 
     if (m_useLeftHand)
     {
-        double time0= yarp::os::Time::now();
 
         // get feedback from the robot left hand values
         if (!m_robotLeftHand->updateFeedback())
@@ -393,33 +392,22 @@ bool HapticGloveModule::getFeedbacks()
                     << "[HapticGloveModule::getFeedbacks()] unable to update the feedback values of "
                        "the left hand fingers.";
         }
-        double time1= yarp::os::Time::now();
-        yInfo()<<"time D1:"<<time1-time0;
-
 
         m_robotLeftHand->getFingerAxisFeedback(m_icubLeftFingerAxisValueFeedback);
-        double time2= yarp::os::Time::now();
-        yInfo()<<"time D2:"<<time2-time1;
 
         m_robotLeftHand->getFingerAxisValueReference(m_icubLeftFingerAxisValueReference);
-        double time3= yarp::os::Time::now();
-        yInfo()<<"time D3:"<<time3-time2;
 
         m_robotLeftHand->getFingerAxisVelocityFeedback( m_icubLeftFingerAxisVelocityFeedback);
-        double time4= yarp::os::Time::now();
-        yInfo()<<"time D4:"<<time4-time3;
 
         m_robotLeftHand->getFingerJointsFeedback(m_icubLeftFingerJointsFeedback);
-        double time5= yarp::os::Time::now();
-        yInfo()<<"time D5:"<<time5-time4;
 
 
-//        yInfo() << "left fingers axis: " << m_icubLeftFingerAxisValueFeedback.toString();
-//        yInfo() << "left fingers joints: " << m_icubLeftFingerJointsFeedback.toString();
         m_robotLeftHand->estimateNextStates();
-        double time6= yarp::os::Time::now();
-        yInfo()<<"time D6:"<<time6-time5;
-        yInfo()<<"total feedback time:"<<time6-time0;
+
+        if(!m_gloveLeftHand->updateGloveWearableData())
+        {
+            yError()<<"Cannot update the left glove wearable data";
+        }
 
     }
 
@@ -437,11 +425,17 @@ bool HapticGloveModule::getFeedbacks()
         m_robotRightHand->getFingerAxisVelocityFeedback( m_icubRightFingerAxisVelocityFeedback);
 
         m_robotRightHand->getFingerJointsFeedback(m_icubRightFingerJointsFeedback);
-        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisValueFeedback.toString();
-        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
-        yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
+//        yInfo() << "right fingers axis feedback: " << m_icubRightFingerAxisValueFeedback.toString();
+//        yInfo() << "right fingers axis reference: " << m_icubRightFingerAxisValueReference.toString();
+//        yInfo() << "right fingers joints: " << m_icubRightFingerJointsFeedback.toString();
 
         m_robotRightHand->estimateNextStates();
+
+        if(!m_gloveRightHand->updateGloveWearableData())
+        {
+            yError()<<"Cannot update the right glove wearable data";
+        }
+
 
     }
     yInfo()<<"getFeedback success.";
