@@ -9,67 +9,65 @@
 #ifndef GLOVE_WEARABLE_HPP
 #define GLOVE_WEARABLE_HPP
 
-
 #include <Wearable/IWear/IWear.h>
 #include <thrift/WearableActuatorCommand.h>
+#include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Network.h>
 
-#include <yarp/sig/Vector.h>
 #include <vector>
-
+#include <yarp/sig/Vector.h>
 
 using namespace yarp::os;
 
-class GloveWearableImpl
-{
+class GloveWearableImpl {
 private:
+  yarp::dev::PolyDriver m_wearableDevice;
 
-    wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
+  wearable::IWear *m_iWear{nullptr}; /**< Sense glove wearable interface. */
 
-    BufferedPort<wearable::msg::WearableActuatorCommand> m_iWearActuatorPort;
+  BufferedPort<wearable::msg::WearableActuatorCommand> m_iWearActuatorPort;
 
-    std::string m_handLinkName;
+  std::string m_handLinkName;
 
-    std::string m_wearablePrefix;
+  std::string m_wearablePrefix;
 
-    std::vector<std::string> m_humanJointNameList;
+  std::vector<std::string> m_humanJointNameList;
 
-    std::vector<std::string> m_humanFingerNameList;
+  std::vector<std::string> m_humanFingerNameList;
 
-    wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor> m_linkSensor;
+  wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor>
+      m_linkSensor;
 
-    std::vector<wearable::SensorPtr<const wearable::sensor::IVirtualJointKinSensor>> m_jointSensors;
+  std::vector<
+      wearable::SensorPtr<const wearable::sensor::IVirtualJointKinSensor>>
+      m_jointSensors;
 
-    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_ForceFeedbackActuators;
+  std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>>
+      m_ForceFeedbackActuators;
 
-    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_VibroTactileActuators;
-
+  std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>>
+      m_VibroTactileActuators;
 
 public:
+  GloveWearableImpl();
 
-    GloveWearableImpl();
+  ~GloveWearableImpl();
 
-    ~GloveWearableImpl();
+  bool updateDevice();
 
-    bool updateDevice();
+  bool configure(const yarp::os::Searchable &config, const std::string &name,
+                 const bool &rightHand);
 
-    bool configure (const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
+  bool createWearableDataVectors();
 
-    bool createWearableDataVectors();
+  bool getSenseGloveHumanJointValues(std::vector<double> &values);
 
-    bool getSenseGloveHumanJointValues(std::vector<double>& values);
+  bool getSenseGloveImuValues(std::vector<double> &values);
 
+  bool setSenseGloveForceFeedbackValues(std::vector<double> &values);
 
-    bool getSenseGloveImuValues(std::vector<double>& values);
-
-
-    bool setSenseGloveForceFeedbackValues( std::vector<double>& values);
-
-    bool setSenseGloveVibroTactileValues(std::vector<double>& values);
-
-
+  bool setSenseGloveVibroTactileValues(std::vector<double> &values);
 };
-
 
 #endif
