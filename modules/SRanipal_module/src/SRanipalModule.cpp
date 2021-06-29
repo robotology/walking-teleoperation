@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string>
+#include <algorithm>
 #include <thread>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/IControlMode.h>
@@ -185,7 +186,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             }
             if (m_iPos)
             {
-                ok &= m_iPos->setRefSpeed(0, 50.0); // max velocity that doesn't give problems
+                ok &= m_iPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
                 ok &= m_iPos->setRefAcceleration(0, std::numeric_limits<double>::max());
             }
             if (!ok)
@@ -200,7 +201,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
     if (m_useLip)
     {
-        output = ViveSR::anipal::Initial(ViveSR::anipal::Lip::ANIPAL_TYPE_LIP, NULL);
+        output = ViveSR::anipal::Initial(ViveSR::anipal::Lip::ANIPAL_TYPE_LIP, NULL); //LIP V1 works better in detecting the smile
         if (output != ViveSR::Error::WORK) {
             yError("[SRanipalModule::configure] Failed to initialize Lip engine [%d - %s].", output, errorCodeToString(output));
             return false;
@@ -229,8 +230,8 @@ bool SRanipalModule::updateModule()
     std::lock_guard<std::mutex> lock(m_mutex);
 
     ViveSR::anipal::Eye::EyeData_v2 eye_data_v2;
-    ViveSR::anipal::Lip::LipData lip_data_v2;
-    lip_data_v2.image = m_lipImage;
+    ViveSR::anipal::Lip::LipData lip_data; //The lip data V1 works better in detecting the smile
+    lip_data.image = m_lipImage;
 
     int result = ViveSR::Error::WORK;
     if (m_useEye) {
@@ -267,24 +268,24 @@ bool SRanipalModule::updateModule()
     }
 
     if (m_useLip) {
-        result = ViveSR::anipal::Lip::GetLipData(&lip_data_v2);
+        result = ViveSR::anipal::Lip::GetLipData(&lip_data);
         if (result == ViveSR::Error::WORK) {
             std::string mouthExpression = "neu";
             using namespace ViveSR::anipal::Lip;
-            if ((lip_data_v2.prediction_data.blend_shape_weight[Jaw_Open] > m_lipExpressionThreshold) ||
-                (lip_data_v2.prediction_data.blend_shape_weight[Mouth_O_Shape] > m_lipExpressionThreshold))
+            if ((lip_data.prediction_data.blend_shape_weight[Jaw_Open] > m_lipExpressionThreshold) ||
+                (lip_data.prediction_data.blend_shape_weight[Mouth_O_Shape] > m_lipExpressionThreshold))
             {
                 mouthExpression = "sur";
             }
-            else if ((lip_data_v2.prediction_data.blend_shape_weight[Mouth_Smile_Left] > m_lipExpressionThreshold) ||
-                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Smile_Right] > m_lipExpressionThreshold))
+            else if ((lip_data.prediction_data.blend_shape_weight[Mouth_Smile_Left] > m_lipExpressionThreshold) ||
+                     (lip_data.prediction_data.blend_shape_weight[Mouth_Smile_Right] > m_lipExpressionThreshold))
             {
                 mouthExpression = "hap";
             }
-            else if ((lip_data_v2.prediction_data.blend_shape_weight[Mouth_Sad_Left] > m_lipExpressionThreshold) ||
-                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Sad_Right] > m_lipExpressionThreshold) ||
-                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Pout] > m_lipExpressionThreshold) || 
-                     (lip_data_v2.prediction_data.blend_shape_weight[Mouth_Ape_Shape] > m_lipExpressionThreshold))
+            else if ((lip_data.prediction_data.blend_shape_weight[Mouth_Sad_Left] > m_lipExpressionThreshold) ||
+                     (lip_data.prediction_data.blend_shape_weight[Mouth_Sad_Right] > m_lipExpressionThreshold) ||
+                     (lip_data.prediction_data.blend_shape_weight[Mouth_Pout] > m_lipExpressionThreshold) || 
+                     (lip_data.prediction_data.blend_shape_weight[Mouth_Ape_Shape] > m_lipExpressionThreshold))
             {
                 mouthExpression = "sad";
             }
@@ -293,7 +294,7 @@ bool SRanipalModule::updateModule()
 
             yarp::sig::FlexImage& outputImage = m_lipImagePort.prepare();
             outputImage.setPixelCode(VOCAB_PIXEL_MONO);
-            outputImage.setExternal(lip_data_v2.image, 800, 400);
+            outputImage.setExternal(lip_data.image, 800, 400);
             m_lipImagePort.write();
         }
     }
