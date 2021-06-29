@@ -26,12 +26,16 @@ class SRanipalModule : public yarp::os::RFModule
     char m_lipImage[800 * 400];
     bool m_useEye;
     bool m_useLip;
+    bool m_useRawEyelids;
     double m_period;
     double m_lipExpressionThreshold;
     double m_eyeWideSurprisedThreshold;
     double m_eyeOpenPrecision;
+    int m_rawEyelidsCloseValue;
+    int m_rawEyelidsOpenValue;
     int m_eyeOpenLevel{-1};
     yarp::os::RpcClient m_emotionsOutputPort; /** The output port to control the face expressions. **/
+    yarp::os::BufferedPort<yarp::os::Bottle> m_rawEyelidsOutputPort;
     yarp::os::BufferedPort<yarp::sig::FlexImage> m_lipImagePort;
     yarp::dev::PolyDriver m_poly;
     yarp::dev::IPositionControl* m_iPos{nullptr};
