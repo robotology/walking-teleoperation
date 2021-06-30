@@ -35,6 +35,7 @@ private:
 
     /** Minimum jerk trajectory smoother for the desired head joints */
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_headTrajectorySmoother{nullptr};
+    yarp::sig::Vector m_desiredNeckJointsBeforeSmoothing;
 
     // In order to understand the transform defined the following frames has to be defined
     // oculusInertial frame: it is the inertial frame of the oculus and it is placed in the
@@ -44,9 +45,46 @@ private:
     //               rigidly attached to the user. In details the oculusInertial frame and
     //               the teleoperation frame differs for a rotation along the Z axis.
     // headOculus frame: frame attached to the oculus head.
-    iDynTree::Rotation m_oculusInertial_R_teleopFrame;
     iDynTree::Rotation m_oculusInertial_R_headOculus;
     iDynTree::Rotation m_teleopFrame_R_headOculus;
+
+    double m_playerOrientation{0};
+
+    /**
+     * Evaluate the inverse kinematics of the head
+     * Further details on the joints name can be found in
+     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
+     * @param chest_R_head is the rotation matrix of the head with respect the chest frame
+     * @param neckPitch neck pitch angle expressed in radiant
+     * @param neckRoll neck roll angle expressed in radiant
+     * @param neckYaw neck yaw angle expressed in radiant
+     */
+    static void inverseKinematics(const iDynTree::Rotation& chest_R_head,
+                                  double& neckPitch,
+                                  double& neckRoll,
+                                  double& neckYaw);
+
+    static void inverseKinematicsXZY(const iDynTree::Rotation& chest_R_head,
+                                     double& neckPitch,
+                                     double& neckRoll,
+                                     double& neckYaw);
+
+    /**
+     * Evaluate the forward kinematics of the head
+     * Further details on the joints name can be found in
+     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
+     * @param neckPitch neck pitch angle expressed in radiant
+     * @param neckRoll neck roll angle expressed in radiant
+     * @param neckYaw neck yaw angle expressed in radiant
+     * @return rotation matrix of the head with respect the chest frame
+     */
+    static iDynTree::Rotation
+    forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
+
+    /**
+     * Smooth the neck joints before sending them to the robot
+     */
+    void smoothNeckJointValues();
 
 public:
     HeadRetargeting();
@@ -75,35 +113,11 @@ public:
     void setDesiredHeadOrientation(const yarp::sig::Matrix& oculusInertial_T_headOculus);
 
     /**
-     * Evaluate the inverse kinematics of the head
-     * Further details on the joints name can be found in
-     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
-     * @param chest_R_head is the rotation matrix of the head with respect the chest frame
-     * @param neckPitch neck pitch angle expressed in radiant
-     * @param neckRoll neck roll angle expressed in radiant
-     * @param neckYaw neck yaw angle expressed in radiant
+     * Set the desired head orientation from OpenXr.
+     * @param oculusInertial_T_headOculus is the homogeneous transformation between the OpenXR
+     * inertial frame and the OpenXr head frame
      */
-    static void inverseKinematics(const iDynTree::Rotation& chest_R_head,
-                                  double& neckPitch,
-                                  double& neckRoll,
-                                  double& neckYaw);
-
-    /**
-     * Evaluate the forward kinematics of the head
-     * Further details on the joints name can be found in
-     * http://wiki.icub.org/wiki/ICub_Model_naming_conventions#Joints
-     * @param neckPitch neck pitch angle expressed in radiant
-     * @param neckRoll neck roll angle expressed in radiant
-     * @param neckYaw neck yaw angle expressed in radiant
-     * @return rotation matrix of the head with respect the chest frame
-     */
-    static iDynTree::Rotation
-    forwardKinematics(const double& neckPitch, const double& neckRoll, const double& neckYaw);
-
-    /**
-     * Evaluate the neck joints according to the desired head pose
-     */
-    void evalueNeckJointValues();
+    void setDesiredHeadOrientationFromOpenXr(const yarp::sig::Matrix& openXrInertial_T_headOpenXr);
 
     /**
      * Set the neck desired joints values

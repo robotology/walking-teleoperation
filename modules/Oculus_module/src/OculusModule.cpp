@@ -23,6 +23,29 @@
 
 #include <functional>
 
+Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>
+getRotation(yarp::sig::Matrix& m)
+{
+
+    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topLeftCorner<3,3>();
+}
+
+auto getPosition(yarp::sig::Matrix& m)
+{
+
+    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topRightCorner<3,1>();
+}
+
+yarp::sig::Matrix identitySE3()
+{
+    yarp::sig::Matrix m;
+    m.resize(4, 4);
+    getRotation(m).setIdentity();
+    getPosition(m).setZero();
+    m(3,3) = 1;
+    return m;
+}
+
 struct OculusModule::Impl
 {
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_NeckJointsPreparationSmoother{nullptr};
@@ -123,9 +146,10 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
         return false;
     }
 
-    m_oculusRoot_T_lOculus.resize(4, 4);
-    m_oculusRoot_T_rOculus.resize(4, 4);
-    m_oculusRoot_T_headOculus.resize(4, 4);
+    m_oculusRoot_T_lOculus = identitySE3();
+    m_oculusRoot_T_rOculus = identitySE3();
+    m_oculusRoot_T_headOculus = identitySE3();
+    m_openXrInitialAlignement = identitySE3();
 
     return true;
 }
@@ -297,6 +321,16 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     m_useSenseGlove = generalOptions.check("useSenseGlove", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses SenseGlove: " << m_useSenseGlove;
+
+    m_useOpenXr = generalOptions.check("useOpenXr", yarp::os::Value(false)).asBool();
+    yInfo() << "Teleoperation uses OpenXr: " << m_useOpenXr;
+
+    if(m_useOpenXr && (!m_useIFeel && !m_useXsens))
+    {
+        yError() << "[OculusModule::configure] You cannot use OpenXr without xsens of iFeel. "
+                    "This feature will be implemented in the future.";
+        return false;
+    }
 
     yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
     if (!configureOculus(oculusOptions))
@@ -543,6 +577,14 @@ bool OculusModule::getTransforms()
 
         if (!m_frameTransformInterface->frameExists(m_headFrameName))
         {
+
+            if (m_useOpenXr)
+            {
+                yError() << "[OculusModule::getTransforms] If OpenXr is used the head transform "
+                            "must be provided by the transform server.";
+                return false;
+            }
+
             // head
             // get head orientation
             yarp::os::Bottle* desiredHeadOrientation = NULL;
@@ -556,7 +598,7 @@ bool OculusModule::getTransforms()
 
                 // Notice that the data coming from the port are written in the following order:
                 // [ pitch, -roll, yaw].
-                iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3)
+                getRotation(m_oculusRoot_T_headOculus)
                     = iDynTree::toEigen(iDynTree::Rotation::RPY(-desiredHeadOrientationVector(1),
                                                                 desiredHeadOrientationVector(0),
                                                                 desiredHeadOrientationVector(2)));
@@ -568,13 +610,12 @@ bool OculusModule::getTransforms()
 
             // get head position
             yarp::os::Bottle* desiredHeadPosition = NULL;
-            iDynTree::Vector3 desiredHeadPositionVector;
             desiredHeadPosition = m_oculusPositionPort.read(false);
             if (desiredHeadPosition != NULL)
             {
                 for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
                 {
-                    desiredHeadPositionVector(i) = desiredHeadPosition->get(i).asDouble();
+                    getPosition(m_oculusRoot_T_headOculus)(i) = desiredHeadPosition->get(i).asDouble();
                 }
 
                 // the data coming from oculus vr is with the following order:
@@ -584,9 +625,7 @@ bool OculusModule::getTransforms()
                 //            iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 3, 3, 1)
                 //                = iDynTree::toEigen(desiredHeadPositionVector);
 
-                m_oculusHeadsetPoseInertial[0] = desiredHeadPositionVector(0);
-                m_oculusHeadsetPoseInertial[1] = desiredHeadPositionVector(1);
-                m_oculusHeadsetPoseInertial[2] = desiredHeadPositionVector(2);
+
             }
 
         } else
@@ -598,8 +637,25 @@ bool OculusModule::getTransforms()
                          << m_headFrameName << " to " << m_rootFrameName << "transformation";
                 return false;
             }
+
+             if (m_useOpenXr)
+             {
+                 iDynTree::toEigen(m_oculusRoot_T_headOculus)
+                     = iDynTree::toEigen(m_openXrInitialAlignement) *//This is to remove any initial misplacement and rotations around gravity
+                       iDynTree::toEigen(m_oculusRoot_T_headOculus) ;
+             }
+
+            iDynTree::Rotation temp;
+            iDynTree::toEigen(temp) = iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3);
+
+            temp.getRPY(m_oculusHeadsetPoseInertial[3], m_oculusHeadsetPoseInertial[4], m_oculusHeadsetPoseInertial[5]);
         }
     }
+
+    // m_oculusHeadsetPoseInertial is a 6d std::vector here I'm getting the first three elements
+    Eigen::Map<Eigen::Vector3d>(m_oculusHeadsetPoseInertial.data())
+        = getPosition(m_oculusRoot_T_headOculus);
+
     if (!m_useXsens && !m_useIFeel)
     {
 
@@ -687,8 +743,14 @@ bool OculusModule::updateModule()
         if (!m_useXsens)
         {
             m_head->setPlayerOrientation(m_playerOrientation);
-            m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
-            m_head->evalueNeckJointValues();
+            if (m_useOpenXr)
+            {
+                m_head->setDesiredHeadOrientationFromOpenXr(m_oculusRoot_T_headOculus);
+            }
+            else
+            {
+                m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
+            }
             // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
             // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
             if (m_moveRobot)
@@ -818,7 +880,7 @@ bool OculusModule::updateModule()
             yInfo() << "[OculusModule::updateModule] stop";
             return false;
         }
-        
+
 #ifdef ENABLE_LOGGER
         if (m_enableLogger)
         {
@@ -932,6 +994,43 @@ bool OculusModule::updateModule()
 
         if (buttonMapping > 0)
         {
+            if (m_useOpenXr)
+            {
+                if (!m_frameTransformInterface->frameExists(m_headFrameName))
+                {
+                    yError() << "[OculusModule::updateModule] The frame named " << m_headFrameName
+                             << " does not exist.";
+                    yError() << "[OculusModule::updateModule] I will not start the walking. Please "
+                                "try to start again.";
+                    return true;
+                }
+
+                yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
+                if (!m_frameTransformInterface->getTransform(
+                        m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
+                {
+                    yError() << "[OculusModule::updateModule] Unable to evaluate the "
+                             << m_headFrameName << " to " << m_rootFrameName << "transformation";
+                    yError() << "[OculusModule::updateModule] I will not start the walking. Please "
+                                "try to start again.";
+                    return true;
+                }
+
+                // get only the yaw axis
+                iDynTree::Rotation tempRot;
+                iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
+                double yaw = 0;
+                double dummy = 0;
+                tempRot.getRPY(dummy, yaw, dummy);
+
+                iDynTree::Transform tempTransform;
+                tempTransform.setRotation(iDynTree::Rotation::RotY(yaw)); //We remove only the initial rotation of the person head around gravity.
+                tempTransform.setPosition(iDynTree::make_span(getPosition(openXrHeadInitialTransform))); //We remove the initial position between the head and the reference frame.
+
+                 iDynTree::toEigen(m_openXrInitialAlignement)
+                     = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+            }
+
             if (m_useVirtualizer)
             {
                 // not sure if here causes the problem of hand rotation, check it
@@ -947,6 +1046,9 @@ bool OculusModule::updateModule()
                 cmd.addString("startWalking");
                 m_rpcWalkingClient.write(cmd, outcome);
             }
+
+
+
             // if(outcome.get(0).asBool())
             m_state = OculusFSM::Running;
             yInfo() << "[OculusModule::updateModule] start the robot";

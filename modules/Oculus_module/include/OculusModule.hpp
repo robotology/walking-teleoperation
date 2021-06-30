@@ -79,6 +79,7 @@ private:
     bool m_useVirtualizer; /**< True if the virtualizer is used in the retargeting */
     bool m_useXsens; /**< True if the Xsens is used in the retargeting */
     bool m_useIFeel; /**< True if the iFeel is used in the retargeting */
+    bool m_useOpenXr; /**< True if OpenXr is used in the retargeting */
     bool m_useSenseGlove; /**< True if the SenseGlove is used in the retargeting */
     bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
                          (default :: true)*/
@@ -139,11 +140,13 @@ private:
     yarp::sig::Matrix m_oculusRoot_T_lOculus;
     yarp::sig::Matrix m_oculusRoot_T_rOculus;
     yarp::sig::Matrix m_oculusRoot_T_headOculus;
+    yarp::sig::Matrix m_openXrInitialAlignement;
+
     std::vector<double> m_oculusHeadsetPoseInertial;
 
-    double m_playerOrientation; /**< Player orientation (read by the Virtualizer)
+    double m_playerOrientation{0}; /**< Player orientation (read by the Virtualizer)
                                    only yaw. */
-    double m_playerOrientationOld; /**< previous updated Player orientation (read by the
+    double m_playerOrientationOld{0}; /**< previous updated Player orientation (read by the
                                    Virtualizer) only yaw. */
     double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
