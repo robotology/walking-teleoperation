@@ -272,7 +272,7 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         yError() << "[configure] Unable to get a string from a searchable";
         return false;
     }
-    if (!m_rpcPort.open("/" + getName() + portName))
+    if (!m_robotGoalPort.open("/" + getName() + portName))
     {
         yError() << "[configure] " << portName << " port already open.";
         return false;
@@ -340,7 +340,7 @@ double VirtualizerModule::getPeriod()
 bool VirtualizerModule::close()
 {
     // close the ports
-    m_rpcPort.close();
+    m_robotGoalPort.close();
     m_robotOrientationPort.close();
     m_playerOrientationPort.close();
     m_rpcServerPort.close();
@@ -452,11 +452,11 @@ bool VirtualizerModule::updateModule()
     yInfo() << "speed (x,y): " << x << " , " << y;
 
     // send data to the walking module
-    yarp::os::Bottle cmd, outcome;
-    cmd.addString("setGoal");
-    cmd.addDouble(x);
-    cmd.addDouble(y);
-    m_rpcPort.write(cmd, outcome);
+    yarp::sig::Vector& goal = m_robotGoalPort.prepare();
+    goal.clear();
+    goal.push_back(x);
+    goal.push_back(y);
+    m_robotGoalPort.write();
 
 
     m_oldPlayerYaw = playerYaw;
