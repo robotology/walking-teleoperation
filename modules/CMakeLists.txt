@@ -17,10 +17,6 @@ if(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule)
     add_subdirectory(FaceExpressions_module)
 endif()
 
-if(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule)
-    add_subdirectory(FaceExpressions_module)
-endif()
-
 if(WALKING_TELEOPERATION_COMPILE_SRanipalModule)
     add_subdirectory(SRanipal_module)
 endif()
