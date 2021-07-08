@@ -134,6 +134,10 @@ checkandset_dependency(HumanDynamicsEstimation)
 find_package(CybSDK QUIET)
 checkandset_dependency(CybSDK)
 
+find_package(SRanipalSDK QUIET)
+checkandset_dependency(SRanipalSDK)
+
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
+WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)
