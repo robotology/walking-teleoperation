@@ -1,0 +1,22 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Lorenzo Rapetti <lorenzo.rapetti@iit.it> -->
+
+<application>
+
+  <name>Transform Server</name>
+  <description>Transform Server device.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="lorenzo.rapetti@iit.it">Lorenzo Rapetti</author>
+  </authors>
+
+  <!-- Transform Server -->
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+
+</application>
