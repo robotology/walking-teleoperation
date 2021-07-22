@@ -93,7 +93,7 @@
   </connection>
 
   <connection>
-    <from>/virtualizer/walkingRpc</from>
+    <from>/virtualizer/goal:o</from>
     <to>/walking-coordinator/rpc</to>
   </connection>
 
