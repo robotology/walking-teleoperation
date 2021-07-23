@@ -46,7 +46,8 @@ private:
     yarp::os::Port
         m_rpcServerPort; /**< Port used to send command to the virtualizer application. */
 
-    yarp::os::RpcClient m_rpcPort; /**< RPC port. */
+    yarp::os::BufferedPort<yarp::sig::Vector> m_robotGoalPort; /**< Port used to specify the desired goal position. */
+
     yarp::os::BufferedPort<yarp::sig::Vector> m_playerOrientationPort; /**< Used to send the player
                                                                           orientation [-pi +pi]. */
     yarp::os::BufferedPort<yarp::sig::Vector> m_robotOrientationPort; /**< Used to get the robot
