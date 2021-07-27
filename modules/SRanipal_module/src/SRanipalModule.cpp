@@ -181,7 +181,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
                                 + " port.";
                 return false;
             }
-        
+
         } else
         {
             yarp::os::Property rcb_face_conf{
@@ -243,6 +243,8 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         yInfo() << "Using Lip tracking.";
     }
 
+    yInfo() << "SRanipalModule started correctly.";
+
     return true;
 }
 
@@ -265,13 +267,13 @@ bool SRanipalModule::updateModule()
         if (result == ViveSR::Error::WORK) {
             std::string leftEyeBrow = "neu";
             std::string rightEyeBrow = "neu";
-    
+
             if ((eye_data_v2.expression_data.left.eye_wide > m_eyeWideSurprisedThreshold) ||
                 (eye_data_v2.expression_data.right.eye_wide > m_eyeWideSurprisedThreshold))
             {
                 leftEyeBrow = "sur";
                 rightEyeBrow = "sur";
-            } 
+            }
 
             sendFaceExpression("leb", leftEyeBrow);
             sendFaceExpression("reb", rightEyeBrow);
@@ -324,7 +326,7 @@ bool SRanipalModule::updateModule()
             }
             else if ((lip_data.prediction_data.blend_shape_weight[Mouth_Sad_Left] > m_lipExpressionThreshold) ||
                      (lip_data.prediction_data.blend_shape_weight[Mouth_Sad_Right] > m_lipExpressionThreshold) ||
-                     (lip_data.prediction_data.blend_shape_weight[Mouth_Pout] > m_lipExpressionThreshold) || 
+                     (lip_data.prediction_data.blend_shape_weight[Mouth_Pout] > m_lipExpressionThreshold) ||
                      (lip_data.prediction_data.blend_shape_weight[Mouth_Ape_Shape] > m_lipExpressionThreshold))
             {
                 mouthExpression = "sad";
