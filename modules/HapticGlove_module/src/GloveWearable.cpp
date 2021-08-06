@@ -6,7 +6,6 @@
  * @date 2021
  */
 
-#include <GloveControlHelper.hpp>
 #include <GloveWearable.hpp>
 #include <Utils.hpp>
 #include <mutex>
