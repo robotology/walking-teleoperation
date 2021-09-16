@@ -32,7 +32,7 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --w 1024 --h 768 --stick_as_axis true --userpose true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5 --GUI_0::alpha 1.0 --hfov 59 --left-pitch-offset 0.0725 --left-yaw-offset -0.065 --right-pitch-offset 0.13 --right-yaw-offset 0.07</parameters>
+    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice openxrheadset --stick_as_axis true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5</parameters>
     <node>icub-virtualizer</node>
   </module>
   
@@ -107,7 +107,16 @@
      <parameters>--from iFeelRetargetingWalking.ini</parameters>
      <node>icub-console-gui</node>
    </module>
-
+   
+   <module>
+     <name>HapticGloveModule</name>
+     <node>icub-console-gui</node>
+   </module>
+   
+   <module>
+     <name>SRanipalModule</name>
+     <node>icub-virtualizer</node>
+   </module>
 
   <!-- Connections -->
 
@@ -134,7 +143,7 @@
 
   <connection>
     <from>/virtualizer/goal:o</from>
-    <to>/walking-coordinator/rpc</to>
+    <to>/walking-coordinator/goal:i</to>
   </connection>
 
   <connection>
@@ -194,19 +203,19 @@
 
   <connection>
     <from>/icub/camcalib/left/out</from>
-    <to>/oculus/display/left:i</to>
+    <to>/joypadDevice/Oculus/display/left:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/camcalib/right/out</from>
-    <to>/oculus/display/right:i</to>
+    <to>/joypadDevice/Oculus/display/right:i</to>
     <protocol>mjpeg</protocol>
   </connection>
   
   <connection>
     <from>/idyntree-yarp-visualizer/image</from>
-    <to>/oculus/gui_0</to>
+    <to>/joypadDevice/Oculus/gui_0</to>
     <protocol>mjpeg</protocol>
   </connection>
 
@@ -235,6 +244,11 @@
     <from>/icub/microphone/audio:o</from>
     <to>/icub-virtualizer/speakers/audio:i</to>
     <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SRanipalModule/emotions:o</from>
+    <to>/icub/face/emotions/in</to>
   </connection>
 
 
