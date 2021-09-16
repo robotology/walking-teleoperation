@@ -1,22 +1,47 @@
 <!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
 <!-- All Rights Reserved. -->
-<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
+<!-- Author: Giulio Romualdi <giulio.romualdi@iit.it> -->
 
 <application>
 
-  <name>XprizeDemoJune2021(Virtualizer iFeel SenseGlove</name>
-  <description>Application to run the ANA Avatar XPRIZE demo on June 2021.</description>
+  <name>XprizeDemo2021February</name>
+  <description>Application to run the ANA Avatar XPRIZE demo on February 2021.</description>
   <version>1.0</version>
   <authors>
-    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
+    <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
   </authors>
 
-  <!-- camera -->
+  <!-- Modules -->
+  <!-- icub-head -->
+
   <module>
     <name>yarpdev</name>
     <parameters> --from camera/ServerGrabberDualDragon.ini --split true</parameters>
     <node>icub-head</node>
   </module>
+
+  <module>
+    <name>WalkingModule</name>
+    <node>icub-head</node>
+    <parameters>--from dcm_walking_joint_retargeting.ini</parameters>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <node>icub-head</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
+    <node>icub-head</node>
+    <dependencies>
+      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
+    </dependencies>
+  </module>
+
+  <!-- icub-console -->
 
   <module>
     <name>camCalibWithPose</name>
@@ -30,32 +55,16 @@
     <node>icub-console</node>
   </module>
 
+  <!-- icub-virtualizer -->
   <module>
     <name>yarpdev</name>
-    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice openxrheadset --stick_as_axis true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5</parameters>
+    <parameters> --device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice ovrheadset --sticks 0  --tfDevice transformClient --tfLocal /oculustf --tfRemote /transformServer --tf_head_frame headoculus --tf_left_hand_frame loculus --tf_right_hand_frame roculus --tf_root_frame oculusworld --stick_as_axis true --userpose true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5 --GUI_0::alpha 1.0 --hfov 59 --left-pitch-offset 0.0725 --left-yaw-offset -0.065 --right-pitch-offset 0.13 --right-yaw-offset 0.07</parameters>
     <node>icub-virtualizer</node>
   </module>
-  
-  <module>
-     <name>idyntree-yarp-visualizer</name>
-     <node>icub-console-gui</node>
-  </module>
-
-  <!-- audio -->
-  
-    <module>
-    <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
-    <node>icub-head</node>
-  </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
-    <node>icub-head</node>
-    <dependencies>
-      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
-    </dependencies>
+    <name>VirtualizerModule</name>
+    <node>icub-virtualizer</node>
   </module>
 
   <module>
@@ -73,21 +82,7 @@
     </dependencies>
   </module>
 
-
-
-
-  <!-- Modules -->
-  <module>
-    <name>WalkingModule</name>
-    <node>icub-head</node>
-    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
-  </module>
-  
-
-  <module>
-    <name>VirtualizerModule</name>
-    <node>icub-virtualizer</node>
-  </module>
+  <!-- icub-console-gui -->
 
   <module>
     <name>OculusRetargetingModule</name>
@@ -101,26 +96,27 @@
     </dependencies>
   </module>
 
-  <!-- Whole Body Retargeting using Xsens-->
    <module>
      <name>XsensRetargetingModule</name>
-     <parameters>--from iFeelRetargetingWalking.ini</parameters>
      <node>icub-console-gui</node>
    </module>
-   
-   <module>
-     <name>HapticGloveModule</name>
-     <node>icub-console-gui</node>
-   </module>
-   
-   <module>
-     <name>SRanipalModule</name>
-     <node>icub-virtualizer</node>
-   </module>
+
+  <module>
+    <name>HapticGloveModule</name>
+    <node>icub-console-gui</node>
+  </module>
+<!-- This module can be preliminarily found at https://github.com/S-Dafarra/dyn-visualizer -->
+  <module>
+    <name>dyn-visualizer</name>
+    <node>icub-console-gui</node>
+  </module>
+
+  <module>
+    <name>FaceExpressionsRetargetingModule</name>
+    <node>icub-console-gui</node>
+  </module>
 
   <!-- Connections -->
-
-  <!-- Virtualizer and Oculus -->
   <connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/virtualizer/robotOrientation:i</to>
@@ -143,7 +139,7 @@
 
   <connection>
     <from>/virtualizer/goal:o</from>
-    <to>/walking-coordinator/goal:i</to>
+    <to>/walking-coordinator/rpc</to>
   </connection>
 
   <connection>
@@ -151,17 +147,6 @@
     <to>/oculusRetargeting/playerOrientation:i</to>
   </connection>
 
-  <connection>
-    <from>/oculus/headpose/orientation:o</from>
-    <to>/oculusRetargeting/oculusOrientation:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/position:o</from>
-    <to>/oculusRetargeting/oculusPosition:i</to>
-  </connection>
-
-  
   <!-- Camera-->
   <connection>
     <from>/icub/cam/left</from>
@@ -188,14 +173,12 @@
   </connection>
 
   <connection>
-    <!-- <from>/icub/inertial</from> -->
     <from>/oculusRetargeting/imagesOrientation:o</from>
     <to>/icub/camcalib/left/imu/in</to>
     <protocol>udp</protocol>
   </connection>
 
   <connection>
-    <!-- <from>/icub/inertial</from> -->
     <from>/oculusRetargeting/imagesOrientation:o</from>
     <to>/icub/camcalib/right/imu/in</to>
     <protocol>udp</protocol>
@@ -203,38 +186,32 @@
 
   <connection>
     <from>/icub/camcalib/left/out</from>
-    <to>/joypadDevice/Oculus/display/left:i</to>
+    <to>/oculus/display/left:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/camcalib/right/out</from>
-    <to>/joypadDevice/Oculus/display/right:i</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-  
-  <connection>
-    <from>/idyntree-yarp-visualizer/image</from>
-    <to>/joypadDevice/Oculus/gui_0</to>
+    <to>/oculus/display/right:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
-    <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
+    <to>/XsensRetargeting/HumanStateWrapper/state:i</to>
   </connection>
 
   <connection>
-    <from>/iFeelRetargeting/jointPosition:o</from>
+    <from>/XsensRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
   </connection>
 
   <connection>
-    <from>/iFeelRetargeting/CoM:o</from>
+    <from>/XsensRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
   </connection>
-  
-    <connection>
+
+  <connection>
     <from>/icub-virtualizer/microphone/audio:o</from>
     <to>/icub/speakers/audio:i</to>
     <protocol>fast_tcp</protocol>
@@ -247,9 +224,19 @@
   </connection>
 
   <connection>
-    <from>/SRanipalModule/emotions:o</from>
-    <to>/icub/face/emotions/in</to>
+    <from>/visualizerImage</from>
+    <to>/oculus/gui_0</to>
+    <protocol>mjpeg</protocol>
   </connection>
 
+  <connection>
+    <from>/icub-virtualizer/microphone/audio:o</from>
+    <to>/face_expressions_from_mic/in</to>
+  </connection>
+
+  <connection>
+    <from>/face_expressions_from_mic/emotions:o</from>
+    <to>/icub/face/emotions/in</to>
+  </connection>
 
 </application>
