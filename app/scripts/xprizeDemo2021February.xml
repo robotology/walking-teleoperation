@@ -4,8 +4,8 @@
 
 <application>
 
-  <name>Xrprize Demo (Virtualizer Xsens SenseGlove)</name>
-  <description>Application to run the ANA Avatar XPRIZE demo.</description>
+  <name>XrprizeDemoFeb2021(Virtualizer Xsens SenseGlove)</name>
+  <description>Application to run the ANA Avatar XPRIZE demo on February 2021.</description>
   <version>1.0</version>
   <authors>
     <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>

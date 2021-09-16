@@ -4,8 +4,8 @@
 
 <application>
 
-  <name>Xprize_Demo (walking Virtualizer iFeel)</name>
-  <description>2D-DCM walking application.</description>
+  <name>XprizeDemoJune2021(Virtualizer iFeel SenseGlove</name>
+  <description>Application to run the ANA Avatar XPRIZE demo on June 2021.</description>
   <version>1.0</version>
   <authors>
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
