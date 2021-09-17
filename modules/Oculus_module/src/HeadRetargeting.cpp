@@ -64,6 +64,8 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head,
     return;
 }
 
+// This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
+// Section 2.2
 void HeadRetargeting::inverseKinematicsXZY(const iDynTree::Rotation &chest_R_head,
                                            double &neckPitch,
                                            double &neckRoll,
@@ -217,6 +219,9 @@ void HeadRetargeting::setDesiredHeadOrientationFromOpenXr(const yarp::sig::Matri
     // desiredNeckJoint(0) = neckPitch, the angle around X, with X pointing right
     // desiredNeckJoint(1) = neckRoll, the angle around Z, with Z pointing backward
     // desiredNeckJoint(2) = neckYaw, the angle around Y, with Y pointing up
+    // The kinematic chain from the chest to the neck is composed of the pitch, roll, and yaw angles, in this order. 
+    // The neck pitch axis is aligned with the x axis of the reference frame used by openxr, the roll with the z axis,
+    // and the yaw with the y axis. Hence, we need to find the Euler angles corresponding to R_x * R_z * R_y.
     inverseKinematicsXZY(
         m_teleopFrame_R_headOculus, m_desiredNeckJointsBeforeSmoothing(0),
                                     m_desiredNeckJointsBeforeSmoothing(1),
