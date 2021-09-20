@@ -64,6 +64,39 @@ void HeadRetargeting::inverseKinematics(const iDynTree::Rotation& chest_R_head,
     return;
 }
 
+// This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
+// Section 2.2
+void HeadRetargeting::inverseKinematicsXZY(const iDynTree::Rotation &chest_R_head,
+                                           double &neckPitch,
+                                           double &neckRoll,
+                                           double &neckYaw)
+{
+    if (chest_R_head(0,1) < +1.0)
+    {
+        if (chest_R_head(0, 1) > -1.0)
+        {
+            neckRoll  = std::asin(-chest_R_head(0, 1)); //The roll is thetaZ
+            neckPitch = std::atan2(chest_R_head(2, 1), chest_R_head(1, 1)); //The pitch is thetaX
+            neckYaw   = std::atan2(chest_R_head(0, 2), chest_R_head(0, 0)); //The yaw is thetay
+        }
+        else
+        {
+            neckRoll  = M_PI/2.0;
+            neckPitch = -std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+            neckYaw   = 0.0;
+        }
+    }
+    else
+    {
+        neckRoll  = -M_PI/2.0;
+        neckPitch = std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+        neckYaw   = 0.0;
+    }
+
+    // minus due to the joints mechanism of the iCub neck
+    neckRoll = -neckRoll;
+}
+
 iDynTree::Rotation HeadRetargeting::forwardKinematics(const double& neckPitch,
                                                       const double& neckRoll,
                                                       const double& neckYaw)
@@ -137,14 +170,17 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
         headDoFs, samplingTime, preparationSmoothingTime, neckJointsFbk);
     pImpl->m_preparationJointReferenceValues = preparationJointReferenceValues;
 
+    m_playerOrientation = 0;
+
+    m_desiredNeckJointsBeforeSmoothing.resize(3);
+
     return true;
 }
 
 void HeadRetargeting::setPlayerOrientation(const double& playerOrientation)
 {
-    // notice in this case the real transformation is rotx(-pi) * rotz(playerOrientation) * rotx(pi)
-    // which is equal to rotz(-playerOrietation);
-    m_oculusInertial_R_teleopFrame = iDynTree::Rotation::RotZ(-playerOrientation);
+    // The orientation coming from the virtualizer is around an axis pointing down
+    m_playerOrientation = -playerOrientation;
 }
 
 void HeadRetargeting::setDesiredHeadOrientation(
@@ -153,6 +189,45 @@ void HeadRetargeting::setDesiredHeadOrientation(
     // get the rotation matrix
     iDynTree::toEigen(m_oculusInertial_R_headOculus)
         = iDynTree::toEigen(oculusInertial_T_headOculus).block(0, 0, 3, 3);
+
+    m_teleopFrame_R_headOculus
+        = iDynTree::Rotation::RotZ(m_playerOrientation).inverse() * m_oculusInertial_R_headOculus;
+
+    // notice here the following assumption is done:
+    // desiredNeckJoint(0) = neckPitch
+    // desiredNeckJoint(1) = neckRoll
+    // desiredNeckJoint(2) = neckYaw
+    inverseKinematics(
+        m_teleopFrame_R_headOculus, m_desiredNeckJointsBeforeSmoothing(0),
+                                    m_desiredNeckJointsBeforeSmoothing(1),
+                                    m_desiredNeckJointsBeforeSmoothing(2));
+
+    smoothNeckJointValues();
+}
+
+void HeadRetargeting::setDesiredHeadOrientationFromOpenXr(const yarp::sig::Matrix &openXrInertial_T_headOpenXr)
+{
+    // get the rotation matrix
+    iDynTree::toEigen(m_oculusInertial_R_headOculus)
+        = iDynTree::toEigen(openXrInertial_T_headOpenXr).block(0, 0, 3, 3);
+
+    m_teleopFrame_R_headOculus
+        = iDynTree::Rotation::RotY(m_playerOrientation).inverse() //With OpenXr the Y is up
+            * m_oculusInertial_R_headOculus;
+
+    // notice here the following assumption is done:
+    // desiredNeckJoint(0) = neckPitch, the angle around X, with X pointing right
+    // desiredNeckJoint(1) = neckRoll, the angle around Z, with Z pointing backward
+    // desiredNeckJoint(2) = neckYaw, the angle around Y, with Y pointing up
+    // The kinematic chain from the chest to the neck is composed of the pitch, roll, and yaw angles, in this order. 
+    // The neck pitch axis is aligned with the x axis of the reference frame used by openxr, the roll with the z axis,
+    // and the yaw with the y axis. Hence, we need to find the Euler angles corresponding to R_x * R_z * R_y.
+    inverseKinematicsXZY(
+        m_teleopFrame_R_headOculus, m_desiredNeckJointsBeforeSmoothing(0),
+                                    m_desiredNeckJointsBeforeSmoothing(1),
+                                    m_desiredNeckJointsBeforeSmoothing(2));
+
+    smoothNeckJointValues();
 }
 
 bool HeadRetargeting::move()
@@ -160,23 +235,12 @@ bool HeadRetargeting::move()
     return RetargetingController::move();
 }
 
-void HeadRetargeting::evalueNeckJointValues()
+void HeadRetargeting::smoothNeckJointValues()
 {
-
-    m_teleopFrame_R_headOculus
-        = m_oculusInertial_R_teleopFrame.inverse() * m_oculusInertial_R_headOculus;
-
-    // notice here the following assumption is done:
-    // desiredNeckJoint(0) = neckPitch
-    // desiredNeckJoint(1) = neckRoll
-    // desiredNeckJoint(2) = neckYaw
-    yarp::sig::Vector desiredNeckJoint(3);
-    inverseKinematics(
-        m_teleopFrame_R_headOculus, desiredNeckJoint(0), desiredNeckJoint(1), desiredNeckJoint(2));
 
     // Notice: this can generate problems when the inverse kinematics return angles
     // near the singularity. it would be nice to implement a smoother in SO(3).
-    m_headTrajectorySmoother->computeNextValues(desiredNeckJoint);
+    m_headTrajectorySmoother->computeNextValues(m_desiredNeckJointsBeforeSmoothing);
     m_desiredJointValue = m_headTrajectorySmoother->getPos();
 }
 
