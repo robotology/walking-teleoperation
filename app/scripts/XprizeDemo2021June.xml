@@ -11,7 +11,11 @@
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
- <application>
+<application>
+   <name>transformServer</name>
+ </application>
+
+<application>
     <name>Xprize-AudioRetargeting</name>
   </application>
 

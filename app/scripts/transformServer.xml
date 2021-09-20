@@ -4,7 +4,7 @@
 
 <application>
 
-  <name>Transform Server</name>
+  <name>transformServer</name>
   <description>Transform Server device.</description>
   <version>1.0</version>
   <authors>
