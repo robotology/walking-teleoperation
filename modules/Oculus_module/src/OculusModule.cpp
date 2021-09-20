@@ -8,11 +8,11 @@
  */
 
 // YARP
+#include <yarp/dev/FrameGrabberInterfaces.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/dev/FrameGrabberInterfaces.h>
 
 #include <iDynTree/Core/EigenHelpers.h>
 #include <iDynTree/yarp/YARPConversions.h>
@@ -23,17 +23,17 @@
 
 #include <functional>
 
-Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>>
-getRotation(yarp::sig::Matrix& m)
+Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> getRotation(yarp::sig::Matrix& m)
 {
 
-    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topLeftCorner<3,3>();
+    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topLeftCorner<3, 3>();
 }
 
 auto getPosition(yarp::sig::Matrix& m)
 {
 
-    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data()).topRightCorner<3,1>();
+    return Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data())
+        .topRightCorner<3, 1>();
 }
 
 yarp::sig::Matrix identitySE3()
@@ -42,7 +42,7 @@ yarp::sig::Matrix identitySE3()
     m.resize(4, 4);
     getRotation(m).setIdentity();
     getPosition(m).setZero();
-    m(3,3) = 1;
+    m(3, 3) = 1;
     return m;
 }
 
@@ -219,7 +219,7 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     return true;
 }
 
-bool OculusModule::resetCamera(const std::string &cameraPort, const std::string &localPort)
+bool OculusModule::resetCamera(const std::string& cameraPort, const std::string& localPort)
 {
     yarp::dev::PolyDriver grabberDriver;
 
@@ -229,23 +229,26 @@ bool OculusModule::resetCamera(const std::string &cameraPort, const std::string 
     config.put("local", localPort);
 
     bool opened = grabberDriver.open(config);
-    if(!opened)
+    if (!opened)
     {
-        yError() << "[OculusModule::configure] Cannot open remote_grabber device on port " << cameraPort <<".";
+        yError() << "[OculusModule::configure] Cannot open remote_grabber device on port "
+                 << cameraPort << ".";
         return false;
     }
 
-    yarp::dev::IFrameGrabberControlsDC1394 *grabberInterface;
+    yarp::dev::IFrameGrabberControlsDC1394* grabberInterface;
 
-    if(!grabberDriver.view(grabberInterface) || !grabberInterface)
+    if (!grabberDriver.view(grabberInterface) || !grabberInterface)
     {
-        yError() << "[OculusModule::configure] RemoteGrabber does not have IFrameGrabberControlDC1394 interface, please update yarp.";
+        yError() << "[OculusModule::configure] RemoteGrabber does not have "
+                    "IFrameGrabberControlDC1394 interface, please update yarp.";
         return false;
     }
 
-    if(!grabberInterface->setResetDC1394())
+    if (!grabberInterface->setResetDC1394())
     {
-        yError() << "[OculusModule::configure] Failed to reset the camera on port " << cameraPort << ".";
+        yError() << "[OculusModule::configure] Failed to reset the camera on port " << cameraPort
+                 << ".";
         return false;
     }
 
@@ -325,14 +328,15 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_useOpenXr = generalOptions.check("useOpenXr", yarp::os::Value(false)).asBool();
     yInfo() << "Teleoperation uses OpenXr: " << m_useOpenXr;
 
-    if(m_useOpenXr && (!m_useIFeel && !m_useXsens))
+    if (m_useOpenXr && (!m_useIFeel && !m_useXsens))
     {
         yError() << "[OculusModule::configure] You cannot use OpenXr without xsens of iFeel. "
                     "This feature will be implemented in the future.";
         return false;
     }
+    std::string headsetGroup = m_useOpenXr ? "OPENXR" : "OCULUS";
 
-    yarp::os::Bottle& oculusOptions = rf.findGroup("OCULUS");
+    yarp::os::Bottle& oculusOptions = rf.findGroup(headsetGroup);
     if (!configureOculus(oculusOptions))
     {
         yError() << "[OculusModule::configure] Unable to configure the oculus";
@@ -340,7 +344,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
 
     // configure head retargeting
-    if(!m_useXsens)
+    if (!m_useXsens)
     {
         m_head = std::make_unique<HeadRetargeting>();
         yarp::os::Bottle& headOptions = rf.findGroup("HEAD_RETARGETING");
@@ -478,7 +482,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     }
     m_oculusHeadsetPoseInertial.resize(6, 0.0);
 
-    //Reset the cameras if necessary
+    // Reset the cameras if necessary
     bool resetCameras = generalOptions.check("resetCameras", yarp::os::Value(false)).asBool();
     yInfo() << "[OculusModule::configure] Reset camera: " << resetCameras;
     if (resetCameras)
@@ -487,23 +491,26 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         std::string leftCameraPort, rightCameraPort;
         if (!YarpHelper::getStringFromSearchable(generalOptions, "leftCameraPort", leftCameraPort))
         {
-            yError() << "[OculusModule::configure] resetCameras is true, but leftCameraPort is not provided.";
+            yError() << "[OculusModule::configure] resetCameras is true, but leftCameraPort is not "
+                        "provided.";
             return false;
         }
 
-        if (!YarpHelper::getStringFromSearchable(generalOptions, "rightCameraPort", rightCameraPort))
+        if (!YarpHelper::getStringFromSearchable(
+                generalOptions, "rightCameraPort", rightCameraPort))
         {
-            yError() << "[OculusModule::configure] resetCameras is true, but rightCameraPort is not provided.";
+            yError() << "[OculusModule::configure] resetCameras is true, but rightCameraPort is "
+                        "not provided.";
             return false;
         }
 
-        if (!resetCamera(leftCameraPort,"/walking-teleoperation/camera-reset/left"))
+        if (!resetCamera(leftCameraPort, "/walking-teleoperation/camera-reset/left"))
         {
             yError() << "[OculusModule::configure] Failed to reset left camera.";
             return false;
         }
 
-        if (!resetCamera(rightCameraPort,"/walking-teleoperation/camera-reset/right"))
+        if (!resetCamera(rightCameraPort, "/walking-teleoperation/camera-reset/right"))
         {
             yError() << "[OculusModule::configure] Failed to reset right camera.";
             return false;
@@ -532,7 +539,7 @@ bool OculusModule::close()
     // m_logger.reset();
 
     // close devices
-    if(!m_useXsens)
+    if (!m_useXsens)
     {
         m_head->controlHelper()->close();
     }
@@ -615,7 +622,8 @@ bool OculusModule::getTransforms()
             {
                 for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
                 {
-                    getPosition(m_oculusRoot_T_headOculus)(i) = desiredHeadPosition->get(i).asDouble();
+                    getPosition(m_oculusRoot_T_headOculus)(i)
+                        = desiredHeadPosition->get(i).asDouble();
                 }
 
                 // the data coming from oculus vr is with the following order:
@@ -624,8 +632,6 @@ bool OculusModule::getTransforms()
                 // https://developer.oculus.com/documentation/pcsdk/latest/concepts/dg-sensor/
                 //            iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 3, 3, 1)
                 //                = iDynTree::toEigen(desiredHeadPositionVector);
-
-
             }
 
         } else
@@ -638,17 +644,21 @@ bool OculusModule::getTransforms()
                 return false;
             }
 
-             if (m_useOpenXr)
-             {
-                 iDynTree::toEigen(m_oculusRoot_T_headOculus)
-                     = iDynTree::toEigen(m_openXrInitialAlignement) *//This is to remove any initial misplacement and rotations around gravity
-                       iDynTree::toEigen(m_oculusRoot_T_headOculus) ;
-             }
+            if (m_useOpenXr)
+            {
+                iDynTree::toEigen(m_oculusRoot_T_headOculus)
+                    = iDynTree::toEigen(m_openXrInitialAlignement)
+                      * // This is to remove any initial misplacement and rotations around gravity
+                      iDynTree::toEigen(m_oculusRoot_T_headOculus);
+            }
 
             iDynTree::Rotation temp;
-            iDynTree::toEigen(temp) = iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3);
+            iDynTree::toEigen(temp)
+                = iDynTree::toEigen(m_oculusRoot_T_headOculus).block(0, 0, 3, 3);
 
-            temp.getRPY(m_oculusHeadsetPoseInertial[3], m_oculusHeadsetPoseInertial[4], m_oculusHeadsetPoseInertial[5]);
+            temp.getRPY(m_oculusHeadsetPoseInertial[3],
+                        m_oculusHeadsetPoseInertial[4],
+                        m_oculusHeadsetPoseInertial[5]);
         }
     }
 
@@ -694,8 +704,7 @@ bool OculusModule::getTransforms()
 bool OculusModule::getFeedbacks()
 {
 
-
-    if(!m_useXsens)
+    if (!m_useXsens)
     {
         if (!m_head->controlHelper()->getFeedback())
         {
@@ -746,8 +755,7 @@ bool OculusModule::updateModule()
             if (m_useOpenXr)
             {
                 m_head->setDesiredHeadOrientationFromOpenXr(m_oculusRoot_T_headOculus);
-            }
-            else
+            } else
             {
                 m_head->setDesiredHeadOrientation(m_oculusRoot_T_headOculus);
             }
@@ -974,7 +982,7 @@ bool OculusModule::updateModule()
         }
     } else if (m_state == OculusFSM::InPreparation)
     {
-        if(!m_useXsens)
+        if (!m_useXsens)
         {
             if (m_moveRobot)
             {
@@ -1024,11 +1032,14 @@ bool OculusModule::updateModule()
                 tempRot.getRPY(dummy, yaw, dummy);
 
                 iDynTree::Transform tempTransform;
-                tempTransform.setRotation(iDynTree::Rotation::RotY(yaw)); //We remove only the initial rotation of the person head around gravity.
-                tempTransform.setPosition(iDynTree::make_span(getPosition(openXrHeadInitialTransform))); //We remove the initial position between the head and the reference frame.
+                tempTransform.setRotation(iDynTree::Rotation::RotY(
+                    yaw)); // We remove only the initial rotation of the person head around gravity.
+                tempTransform.setPosition(iDynTree::make_span(getPosition(
+                    openXrHeadInitialTransform))); // We remove the initial position between the
+                                                   // head and the reference frame.
 
-                 iDynTree::toEigen(m_openXrInitialAlignement)
-                     = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+                iDynTree::toEigen(m_openXrInitialAlignement)
+                    = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
             }
 
             if (m_useVirtualizer)
@@ -1047,15 +1058,12 @@ bool OculusModule::updateModule()
                 m_rpcWalkingClient.write(cmd, outcome);
             }
 
-
-
             // if(outcome.get(0).asBool())
             m_state = OculusFSM::Running;
             yInfo() << "[OculusModule::updateModule] start the robot";
             yInfo() << "[OculusModule::updateModule] Running ...";
         }
     }
-
 
     return true;
 }
