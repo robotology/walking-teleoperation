@@ -467,6 +467,18 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcOculusFSMPort_name", portName))
+    {
+        yError() << "[OculusModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_rpcOculusServer.open("/" + getName() + portName))
+    {
+        yError() << "[OculusModule::configure] " << portName << " port already open.";
+        return false;
+    }
+    attach(m_rpcOculusServer);
+
     m_playerOrientation = 0;
     m_playerOrientationOld = 0;
     m_robotYaw = 0;
@@ -552,6 +564,147 @@ bool OculusModule::close()
 
     m_joypadDevice.close();
     m_transformClientDevice.close();
+
+    m_rpcOculusServer.close();
+    m_rpcVirtualizerClient.close();
+    m_rpcWalkingClient.close();
+    m_oculusPositionPort.close();
+    m_oculusOrientationPort.close();
+    m_imagesOrientationPort.close();
+    m_playerOrientationPort.close();
+    m_rightHandPosePort.close();
+    m_leftHandPosePort.close();
+
+    return true;
+}
+
+std::string OculusModule::getStringFromOculusState(const OculusFSM state)
+{
+    switch (state)
+    {
+    case (OculusFSM::Configured):
+        return "OculusFSM::Configured";
+    case (OculusFSM::InPreparation):
+        return "OculusFSM::InPreparation";
+    case (OculusFSM::Running):
+        return "OculusFSM::Running";
+    default:
+        return "";
+    }
+    return "";
+}
+
+bool OculusModule::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
+{
+    if (command.get(0).asString() == "help")
+    {
+        reply.addVocab(yarp::os::Vocab::encode("many"));
+        reply.addString("Enter <prepare> to prepare the Oculus module. \n");
+        reply.addString("Enter <run> to run the Oculus module (only after preparing). \n");
+
+        // TODO
+    } else if (command.get(0).asString() == "prepare")
+    {
+        if (m_state == OculusFSM::Configured)
+        {
+            yarp::os::Bottle cmd, outcome;
+            if (m_moveRobot)
+            {
+                cmd.addString("prepareRobot");
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
+            m_state = OculusFSM::InPreparation;
+            yInfo() << "[OculusModule::respond] prepare the robot";
+
+            reply.addString("OK");
+        } else
+        {
+            reply.addVocab(yarp::os::Vocab::encode("many"));
+            reply.addString("Not OK \n");
+            reply.addString("The robot is in state: " + getStringFromOculusState(m_state)
+                            + ", while it should be in state: "
+                            + getStringFromOculusState(OculusFSM::Configured));
+        }
+    } else if (command.get(0).asString() == "run")
+    {
+        if (m_state == OculusFSM::InPreparation)
+        {
+            yarp::os::Bottle cmd, outcome;
+
+            if (m_useOpenXr)
+            {
+                if (!m_frameTransformInterface->frameExists(m_headFrameName))
+                {
+                    yError() << "[OculusModule::respond] The frame named " << m_headFrameName
+                             << " does not exist.";
+                    yError() << "[OculusModule::respond] I will not start the walking. Please "
+                                "try to start again.";
+                    return true;
+                }
+                yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
+                if (!m_frameTransformInterface->getTransform(
+                        m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
+                {
+                    yError() << "[OculusModule::respond] Unable to evaluate the " << m_headFrameName
+                             << " to " << m_rootFrameName << "transformation";
+                    yError() << "[OculusModule::respond] I will not start the walking. Please "
+                                "try to start again.";
+                    return true;
+                }
+
+                // get only the yaw axis
+                iDynTree::Rotation tempRot;
+                iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
+                double yaw = 0;
+                double dummy = 0;
+                tempRot.getRPY(dummy, yaw, dummy);
+
+                iDynTree::Transform tempTransform;
+                tempTransform.setRotation(
+                    iDynTree::Rotation::RotY(yaw)); // We remove only the initial rotation of
+                                                    // the person head around gravity.
+                tempTransform.setPosition(iDynTree::make_span(getPosition(
+                    openXrHeadInitialTransform))); // We remove the initial position between the
+                                                   // head and the reference frame.
+
+                iDynTree::toEigen(m_openXrInitialAlignement)
+                    = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+            }
+
+            if (m_useVirtualizer)
+            {
+                // not sure if here causes the problem of hand rotation, check it
+                // reset the player orientation of the virtualizer
+                cmd.addString("resetPlayerOrientation");
+                m_rpcVirtualizerClient.write(cmd, outcome);
+                cmd.clear();
+            }
+
+            // TODO add a visual feedback for the user
+            if (m_moveRobot)
+            {
+                cmd.addString("startWalking");
+                m_rpcWalkingClient.write(cmd, outcome);
+            }
+            // if(outcome.get(0).asBool())
+            m_state = OculusFSM::Running;
+            yInfo() << "[OculusModule::respond] start the robot";
+            yInfo() << "[OculusModule::respond] Running ...";
+
+            reply.addString("OK");
+
+        } else
+        {
+            reply.addVocab(yarp::os::Vocab::encode("many"));
+            reply.addString("Not OK \n");
+            reply.addString("The robot is in state: " + getStringFromOculusState(m_state)
+                            + ", while it should be in state: "
+                            + getStringFromOculusState(OculusFSM::InPreparation));
+        }
+    } else
+    {
+        reply.addString("Entered command is incorrect, Enter `help` to know available commands");
+    }
 
     return true;
 }

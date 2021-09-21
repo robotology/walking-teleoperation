@@ -22,6 +22,7 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/RpcClient.h>
+#include <yarp/os/RpcServer.h>
 #include <yarp/sig/Vector.h>
 
 #include <FingersRetargeting.hpp>
@@ -129,11 +130,8 @@ private:
     yarp::os::RpcClient
         m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
-    /** Port used to retrieve the human whole body joint pose. */
-    yarp::os::BufferedPort<yarp::os::Bottle> m_wholeBodyHumanJointsPort;
+    yarp::os::RpcServer m_rpcOculusServer; /**< RPC port to control Oculus FSM. */
 
-    /** Port used to retrieve the human whole body joint pose. */
-    yarp::os::BufferedPort<yarp::sig::Vector> m_wholeBodyHumanSmoothedJointsPort;
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 
@@ -244,6 +242,28 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
+
+     /**
+     * Respond to a message from the RPC port.
+     * @param command is the received message.
+     * The following message has to be a bottle with the following structure:
+     * 1. ("help");
+     * 2. ("prepare").
+     * 3. ("run")
+     * @param reply is the response of the server.
+     * 1. OK in case of success;
+     * 2. Not OK in case of failure.
+     * 3. list of available commands in case of "help" command
+     * @return true in case of success and false otherwise.
+     */
+    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) final;
+
+    /**
+     * to get the Oculus FSM in string format
+     * @param OculusFSM to get the string value
+     * @return string associated with the inpute sate
+     */
+    std::string getStringFromOculusState(const OculusFSM state);
 };
 
 inline std::string getTimeDateMatExtension()
