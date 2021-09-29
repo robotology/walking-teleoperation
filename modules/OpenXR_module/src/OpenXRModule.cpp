@@ -6,6 +6,11 @@
  * @date 2021
  */
 
+#include <functional>
+#include <iterator>
+#include <thread>
+#include <tuple>
+
 // YARP
 #include <yarp/dev/FrameGrabberInterfaces.h>
 #include <yarp/dev/IJoypadController.h>
@@ -13,6 +18,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/sig/Matrix.h>
 
 #include <iDynTree/Core/EigenHelpers.h>
 #include <iDynTree/yarp/YARPConversions.h>
@@ -20,8 +26,6 @@
 
 #include <OpenXRModule.hpp>
 #include <Utils.hpp>
-
-#include <functional>
 
 Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> getRotation(yarp::sig::Matrix& m)
 {
@@ -60,6 +64,21 @@ struct OpenXRModule::Impl
         double scaleY; /**< Scaling factor on the y axis */
         double x; /**< x value */
         double y; /**< y value */
+
+        std::vector<int> startWalkingButtonsMap;
+        std::vector<int> prepareWalkingButtonsMap;
+        std::vector<int> stopWalkingButtonsMap;
+        std::vector<int> leftFingersSqueezeButtonsMap;
+        std::vector<int> leftFingersReleaseButtonsMap;
+        std::vector<int> rightFingersSqueezeButtonsMap;
+        std::vector<int> rightFingersReleaseButtonsMap;
+
+        int xJoypadIndex; /**< Mapping of the axis related to x coordinate */
+        int yJoypadIndex; /**< Mapping of the axis related to y coordinate */
+
+        int fingersVelocityLeftIndex; /**< Index of the trigger used for squeezing the left hand */
+        int fingersVelocityRightIndex; /**< Index of the trigger used for
+                                           squeezing the right hand */
     };
     JoypadParameters joypadParameters;
 
@@ -78,6 +97,20 @@ struct OpenXRModule::Impl
     double playerOrientationThreshold;
 
     std::unique_ptr<HeadRetargeting> head; /**< Pointer to the head retargeting object. */
+    std::unique_ptr<FingersRetargeting> leftHandFingers; /**< Pointer to the left
+                                                              finger retargeting object. */
+    std::unique_ptr<FingersRetargeting> rightHandFingers; /**< Pointer to the right
+                                                               finger retargeting object. */
+    std::unique_ptr<HandRetargeting> rightHand; /**< Pointer to the right
+                                                     hand retargeting object. */
+    std::unique_ptr<HandRetargeting> leftHand; /**< Pointer to the left hand
+                                                    retargeting object. */
+
+    yarp::os::BufferedPort<yarp::sig::Vector> leftHandPosePort; /**< Left hand port pose. */
+    yarp::os::BufferedPort<yarp::sig::Vector> rightHandPosePort; /**< Right hand port pose. */
+
+    yarp::os::RpcClient rpcWalkingClient; /**< Rpc client used for sending command to the walking
+                                               controller */
 
     // transform server
     yarp::dev::PolyDriver transformClientDevice; /**< Transform client. */
@@ -87,8 +120,7 @@ struct OpenXRModule::Impl
     yarp::dev::IJoypadController* joypadControllerInterface{nullptr}; /**< joypad interface. */
 
     std::string rootFrameName; /**< Name of the root frame used in the transform server */
-    std::string headFrameName; /**< Name of the head frame used in the transform server (NOT
-                                    SUPPORTED BY YARP)*/
+    std::string headFrameName; /**< Name of the head frame used in the transform server */
     std::string leftHandFrameName; /**< Name of the left hand frame used in the transform server */
     std::string rightHandFrameName; /**< Name of the right hand
                                        frame used in the transform server */
@@ -103,6 +135,18 @@ struct OpenXRModule::Impl
     bool moveRobot{false};
     double playerOrientation{0}; /**< Player orientation (read by the Virtualizer)
                                      only yaw. */
+
+    bool leftAndRightSwapped{false};
+    std::vector<int> buttonsState;
+
+    bool isButtonStateEqualToMask(const std::vector<int>& mask)
+    {
+        auto isEqual = [](const auto& v1, const auto& v2) {
+            return (v1.size() == v2.size() && std::equal(v1.begin(), v1.end(), v2.begin()));
+        };
+
+        return isEqual(mask, this->buttonsState);
+    }
 
     void initializeNeckJointsSmoother(const unsigned actuatedDOFs,
                                       const double dT,
@@ -176,40 +220,49 @@ struct OpenXRModule::Impl
         Eigen::Map<Eigen::Vector3d>(this->openXRHeadsetPoseInertial.data())
             = getPosition(this->openXRRoot_T_headOpenXR);
 
-        // if (!m_useXsens && !m_useIFeel)
-        // {
+        if (!this->frameTransformInterface->frameExists(this->leftHandFrameName))
+        {
 
-        //     if (!m_frameTransformInterface->frameExists(m_leftHandFrameName))
-        //     {
+            yError() << "[OpenXRModule::getTransforms] No " << this->leftHandFrameName << "frame.";
+            return false;
+        }
 
-        //         yError() << "[OpenXRModule::getTransforms] No " << m_leftHandFrameName << "
-        //         frame."; return false;
-        //     }
+        if (!this->frameTransformInterface->frameExists(this->rightHandFrameName))
+        {
+            yError() << "[OpenXRModule::getTransforms] No " << this->rightHandFrameName
+                     << " frame.";
+            return false;
+        }
 
-        //     if (!m_frameTransformInterface->frameExists(m_rightHandFrameName))
-        //     {
-        //         yError() << "[OpenXRModule::getTransforms] No " << m_rightHandFrameName
-        //                  << " frame.";
-        //         return false;
-        //     }
+        if (!this->frameTransformInterface->getTransform(this->leftHandFrameName, //
+                                                         this->rootFrameName,
+                                                         this->openXRRoot_T_lOpenXR))
+        {
+            yError() << "[OpenXRModule::getTransforms] Unable to evaluate the "
+                     << this->leftHandFrameName << " to " << this->rootFrameName
+                     << "transformation";
+            return false;
+        }
 
-        //     if (!m_frameTransformInterface->getTransform(
-        //             m_leftHandFrameName, m_rootFrameName, m_oculusRoot_T_lOculus))
-        //     {
-        //         yError() << "[OpenXRModule::getTransforms] Unable to evaluate the "
-        //                  << m_leftHandFrameName << " to " << m_rootFrameName << "transformation";
-        //         return false;
-        //     }
+        if (!this->frameTransformInterface->getTransform(this->rightHandFrameName, //
+                                                         this->rootFrameName,
+                                                         this->openXRRoot_T_rOpenXR))
+        {
+            yError() << "[OpenXRModule::getTransforms] Unable to evaluate the "
+                     << this->rightHandFrameName << " to " << this->rootFrameName
+                     << "transformation";
+            return false;
+        }
 
-        //     if (!m_frameTransformInterface->getTransform(
-        //             m_rightHandFrameName, m_rootFrameName, m_oculusRoot_T_rOculus))
-        //     {
-        //         yError() << "[OpenXRModule::getTransforms] Unable to evaluate the "
-        //                  << m_rightHandFrameName << " to " << m_rootFrameName <<
-        //                  "transformation";
-        //         return false;
-        //     }
-        // }
+        // This is to remove any initial misplacement and rotations around gravity
+        iDynTree::toEigen(this->openXRRoot_T_rOpenXR)
+            = iDynTree::toEigen(this->openXRInitialAlignement)
+              * iDynTree::toEigen(this->openXRRoot_T_rOpenXR);
+
+        iDynTree::toEigen(this->openXRRoot_T_lOpenXR)
+            = iDynTree::toEigen(this->openXRInitialAlignement)
+              * iDynTree::toEigen(this->openXRRoot_T_lOpenXR);
+
         return true;
     }
 
@@ -325,30 +378,258 @@ struct OpenXRModule::Impl
         }
 
 
-        // TODO set index of joypad
+        // this vector of pointers of maps will simplify some checks later on
+        std::vector<std::vector<int>*> buttonsMap;
+        std::vector<std::vector<int>*> stateMachineButtonsMap;
+
         // set the index of the axis according to the OVRheadset yarp device
-        // bool useLeftStick = config.check("use_left", yarp::os::Value("false")).asBool();
-        // m_xJoypadIndex = useLeftStick ? 4 : 6;
-        // m_yJoypadIndex = useLeftStick ? 5 : 7;
+        //  The order of the buttons are here: https://github.com/ami-iit/yarp-device-openxrheadset/blob/b560d603bba8e50415be839d0e22b51219abbda8/src/devices/openxrheadset/OpenXrInterface.cpp#L651-L661
 
-        // m_squeezeLeftIndex = 0;
-        // m_squeezeRightIndex = 1;
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "start_walking_buttons_map",
+                                                    this->joypadParameters.startWalkingButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "start_walking_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.startWalkingButtonsMap);
+        stateMachineButtonsMap.push_back(&this->joypadParameters.startWalkingButtonsMap);
 
-        // m_releaseLeftIndex = 2;
-        // m_releaseRightIndex = 3;
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "prepare_walking_buttons_map",
+                                                    this->joypadParameters.prepareWalkingButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "prepare_walking_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.prepareWalkingButtonsMap);
+        stateMachineButtonsMap.push_back(&this->joypadParameters.prepareWalkingButtonsMap);
 
-        // m_startWalkingIndex = 4; // X button
-        // m_stopWalkingIndex = 5; // X button
-        // m_prepareWalkingIndex = 0; // A button
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "left_fingers_squeeze_buttons_map",
+                                                    this->joypadParameters.leftFingersSqueezeButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "left_fingers_squeeze_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.leftFingersSqueezeButtonsMap);
+
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "left_fingers_release_buttons_map",
+                                                    this->joypadParameters.leftFingersReleaseButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "left_fingers_release_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.leftFingersReleaseButtonsMap);
+
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "right_fingers_squeeze_buttons_map",
+                                                    this->joypadParameters.rightFingersSqueezeButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "right_fingers_squeeze_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.rightFingersSqueezeButtonsMap);
+
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "right_fingers_release_buttons_map",
+                                                    this->joypadParameters.rightFingersReleaseButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "right_fingers_release_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&this->joypadParameters.rightFingersReleaseButtonsMap);
+
+        // check if the size of all the maps are the same. If not there is a mistake in the
+        // configuration file.
+        const auto size = this->joypadParameters.rightFingersReleaseButtonsMap.size();
+        for (const auto map : buttonsMap)
+        {
+            if (size != map->size())
+            {
+                yError()
+                    << "[OpenXRModule::configureJoypad] Mismatch in the size of the buttons map. "
+                       "Please check the configuration file";
+                return false;
+            }
+        }
+
+        auto isEqual = [](const auto& v1, const auto& v2) {
+            return (v1->size() == v2->size() && std::equal(v1->begin(), v1->end(), v2->begin()));
+        };
+
+        for (auto it = stateMachineButtonsMap.cbegin(); it != stateMachineButtonsMap.cend();
+             std::advance(it, 1))
+        {
+            for (auto otherIt = std::next(it, 1); otherIt != stateMachineButtonsMap.cend();
+                 std::advance(otherIt, 1))
+            {
+                if (isEqual(*it, *otherIt))
+                {
+                    yError() << "[OpenXRModule::configureJoypad] State machine maps cannot must be "
+                                "different";
+                    return false;
+                }
+            }
+        }
+
+        // the stop button mask is the end of the prepare and start mask
+        this->joypadParameters.stopWalkingButtonsMap.resize(
+            this->joypadParameters.startWalkingButtonsMap.size());
+        for (int i = 0; i < this->joypadParameters.startWalkingButtonsMap.size(); i++)
+        {
+            this->joypadParameters.stopWalkingButtonsMap[i]
+                = (this->joypadParameters.startWalkingButtonsMap[i] > 0
+                   || this->joypadParameters.prepareWalkingButtonsMap[i] > 0)
+                      ? 1
+                      : 0;
+        }
+
+        // in the vive (yarp) we have the following axis
+        // [vive_left_trigger, vive_right_trigger, vive_left_trackpad_x, vive_left_trackpad_y,
+        // vive_right_trackpad_x, vive_right_trackpad_y]
+
+        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1;
+        this->joypadParameters.fingersVelocityRightIndex = !this->leftAndRightSwapped ? 1 : 0;
+
+
+        constexpr bool useLeftStick = true;
+        constexpr int leftXIndex = 2;
+        constexpr int leftYIndex = 3;
+        constexpr int rightXIndex = 4;
+        constexpr int rightYIndex = 5;
+
+        // truth table
+        // use left | left_and_right_swapped  | output
+        //   T      |       T                 |  use right index (F)
+        //   T      |       F                 |  use left index (T)
+        //   F      |       T                 |  use left index (T)
+        //   F      |       F                 |  use right index (F)
+        // this is the xor operator
+        // in c++ you can use !A != !B
+        this->joypadParameters.xJoypadIndex
+            = (!useLeftStick != !this->leftAndRightSwapped) ? rightXIndex : leftXIndex;
+        this->joypadParameters.yJoypadIndex
+            = (!useLeftStick != !this->leftAndRightSwapped) ? rightYIndex : leftYIndex;
+
+        // if swapped we have to swap all the maps
+        if (this->leftAndRightSwapped)
+        {
+            std::swap(this->joypadParameters.rightFingersReleaseButtonsMap,
+                      this->joypadParameters.leftFingersReleaseButtonsMap);
+            std::swap(this->joypadParameters.rightFingersSqueezeButtonsMap,
+                      this->joypadParameters.leftFingersSqueezeButtonsMap);
+            std::swap(this->joypadParameters.startWalkingButtonsMap,
+                      this->joypadParameters.prepareWalkingButtonsMap);
+        }
 
         return true;
     }
 
+    bool setLeftAndRightSwappedFlag()
+    {
+
+        auto readTransforms = [this](yarp::sig::Matrix& headOpenXR_T_leftHandOpenXR,
+                                     yarp::sig::Matrix& headOpenXR_T_rightHandOpenXR) {
+            bool ok = true;
+
+            ok = ok && this->frameTransformInterface->frameExists(this->rootFrameName);
+            ok = ok && this->frameTransformInterface->frameExists(this->headFrameName);
+            ok = ok && this->frameTransformInterface->frameExists(this->leftHandFrameName);
+            ok = ok && this->frameTransformInterface->frameExists(this->rightHandFrameName);
+
+
+            ok = ok && this->frameTransformInterface->getTransform(this->rightHandFrameName, //
+                                                                   this->headFrameName,
+                                                                   headOpenXR_T_rightHandOpenXR);
+
+            ok = ok && this->frameTransformInterface->getTransform(this->leftHandFrameName, //
+                                                                   this->headFrameName,
+                                                                   headOpenXR_T_leftHandOpenXR);
+
+            return ok;
+        };
+
+        yarp::sig::Matrix headOpenXR_T_expectedLeftHandOpenXR;
+        yarp::sig::Matrix headOpenXR_T_expectedRightHandOpenXR;
+        headOpenXR_T_expectedLeftHandOpenXR.resize(4, 4);
+        headOpenXR_T_expectedRightHandOpenXR.resize(4, 4);
+
+        // try to read the transform
+        std::size_t counter = 0;
+        constexpr unsigned int maxAttempt = 20;
+        while (!readTransforms(headOpenXR_T_expectedLeftHandOpenXR, headOpenXR_T_expectedRightHandOpenXR))
+        {
+            if (++counter == maxAttempt)
+            {
+                yError() << "[OpenXRModule::setLeftAndRightJoypad] Unable to read the "
+                            "transform client.";
+                return false;
+            }
+
+            // Sleep for some while
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+        }
+
+        // check if the left joypad is on the left and the right is on the right. If not we have to
+        // swap the content of the left and right frame name variables
+
+        // first of all we check that one joypad is on the left and the other one is on the right,
+        // The openxr frame is oriented as follows X on the right Y upward and Z backward
+        // for this reason we take the X coordinate
+        //   L       R
+        //   |       |       <----- representation of the user from the top
+        //   |---H---|              H = head L = left R = right
+        //
+        //      -|-----> x
+        //       |
+        //       |
+        //       v   z
+        const double expectedLeftXCoordinate = getPosition(headOpenXR_T_expectedLeftHandOpenXR)(0);
+        const double expectedRightXCoordinate = getPosition(headOpenXR_T_expectedRightHandOpenXR)(0);
+
+        if (expectedLeftXCoordinate * expectedRightXCoordinate > 0)
+        {
+            yError() << "[OpenXRModule::setLeftAndRightJoypad] One joypad should be on the left "
+                        "and the other one on the right";
+            return false;
+        }
+
+        // if the expectedLeftHandOpenXR x coordinate is positive, the left and the right joypad has
+        // been swapped. It is not a big deal the following flag is here for handling this case
+        // solve your hadake
+        this->leftAndRightSwapped = expectedLeftXCoordinate > 0;
+        if (this->leftAndRightSwapped)
+        {
+            std::swap(this->leftHandFrameName, this->rightHandFrameName);
+        }
+
+        return true;
+
+    }
+
     bool configureOpenXR(const yarp::os::Searchable& config, const std::string& name)
     {
-      if (!this->configureTranformClient(config, name))
+        if (!this->configureTranformClient(config, name))
         {
             yError() << "[OpenXRModule::configureOpenXR] Unable to configure the transform client.";
+            return false;
+        }
+
+        // Once the vive is stared the left and right joypad are chosen. Since the joypad are
+        // exactly the same. We should consider in the application which is the left and the right
+        // joypad
+        if (!this->setLeftAndRightSwappedFlag())
+        {
+            yError() << "[OpenXRModule::configureOpenXR] Unable to set the flag related "
+                        "to the swap of the left and right joypad.";
             return false;
         }
 
@@ -398,6 +679,67 @@ struct OpenXRModule::Impl
 
         return true;
     };
+
+    double deadzone(const double& input)
+    {
+        if (input >= 0)
+        {
+            if (input > this->joypadParameters.deadzone)
+                return (input - this->joypadParameters.deadzone)
+                       / (this->joypadParameters.fullscale - this->joypadParameters.deadzone);
+            else
+                return 0.0;
+        } else
+        {
+            if (input < -this->joypadParameters.deadzone)
+                return (input + this->joypadParameters.deadzone)
+                       / (this->joypadParameters.fullscale - this->joypadParameters.deadzone);
+            else
+                return 0.0;
+        }
+    }
+
+    double evaluateDesiredFingersVelocity(const std::vector<int>& fingersSqueezeButtonsMask,
+                                          const std::vector<int>& fingersReleaseButtonsMask,
+                                          int fingersVelocityIndex)
+    {
+        double fingersVelocity;
+        this->joypadControllerInterface->getAxis(fingersVelocityIndex, fingersVelocity);
+
+        if (fingersVelocity == 0)
+            return 0;
+
+        if (this->isButtonStateEqualToMask(fingersSqueezeButtonsMask))
+        {
+            return fingersVelocity;
+        }
+
+        if (this->isButtonStateEqualToMask(fingersReleaseButtonsMask))
+        {
+            return -fingersVelocity;
+        }
+        return 0;
+    }
+
+    std::vector<int> getDeviceButtonsState()
+    {
+        std::vector<int> buttons;
+        unsigned int buttonCount = 0;
+        this->joypadControllerInterface->getButtonCount(buttonCount);
+
+        float value;
+        for (unsigned int i = 0; i < buttonCount; i++)
+        {
+            this->joypadControllerInterface->getButton(i, value);
+
+            if (value > 0)
+                buttons.push_back(1);
+            else
+                buttons.push_back(0);
+        }
+
+        return buttons;
+    }
 };
 
 OpenXRModule::OpenXRModule()
@@ -461,72 +803,67 @@ bool OpenXRModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    // if (!m_useSenseGlove)
-    // {
-    //     // configure fingers retargeting
-    //     m_leftHandFingers = std::make_unique<FingersRetargeting>();
-    //     yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
-    //     leftFingersOptions.append(generalOptions);
-    //     if (!m_leftHandFingers->configure(leftFingersOptions, getName()))
-    //     {
-    //         yError()
-    //             << "[OpenXRModule::configure] Unable to initialize the left fingers retargeting.";
-    //         return false;
-    //     }
+    // configure fingers retargeting
+    m_pImpl->leftHandFingers = std::make_unique<FingersRetargeting>();
+    yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
+    leftFingersOptions.append(generalOptions);
+    if (!m_pImpl->leftHandFingers->configure(leftFingersOptions, getName()))
+    {
+        yError() << "[OpenXRModule::configure] Unable to initialize the left fingers retargeting.";
+        return false;
+    }
 
-    //     m_rightHandFingers = std::make_unique<FingersRetargeting>();
-    //     yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
-    //     rightFingersOptions.append(generalOptions);
-    //     if (!m_rightHandFingers->configure(rightFingersOptions, getName()))
-    //     {
-    //         yError()
-    //             << "[OpenXRModule::configure] Unable to initialize the right fingers retargeting.";
-    //         return false;
-    //     }
-    // }
+    m_pImpl->rightHandFingers = std::make_unique<FingersRetargeting>();
+    yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
+    rightFingersOptions.append(generalOptions);
+    if (!m_pImpl->rightHandFingers->configure(rightFingersOptions, getName()))
+    {
+        yError() << "[OpenXRModule::configure] Unable to initialize the right fingers retargeting.";
+        return false;
+    }
 
     // configure hands retargeting
-    // m_leftHand = std::make_unique<HandRetargeting>();
-    // yarp::os::Bottle& leftHandOptions = rf.findGroup("LEFT_HAND_RETARGETING");
-    // leftHandOptions.append(generalOptions);
-    // if (!m_leftHand->configure(leftHandOptions))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to initialize the left fingers retargeting.";
-    //     return false;
-    // }
+    m_pImpl->leftHand = std::make_unique<HandRetargeting>();
+    yarp::os::Bottle& leftHandOptions = rf.findGroup("LEFT_HAND_RETARGETING");
+    leftHandOptions.append(generalOptions);
+    if (!m_pImpl->leftHand->configure(leftHandOptions))
+    {
+        yError() << "[OpenXRModule::configure] Unable to initialize the left fingers retargeting.";
+        return false;
+    }
 
-    // m_rightHand = std::make_unique<HandRetargeting>();
-    // yarp::os::Bottle& rightHandOptions = rf.findGroup("RIGHT_HAND_RETARGETING");
-    // rightHandOptions.append(generalOptions);
-    // if (!m_rightHand->configure(rightHandOptions))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to initialize the right fingers retargeting.";
-    //     return false;
-    // }
+    m_pImpl->rightHand = std::make_unique<HandRetargeting>();
+    yarp::os::Bottle& rightHandOptions = rf.findGroup("RIGHT_HAND_RETARGETING");
+    rightHandOptions.append(generalOptions);
+    if (!m_pImpl->rightHand->configure(rightHandOptions))
+    {
+        yError() << "[OpenXRModule::configure] Unable to initialize the right fingers retargeting.";
+        return false;
+    }
 
-    // // open ports
-    // std::string portName;
-    // if (!YarpHelper::getStringFromSearchable(rf, "leftHandPosePort", portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
-    //     return false;
-    // }
-    // if (!m_leftHandPosePort.open("/" + getName() + portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to open the port " << portName;
-    //     return false;
-    // }
+    // open ports
+    std::string portName;
+    if (!YarpHelper::getStringFromSearchable(rf, "leftHandPosePort", portName))
+    {
+        yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_pImpl->leftHandPosePort.open("/" + getName() + portName))
+    {
+        yError() << "[OpenXRModule::configure] Unable to open the port " << portName;
+        return false;
+    }
 
-    // if (!YarpHelper::getStringFromSearchable(rf, "rightHandPosePort", portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
-    //     return false;
-    // }
-    // if (!m_rightHandPosePort.open("/" + getName() + portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to open the port " << portName;
-    //     return false;
-    // }
+    if (!YarpHelper::getStringFromSearchable(rf, "rightHandPosePort", portName))
+    {
+        yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_pImpl->rightHandPosePort.open("/" + getName() + portName))
+    {
+        yError() << "[OpenXRModule::configure] Unable to open the port " << portName;
+        return false;
+    }
 
     // if (!m_imagesOrientationPort.open("/" + getName() + "/imagesOrientation:o"))
     // {
@@ -550,16 +887,16 @@ bool OpenXRModule::configure(yarp::os::ResourceFinder& rf)
     //     return false;
     // }
 
-    // if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
-    //     return false;
-    // }
-    // if (!m_rpcWalkingClient.open("/" + getName() + portName))
-    // {
-    //     yError() << "[OpenXRModule::configure] " << portName << " port already open.";
-    //     return false;
-    // }
+    if (!YarpHelper::getStringFromSearchable(rf, "rpcWalkingPort_name", portName))
+    {
+        yError() << "[OpenXRModule::configure] Unable to get a string from a searchable";
+        return false;
+    }
+    if (!m_pImpl->rpcWalkingClient.open("/" + getName() + portName))
+    {
+        yError() << "[OpenXRModule::configure] " << portName << " port already open.";
+        return false;
+    }
 
     // if (!YarpHelper::getStringFromSearchable(rf, "rpcVirtualizerPort_name", portName))
     // {
@@ -641,20 +978,6 @@ bool OpenXRModule::close()
     return true;
 }
 
-// double OpenXRModule::evaluateDesiredFingersVelocity(unsigned int squeezeIndex,
-//                                                     unsigned int releaseIndex)
-// {
-//     double releaseFingersVelocity, squeezeFingersVelocity;
-//     m_joypadControllerInterface->getAxis(squeezeIndex, squeezeFingersVelocity);
-//     m_joypadControllerInterface->getAxis(releaseIndex, releaseFingersVelocity);
-
-//     if (squeezeFingersVelocity > releaseFingersVelocity)
-//         return squeezeFingersVelocity;
-//     else if (squeezeFingersVelocity < releaseFingersVelocity)
-//         return -releaseFingersVelocity;
-//     else
-//         return 0;
-// }
 
 bool OpenXRModule::updateModule()
 {
@@ -663,6 +986,8 @@ bool OpenXRModule::updateModule()
         yError() << "[OpenXRModule::updateModule] Unable to get the feedback";
         return false;
     }
+
+    m_pImpl->buttonsState = m_pImpl->getDeviceButtonsState();
 
     if (m_pImpl->state == Impl::OpenXRFSM::Running)
     {
@@ -677,8 +1002,6 @@ bool OpenXRModule::updateModule()
         m_pImpl->head->setPlayerOrientation(m_pImpl->playerOrientation);
         m_pImpl->head->setDesiredHeadOrientationFromOpenXr(m_pImpl->openXRRoot_T_headOpenXR);
 
-        // m_head->setDesiredHeadOrientation(desiredHeadOrientationVector(0),
-        // desiredHeadOrientationVector(1), desiredHeadOrientationVector(2));
         if (m_pImpl->moveRobot)
         {
             if (!m_pImpl->head->move())
@@ -687,144 +1010,119 @@ bool OpenXRModule::updateModule()
                 return false;
             }
         }
-        // if (!m_useXsens && !m_useIFeel)
-        // {
-        //     // update left hand transformation values
-        //     yarp::sig::Vector& leftHandPose = m_leftHandPosePort.prepare();
-        //     m_leftHand->setPlayerOrientation(m_playerOrientation);
-        //     m_leftHand->setHandTransform(m_oculusRoot_T_lOculus);
 
-        //     // update right hand transformation values
-        //     yarp::sig::Vector& rightHandPose = m_rightHandPosePort.prepare();
-        //     m_rightHand->setPlayerOrientation(m_playerOrientation);
-        //     m_rightHand->setHandTransform(m_oculusRoot_T_rOculus);
+        // update left hand transformation values
+        yarp::sig::Vector& leftHandPose = m_pImpl->leftHandPosePort.prepare();
+        m_pImpl->leftHand->setPlayerOrientation(m_pImpl->playerOrientation);
+        m_pImpl->leftHand->setHandTransform(m_pImpl->openXRRoot_T_lOpenXR);
 
-        //     if (m_useVirtualizer)
-        //     {
-        //         if (std::abs(m_playerOrientation - m_playerOrientationOld)
-        //             > m_playerOrientationThreshold)
-        //         {
-        //             iDynTree::Position teleopPosition = {m_oculusHeadsetPoseInertial[0],
-        //                                                  m_oculusHeadsetPoseInertial[1],
-        //                                                  m_oculusHeadsetPoseInertial[2]};
+        // update right hand transformation values
+        yarp::sig::Vector& rightHandPose = m_pImpl->rightHandPosePort.prepare();
+        m_pImpl->rightHand->setPlayerOrientation(m_pImpl->playerOrientation);
+        m_pImpl->rightHand->setHandTransform(m_pImpl->openXRRoot_T_rOpenXR);
 
-        //             m_leftHand->setPlayerPosition(teleopPosition);
-        //             m_rightHand->setPlayerPosition(teleopPosition);
-        //             m_playerOrientationOld = m_playerOrientation;
-        //         }
-        //     }
+        m_pImpl->leftHand->evaluateDesiredHandPose(leftHandPose);
+        m_pImpl->rightHand->evaluateDesiredHandPose(rightHandPose);
 
-        //     // evaluate the robot hands' pose
-        //     m_leftHand->evaluateDesiredHandPose(leftHandPose);
-        //     m_rightHand->evaluateDesiredHandPose(rightHandPose);
+        // move the robot
+        if (m_pImpl->moveRobot)
+        {
+            m_pImpl->leftHandPosePort.write();
+            m_pImpl->rightHandPosePort.write();
+        }
 
-        //     // move the robot
-        //     if (m_moveRobot)
-        //     {
-        //         m_leftHandPosePort.write();
-        //         m_rightHandPosePort.write();
-        //     }
-        // }
+        // send commands to the walking
+        yarp::os::Bottle cmd, outcome;
+        double x, y;
+        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
+        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
 
-        // use joypad
-        // std::vector<double> locCmd;
-        // if (!m_useVirtualizer)
-        // {
-        //     yarp::os::Bottle cmd, outcome;
-        //     double x, y;
-        //     m_joypadControllerInterface->getAxis(m_xJoypadIndex, x);
-        //     m_joypadControllerInterface->getAxis(m_yJoypadIndex, y);
+        x = -m_pImpl->joypadParameters.scaleX * m_pImpl->deadzone(x);
+        y = m_pImpl->joypadParameters.scaleY * m_pImpl->deadzone(y);
+        std::swap(x, y);
 
-        //     x = -m_scaleX * deadzone(x);
-        //     y = m_scaleY * deadzone(y);
-        //     std::swap(x, y);
+        cmd.addString("setGoal");
+        cmd.addDouble(x);
+        cmd.addDouble(y);
+        if (m_pImpl->moveRobot)
+        {
+            m_pImpl->rpcWalkingClient.write(cmd, outcome);
+        }
 
-        //     cmd.addString("setGoal");
-        //     cmd.addDouble(x);
-        //     cmd.addDouble(y);
-        //     if (m_moveRobot)
-        //     {
-        //         m_rpcWalkingClient.write(cmd, outcome);
-        //     }
-        //     locCmd.push_back(x);
-        //     locCmd.push_back(y);
-        // }
 
-        // if (!m_useSenseGlove)
-        // {
-        //     // left fingers
-        //     double leftFingersVelocity
-        //         = evaluateDesiredFingersVelocity(m_squeezeLeftIndex, m_releaseLeftIndex);
-        //     if (!m_leftHandFingers->setFingersVelocity(leftFingersVelocity))
-        //     {
-        //         yError() << "[OpenXRModule::updateModule] Unable to set the left finger
-        //         velocity."; return false;
-        //     }
-        //     if (m_moveRobot)
-        //     {
-        //         if (!m_leftHandFingers->move())
-        //         {
-        //             yError() << "[OpenXRModule::updateModule] Unable to move the left finger";
-        //             return false;
-        //         }
-        //     }
+                                          // const std::vector<int>& fingersSqueezeButtonsMask,
+                                          // const std::vector<int>& fingersReleaseButtonsMask,
+                                          // int fingersVelocityIndex)
 
-        //     // right fingers
-        //     double rightFingersVelocity
-        //         = evaluateDesiredFingersVelocity(m_squeezeRightIndex, m_releaseRightIndex);
-        //     if (!m_rightHandFingers->setFingersVelocity(rightFingersVelocity))
-        //     {
-        //         yError() << "[OpenXRModule::updateModule] Unable to set the right finger
-        //         velocity."; return false;
-        //     }
-        //     if (m_moveRobot)
-        //     {
-        //         if (!m_rightHandFingers->move())
-        //         {
-        //             yError() << "[OpenXRModule::updateModule] Unable to move the right finger";
-        //             return false;
-        //         }
-        //     }
-        // }
+        // left fingers
+        const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
+            m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
+            m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
+            m_pImpl->joypadParameters.fingersVelocityLeftIndex);
 
-        // // check if it is time to prepare or start walking
-        // float buttonMapping;
+        if (!m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity))
+        {
+            yError() << "[OpenXRModule::updateModule] Unable to set the left finger velocity.";
+            return false;
+        }
+        if (m_pImpl->moveRobot)
+        {
+            if (!m_pImpl->leftHandFingers->move())
+            {
+                yError() << "[OpenXRModule::updateModule] Unable to move the left finger";
+                return false;
+            }
+        }
 
-        // // prepare robot (A button)
-        // m_joypadControllerInterface->getButton(m_stopWalkingIndex, buttonMapping);
-        // yarp::os::Bottle cmd, outcome;
+        const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
+            m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
+            m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
+            m_pImpl->joypadParameters.fingersVelocityRightIndex);
 
-        // if (buttonMapping > 0)
-        // {
-        //     // TODO add a visual feedback for the user
-        //     if (m_moveRobot)
-        //     {
-        //         cmd.addString("stopWalking");
-        //         m_rpcWalkingClient.write(cmd, outcome);
-        //     }
-        //     yInfo() << "[OpenXRModule::updateModule] stop";
-        //     return false;
-        // }
+        if (!m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity))
+        {
+            yError() << "[OpenXRModule::updateModule] Unable to set the right finger velocity.";
+            return false;
+        }
+        if (m_pImpl->moveRobot)
+        {
+            if (!m_pImpl->rightHandFingers->move())
+            {
+                yError() << "[OpenXRModule::updateModule] Unable to move the right finger";
+                return false;
+            }
+        }
+
+
+
+        // check if it is time to stop walking
+        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
+        {
+            if (m_pImpl->moveRobot)
+            {
+                yarp::os::Bottle cmd, outcome;
+                cmd.addString("stopWalking");
+                m_pImpl->rpcWalkingClient.write(cmd, outcome);
+            }
+            yInfo() << "[OpenXRModule::updateModule] stop";
+            return false;
+        }
+
     } else if (m_pImpl->state == Impl::OpenXRFSM::Configured)
     {
         // // check if it is time to prepare or start walking
-        // float buttonMapping;
-
-        // // prepare robot (A button)
-        // m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
-        // yarp::os::Bottle cmd, outcome;
-
-        // if (buttonMapping > 0)
-        // {
-        //     // TODO add a visual feedback for the user
-        //     if (m_moveRobot)
-        //     {
-        //         cmd.addString("prepareRobot");
-        //         m_rpcWalkingClient.write(cmd, outcome);
-        //     }
-        //     m_state = OculusFSM::InPreparation;
-        //     yInfo() << "[OpenXRModule::updateModule] prepare the robot";
-        // }
+        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
+        {
+            // TODO add a visual feedback for the user
+            if (m_pImpl->moveRobot)
+            {
+                yarp::os::Bottle cmd, outcome;
+                cmd.addString("prepareRobot");
+                m_pImpl->rpcWalkingClient.write(cmd, outcome);
+            }
+            m_pImpl->state = OpenXRModule::Impl::OpenXRFSM::InPreparation;
+            yInfo() << "[OpenXRModule::updateModule] prepare the robot";
+        }
     } else if (m_pImpl->state == Impl::OpenXRFSM::InPreparation)
     {
         if (m_pImpl->moveRobot)
@@ -837,95 +1135,58 @@ bool OpenXRModule::updateModule()
             }
         }
 
-        // TODO reenable  the initial pose resetting
-        // float buttonMapping;
-        // start walking (X button)
+        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
+        {
+            if (!m_pImpl->frameTransformInterface->frameExists(m_pImpl->headFrameName))
+            {
+                yError() << "[OpenXRModule::updateModule] The frame named "
+                         << m_pImpl->headFrameName << " does not exist.";
+                yError() << "[OpenXRModule::updateModule] I will not start the walking. Please "
+                            "try to start again.";
+                return true;
+            }
 
+            yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
+            if (!m_pImpl->frameTransformInterface->getTransform(
+                    m_pImpl->headFrameName, m_pImpl->rootFrameName, openXrHeadInitialTransform))
+            {
+                yError() << "[OpenXRModule::updateModule] Unable to evaluate the "
+                         << m_pImpl->headFrameName << " to " << m_pImpl->rootFrameName
+                         << "transformation";
+                yError() << "[OpenXRModule::updateModule] I will not start the walking. Please "
+                            "try to start again.";
+                return true;
+            }
 
-        // m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
-        // yarp::os::Bottle cmd, outcome;
+            // get only the yaw axis
+            iDynTree::Rotation tempRot;
+            iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
+            double yaw = 0;
+            double dummy = 0;
+            tempRot.getRPY(dummy, yaw, dummy);
 
-        // if (buttonMapping > 0)
-        // {
-        //     if (m_useOpenXr)
-        //     {
-        //         if (!m_frameTransformInterface->frameExists(m_headFrameName))
-        //         {
-        //             yError() << "[OpenXRModule::updateModule] The frame named " << m_headFrameName
-        //                      << " does not exist.";
-        //             yError() << "[OpenXRModule::updateModule] I will not start the walking. Please "
-        //                         "try to start again.";
-        //             return true;
-        //         }
+            iDynTree::Transform tempTransform;
+            tempTransform.setRotation(iDynTree::Rotation::RotY(
+                yaw)); // We remove only the initial rotation of the person head around gravity.
+            tempTransform.setPosition(iDynTree::make_span(
+                getPosition(openXrHeadInitialTransform))); // We remove the initial position between
+                                                           // the head and the reference frame.
 
-        //         yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
-        //         if (!m_frameTransformInterface->getTransform(
-        //                 m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
-        //         {
-        //             yError() << "[OpenXRModule::updateModule] Unable to evaluate the "
-        //                      << m_headFrameName << " to " << m_rootFrameName << "transformation";
-        //             yError() << "[OpenXRModule::updateModule] I will not start the walking. Please "
-        //                         "try to start again.";
-        //             return true;
-        //         }
+            iDynTree::toEigen(m_pImpl->openXRInitialAlignement)
+                = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
 
-        //         // get only the yaw axis
-        //         iDynTree::Rotation tempRot;
-        //         iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
-        //         double yaw = 0;
-        //         double dummy = 0;
-        //         tempRot.getRPY(dummy, yaw, dummy);
+            if (m_pImpl->moveRobot)
+            {
+                yarp::os::Bottle cmd, outcome;
+                cmd.addString("startWalking");
+                m_pImpl->rpcWalkingClient.write(cmd, outcome);
+            }
 
-        //         iDynTree::Transform tempTransform;
-        //         tempTransform.setRotation(iDynTree::Rotation::RotY(
-        //             yaw)); // We remove only the initial rotation of the person head around gravity.
-        //         tempTransform.setPosition(iDynTree::make_span(getPosition(
-        //             openXrHeadInitialTransform))); // We remove the initial position between the
-        //                                            // head and the reference frame.
-
-        //         iDynTree::toEigen(m_openXrInitialAlignement)
-        //             = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
-        //     }
-
-        //     if (m_useVirtualizer)
-        //     {
-        //         // not sure if here causes the problem of hand rotation, check it
-        //         // reset the player orientation of the virtualizer
-        //         cmd.addString("resetPlayerOrientation");
-        //         m_rpcVirtualizerClient.write(cmd, outcome);
-        //         cmd.clear();
-        //     }
-
-        //     // TODO add a visual feedback for the user
-        //     if (m_moveRobot)
-        //     {
-        //         cmd.addString("startWalking");
-        //         m_rpcWalkingClient.write(cmd, outcome);
-        //     }
-
-        //     // if(outcome.get(0).asBool())
-        //     m_state = OculusFSM::Running;
-        //     yInfo() << "[OpenXRModule::updateModule] start the robot";
-        //     yInfo() << "[OpenXRModule::updateModule] Running ...";
-        // }
+            // if(outcome.get(0).asBool())
+            m_pImpl->state = OpenXRModule::Impl::OpenXRFSM::Running;
+            yInfo() << "[OpenXRModule::updateModule] start the robot";
+            yInfo() << "[OpenXRModule::updateModule] Running ...";
+        }
     }
-
     return true;
 }
-
-// double OpenXRModule::deadzone(const double& input)
-// {
-//     if (input >= 0)
-//     {
-//         if (input > m_deadzone)
-//             return (input - m_deadzone) / (m_fullscale - m_deadzone);
-//         else
-//             return 0.0;
-//     } else
-//     {
-//         if (input < -m_deadzone)
-//             return (input + m_deadzone) / (m_fullscale - m_deadzone);
-//         else
-//             return 0.0;
-//     }
-// }
