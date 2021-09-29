@@ -142,6 +142,39 @@ bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,
     return true;
 }
 
+bool YarpHelper::getIntVectorFromSearchable(const yarp::os::Searchable& config,
+                                            const std::string& key,
+                                            std::vector<int>& output)
+{
+    yarp::os::Value* value;
+    if (!config.check(key, value))
+    {
+        yError() << "[getIntVectorFromSearchable] Missing field " << key;
+        return false;
+    }
+
+    if (!value->isList())
+    {
+        yError() << "[getIntVectorFromSearchable] the value is not a double.";
+        return false;
+    }
+
+    yarp::os::Bottle* inputPtr = value->asList();
+
+    output.resize(inputPtr->size());
+
+    for (int i = 0; i < inputPtr->size(); i++)
+    {
+        if (!inputPtr->get(i).isInt())
+        {
+            yError() << "[getIntVectorFromSearchable] The input is expected to be an int";
+            return false;
+        }
+        output[i] = inputPtr->get(i).asInt();
+    }
+    return true;
+}
+
 void YarpHelper::populateBottleWithStrings(yarp::os::Bottle& bottle,
                                            const std::initializer_list<std::string>& strings)
 {
