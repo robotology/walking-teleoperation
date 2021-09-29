@@ -3,6 +3,7 @@
 # Authors: Giulio Romualdi <giulio.romualdi@iit.it>
 
 add_subdirectory(Utils)
+add_subdirectory(Common)
 add_subdirectory(Oculus_module)
 
 if(WALKING_TELEOPERATION_COMPILE_XsensModule)

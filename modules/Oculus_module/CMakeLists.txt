@@ -1,4 +1,4 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
+# Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT)
 # All Rights Reserved.
 # Authors: Giulio Romualdi <giulio.romualdi@iit.it>
 
@@ -27,21 +27,11 @@ include(FindPackageHandleStandardArgs)
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
-  src/FingersRetargeting.cpp
-  src/HandRetargeting.cpp
-  src/HeadRetargeting.cpp
-  src/RobotControlHelper.cpp
-  src/RetargetingController.cpp
   src/OculusModule.cpp
   )
 
 # set hpp files
 set(${EXE_TARGET_NAME}_HDR
-  include/FingersRetargeting.hpp
-  include/HandRetargeting.hpp
-  include/HeadRetargeting.hpp
-  include/RobotControlHelper.hpp
-  include/RetargetingController.hpp
   include/OculusModule.hpp
   )
 
@@ -54,18 +44,19 @@ include_directories(
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
 
 if(ENABLE_LOGGER)
-  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
+  target_link_libraries(${EXE_TARGET_NAME} PRIVATE
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
     ctrlLib
-    UtilityLibrary
+    CommonLibrary
     matlogger2::matlogger2)
 else(ENABLE_LOGGER)
-  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
+  target_link_libraries(${EXE_TARGET_NAME} PRIVATE
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
     ctrlLib
     UtilityLibrary
+    CommonLibrary
 )
 endif()
 
