@@ -75,6 +75,7 @@ struct OpenXRModule::Impl
 
         int xJoypadIndex; /**< Mapping of the axis related to x coordinate */
         int yJoypadIndex; /**< Mapping of the axis related to y coordinate */
+        std::vector<int> joypadButtonsMap;
 
         int fingersVelocityLeftIndex; /**< Index of the trigger used for squeezing the left hand */
         int fingersVelocityRightIndex; /**< Index of the trigger used for
@@ -139,13 +140,17 @@ struct OpenXRModule::Impl
     bool leftAndRightSwapped{false};
     std::vector<int> buttonsState;
 
-    bool isButtonStateEqualToMask(const std::vector<int>& mask)
+    bool isButtonStateEqualToMask(const std::vector<int>& mask) const
     {
-        auto isEqual = [](const auto& v1, const auto& v2) {
-            return (v1.size() == v2.size() && std::equal(v1.begin(), v1.end(), v2.begin()));
-        };
-
-        return isEqual(mask, this->buttonsState);
+        return (mask.size() == this->buttonsState.size()
+                && std::equal(mask.begin(),
+                              mask.end(),
+                              this->buttonsState.begin(),
+                              [](const auto& a, const auto& b) {
+                                  if (a < 0)
+                                      return true;
+                                  return a == b;
+                              }));
     }
 
     void initializeNeckJointsSmoother(const unsigned actuatedDOFs,
@@ -461,6 +466,29 @@ struct OpenXRModule::Impl
             }
         }
 
+        std::vector<int> leftWalkingButtonsMap;
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "left_walking_buttons_map",
+                                                    leftWalkingButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "left_walking_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&leftWalkingButtonsMap);
+
+        std::vector<int> rightWalkingButtonsMap;
+        if (!YarpHelper::getIntVectorFromSearchable(config, //
+                                                    "right_walking_buttons_map",
+                                                    rightWalkingButtonsMap))
+        {
+            yError() << "[OpenXRModule::configureJoypad] Unable to find parameter "
+                        "right_walking_buttons_map";
+            return false;
+        }
+        buttonsMap.push_back(&rightWalkingButtonsMap);
+
+
         auto isEqual = [](const auto& v1, const auto& v2) {
             return (v1->size() == v2->size() && std::equal(v1->begin(), v1->end(), v2->begin()));
         };
@@ -499,7 +527,6 @@ struct OpenXRModule::Impl
         this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1;
         this->joypadParameters.fingersVelocityRightIndex = !this->leftAndRightSwapped ? 1 : 0;
 
-
         constexpr bool useLeftStick = true;
         constexpr int leftXIndex = 2;
         constexpr int leftYIndex = 3;
@@ -518,6 +545,9 @@ struct OpenXRModule::Impl
             = (!useLeftStick != !this->leftAndRightSwapped) ? rightXIndex : leftXIndex;
         this->joypadParameters.yJoypadIndex
             = (!useLeftStick != !this->leftAndRightSwapped) ? rightYIndex : leftYIndex;
+        this->joypadParameters.joypadButtonsMap = (!useLeftStick != !this->leftAndRightSwapped)
+                                                      ? rightWalkingButtonsMap
+                                                      : leftWalkingButtonsMap;
 
         // if swapped we have to swap all the maps
         if (this->leftAndRightSwapped)
@@ -1031,28 +1061,24 @@ bool OpenXRModule::updateModule()
             m_pImpl->rightHandPosePort.write();
         }
 
-        // send commands to the walking
-        yarp::os::Bottle cmd, outcome;
-        double x, y;
-        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
-        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
-
-        x = -m_pImpl->joypadParameters.scaleX * m_pImpl->deadzone(x);
-        y = m_pImpl->joypadParameters.scaleY * m_pImpl->deadzone(y);
-        std::swap(x, y);
-
-        cmd.addString("setGoal");
-        cmd.addDouble(x);
-        cmd.addDouble(y);
-        if (m_pImpl->moveRobot)
+        if (m_pImpl->moveRobot
+            && m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadButtonsMap))
         {
+            // send commands to the walking
+            yarp::os::Bottle cmd, outcome;
+            double x, y;
+            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
+            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
+
+            x = -m_pImpl->joypadParameters.scaleX * m_pImpl->deadzone(x);
+            y = m_pImpl->joypadParameters.scaleY * m_pImpl->deadzone(y);
+            std::swap(x, y);
+
+            cmd.addString("setGoal");
+            cmd.addDouble(x);
+            cmd.addDouble(y);
             m_pImpl->rpcWalkingClient.write(cmd, outcome);
         }
-
-
-                                          // const std::vector<int>& fingersSqueezeButtonsMask,
-                                          // const std::vector<int>& fingersReleaseButtonsMask,
-                                          // int fingersVelocityIndex)
 
         // left fingers
         const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
