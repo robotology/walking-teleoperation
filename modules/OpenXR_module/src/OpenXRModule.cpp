@@ -542,12 +542,12 @@ struct OpenXRModule::Impl
         // this is the xor operator
         // in c++ you can use !A != !B
         this->joypadParameters.xJoypadIndex
-            = (!useLeftStick != !this->leftAndRightSwapped) ? rightXIndex : leftXIndex;
+            = (!useLeftStick != !this->leftAndRightSwapped) ? leftXIndex : rightXIndex;
         this->joypadParameters.yJoypadIndex
-            = (!useLeftStick != !this->leftAndRightSwapped) ? rightYIndex : leftYIndex;
+            = (!useLeftStick != !this->leftAndRightSwapped) ? leftYIndex : rightYIndex;
         this->joypadParameters.joypadButtonsMap = (!useLeftStick != !this->leftAndRightSwapped)
-                                                      ? rightWalkingButtonsMap
-                                                      : leftWalkingButtonsMap;
+                                                      ? leftWalkingButtonsMap
+                                                      : rightWalkingButtonsMap;
 
         // if swapped we have to swap all the maps
         if (this->leftAndRightSwapped)
