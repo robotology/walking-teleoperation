@@ -1061,19 +1061,23 @@ bool OpenXRModule::updateModule()
             m_pImpl->rightHandPosePort.write();
         }
 
-        if (m_pImpl->moveRobot
-            && m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadButtonsMap))
+        if (m_pImpl->moveRobot)
         {
             // send commands to the walking
             yarp::os::Bottle cmd, outcome;
-            double x, y;
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
+            double x{0.0}, y{0.0};
+            
+            if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadButtonsMap))
+            {
+                m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
+                m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
 
-            x = -m_pImpl->joypadParameters.scaleX * m_pImpl->deadzone(x);
-            y = m_pImpl->joypadParameters.scaleY * m_pImpl->deadzone(y);
-            std::swap(x, y);
-
+                x = -m_pImpl->joypadParameters.scaleX * m_pImpl->deadzone(x);
+                y = m_pImpl->joypadParameters.scaleY * m_pImpl->deadzone(y);
+                std::swap(x, y);
+            }
+            
+            // send commands to the walking
             cmd.addString("setGoal");
             cmd.addDouble(x);
             cmd.addDouble(y);
