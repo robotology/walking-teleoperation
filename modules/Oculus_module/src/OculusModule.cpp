@@ -531,7 +531,10 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         yInfo() << "[OculusModule::configure] Cameras have been reset.";
     }
 
-    m_state = OculusFSM::Configured;
+    {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        m_state = OculusFSM::Configured;
+    }
 
     return true;
 }
@@ -595,123 +598,6 @@ std::string OculusModule::getStringFromOculusState(const OculusFSM state)
     return "";
 }
 
-bool OculusModule::respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply)
-{
-    if (command.get(0).asString() == "help")
-    {
-        reply.addVocab(yarp::os::Vocab::encode("many"));
-        reply.addString("Enter <prepare> to prepare the Oculus module. \n");
-        reply.addString("Enter <run> to run the Oculus module (only after preparing). \n");
-
-        // TODO
-    }
-    //    else if (command.get(0).asString() == "prepare")
-    //    {
-    //        if (m_state == OculusFSM::Configured)
-    //        {
-    //            yarp::os::Bottle cmd, outcome;
-    //            if (m_moveRobot)
-    //            {
-    //                cmd.addString("prepareRobot");
-    //                m_rpcWalkingClient.write(cmd, outcome);
-    //            }
-    //            m_state = OculusFSM::InPreparation;
-    //            yInfo() << "[OculusModule::respond] prepare the robot";
-
-    //            reply.addString("OK");
-    //        } else
-    //        {
-    //            reply.addVocab(yarp::os::Vocab::encode("many"));
-    //            reply.addString("Not OK \n");
-    //            reply.addString("The robot is in state: " + getStringFromOculusState(m_state)
-    //                            + ", while it should be in state: "
-    //                            + getStringFromOculusState(OculusFSM::Configured));
-    //        }
-    //    }
-    else if (command.get(0).asString() == "run")
-    {
-        if (m_state == OculusFSM::InPreparation)
-        {
-            yarp::os::Bottle cmd, outcome;
-
-            if (m_useOpenXr)
-            {
-                if (!m_frameTransformInterface->frameExists(m_headFrameName))
-                {
-                    yError() << "[OculusModule::respond] The frame named " << m_headFrameName
-                             << " does not exist.";
-                    yError() << "[OculusModule::respond] I will not start the walking. Please "
-                                "try to start again.";
-                    return true;
-                }
-                yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
-                if (!m_frameTransformInterface->getTransform(
-                        m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
-                {
-                    yError() << "[OculusModule::respond] Unable to evaluate the " << m_headFrameName
-                             << " to " << m_rootFrameName << "transformation";
-                    yError() << "[OculusModule::respond] I will not start the walking. Please "
-                                "try to start again.";
-                    return true;
-                }
-
-                // get only the yaw axis
-                iDynTree::Rotation tempRot;
-                iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
-                double yaw = 0;
-                double dummy = 0;
-                tempRot.getRPY(dummy, yaw, dummy);
-
-                iDynTree::Transform tempTransform;
-                tempTransform.setRotation(
-                    iDynTree::Rotation::RotY(yaw)); // We remove only the initial rotation of
-                                                    // the person head around gravity.
-                tempTransform.setPosition(iDynTree::make_span(getPosition(
-                    openXrHeadInitialTransform))); // We remove the initial position between the
-                                                   // head and the reference frame.
-
-                iDynTree::toEigen(m_openXrInitialAlignement)
-                    = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
-            }
-
-            if (m_useVirtualizer)
-            {
-                // not sure if here causes the problem of hand rotation, check it
-                // reset the player orientation of the virtualizer
-                cmd.addString("resetPlayerOrientation");
-                m_rpcVirtualizerClient.write(cmd, outcome);
-                cmd.clear();
-            }
-
-            // TODO add a visual feedback for the user
-            if (m_moveRobot)
-            {
-                cmd.addString("startWalking");
-                m_rpcWalkingClient.write(cmd, outcome);
-            }
-            // if(outcome.get(0).asBool())
-            m_state = OculusFSM::Running;
-            yInfo() << "[OculusModule::respond] start the robot";
-            yInfo() << "[OculusModule::respond] Running ...";
-
-            reply.addString("OK");
-        }
-        //        else
-        //        {
-        //            reply.addVocab(yarp::os::Vocab::encode("many"));
-        //            reply.addString("Not OK \n");
-        //            reply.addString("The robot is in state: " + getStringFromOculusState(m_state)
-        //                            + ", while it should be in state: "
-        //                            + getStringFromOculusState(OculusFSM::InPreparation));
-        //        }
-    } else
-    {
-        reply.addString("Entered command is incorrect, Enter `help` to know available commands");
-    }
-
-    return true;
-}
-
 bool OculusModule::prepareTeleoperation()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
@@ -742,7 +628,7 @@ bool OculusModule::runTeleoperation()
         return false;
     }
 
-    return true;
+    return this->runningModule();
 }
 
 bool OculusModule::preparingModule()
@@ -993,6 +879,8 @@ bool OculusModule::getFeedbacks()
 
 bool OculusModule::updateModule()
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
+
     if (!getFeedbacks())
     {
         yError() << "[OculusModule::updateModule] Unable to get the feedback";
@@ -1242,7 +1130,6 @@ bool OculusModule::updateModule()
         m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
         if (buttonMapping > 0)
         {
-            std::lock_guard<std::mutex> guard(m_mutex);
             this->preparingModule();
         }
 
@@ -1266,7 +1153,6 @@ bool OculusModule::updateModule()
         m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
         if (buttonMapping > 0)
         {
-            std::lock_guard<std::mutex> guard(m_mutex);
             this->runningModule();
         }
     }

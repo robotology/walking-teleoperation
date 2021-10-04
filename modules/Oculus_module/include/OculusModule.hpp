@@ -273,21 +273,6 @@ public:
     bool runningModule();
 
     /**
-     * Respond to a message from the RPC port.
-     * @param command is the received message.
-     * The following message has to be a bottle with the following structure:
-     * 1. ("help");
-     * 2. ("prepare").
-     * 3. ("run")
-     * @param reply is the response of the server.
-     * 1. OK in case of success;
-     * 2. Not OK in case of failure.
-     * 3. list of available commands in case of "help" command
-     * @return true in case of success and false otherwise.
-     */
-    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) final;
-
-    /**
      * to get the Oculus FSM in string format
      * @param OculusFSM to get the string value
      * @return string associated with the inpute sate
