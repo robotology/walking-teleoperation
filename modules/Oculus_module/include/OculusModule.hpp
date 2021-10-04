@@ -13,6 +13,7 @@
 // std
 #include <ctime>
 #include <memory>
+#include <mutex>
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
@@ -29,6 +30,8 @@
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
 
+#include <thrifts/TeleoperationCommands.h>
+
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
 #include <matlogger2/utils/mat_appender.h>
@@ -39,7 +42,7 @@
  * Oculus readouts, send the desired pose of the hands to the walking application, move the robot
  * fingers and move the robot head
  */
-class OculusModule : public yarp::os::RFModule
+class OculusModule : public yarp::os::RFModule, public TeleoperationCommands
 {
 private:
     double m_dT; /**< Module period. */
@@ -130,8 +133,7 @@ private:
     yarp::os::RpcClient
         m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
-    yarp::os::RpcServer m_rpcOculusServer; /**< RPC port to control Oculus FSM. */
-
+    yarp::os::RpcServer m_rpcOculusServerPort; /**< RPC port to control Oculus FSM. */
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 
@@ -149,6 +151,9 @@ private:
     double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
     bool m_enableLogger; /**< log the data (if ON) */
+
+    std::mutex m_mutex; /**< Mutex. */
+
 #ifdef ENABLE_LOGGER
     XBot::MatLogger2::Ptr m_logger; /**< */
     XBot::MatAppender::Ptr m_appender;
@@ -243,7 +248,31 @@ public:
      */
     bool close() final;
 
-     /**
+    /**
+     * This method prepares the Oculus Module for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    virtual bool prepareTeleoperation() override;
+
+    /**
+     * This method runs the entire Oculus Module for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    virtual bool runTeleoperation() override;
+
+    /**
+     * This method is called in order to prepare the Oculus Module FSM for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    bool preparingModule();
+
+    /**
+     * This method is called in order to run the Oculus Module FSM for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    bool runningModule();
+
+    /**
      * Respond to a message from the RPC port.
      * @param command is the received message.
      * The following message has to be a bottle with the following structure:
