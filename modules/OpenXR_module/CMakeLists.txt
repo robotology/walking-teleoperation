@@ -61,3 +61,6 @@ else(ENABLE_LOGGER)
 endif()
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
+
+install_ini_files(NAME WalkingTeleoperationOpenXR
+                  PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/config)
