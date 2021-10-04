@@ -276,6 +276,8 @@ bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 
 bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
+
 #ifdef ENABLE_LOGGER
     yInfo() << "[OculusModule::configure] matlogger2 is eanbled!";
 #else
@@ -531,10 +533,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         yInfo() << "[OculusModule::configure] Cameras have been reset.";
     }
 
-    {
-        std::lock_guard<std::mutex> guard(m_mutex);
-        m_state = OculusFSM::Configured;
-    }
+    m_state = OculusFSM::Configured;
 
     return true;
 }
@@ -546,6 +545,8 @@ double OculusModule::getPeriod()
 
 bool OculusModule::close()
 {
+    std::lock_guard<std::mutex> guard(m_mutex);
+
 #ifdef ENABLE_LOGGER
     if (m_enableLogger)
     {
@@ -633,7 +634,6 @@ bool OculusModule::runTeleoperation()
 
 bool OculusModule::preparingModule()
 {
-    std::lock_guard<std::mutex> guard(m_mutex);
     yarp::os::Bottle cmd, outcome;
     if (m_moveRobot)
     {
@@ -648,8 +648,6 @@ bool OculusModule::preparingModule()
 
 bool OculusModule::runningModule()
 {
-    std::lock_guard<std::mutex> guard(m_mutex);
-
     yarp::os::Bottle cmd, outcome;
 
     if (m_useOpenXr)
