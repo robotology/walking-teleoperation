@@ -1,0 +1,49 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Giulio Romualdi <giulio.romualdi@iit.it> -->
+
+<application>
+
+  <name>OpenXR-KynDynRetargeting</name>
+  <description>Application to run kinematic and dynamic related modules for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
+  </authors>
+
+  <!-- Modules -->
+  <module>
+    <name>WalkingModule</name>
+    <node>icub-head</node>
+    <parameters>--from dcm_walking_hand_retargeting.ini</parameters>
+  </module>
+
+  <module>
+    <name>OpenXRModule</name>
+    <node>icub-console-gui</node>
+    <dependencies>
+      <port timeout="5.0">/transformServer/transforms:o</port>
+      <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
+      <port timeout="5.0">/icub/cam/left</port>
+      <port timeout="5.0">/icub/cam/right</port>
+    </dependencies>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/oculusRetargeting/leftHandPose:o</from>
+    <to>/walking-coordinator/leftHandDesiredPose:i</to>
+  </connection>
+
+  <connection>
+    <from>/oculusRetargeting/rightHandPose:o</from>
+    <to>/walking-coordinator/rightHandDesiredPose:i</to>
+  </connection>
+
+  <connection>
+    <from>/oculusRetargeting/walkingRpc</from>
+    <to>/walking-coordinator/rpc</to>
+  </connection>
+
+
+</application>
