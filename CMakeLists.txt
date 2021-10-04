@@ -11,6 +11,7 @@ project(walking-teleoperation
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include(WalkingTeleoperationFindDependencies)
+include(InstallIniFiles)
 
 add_subdirectory(modules)
 add_subdirectory(app)
