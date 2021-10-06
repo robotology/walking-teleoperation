@@ -30,10 +30,10 @@ if(WIN32)
 endif()
 
 #find_package(SenseGlove REQUIRED)
-if(SENSEGLOVE_FOUND)
+#if(SENSEGLOVE_FOUND)
 #  include_directories($SENSEGLOVE_INCLUDE_DIR)
-   message(WARNING "${EXE_TARGET_NAME} SenseGlove is not found")
-endif(SENSEGLOVE_FOUND)
+#   message(WARNING "${EXE_TARGET_NAME} SenseGlove is not found")
+#endif(SENSEGLOVE_FOUND)
 
 
 
@@ -89,21 +89,20 @@ if(ENABLE_LOGGER)
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
 #    ${SenseGlove_LIBRARIES}
-    SenseGlove
+#    SenseGlove
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
     walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
-
     )
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
 #    ${SenseGlove_LIBRARIES}
-    SenseGlove
+#    SenseGlove
     ctrlLib
     UtilityLibrary
     walking-teleoperation::ML
@@ -117,8 +116,8 @@ message(" {CMAKE_BUILD_TYPE}: ${CMAKE_BUILD_TYPE}")
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
 
 #install(FILES ${SenseGlove_LIBRARIES} DESTINATION lib RENAME libSGCore.so)
-if(WIN32)
-	install(FILES $ENV{SenseGlove_DIR}/SGCore.dll DESTINATION bin )
-else()
-        install(FILES ${SenseGlove} DESTINATION lib RENAME libSGCoreCpp.so)
-endif() 
+#if(WIN32)
+#	install(FILES $ENV{SenseGlove_DIR}/SGCore.dll DESTINATION bin )
+#else()
+#        install(FILES ${SenseGlove} DESTINATION lib RENAME libSGCoreCpp.so)
+#endif()

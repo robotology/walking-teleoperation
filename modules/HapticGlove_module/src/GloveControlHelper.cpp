@@ -14,8 +14,8 @@
 #include <GloveControlHelper.hpp>
 #include <Utils.hpp>
 
-#include <yarp/dev/PolyDriver.h>
 #include <Wearable/IWear/Sensors/IVirtualJointKinSensor.h>
+#include <yarp/dev/PolyDriver.h>
 
 using namespace HapticGlove;
 
@@ -43,30 +43,33 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     m_handJointsAngles = Eigen::MatrixXd::Zero(m_handNoLinks, 3);
 
-
     yarp::os::Value* jointListYarp;
     if (!config.check("human_joint_list", jointListYarp))
     {
-        yError() << "[GloveControlHelper::configure] Unable to find human_joint_list into config file.";
+        yError()
+            << "[GloveControlHelper::configure] Unable to find human_joint_list into config file.";
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(jointListYarp, m_humanJointNameList))
     {
-        yError() << "[GloveControlHelper::configure] Unable to convert human_joint_list list into a "
-                    "vector of strings.";
+        yError()
+            << "[GloveControlHelper::configure] Unable to convert human_joint_list list into a "
+               "vector of strings.";
         return false;
     }
 
     yarp::os::Value* fingerListYarp;
     if (!config.check("human_finger_list", fingerListYarp))
     {
-        yError() << "[GloveControlHelper::configure] Unable to find human_finger_list into config file.";
+        yError()
+            << "[GloveControlHelper::configure] Unable to find human_finger_list into config file.";
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(fingerListYarp, m_humanFingerNameList))
     {
-        yError() << "[GloveControlHelper::configure] Unable to convert human_finger_list list into a "
-                    "vector of strings.";
+        yError()
+            << "[GloveControlHelper::configure] Unable to convert human_finger_list list into a "
+               "vector of strings.";
         return false;
     }
     m_jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
@@ -74,81 +77,51 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     // wearable device
 
-    m_pImp= std::make_unique<GloveWearableImpl>();
+    m_pImp = std::make_unique<GloveWearableImpl>();
     if (!m_pImp->configure(config, name, m_isRightHand))
     {
-        yError()<<"unable to configure the haptic glove wearable device.";
+        yError() << "unable to configure the haptic glove wearable device.";
         return false;
     }
-
-    return true;
-}
-
-bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desiredValue)
-{
-    if (desiredValue.size() != m_forceFbDof)
-    {
-        yError() << "[GloveControlHelper::setFingersForceReference] the size of the input "
-                    "desired vecotr and the number of haptic force feedbacks are not equal.";
-        return false;
-    }
-
-//    for (size_t i = 0; i < m_forceFbDof; i++)
-//    {
-//        //        if (desiredValue(i) > 0.0)
-//        m_desiredForceValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
-//        //        else
-//        //            m_desiredForceValues[i] = 0;
-//    }
-//    std::cout<<"Force Feedback \n"<<m_desiredForceValues<<std::endl;
-
-//    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd(m_desiredForceValues));
-
-    for (size_t i = 0; i < m_forceFbDof; i++)
-    {
-        m_desiredForceValues[i] = desiredValue(i);
-    }
-
-    m_pImp->setSenseGloveForceFeedbackValues(m_desiredForceValues);
 
     return true;
 }
 
 bool GloveControlHelper::getFingersForceMeasured(yarp::sig::Vector& measuredValue)
 {
+    // Not Implemented
     return true;
 }
 
 bool GloveControlHelper::getGlovePose(Eigen::MatrixXd& measuredValue)
 {
 
-//    SGCore::SG::SG_GlovePose glovePose;
+    //    SGCore::SG::SG_GlovePose glovePose;
 
-//    if (!m_glove.GetGlovePose(glovePose))
-//    {
-//        yWarning() << "m_glove.GetGlovePose return error.";
-//        measuredValue = m_glovePose;
-//        return true;
-//    }
+    //    if (!m_glove.GetGlovePose(glovePose))
+    //    {
+    //        yWarning() << "m_glove.GetGlovePose return error.";
+    //        measuredValue = m_glovePose;
+    //        return true;
+    //    }
 
-//    int count = 0;
-//    for (int i = 0; i < glovePose.jointPositions.size(); i++)
-//    {
-//        for (int j = 0; j < glovePose.jointPositions[i].size(); j++)
-//        {
+    //    int count = 0;
+    //    for (int i = 0; i < glovePose.jointPositions.size(); i++)
+    //    {
+    //        for (int j = 0; j < glovePose.jointPositions[i].size(); j++)
+    //        {
 
-//            m_glovePose(count, 0) = glovePose.jointPositions[i][j].x;
-//            m_glovePose(count, 1) = glovePose.jointPositions[i][j].y;
-//            m_glovePose(count, 2) = glovePose.jointPositions[i][j].z;
+    //            m_glovePose(count, 0) = glovePose.jointPositions[i][j].x;
+    //            m_glovePose(count, 1) = glovePose.jointPositions[i][j].y;
+    //            m_glovePose(count, 2) = glovePose.jointPositions[i][j].z;
 
-//            m_glovePose(count, 3) = glovePose.jointRotations[i][j].x; // wrt to the origin frame
-//            m_glovePose(count, 4) = glovePose.jointRotations[i][j].y;
-//            m_glovePose(count, 5) = glovePose.jointRotations[i][j].z;
-//            m_glovePose(count, 6) = glovePose.jointRotations[i][j].w;
-//            count++;
-//        }
-//    }
-//    measuredValue = m_glovePose;
+    //            m_glovePose(count, 3) = glovePose.jointRotations[i][j].x; // wrt to the origin
+    //            frame m_glovePose(count, 4) = glovePose.jointRotations[i][j].y; m_glovePose(count,
+    //            5) = glovePose.jointRotations[i][j].z; m_glovePose(count, 6) =
+    //            glovePose.jointRotations[i][j].w; count++;
+    //        }
+    //    }
+    //    measuredValue = m_glovePose;
     //    yInfo() << "glovePose[ " << i << " ].size(): " << glovePose.jointPositions[i].size();
     //    yInfo() << glovePose.jointPositions[i][j].ToString;
     return true;
@@ -157,95 +130,95 @@ bool GloveControlHelper::getGlovePose(Eigen::MatrixXd& measuredValue)
 bool GloveControlHelper::getSensorData(std::vector<float>& measuredValues)
 {
 
-//    SGCore::SG::SG_SensorData sensorData;
-//    if (!m_glove.GetSensorData(sensorData))
-//    {
-//        yWarning() << "m_glove.GetSensorData return error.";
-//        measuredValues = m_sensorData;
-//        return true;
-//    }
+    //    SGCore::SG::SG_SensorData sensorData;
+    //    if (!m_glove.GetSensorData(sensorData))
+    //    {
+    //        yWarning() << "m_glove.GetSensorData return error.";
+    //        measuredValues = m_sensorData;
+    //        return true;
+    //    }
 
-//    //    if (!sensorData.IsComplete())
-//    //    {
-//    // all the finger, from proximal to distal
+    //    //    if (!sensorData.IsComplete())
+    //    //    {
+    //    // all the finger, from proximal to distal
 
-//    //    }
-//    m_sensorData = sensorData.GetAngleSequence();
-//    measuredValues = m_sensorData;
+    //    //    }
+    //    m_sensorData = sensorData.GetAngleSequence();
+    //    measuredValues = m_sensorData;
     return true;
 }
 bool GloveControlHelper::getHandPose(Eigen::MatrixXd& measuredValue)
 {
-//    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
-//    SGCore::HandPose handPose;
-//    //    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
-//    if (!m_glove.GetHandPose(profile, handPose)) //(profile, solver, handPose)
-//    {
-//        yWarning() << "m_glove.GetHandPose return error.";
-//        measuredValue = m_handPose;
-//        return true;
-//    }
+    //    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
+    //    SGCore::HandPose handPose;
+    //    //    SGCore::SG::SG_Solver solver = SGCore::SG::SG_Solver::Interpolation;
+    //    if (!m_glove.GetHandPose(profile, handPose)) //(profile, solver, handPose)
+    //    {
+    //        yWarning() << "m_glove.GetHandPose return error.";
+    //        measuredValue = m_handPose;
+    //        return true;
+    //    }
 
-//    int count = 0;
-//    for (int i = 0; i < handPose.jointPositions.size(); i++)
-//    {
-//        for (int j = 0; j < handPose.jointPositions[i].size(); j++)
-//        {
-//            m_handPose(count, 0) = handPose.jointPositions[i][j].x;
-//            m_handPose(count, 1) = handPose.jointPositions[i][j].y;
-//            m_handPose(count, 2) = handPose.jointPositions[i][j].z;
+    //    int count = 0;
+    //    for (int i = 0; i < handPose.jointPositions.size(); i++)
+    //    {
+    //        for (int j = 0; j < handPose.jointPositions[i].size(); j++)
+    //        {
+    //            m_handPose(count, 0) = handPose.jointPositions[i][j].x;
+    //            m_handPose(count, 1) = handPose.jointPositions[i][j].y;
+    //            m_handPose(count, 2) = handPose.jointPositions[i][j].z;
 
-//            m_handPose(count, 3) = handPose.jointRotations[i][j].x; // wrt to the origin frame
-//            m_handPose(count, 4) = handPose.jointRotations[i][j].y;
-//            m_handPose(count, 5) = handPose.jointRotations[i][j].z;
-//            m_handPose(count, 6) = handPose.jointRotations[i][j].w;
-//            count++;
-//        }
-//    }
-//    measuredValue = m_handPose;
+    //            m_handPose(count, 3) = handPose.jointRotations[i][j].x; // wrt to the origin frame
+    //            m_handPose(count, 4) = handPose.jointRotations[i][j].y;
+    //            m_handPose(count, 5) = handPose.jointRotations[i][j].z;
+    //            m_handPose(count, 6) = handPose.jointRotations[i][j].w;
+    //            count++;
+    //        }
+    //    }
+    //    measuredValue = m_handPose;
 
     return true;
 }
 
 bool GloveControlHelper::getHandJointsAngles()
 {
-//    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
-//    SGCore::HandPose handPose;
+    //    SGCore::HandProfile profile = SGCore::HandProfile::Default(m_glove.IsRight());
+    //    SGCore::HandPose handPose;
 
-//    if (!m_glove.GetHandPose(profile, handPose))
-//    {
-//        yWarning() << "m_glove.GetHandPose return error.";
-//        //        measuredValue = m_handJointsAngles;
-//        return true;
-//    }
+    //    if (!m_glove.GetHandPose(profile, handPose))
+    //    {
+    //        yWarning() << "m_glove.GetHandPose return error.";
+    //        //        measuredValue = m_handJointsAngles;
+    //        return true;
+    //    }
 
-//    // handPose.handAngles.size() --> size is 5 (5 Fingers)
-//    int count = 0;
-//    for (int i = 0; i < handPose.jointPositions.size(); i++)
-//    {
+    //    // handPose.handAngles.size() --> size is 5 (5 Fingers)
+    //    int count = 0;
+    //    for (int i = 0; i < handPose.jointPositions.size(); i++)
+    //    {
 
-//        // handPose.handAngles[i].size() --> size is 3 (3 joints each)
+    //        // handPose.handAngles[i].size() --> size is 3 (3 joints each)
 
-//        for (int j = 0; j < handPose.jointPositions[i].size(); j++)
-//        {
+    //        for (int j = 0; j < handPose.jointPositions[i].size(); j++)
+    //        {
 
-//            m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
-//            m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
-//            m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
-//            count++;
-//        }
-//    }
+    //            m_handJointsAngles(count, 0) = handPose.handAngles[i][j].x;
+    //            m_handJointsAngles(count, 1) = handPose.handAngles[i][j].y;
+    //            m_handJointsAngles(count, 2) = handPose.handAngles[i][j].z;
+    //            count++;
+    //        }
+    //    }
     return true;
 }
 
-bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleList)
+bool GloveControlHelper::getHandJointsAngles(std::vector<double>& jointAngleList)
 {
     //    GloveControlHelper::getHandJointsAngles( );
     //    jointAngleList.resize(m_humanJointNameList.size(),0.0);
 
-    if(!m_pImp->getSenseGloveHumanJointValues(jointAngleList))
+    if (!m_pImp->getFingersJointValues(jointAngleList))
     {
-        yError()<< "getHandJointsAngles: error in geting new human joint angles.";
+        yError() << "getHandJointsAngles: error in geting new human joint angles.";
         return false;
     }
     //    // thumb
@@ -282,17 +255,37 @@ bool GloveControlHelper::getHandJointsAngles(std::vector<double> & jointAngleLis
 
     return true;
 }
-bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd measuredValue )
+bool GloveControlHelper::getHandJointsAngles(Eigen::MatrixXd measuredValue)
 {
     measuredValue = m_handJointsAngles;
     return true;
 }
 
-
 bool GloveControlHelper::isConnected()
 {
-//    return m_glove.IsConnected();
-return true;
+    //    return m_glove.IsConnected();
+    return true;
+}
+
+bool GloveControlHelper::setFingersForceReference(const yarp::sig::Vector& desiredValue)
+{
+    if (desiredValue.size() != m_forceFbDof)
+    {
+        yError() << "[GloveControlHelper::setFingersForceReference] the size of the input "
+                    "desired vecotr ["
+                 << desiredValue.size() << "] and the number of haptic force feedbacks [ "
+                 << m_forceFbDof << " ]are not equal.";
+        return false;
+    }
+
+    for (size_t i = 0; i < m_forceFbDof; i++)
+    {
+        m_desiredForceValues[i] = desiredValue(i);
+    }
+
+    m_pImp->setFingersForceFeedbackValues(m_desiredForceValues);
+
+    return true;
 }
 
 bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desiredValue)
@@ -303,14 +296,16 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
                     "desired vecotr and the number of buzz motors are not equal.";
         return false;
     }
-//    for (size_t i = 0; i < m_buzzDof; i++)
-//    {
-//        //        if (desiredValue(i) > 0.0)
-//        //            m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,desiredValue(i)));//(int)std::round(std::max(0.0,std::min(desiredValue(i), 40.0))*100/40);
-//        m_desiredBuzzValues[i] = (int)std::round(std::max(0.0,std::min(desiredValue(i), 100.0)));
-//        //        else
-//        //            m_desiredBuzzValues[i] = 0;
-//    }
+    //    for (size_t i = 0; i < m_buzzDof; i++)
+    //    {
+    //        //        if (desiredValue(i) > 0.0)
+    //        //            m_desiredBuzzValues[i] =
+    //        (int)std::round(std::max(0.0,desiredValue(i)));//(int)std::round(std::max(0.0,std::min(desiredValue(i),
+    //        40.0))*100/40); m_desiredBuzzValues[i] =
+    //        (int)std::round(std::max(0.0,std::min(desiredValue(i), 100.0)));
+    //        //        else
+    //        //            m_desiredBuzzValues[i] = 0;
+    //    }
 
     for (size_t i = 0; i < m_buzzDof; i++)
     {
@@ -318,26 +313,59 @@ bool GloveControlHelper::setBuzzMotorsReference(const yarp::sig::Vector& desired
     }
 
     // vibrate fingers at percetage intensity, between 0-100, integer numbers
-//    std::cout<<"Vibrotactile Feedback \n"<<m_desiredBuzzValues<<std::endl;
-//    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
-    m_pImp->setSenseGloveVibroTactileValues(m_desiredBuzzValues);
+    //    std::cout<<"Vibrotactile Feedback \n"<<m_desiredBuzzValues<<std::endl;
+    //    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd(m_desiredBuzzValues));
+    m_pImp->setFingersVibroTactileValues(m_desiredBuzzValues);
 
     return true;
 }
 
 bool GloveControlHelper::turnOffBuzzMotors()
 {
-//    yInfo() << "[GloveControlHelper::turnOffBuzzMotors]";
-//    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd::off); // turn off all Buzz Motors.
+    //    yInfo() << "[GloveControlHelper::turnOffBuzzMotors]";
+    //    m_glove.SendHaptics(SGCore::Haptics::SG_BuzzCmd::off); // turn off all Buzz Motors.
+
+    for (size_t i = 0; i < m_buzzDof; i++)
+    {
+        m_desiredBuzzValues[i] = 0.0;
+    }
+    m_pImp->setFingersVibroTactileValues(m_desiredBuzzValues);
     return true;
 }
 
 bool GloveControlHelper::turnForceFeedback()
 {
-//    yInfo() << "[GloveControlHelper::turnForceFeedback]";
-//    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd::off); // turn off all Force Feedback commands.
+    //    yInfo() << "[GloveControlHelper::turnForceFeedback]";
+    //    m_glove.SendHaptics(SGCore::Haptics::SG_FFBCmd::off); // turn off all Force Feedback
+    //    commands.
+    for (size_t i = 0; i < m_forceFbDof; i++)
+    {
+        m_desiredForceValues[i] = 0.0;
+    }
+
+    m_pImp->setFingersForceFeedbackValues(m_desiredForceValues);
+
     return true;
 }
+
+bool GloveControlHelper::stopHapticFeedback()
+{
+
+    if (!turnOffBuzzMotors())
+    {
+        yError()
+            << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the vibrotactile feedback";
+        return false;
+    }
+    if (!turnForceFeedback())
+    {
+        yError() << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the froce feedback";
+        return false;
+    }
+
+    return true;
+}
+
 const int GloveControlHelper::getNoOfBuzzMotors() const
 {
     return m_buzzDof;
@@ -353,57 +381,49 @@ void GloveControlHelper::close()
 
 bool GloveControlHelper::setupGlove()
 {
-//    yInfo() << "GloveControlHelper::setupGlove()";
+    //    yInfo() << "GloveControlHelper::setupGlove()";
 
-//    if (!SGCore::DeviceList::SenseCommRunning()) // Returns true if SenseComm is running.
-//    {
-//        yError() << "SenseComm is not running. Please run SenseComm, then try again.";
-//        return false;
-//    }
+    //    if (!SGCore::DeviceList::SenseCommRunning()) // Returns true if SenseComm is running.
+    //    {
+    //        yError() << "SenseComm is not running. Please run SenseComm, then try again.";
+    //        return false;
+    //    }
     // GetSenseGlove retrieves the first (connected) Sense Glove it can find. Returns true if one
     // can be found. Additional search parameters can be used.
 
-//    if (!SGCore::SG::SenseGlove::GetSenseGlove(m_isRightHand, m_glove))
-//    {
-//        yError() << "No sense gloves connected to the system. Ensure the USB connection is "
-//                    "secure, then try again.";
-//        return false;
-//    }
+    //    if (!SGCore::SG::SenseGlove::GetSenseGlove(m_isRightHand, m_glove))
+    //    {
+    //        yError() << "No sense gloves connected to the system. Ensure the USB connection is "
+    //                    "secure, then try again.";
+    //        return false;
+    //    }
 
-//    yInfo() << "Activating " << m_glove.ToString();
+    //    yInfo() << "Activating " << m_glove.ToString();
 
-//    SGCore::SG::SG_GloveInfo gloveModel = m_glove.GetGloveModel();
-//    yInfo() << "glove model:" << gloveModel.ToString();
-//    yInfo() << "glove model:" << gloveModel.ToString(false);
+    //    SGCore::SG::SG_GloveInfo gloveModel = m_glove.GetGloveModel();
+    //    yInfo() << "glove model:" << gloveModel.ToString();
+    //    yInfo() << "glove model:" << gloveModel.ToString(false);
 
     std::vector<double> jointAngleList;
     getHandJointsAngles(jointAngleList);
-    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    for (size_t i = 0; i < m_humanJointNameList.size(); i++)
     {
-        m_jointRangeMin[i]=    jointAngleList[i];
-        m_jointRangeMax[i]=    jointAngleList[i];
+        m_jointRangeMin[i] = jointAngleList[i];
+        m_jointRangeMax[i] = jointAngleList[i];
     }
 
     return true;
 }
 
-bool GloveControlHelper::stopFeedback()
-{
-    /*
-    return m_glove.StopFeedback();
-*/
-    return true;
-}
-
 bool GloveControlHelper::setPalmFeedbackThumper(const int desiredValue)
 {
-//    if (desiredValue == 0)
-//        return m_glove.SendHaptics(SGCore::Haptics::Impact_Thump_100);
-//    else if (desiredValue == 1)
-//        return m_glove.SendHaptics(SGCore::Haptics::Object_Grasp_100);
-//    else
-//        return m_glove.SendHaptics(SGCore::Haptics::Button_Double_100);
-return true;
+    //    if (desiredValue == 0)
+    //        return m_glove.SendHaptics(SGCore::Haptics::Impact_Thump_100);
+    //    else if (desiredValue == 1)
+    //        return m_glove.SendHaptics(SGCore::Haptics::Object_Grasp_100);
+    //    else
+    //        return m_glove.SendHaptics(SGCore::Haptics::Button_Double_100);
+    return true;
 }
 
 int GloveControlHelper::getNoGloveLinks()
@@ -421,50 +441,52 @@ int GloveControlHelper::getNoSensors()
     return m_NoSensors;
 }
 
-
-
-void GloveControlHelper::getHumanJointsList( std::vector<std::string>& jointList)const {
+void GloveControlHelper::getHumanJointsList(std::vector<std::string>& jointList) const
+{
     jointList.resize(m_humanJointNameList.size());
-    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    for (size_t i = 0; i < m_humanJointNameList.size(); i++)
         jointList[i] = m_humanJointNameList[i];
 }
 
-void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList)const {
+void GloveControlHelper::getHumanFingersList(std::vector<std::string>& fingerList) const
+{
     fingerList = m_humanFingerNameList;
 }
 
-bool GloveControlHelper::findHumanMotionRange(){
-    yInfo()<<"GloveControlHelper::findHumanMotionRange";
+bool GloveControlHelper::findHumanMotionRange()
+{
+    yInfo() << "GloveControlHelper::findHumanMotionRange";
 
     std::vector<double> jointAngleList;
     getHandJointsAngles(jointAngleList);
 
-    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    for (size_t i = 0; i < m_humanJointNameList.size(); i++)
     {
-        m_jointRangeMin[i]=std::min(m_jointRangeMin[i], jointAngleList[i]);
-        m_jointRangeMax[i]=std::max(m_jointRangeMax[i], jointAngleList[i]);
+        m_jointRangeMin[i] = std::min(m_jointRangeMin[i], jointAngleList[i]);
+        m_jointRangeMax[i] = std::max(m_jointRangeMax[i], jointAngleList[i]);
     }
 
     yarp::sig::Vector desiredValue;
-    desiredValue.resize(m_buzzDof,35);
+    desiredValue.resize(m_buzzDof, 35);
     setBuzzMotorsReference(desiredValue);
 
     return true;
 }
 
-void GloveControlHelper::getHumanMotionRange( std::vector<double>& jointRangeMin, std::vector<double>& jointRangeMax)
+void GloveControlHelper::getHumanMotionRange(std::vector<double>& jointRangeMin,
+                                             std::vector<double>& jointRangeMax)
 {
-    yInfo()<<"GloveControlHelper::getHumanMotionRange";
+    yInfo() << "GloveControlHelper::getHumanMotionRange";
 
     jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
     jointRangeMax.resize(m_humanJointNameList.size(), 0.0);
-    for(size_t i=0; i<m_humanJointNameList.size(); i++)
+    for (size_t i = 0; i < m_humanJointNameList.size(); i++)
     {
-        jointRangeMax[i]=m_jointRangeMax[i];
-        jointRangeMin[i]=m_jointRangeMin[i];
+        jointRangeMax[i] = m_jointRangeMax[i];
+        jointRangeMin[i] = m_jointRangeMin[i];
     }
-    std::cout<<"jointRangeMax"<<jointRangeMax<<std::endl;
-    std::cout<<"jointRangeMin"<<jointRangeMin<<std::endl;
+    std::cout << "jointRangeMax" << jointRangeMax << std::endl;
+    std::cout << "jointRangeMin" << jointRangeMin << std::endl;
 }
 
 bool GloveControlHelper::updateGloveWearableData()
@@ -474,40 +496,39 @@ bool GloveControlHelper::updateGloveWearableData()
 
 bool GloveControlHelper::getGloveIMUData(std::vector<double>& gloveImuData)
 {
-    yInfo()<<"GloveControlHelper::getGloveIMUData";
+    yInfo() << "GloveControlHelper::getGloveIMUData";
 
-//    SGCore::Kinematics::Quat imu;
-//    gloveImuData.resize(4, 0.0);
+    //    SGCore::Kinematics::Quat imu;
+    //    gloveImuData.resize(4, 0.0);
 
-//    if(!m_glove.GetIMURotation(imu))
-//    {
-//        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove IMU value";
-//        return true; // to avoid crashing
-//    }
+    //    if(!m_glove.GetIMURotation(imu))
+    //    {
+    //        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove IMU value";
+    //        return true; // to avoid crashing
+    //    }
 
-//    //    SGCore::SG::SG_SensorData sensorData;
-//    //    if(!m_glove.GetSensorData(sensorData))
-//    //    {
-//    //        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove sensory values";
-//    //        return true;
-//    //    }
-//    //    if(!sensorData.IMUParsed())
-//    //    {
-//    //        yError()<<"[GloveControlHelper::getGloveIMUData] Cannot pasre glove IMU value";
-//    //        return true;
-//    //    }
-//    //     SGCore::Kinematics::Quat imu= sensorData.imuValues;
+    //    //    SGCore::SG::SG_SensorData sensorData;
+    //    //    if(!m_glove.GetSensorData(sensorData))
+    //    //    {
+    //    //        yWarning()<<"[GloveControlHelper::getGloveIMUData] Cannot get glove sensory
+    //    values";
+    //    //        return true;
+    //    //    }
+    //    //    if(!sensorData.IMUParsed())
+    //    //    {
+    //    //        yError()<<"[GloveControlHelper::getGloveIMUData] Cannot pasre glove IMU value";
+    //    //        return true;
+    //    //    }
+    //    //     SGCore::Kinematics::Quat imu= sensorData.imuValues;
 
-//    gloveImuData[0]= imu.w;
-//    gloveImuData[1]= imu.x;
-//    gloveImuData[2]= imu.y;
-//    gloveImuData[3]= imu.z;
-    m_pImp->getSenseGloveImuValues(gloveImuData);
+    //    gloveImuData[0]= imu.w;
+    //    gloveImuData[1]= imu.x;
+    //    gloveImuData[2]= imu.y;
+    //    gloveImuData[3]= imu.z;
+    m_pImp->getPalmImuRotationValues(gloveImuData);
 
     return true;
 }
-
-
 
 ///// <summary> set the level(s) of force and vibrotactile feedback, with an optional thumper
 /// command
