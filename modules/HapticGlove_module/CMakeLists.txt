@@ -28,38 +28,7 @@ if(WIN32)
   # MSVC standard library doesn't include things like M_PI_2 without this
   add_definitions(-D_USE_MATH_DEFINES)
 endif()
-#######
-#if(WIN32)
-#	if(DEFINED $ENV{SenseGlove_DIR})
-#		SET(SENSEGLOVE_DIR "$ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Win/x64/Release")
-#	endif()
-#else()
-#	if(DEFINED $ENV{SenseGlove_DIR})
-#		SET(SENSEGLOVE_DIR "$ENV{SenseGlove_DIR}/Core/SGCoreCpp/lib/Linux")
-#	endif()
-#endif()
 
-#find_path(SENSEGLOVE_INCLUDE_DIR NAMES Core/SGCoreCpp/incl/DeviceList.h Core/SGCoreCpp/incl/SenseGlove.h PATHS ${SENSEGLOVE_DIR})
-#find_library(SENSEGLOVE_LIBRARY NAMES SGCore PATHS ${SENSEGLOVE_DIR} )
-
-#find_package_handle_standard_args(SENSEGLOVE DEFAULT_MSG 
-#	SENSEGLOVE_INCLUDE_DIR
-#	SENSEGLOVE_LIBRARY )
-
-#if(SENSEGLOVE_FOUND)
-#	set(SENSEGLOVE_LIBRARIES ${SENSEGLOVE_LIBRARY})
-#	set(SENSEGLOVE_INCLUDE_DIRS ${SENSEGLOVE_DIR})
-#	mark_as_advanced( SENSEGLOVE_LIBRARY
-#										SENSEGLOVE_INCLUDE_DIR
-#										SenseGlove_DIR )
-	
-#	message("SENSEGLOVE FOUND!")
-#else()
-#	set(SenseGlove_DIR "" CACHE STRING 
-#			"an optional hint to a directory for finding `SenseGlove`" )
-#	message("SENSEGLOVE not FOUND!")
-#endif()
-##########
 #find_package(SenseGlove REQUIRED)
 if(SENSEGLOVE_FOUND)
 #  include_directories($SENSEGLOVE_INCLUDE_DIR)
@@ -140,7 +109,6 @@ else(ENABLE_LOGGER)
     walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
-
 )
 endif()
 
