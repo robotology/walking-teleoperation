@@ -52,8 +52,6 @@ public:
 
     ~GloveWearableImpl();
 
-    bool updateDevice();
-
     bool
     configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 

@@ -22,17 +22,6 @@ GloveWearableImpl::~GloveWearableImpl()
 {
 }
 
-bool GloveWearableImpl::updateDevice()
-{
-    yInfo() << "WearableImpl::updateDevice()";
-    //    if(m_iWear->getStatus()== wearable::WearStatus::Error)
-    //    {
-    //        yError()<<"Cannot update iWearRemapper";
-    //        return false;
-    //    }
-    return true;
-}
-
 bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
                                   const std::string& name,
                                   const bool& rightHand)

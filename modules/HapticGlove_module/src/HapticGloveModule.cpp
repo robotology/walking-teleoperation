@@ -364,14 +364,14 @@ bool HapticGloveModule::LoggerImplementation::updateData()
                                                                    data.robotJointsExpectedKF);
 
     if (this->isRightHand)
-        this->hapticModule.m_gloveRightHand->getHandJointsAngles(data.humanJointValues);
+        this->hapticModule.m_gloveRightHand->getHandJointAngles(data.humanJointValues);
     else
-        this->hapticModule.m_gloveLeftHand->getHandJointsAngles(data.humanJointValues);
+        this->hapticModule.m_gloveLeftHand->getHandJointAngles(data.humanJointValues);
 
     if (this->isRightHand)
-        this->hapticModule.m_gloveRightHand->getHandJointsAngles(data.humanJointValues);
+        this->hapticModule.m_gloveRightHand->getHandJointAngles(data.humanJointValues);
     else
-        this->hapticModule.m_gloveLeftHand->getHandJointsAngles(data.humanJointValues);
+        this->hapticModule.m_gloveLeftHand->getHandJointAngles(data.humanJointValues);
 
     data.humanFingertipPose = Eigen::MatrixXd::Zero(this->numOfHumanHandFingers, 7); // to implement
     data.humanForceFeedback.resize(this->numOfHumanHandFingers, 0.0); // to implement
@@ -591,9 +591,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> robotActuatedAxisNameList;
         m_robotLeftHand->controlHelper()->getActuatedAxisNameList(robotActuatedAxisNameList);
 
-        size_t noBuzzMotors = m_gloveLeftHand->getNumOfVibrotactileMotors();
+        size_t noBuzzMotors = m_gloveLeftHand->getNumOfVibrotactileFeedbacks();
         std::vector<std::string> humanJointNameList;
-        m_gloveLeftHand->getHumanHandJointsList(humanJointNameList);
+        m_gloveLeftHand->getHumanHandJointsNames(humanJointNameList);
 
         m_retargetingLeftHand = std::make_unique<Retargeting>(noRobotAllAxis,
                                                               noRobotActuatedAxis,
@@ -675,9 +675,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> robotActuatedAxisNameList;
         m_robotRightHand->controlHelper()->getActuatedAxisNameList(robotActuatedAxisNameList);
 
-        size_t noBuzzMotors = m_gloveRightHand->getNumOfVibrotactileMotors();
+        size_t noBuzzMotors = m_gloveRightHand->getNumOfVibrotactileFeedbacks();
         std::vector<std::string> humanJointNameList;
-        m_gloveRightHand->getHumanHandJointsList(humanJointNameList);
+        m_gloveRightHand->getHumanHandJointsNames(humanJointNameList);
 
         m_retargetingRightHand = std::make_unique<Retargeting>(noRobotAllAxis,
                                                                noRobotActuatedAxis,
@@ -733,7 +733,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         m_leftAxisVelocityErrorSmoother->init(buff);
 
         // HUMAN
-        m_gloveLeftBuzzMotorReference.resize(m_gloveLeftHand->getNumOfVibrotactileMotors(), 0.0);
+        m_gloveLeftBuzzMotorReference.resize(m_gloveLeftHand->getNumOfVibrotactileFeedbacks(), 0.0);
         m_gloveLeftForceFeedbackReference.resize(m_gloveLeftHand->getNumOfForceFeedback(), 0.0);
     }
     std::cerr << "conf 06 \n";
@@ -775,7 +775,8 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         m_rightAxisVelocityErrorSmoother->init(buff);
 
         // HUMAN
-        m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNumOfVibrotactileMotors(), 0.0);
+        m_gloveRightBuzzMotorReference.resize(m_gloveRightHand->getNumOfVibrotactileFeedbacks(),
+                                              0.0);
         m_gloveRightForceFeedbackReference.resize(m_gloveRightHand->getNumOfForceFeedback(), 0.0);
     }
 
@@ -855,15 +856,15 @@ bool HapticGloveModule::close()
     if (m_useLeftHand)
     {
         m_gloveLeftHand->stopHapticFeedback();
-        m_gloveLeftHand->turnOffBuzzMotors();
-        m_gloveLeftHand->turnForceFeedback();
+        m_gloveLeftHand->stopVibrotactileFeedback();
+        m_gloveLeftHand->stopForceFeedback();
     }
 
     if (m_useRightHand)
     {
         m_gloveRightHand->stopHapticFeedback();
-        m_gloveRightHand->turnOffBuzzMotors();
-        m_gloveRightHand->turnForceFeedback();
+        m_gloveRightHand->stopVibrotactileFeedback();
+        m_gloveRightHand->stopForceFeedback();
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for 100ms.
@@ -1012,7 +1013,8 @@ bool HapticGloveModule::updateModule()
                 yInfo() << "++++++++++++++++++++++++ time: " << m_timeNow - m_timePreparation
                         << " give force feedback command";
                 //  m_gloveRightHand->setPalmFeedbackThumper(0);
-                m_gloveRightHand->setFingersForceReference(m_gloveRightBuzzMotorReference);
+                m_gloveRightHand->setFingertipForceFeedbackReferences(
+                    m_gloveRightBuzzMotorReference);
             }
             /**else if (m_timeNow - m_timePreparationStarting > 5.0
                        && m_timeNow - m_timePreparationStarting < 10.0)
@@ -1199,7 +1201,7 @@ bool HapticGloveModule::updateModule()
         if (m_useLeftHand)
         {
             std::vector<double> humanJointAngles;
-            m_gloveLeftHand->getHandJointsAngles(humanJointAngles);
+            m_gloveLeftHand->getHandJointAngles(humanJointAngles);
             //            yInfo()<<"human joint angles: "<<humanJointAngles;
             if (!m_retargetingLeftHand->retargetHumanMotionToRobot(humanJointAngles))
             {
@@ -1215,7 +1217,7 @@ bool HapticGloveModule::updateModule()
         if (m_useRightHand)
         {
             std::vector<double> humanJointAngles;
-            m_gloveRightHand->getHandJointsAngles(humanJointAngles);
+            m_gloveRightHand->getHandJointAngles(humanJointAngles);
             if (!m_retargetingRightHand->retargetHumanMotionToRobot(humanJointAngles))
             {
                 yError() << "[HapticGloveModule::updateModule()] "
@@ -1726,8 +1728,9 @@ bool HapticGloveModule::updateModule()
                     << m_gloveLeftForceFeedbackReference.toString();
             yInfo() << "m_gloveLeftBuzzMotorReference\n"
                     << m_gloveLeftBuzzMotorReference.toString();
-            m_gloveLeftHand->setFingersForceReference(m_gloveLeftForceFeedbackReference);
-            m_gloveLeftHand->setBuzzMotorsReference(m_gloveLeftBuzzMotorReference);
+            m_gloveLeftHand->setFingertipForceFeedbackReferences(m_gloveLeftForceFeedbackReference);
+            m_gloveLeftHand->setFingertipVibrotactileFeedbackReferences(
+                m_gloveLeftBuzzMotorReference);
         }
 
         if (m_useRightHand)
@@ -1744,8 +1747,10 @@ bool HapticGloveModule::updateModule()
             yInfo() << "m_gloveRightBuzzMotorReference\n"
                     << m_gloveRightBuzzMotorReference.toString();
 
-            m_gloveRightHand->setFingersForceReference(m_gloveRightForceFeedbackReference);
-            m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
+            m_gloveRightHand->setFingertipForceFeedbackReferences(
+                m_gloveRightForceFeedbackReference);
+            m_gloveRightHand->setFingertipVibrotactileFeedbackReferences(
+                m_gloveRightBuzzMotorReference);
         }
         double time4 = yarp::os::Time::now();
         yInfo() << "[updateModule] time setting values: " << time4 - time3;
@@ -1789,7 +1794,7 @@ bool HapticGloveModule::updateModule()
 
         if (m_useLeftHand)
         {
-            if (!m_gloveLeftHand->setupGlove())
+            if (!m_gloveLeftHand->prepareGlove())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot setup the left "
                             "hand glove.";
@@ -1799,7 +1804,7 @@ bool HapticGloveModule::updateModule()
 
         if (m_useRightHand)
         {
-            if (!m_gloveRightHand->setupGlove())
+            if (!m_gloveRightHand->prepareGlove())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot setup the "
                             "right hand glove.";
