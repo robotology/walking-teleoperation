@@ -27,12 +27,11 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/sig/Vector.h>
 
-#include <RobotController_hapticGlove.hpp>
 #include <GloveControlHelper.hpp>
+#include <RobotController_hapticGlove.hpp>
 
-#include <iCub/ctrl/minJerkCtrl.h>
 #include <Retargeting.hpp>
-
+#include <iCub/ctrl/minJerkCtrl.h>
 
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
@@ -48,8 +47,6 @@
 class HapticGloveModule : public yarp::os::RFModule
 {
 private:
-
-
     double m_dT; /**< Module period. */
     std::string m_robot; /**< robot name. */
     bool m_getHumanMotionRange; /**< get the motion range of the human joints*/
@@ -67,13 +64,16 @@ private:
 
     double m_timePreparation, m_timeConfigurationEnding, m_timeNow;
 
-    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisValueErrorSmoother{nullptr}, m_leftAxisValueErrorSmoother{nullptr};
-    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisVelocityErrorSmoother{nullptr}, m_leftAxisVelocityErrorSmoother{nullptr};
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisValueErrorSmoother{nullptr},
+        m_leftAxisValueErrorSmoother{nullptr};
+    std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisVelocityErrorSmoother{nullptr},
+        m_leftAxisVelocityErrorSmoother{nullptr};
 
     yarp::sig::Vector m_icubRightFingerAxisValueError, m_icubRightFingerAxisValueErrorSmoothed;
     yarp::sig::Vector m_icubLeftFingerAxisValueError, m_icubLeftFingerAxisValueErrorSmoothed;
 
-    yarp::sig::Vector m_icubRightFingerAxisVelocityError, m_icubRightFingerAxisVelocityErrorSmoothed;
+    yarp::sig::Vector m_icubRightFingerAxisVelocityError,
+        m_icubRightFingerAxisVelocityErrorSmoothed;
     yarp::sig::Vector m_icubLeftFingerAxisVelocityError, m_icubLeftFingerAxisVelocityErrorSmoothed;
 
     yarp::sig::Vector m_leftTotalGain, m_rightTotalGain;
@@ -83,8 +83,6 @@ private:
     double m_velocity_threshold_transient;
     double m_Value_error_threshold_transient;
 
-
-
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
     {
@@ -92,6 +90,10 @@ private:
         Running,
         InPreparation
     };
+
+    class LoggerImplementation;
+
+    std::unique_ptr<LoggerImplementation> m_loggerLeftHand, m_loggerRightHand;
 
     HapticGloveFSM m_state; /**< State of the HapticGloveFSM */
 
@@ -108,13 +110,13 @@ private:
     std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveLeftHand; /**< Pointer to the left
                                                                hand glove object. */
 
+    std::unique_ptr<Retargeting> m_retargetingLeftHand;
 
-    std::unique_ptr<Retargeting>m_retargetingLeftHand;
-
-    std::unique_ptr<Retargeting>m_retargetingRightHand;
+    std::unique_ptr<Retargeting> m_retargetingRightHand;
 
     bool m_enableLogger; /**< log the data (if ON) */
-    bool m_useLeftHand, m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
+    bool m_useLeftHand,
+        m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
     double m_calibrationTimePeriod; /**< calibration time period [sec] */
 #ifdef ENABLE_LOGGER
     XBot::MatLogger2::Ptr m_logger; /**< */
@@ -162,17 +164,16 @@ public:
      */
     bool close() final;
 
-    /**
-     * Open the logger
-     * @return true if it could open the logger
-     */
-    bool openLogger();
+    //    /**
+    //     * Open the logger
+    //     * @return true if it could open the logger
+    //     */
+    //    bool openLogger();
 
-    /**
-     * Log the data
-     */
-    void logData();
-
+    //    /**
+    //     * Log the data
+    //     */
+    //    void logData();
 };
 
 inline std::string getTimeDateMatExtension()
