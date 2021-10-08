@@ -1,7 +1,7 @@
 /**
  * @file GloveWearable.hpp
  * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
- * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
+ * @copyright 2021 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2021
  */
@@ -9,22 +9,37 @@
 #ifndef GLOVE_WEARABLE_HPP
 #define GLOVE_WEARABLE_HPP
 
+// std
+#include <Eigen/Dense>
+#include <vector>
+// wearable
 #include <Wearable/IWear/IWear.h>
 #include <thrift/WearableActuatorCommand.h>
+// YARP
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/os/Network.h>
-
-#include <vector>
 #include <yarp/sig/Vector.h>
 
-#include <Eigen/Dense>
-
 using namespace yarp::os;
+namespace HapticGlove
+{
+class GloveWearableImpl;
+}
 
-class GloveWearableImpl
+class HapticGlove::GloveWearableImpl
 {
 private:
+    std::string m_logPrefix;
+
+    const size_t m_numForceFeedback; /**< Number of the motors to produce force feedback to the
+                         human*/
+    const size_t m_numVibrotactileFeedback; /**< Number of the vibrotactile to produce vibrotactile
+                                      feedback to the human*/
+    const size_t m_numFingers; /**< Number of the fingers of the glove/human */
+    const size_t m_numHandJoints; /**< Number of the joints of the human hand*/
+
+    bool m_isRightHand; /**< true if the glove is the right hand*/
+
     yarp::dev::PolyDriver m_wearableDevice;
 
     wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
@@ -39,33 +54,104 @@ private:
 
     std::vector<std::string> m_humanFingerNameList;
 
-    wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor> m_handLinkSensor;
+    wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor> m_handPalmSensor;
 
     std::vector<wearable::SensorPtr<const wearable::sensor::IVirtualJointKinSensor>> m_jointSensors;
 
-    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_ForceFeedbackActuators;
+    std::vector<wearable::SensorPtr<const wearable::sensor::IVirtualLinkKinSensor>>
+        m_fingertipLinkSensors;
 
-    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>> m_VibroTactileActuators;
+    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>>
+        m_fingertipForceFeedbackActuators;
+
+    std::vector<wearable::SensorPtr<const wearable::actuator::IHaptic>>
+        m_fingertipVibrotactileActuators;
+
+    wearable::SensorPtr<const wearable::actuator::IHaptic> m_palmVibrotactileActuator;
 
 public:
-    GloveWearableImpl();
+    /**
+     * ConstructorbrotactileValues(const std::vector<int>& values);
 
+     * @param numFingers number of fingers
+     * @param numForceFeedback number of force feedback actuators on the hand fingertips
+     * @param numVibrotactileFeedback number of vibrotactile feedback actuators on the hand
+     * fingertips
+     * @param numHandJoints number of hand joints
+     */
+    GloveWearableImpl(const size_t& numFingers,
+                      const size_t& numForceFeedback,
+                      const size_t& numVibrotactileFeedback,
+                      const size_t& numHandJoints);
+
+    /**
+     * Destructor
+     */
     ~GloveWearableImpl();
 
+    /**
+     * Configure the wearable implemenetation
+     * @param config confifuration options
+     * @param name name of the robot
+     * @param rightHand if true the right hand is used
+     * @return true/false in case of success/failure
+     */
     bool
     configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
-    bool createWearableDataVectors();
+    /**
+     * initialize the Wearable data vectors associated with the sensors
+     * @return true/false in case of success/failure
+     */
+    bool initializeWearableSensors();
 
-    bool getFingersJointValues(std::vector<double>& values);
+    /**
+     * get the sensor data associated with the human hand joints
+     * @param values the vector of human joint angles [rad]
+     * @return true/false in case of success/failure
+     */
+    bool getJointValues(std::vector<double>& values);
 
+    /**
+     * get the sensor data associated with the human hand palm rotation
+     * @param values the vector of human hand palm quaternion [w, x, y, z]
+     * @return true/false in case of success/failure
+     */
     bool getPalmImuRotationValues(std::vector<double>& values);
 
-    bool getFingertipsPoseValues(Eigen::MatrixXd& measuredValue);
+    /**
+     * get the sensor data associated with all the human hand fingertip poses [position(x, y, z),
+     * quaternion(w, x, y, z)]
+     * @param values an eigen matrix providing all the human hand fingertip poses (number of
+     * fingertips x pose size (7))
+     * -- rows: from thumb to pinky finger
+     * -- columns:[position(x, y, z), quaternion(w, x, y, z)]
+     * @return true/false in case of success/failure
+     */
+    bool getFingertipPoseValues(Eigen::MatrixXd& values);
 
-    bool setFingersForceFeedbackValues(std::vector<double>& values);
+    /**
+     * set the force feedback actuator values associated with all the human hand fingertips
+     * @param values the vector of force feedback values to the human fingertips, from thumb to
+     * pinky, range: [0, 100]
+     * @return true/false in case of success/failure
+     */
+    bool setFingertipForceFeedbackValues(const std::vector<int>& values);
 
-    bool setFingersVibroTactileValues(std::vector<double>& values);
+    /**
+     * set the vibrotactile feedback actuator values associated with all the human hand fingertips
+     * @param values the vector of vibrotactile feedback values to the human fingertips, from thumb
+     * to pinky, range: [0, 100]
+     * @return true/false in case of success/failure
+     */
+    bool setFingertipVibrotactileValues(const std::vector<int>& values);
+
+    /**
+     * set the vibrotactile feedback actuator value associated with the human hand palm
+     * @param value the vibrotactile feedback value associated with the human hand palm
+     * @return true/false in case of success/failure
+     */
+    bool setPalmVibrotactileValue(const int& value);
 };
 
 #endif

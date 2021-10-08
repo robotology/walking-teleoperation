@@ -997,7 +997,7 @@ bool HapticGloveModule::updateModule()
                 tmp_buzzVal = 0.0;
             }
             for (int i = 0; i < 5; i++)
-                m_gloveRightBuzzMotorReference(i) = tmp_buzzVal;
+                m_gloveRightBuzzMotorReference[i] = tmp_buzzVal;
             // m_gloveRightBuzzMotorReference(1) = tmp_buzzVal;
 
             // m_gloveRightHand->setBuzzMotorsReference(m_gloveRightBuzzMotorReference);
@@ -1724,10 +1724,8 @@ bool HapticGloveModule::updateModule()
             m_robotLeftHand->setFingersJointReference(m_icubLeftFingerJointsReference);
             m_robotLeftHand->move();
             // set glove values
-            yInfo() << "m_gloveLeftForceFeedbackReference\n"
-                    << m_gloveLeftForceFeedbackReference.toString();
-            yInfo() << "m_gloveLeftBuzzMotorReference\n"
-                    << m_gloveLeftBuzzMotorReference.toString();
+            yInfo() << "m_gloveLeftForceFeedbackReference\n" << m_gloveLeftForceFeedbackReference;
+            yInfo() << "m_gloveLeftBuzzMotorReference\n" << m_gloveLeftBuzzMotorReference;
             m_gloveLeftHand->setFingertipForceFeedbackReferences(m_gloveLeftForceFeedbackReference);
             m_gloveLeftHand->setFingertipVibrotactileFeedbackReferences(
                 m_gloveLeftBuzzMotorReference);
@@ -1742,10 +1740,8 @@ bool HapticGloveModule::updateModule()
             m_robotRightHand->move();
 
             // set glove values
-            yInfo() << "m_gloveRightForceFeedbackReference\n"
-                    << m_gloveRightForceFeedbackReference.toString();
-            yInfo() << "m_gloveRightBuzzMotorReference\n"
-                    << m_gloveRightBuzzMotorReference.toString();
+            yInfo() << "m_gloveRightForceFeedbackReference\n" << m_gloveRightForceFeedbackReference;
+            yInfo() << "m_gloveRightBuzzMotorReference\n" << m_gloveRightBuzzMotorReference;
 
             m_gloveRightHand->setFingertipForceFeedbackReferences(
                 m_gloveRightForceFeedbackReference);

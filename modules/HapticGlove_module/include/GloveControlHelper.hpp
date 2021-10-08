@@ -1,9 +1,9 @@
 /**
  * @file GloveControlHelper.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
- * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
+ * @copyright 2021 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- * @date 2020
+ * @date 2021
  */
 
 #ifndef GLOVE_CONTROL_HELPER_HPP
@@ -13,32 +13,39 @@
 
 // std
 #include <memory>
+#include <vector>
 
-// YARP
-#include <yarp/sig/Vector.h>
 // Wearable library
 #include "GloveWearable.hpp"
 
+// YARP
+#include <yarp/os/Searchable.h>
+
 namespace HapticGlove
 {
+class GloveControlHelper;
+}
 /**
  * GloveControlHelper is an helper class for controlling the glove.
  */
-class GloveControlHelper
+class HapticGlove::GloveControlHelper
 {
 
-    int m_numForceFeedback; /**< Number of the motors to produce force feedback to the
+    std::string m_logPrefix;
+
+    const size_t m_numForceFeedback; /**< Number of the motors to produce force feedback to the
                          human*/
-    int m_numVibrotactileFeedback; /**< Number of the vibrotactile to produce vibrotactile feedback
-                                      to the human*/
-    size_t m_numFingers; /**< Number of the fingers of the glove/human */
-    size_t m_numHandJoints; /**< Number of the joints of the human hand*/
+    const size_t m_numVibrotactileFeedback; /**< Number of the vibrotactile to produce vibrotactile
+                                      feedback to the human*/
+    const size_t m_numFingers; /**< Number of the fingers of the glove/human */
+    const size_t m_numHandJoints; /**< Number of the joints of the human hand*/
+    const double m_maxForceFeedback; /**< Max force feedback the glove at each fingertip can apply
+                                     to the human [N]*/
 
     bool m_isRightHand; /**< true if the glove is the right hand*/
 
-    std::vector<double>
-        m_desiredForceValues; /**< Desired force feedback values; range: [0, 100]. */
-    std::vector<double>
+    std::vector<int> m_desiredForceValues; /**< Desired force feedback values; range: [0, 100]. */
+    std::vector<int>
         m_desiredVibrotactileValues; /**< Desired vibrotactile feedback values; range: [0, 100] */
     std::vector<double>
         m_JointsValues; /**< human hand joints angles [rad];
@@ -58,6 +65,11 @@ class GloveControlHelper
         m_pImp; /**< Sense glove wearable interface impelemntation. */
 
 public:
+    /**
+     * Constructor
+     */
+    GloveControlHelper();
+
     /**
      * Configure the helper
      * @param config confifuration options
@@ -87,7 +99,7 @@ public:
      * @param desiredValue desired force feedback values
      * @return true/false in case of success/failure
      */
-    bool setFingertipForceFeedbackReferences(const yarp::sig::Vector& desiredValue);
+    bool setFingertipForceFeedbackReferences(const std::vector<double>& desiredValue);
 
     /**
      * Set the vibro-tactile feedback references to the user
@@ -95,14 +107,14 @@ public:
      * @return true/false in case of success/failure
      */
     bool setFingertipVibrotactileFeedbackReferences(
-        const yarp::sig::Vector& desiredValue); // to change data type
+        const std::vector<double>& desiredValue); // to change data type
 
     /**
      * Set the number of vibro-tactile reference
      * @param desiredValue desired vibro-tactile values
      * @return true / false in case of success/failure
      */
-    bool setPalmVibrotactileFeedbackReference(const int desiredValue);
+    bool setPalmVibrotactileFeedbackReference(const int& desiredValue);
 
     /**
      * stop the haptic feedback (force feedback, fingertip vibrotactile feedback, palm vibrotactile
@@ -181,14 +193,14 @@ public:
      * @return true/false in case of success/failure
      */
     bool getHumanFingerJointsMotionRange(std::vector<double>& jointRangeMin,
-                                         std::vector<double>& jointRangeMax);
+                                         std::vector<double>& jointRangeMax) const;
 
     /**
      * Get the hand palm rotation from the IMU data
      * @param data glove IMU data attached to the human hand palm (order x y z w)
      * @return true/false in case of success/failure
      */
-    bool getHandPalmRotation(std::vector<double>& data);
+    bool getHandPalmRotation(std::vector<double>& data) const;
 
     /**
      * Get the number of human/glove fingers
@@ -220,6 +232,5 @@ public:
      */
     bool close();
 };
-} // namespace HapticGlove
 
 #endif

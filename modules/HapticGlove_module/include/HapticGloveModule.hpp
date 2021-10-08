@@ -16,6 +16,7 @@
 #include <chrono>
 #include <ctime>
 #include <memory>
+#include <vector>
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
@@ -59,8 +60,8 @@ private:
     yarp::sig::Vector m_icubRightFingerAxisVelocityReference, m_icubRightFingerAxisVelocityFeedback;
     yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
-    yarp::sig::Vector m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
-    yarp::sig::Vector m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
+    std::vector<double> m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
+    std::vector<double> m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
 
     double m_timePreparation, m_timeConfigurationEnding, m_timeNow;
 
