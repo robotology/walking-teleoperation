@@ -218,7 +218,8 @@ bool GloveWearableImpl::initializeWearableSensors()
                     << "initialize the following sensor: " << sensor->getSensorName();
         }
 
-        yInfo() << m_logPrefix << "size of the fingertip link sensors: " << m_jointSensors.size();
+        yInfo() << m_logPrefix
+                << "size of the fingertip link sensors: " << m_fingertipLinkSensors.size();
     }
 
     // intialize joints sensors
@@ -242,6 +243,7 @@ bool GloveWearableImpl::initializeWearableSensors()
         }
         yInfo() << m_logPrefix << "size of the joint sensors: " << m_jointSensors.size();
     }
+    yInfo() << m_logPrefix << "initialization of the wearable sensors is done.";
 
     return true;
 }
@@ -295,8 +297,8 @@ bool GloveWearableImpl::getFingertipPoseValues(Eigen::MatrixXd& values)
         sensor->getLinkPose(position, orientation);
         for (size_t j = 0; j < 3; j++)
             values(i, j) = position[j];
-        for (size_t j = 3; j < 7; j++)
-            values(i, j) = orientation[j];
+        for (size_t j = 0; j < 4; j++)
+            values(i, j + 3) = orientation[j];
         i++;
     }
     return true;

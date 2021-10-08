@@ -117,7 +117,7 @@ bool Retargeting::configure(const yarp::os::Searchable& config, const std::strin
             config, "joints_min_boundary_all", m_robotJointsRangeMin))
     {
         yError() << "[Retargeting::configure] Initialization failed while reading "
-                    "joints_min_boundary vector of the hand.";
+                    "joints_min_boundary_all vector of the hand.";
         return false;
     }
 
