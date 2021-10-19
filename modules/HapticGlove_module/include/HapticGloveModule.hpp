@@ -54,11 +54,11 @@ private:
 
     yarp::sig::Vector m_icubLeftFingerAxisValueReference, m_icubLeftFingerAxisValueFeedback;
     yarp::sig::Vector m_icubLeftFingerAxisVelocityReference, m_icubLeftFingerAxisVelocityFeedback;
-    yarp::sig::Vector m_icubLeftFingerJointsReference, m_icubLeftFingerJointsFeedback;
+    std::vector<double> m_icubLeftFingerJointsReference, m_icubLeftFingerJointsFeedback;
 
     yarp::sig::Vector m_icubRightFingerAxisValueReference, m_icubRightFingerAxisValueFeedback;
     yarp::sig::Vector m_icubRightFingerAxisVelocityReference, m_icubRightFingerAxisVelocityFeedback;
-    yarp::sig::Vector m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
+    std::vector<double> m_icubRightFingerJointsReference, m_icubRightFingerJointsFeedback;
 
     std::vector<double> m_gloveRightBuzzMotorReference, m_gloveLeftBuzzMotorReference;
     std::vector<double> m_gloveRightForceFeedbackReference, m_gloveLeftForceFeedbackReference;
@@ -70,12 +70,13 @@ private:
     std::unique_ptr<iCub::ctrl::minJerkTrajGen> m_rightAxisVelocityErrorSmoother{nullptr},
         m_leftAxisVelocityErrorSmoother{nullptr};
 
-    yarp::sig::Vector m_icubRightFingerAxisValueError, m_icubRightFingerAxisValueErrorSmoothed;
-    yarp::sig::Vector m_icubLeftFingerAxisValueError, m_icubLeftFingerAxisValueErrorSmoothed;
+    std::vector<double> m_icubRightFingerAxisValueError, m_icubRightFingerAxisValueErrorSmoothed;
+    std::vector<double> m_icubLeftFingerAxisValueError, m_icubLeftFingerAxisValueErrorSmoothed;
 
-    yarp::sig::Vector m_icubRightFingerAxisVelocityError,
+    std::vector<double> m_icubRightFingerAxisVelocityError,
         m_icubRightFingerAxisVelocityErrorSmoothed;
-    yarp::sig::Vector m_icubLeftFingerAxisVelocityError, m_icubLeftFingerAxisVelocityErrorSmoothed;
+    std::vector<double> m_icubLeftFingerAxisVelocityError,
+        m_icubLeftFingerAxisVelocityErrorSmoothed;
 
     yarp::sig::Vector m_leftTotalGain, m_rightTotalGain;
     yarp::sig::Vector m_leftVelocityGain, m_rightVelocityGain;
@@ -111,9 +112,9 @@ private:
     std::unique_ptr<HapticGlove::GloveControlHelper> m_gloveLeftHand; /**< Pointer to the left
                                                                hand glove object. */
 
-    std::unique_ptr<Retargeting> m_retargetingLeftHand;
+    std::unique_ptr<HapticGlove::Retargeting> m_retargetingLeftHand;
 
-    std::unique_ptr<Retargeting> m_retargetingRightHand;
+    std::unique_ptr<HapticGlove::Retargeting> m_retargetingRightHand;
 
     bool m_enableLogger; /**< log the data (if ON) */
     bool m_useLeftHand,

@@ -16,25 +16,22 @@
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/IControlLimits.h>
 #include <yarp/dev/IControlMode.h>
+#include <yarp/dev/ICurrentControl.h>
 #include <yarp/dev/IEncodersTimed.h>
 #include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/IPWMControl.h>
+#include <yarp/dev/IPidControl.h>
 #include <yarp/dev/IPositionControl.h>
 #include <yarp/dev/IPositionDirect.h>
 #include <yarp/dev/IVelocityControl.h>
-#include <yarp/dev/ICurrentControl.h>
-#include<yarp/dev/IPWMControl.h>
-#include<yarp/dev/IPidControl.h>
-
 
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 
-
 namespace HapticGlove
 {
-
 
 /**
  * Data structure the name of the all the sesnors (analog, encoders) assosiated with the axes list.
@@ -43,8 +40,8 @@ struct axisSensorData
 {
     std::string axisName;
     bool useAnalog;
-    std::vector<int> relatedAnalogSensorsIndex; /**< The list of elements of the analog sensor associated axis name */
-
+    std::vector<int> relatedAnalogSensorsIndex; /**< The list of elements of the analog sensor
+                                                   associated axis name */
 };
 
 /**
@@ -57,18 +54,20 @@ class RobotControlInterface
 
     int m_noActuatedAxis; /**< Number of the actuated DoF */
     size_t m_noAnalogSensor; /**< Number of the joints ( associated with the analog sensors) */
-    size_t m_noAllJoints; /**< Number of all the interested joints ( associated with the analog & encoders sensors) */
+    size_t m_noAllJoints; /**< Number of all the interested joints ( associated with the analog &
+                             encoders sensors) */
     size_t m_noAllAxis;
 
-    std::vector<std::string>
-        m_axesList; /**< Vector containing the name of the controlled axes. */
+    std::vector<std::string> m_axesList; /**< Vector containing the name of the controlled axes. */
 
     std::vector<std::string>
-        m_actuatedJointList; /**< Vector containing the names of the activated joints (activated joints are related to the axis that we are using). */
+        m_actuatedJointList; /**< Vector containing the names of the activated joints (activated
+                                joints are related to the axis that we are using). */
 
     size_t m_noActuatedJoints;
     std::vector<axisSensorData>
-        m_axisInfoList; /**< Vector containing the data structure for controlled axis and the associated sensor list. */
+        m_axisInfoList; /**< Vector containing the data structure for controlled axis and the
+                           associated sensor list. */
 
     yarp::dev::IPreciselyTimed* m_timedInterface{nullptr};
     yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */
@@ -79,7 +78,7 @@ class RobotControlInterface
     yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
     yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */
     yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /**< Sensor interface */
-    yarp::dev::ICurrentControl* m_currentInterface{nullptr};/**< current control interface */
+    yarp::dev::ICurrentControl* m_currentInterface{nullptr}; /**< current control interface */
     yarp::dev::IPWMControl* m_pwmInterface{nullptr}; /**< PWM control interface*/
     yarp::dev::IPidControl* m_pidInterface{nullptr}; /**< pid control interface*/
 
@@ -92,14 +91,18 @@ class RobotControlInterface
     yarp::sig::Vector m_analogSensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
     yarp::sig::Vector m_analogSensorFeedbackSelected; /**< sensor info to read*/
-    yarp::sig::Vector m_SensorActuatedJointFeedbackInRadians; /**< all the interested sensor info to read (analog+encoders)*/
-    yarp::sig::Vector m_currentFeedback;/**< motor current feedbacks*/
-    yarp::sig::Vector m_desiredCurrent;/**< motor current reference*/
-    yarp::sig::Vector m_desiredCurrentInterface;/**< motor current reference returned from the Current interface*/
-    yarp::sig::Vector m_pwmDesired;/**< motor PWM desires*/
+    yarp::sig::Vector m_SensorActuatedJointFeedbackInRadians; /**< all the interested sensor info to
+                                                                 read (analog+encoders)*/
+    yarp::sig::Vector m_currentFeedback; /**< motor current feedbacks*/
+    yarp::sig::Vector m_desiredCurrent; /**< motor current reference*/
+    yarp::sig::Vector m_desiredCurrentInterface; /**< motor current reference returned from the
+                                                    Current interface*/
+    yarp::sig::Vector m_pwmDesired; /**< motor PWM desires*/
     yarp::sig::Vector m_pwmFeedback; /**< motor PWM feedbacks*/
-    yarp::sig::Vector m_pwmDesiredInterface; /**< motor PWM feedbacks returned from the PWM interface*/
-    yarp::sig::Vector m_pidOutput; /**< low level pid controller output returned from the PID interface*/
+    yarp::sig::Vector
+        m_pwmDesiredInterface; /**< motor PWM feedbacks returned from the PWM interface*/
+    yarp::sig::Vector
+        m_pidOutput; /**< low level pid controller output returned from the PID interface*/
 
     yarp::sig::Vector m_joints_min_boundary; /**< joint minimum possible value [deg]*/
     yarp::sig::Vector m_joints_max_boundary; /**< joint maximum possible value [deg]*/
@@ -107,13 +110,12 @@ class RobotControlInterface
     yarp::sig::Vector m_sensors_max_boundary; /**< senor maximum value [raw]*/
     yarp::sig::Vector m_sensors_raw2Degree_scaling; /**< sacling from raw to Degree of joints*/
 
-
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
     bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */
 
     yarp::conf::vocab32_t m_controlMode; /**< Used control mode. */
-    yarp::dev::PidControlTypeEnum m_pidControlMode;/**< Used pid control mode. */
+    yarp::dev::PidControlTypeEnum m_pidControlMode; /**< Used pid control mode. */
 
     /**
      * Switch to control mode
@@ -150,15 +152,12 @@ class RobotControlInterface
      */
     bool setCurrentReferences(const yarp::sig::Vector& desiredCurrent);
 
-
     /**
      * Set the desired motor PWM
      * @param desiredPWM desired motor PWM
      * @return true / false in case of success / failure
      */
     bool setPwmReferences(const yarp::sig::Vector& desiredPWM);
-
-
 
 public:
     /**
@@ -245,7 +244,6 @@ public:
      */
     const yarp::sig::Vector& jointEncodersSpeed() const;
 
-
     /**
      * Get the analog sensors value
      * @return the analog sensor values
@@ -288,7 +286,6 @@ public:
      */
     const yarp::sig::Vector& motorPwmReference() const;
 
-
     /**
      * Get the number of actuated degree of freedom (motors)
      * @return the number of actuated DoF
@@ -304,9 +301,6 @@ public:
     const int getNumberOfAllJoints() const;
 
     const int getNumberOfActuatedJoints() const;
-
-
-
 
     void getActuatedJointNameList(std::vector<std::string>& robotActuatedJointNameList) const;
 

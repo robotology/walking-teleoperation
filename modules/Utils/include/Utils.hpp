@@ -96,9 +96,7 @@ bool getDoubleFromSearchable(const yarp::os::Searchable& config,
  * @param number is the int.
  * @return true/false in case of success/failure
  */
-bool getIntFromSearchable(const yarp::os::Searchable& config,
-                          const std::string& key,
-                          int& number);
+bool getIntFromSearchable(const yarp::os::Searchable& config, const std::string& key, int& number);
 
 /**
  * Extract an unsigned int from a searchable object.
@@ -131,7 +129,18 @@ bool getBooleanFromSearchable(const yarp::os::Searchable& config,
  */
 bool getYarpVectorFromSearchable(const yarp::os::Searchable& config,
                                  const std::string& key,
-                                 yarp::sig::Vector& vector);
+                                 yarp::sig::Vector& output);
+
+/**
+ * Extract a vector from a searchable object.
+ * @param config is the searchable object;
+ * @param key the name to check for;
+ * @param vector is the vector.
+ * @return true/false in case of success/failure
+ */
+bool getVectorFromSearchable(const yarp::os::Searchable& config,
+                             const std::string& key,
+                             std::vector<double>& output);
 
 /**
  * Merge two vectors. vector = [vector, t]

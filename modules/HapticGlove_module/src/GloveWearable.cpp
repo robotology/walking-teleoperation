@@ -34,9 +34,8 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
                                   const std::string& name,
                                   const bool& rightHand)
 {
-    m_isRightHand = rightHand;
 
-    m_logPrefix += m_isRightHand ? "RightHand:: " : "LeftHand:: ";
+    m_logPrefix += rightHand ? "RightHand:: " : "LeftHand:: ";
 
     m_wearablePrefix = "HapticGlove::";
 
@@ -197,8 +196,8 @@ bool GloveWearableImpl::initializeWearableSensors()
         yInfo() << m_logPrefix
                 << "initialize the following sensor: " << m_handPalmSensor->getSensorName();
     }
-    // intialize fingertip link sensors
 
+    // intialize fingertip link sensors
     {
         m_fingertipLinkSensors.reserve(m_numFingers);
         for (auto fingerName : m_humanFingerNameList)

@@ -25,7 +25,7 @@ class HapticGlove::Retargeting
 {
     std::string m_logPrefix;
 
-    std::vector<double> m_gainValueError; /**< each element of this vector is multiplied to the
+    std::vector<double> m_gainTotalError; /**< each element of this vector is multiplied to the
                                            error for each motor/axis value error to compute the
                                            force feedback associated with each axis */
     std::vector<double> m_gainVelocityError; /**< each element of this vector is multiplied to the

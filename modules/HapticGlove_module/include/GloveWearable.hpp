@@ -18,7 +18,7 @@
 // YARP
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/sig/Vector.h>
+#include <yarp/os/Searchable.h>
 
 using namespace yarp::os;
 namespace HapticGlove
@@ -37,8 +37,6 @@ private:
                                       feedback to the human*/
     const size_t m_numFingers; /**< Number of the fingers of the glove/human */
     const size_t m_numHandJoints; /**< Number of the joints of the human hand*/
-
-    bool m_isRightHand; /**< true if the glove is the right hand*/
 
     yarp::dev::PolyDriver m_wearableDevice;
 

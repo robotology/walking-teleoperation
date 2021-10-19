@@ -332,19 +332,19 @@ bool HapticGloveModule::LoggerImplementation::updateData()
 
     if (this->isRightHand)
         for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
-            data.robotAxisError[i] = this->hapticModule.m_icubRightFingerAxisValueError(i);
+            data.robotAxisError[i] = this->hapticModule.m_icubRightFingerAxisValueError[i];
     else
         for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
-            data.robotAxisError[i] = this->hapticModule.m_icubLeftFingerAxisValueError(i);
+            data.robotAxisError[i] = this->hapticModule.m_icubLeftFingerAxisValueError[i];
 
     if (this->isRightHand)
         for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
             data.robotAxisErrorSmoothed[i]
-                = this->hapticModule.m_icubRightFingerAxisValueErrorSmoothed(i);
+                = this->hapticModule.m_icubRightFingerAxisValueErrorSmoothed[i];
     else
         for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
             data.robotAxisErrorSmoothed[i]
-                = this->hapticModule.m_icubLeftFingerAxisValueErrorSmoothed(i);
+                = this->hapticModule.m_icubLeftFingerAxisValueErrorSmoothed[i];
 
     if (this->isRightHand)
         this->hapticModule.m_robotRightHand->getFingerJointReference(data.robotJointsReference);
@@ -595,13 +595,9 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> humanJointNameList;
         m_gloveLeftHand->getHumanHandJointsNames(humanJointNameList);
 
-        m_retargetingLeftHand = std::make_unique<Retargeting>(noRobotAllAxis,
-                                                              noRobotActuatedAxis,
-                                                              noBuzzMotors,
-                                                              robotActuatedJointNameList,
-                                                              robotActuatedAxisNameList,
-                                                              humanJointNameList);
-        if (!m_retargetingLeftHand->configure(leftFingersOptions, getName()))
+        m_retargetingLeftHand = std::make_unique<HapticGlove::Retargeting>(
+            robotActuatedJointNameList, robotActuatedAxisNameList, humanJointNameList);
+        if (!m_retargetingLeftHand->configure(leftFingersOptions, getName(), false))
         {
             yError() << "[HapticGloveModule::configure] "
                         "m_retargetingLeftHand->configure returns false";
@@ -679,14 +675,10 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         std::vector<std::string> humanJointNameList;
         m_gloveRightHand->getHumanHandJointsNames(humanJointNameList);
 
-        m_retargetingRightHand = std::make_unique<Retargeting>(noRobotAllAxis,
-                                                               noRobotActuatedAxis,
-                                                               noBuzzMotors,
-                                                               robotActuatedJointNameList,
-                                                               robotActuatedAxisNameList,
-                                                               humanJointNameList);
+        m_retargetingRightHand = std::make_unique<HapticGlove::Retargeting>(
+            robotActuatedJointNameList, robotActuatedAxisNameList, humanJointNameList);
 
-        if (!m_retargetingRightHand->configure(rightFingersOptions, getName()))
+        if (!m_retargetingRightHand->configure(rightFingersOptions, getName(), true))
         {
             yError() << "[HapticGloveModule::configure] "
                         "m_retargetingRightHand->configure returns false";
@@ -974,7 +966,7 @@ bool HapticGloveModule::updateModule()
                 for (unsigned i = 0; i < noLeftFingersJoints; i++)
                 {
                     //            m_icubLeftFingerAxisReference(i)
-                    m_icubLeftFingerJointsReference(i)
+                    m_icubLeftFingerJointsReference[i]
                         = M_PI_4 + M_PI_4 * sin((m_timeNow - m_timePreparation) - M_PI_2);
                     //            m_icubRightFingerAxisReference(i) =
                     //            m_icubLeftFingerAxisReference(i);
@@ -1211,8 +1203,7 @@ bool HapticGloveModule::updateModule()
                 return false;
             }
             m_retargetingLeftHand->getRobotJointReferences(m_icubLeftFingerJointsReference);
-            yInfo() << "m_icubLeftFingerJointsReference: "
-                    << m_icubLeftFingerJointsReference.toString();
+            yInfo() << "m_icubLeftFingerJointsReference: " << m_icubLeftFingerJointsReference;
         }
         if (m_useRightHand)
         {
@@ -1251,13 +1242,13 @@ bool HapticGloveModule::updateModule()
 
             for (int i = 0; i < m_icubLeftFingerAxisValueReference.size(); i++)
             {
-                m_icubLeftFingerAxisValueError(i)
+                m_icubLeftFingerAxisValueError[i]
                     = axisReferenceValuesEstimationKF[i] - axisFeedbackValuesEstimationKF[i];
-                m_icubLeftFingerAxisVelocityError(i) = axisReferenceVelocitiesEstimationKF[i]
+                m_icubLeftFingerAxisVelocityError[i] = axisReferenceVelocitiesEstimationKF[i]
                                                        - axisFeedbackVelocitiesEstimationKF[i];
 
-                m_icubLeftFingerAxisValueErrorSmoothed(i) = m_icubLeftFingerAxisValueError(i);
-                m_icubLeftFingerAxisVelocityErrorSmoothed(i) = m_icubLeftFingerAxisVelocityError(i);
+                m_icubLeftFingerAxisValueErrorSmoothed[i] = m_icubLeftFingerAxisValueError[i];
+                m_icubLeftFingerAxisVelocityErrorSmoothed[i] = m_icubLeftFingerAxisVelocityError[i];
             }
 
             for (int i = 0; i < m_icubLeftFingerAxisValueReference.size(); i++)
@@ -1266,8 +1257,8 @@ bool HapticGloveModule::updateModule()
                 // then we set the error to zero
                 if (axisReferenceValuesEstimationKF[i] < 0)
                 {
-                    m_icubLeftFingerAxisValueErrorSmoothed(i) = 0.0;
-                    m_icubLeftFingerAxisVelocityErrorSmoothed(i) = 0.0;
+                    m_icubLeftFingerAxisValueErrorSmoothed[i] = 0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed[i] = 0.0;
                 }
                 bool isInContact = true;
                 isInContact =
@@ -1278,8 +1269,8 @@ bool HapticGloveModule::updateModule()
 
                 if (!isInContact)
                 {
-                    m_icubLeftFingerAxisValueErrorSmoothed(i) = 0.0;
-                    m_icubLeftFingerAxisVelocityErrorSmoothed(i) = 0.0;
+                    m_icubLeftFingerAxisValueErrorSmoothed[i] = 0.0;
+                    m_icubLeftFingerAxisVelocityErrorSmoothed[i] = 0.0;
                 }
             }
             yInfo() << "axisReferenceValuesEstimationKF: " << axisReferenceValuesEstimationKF;
@@ -1288,9 +1279,9 @@ bool HapticGloveModule::updateModule()
                     << axisReferenceVelocitiesEstimationKF;
             yInfo() << "axisFeedbackVelocitiesEstimationKF: " << axisFeedbackVelocitiesEstimationKF;
             yInfo() << "m_icubLeftFingerAxisValueErrorSmoothed: "
-                    << m_icubLeftFingerAxisValueErrorSmoothed.toString();
+                    << m_icubLeftFingerAxisValueErrorSmoothed;
             yInfo() << "m_icubLeftFingerAxisVelocityErrorSmoothed: "
-                    << m_icubLeftFingerAxisVelocityErrorSmoothed.toString();
+                    << m_icubLeftFingerAxisVelocityErrorSmoothed;
 
             // Deleted to use KALMAN FILTER
             /*            for (int i=0;
@@ -1502,31 +1493,37 @@ bool HapticGloveModule::updateModule()
 
             for (int i = 0; i < m_icubRightFingerAxisValueReference.size(); i++)
             {
-                m_icubRightFingerAxisValueError(i)
+                m_icubRightFingerAxisValueError[i]
                     = axisReferenceValuesEstimationKF[i] - axisFeedbackValuesEstimationKF[i];
-                m_icubRightFingerAxisVelocityError(i) = axisReferenceVelocitiesEstimationKF[i]
+                m_icubRightFingerAxisVelocityError[i] = axisReferenceVelocitiesEstimationKF[i]
                                                         - axisFeedbackVelocitiesEstimationKF[i];
 
-                m_icubRightFingerAxisValueErrorSmoothed(i) = m_icubRightFingerAxisValueError(i);
-                m_icubRightFingerAxisVelocityErrorSmoothed(i)
-                    = m_icubRightFingerAxisVelocityError(i);
+                m_icubRightFingerAxisValueErrorSmoothed[i] = m_icubRightFingerAxisValueError[i];
+                m_icubRightFingerAxisVelocityErrorSmoothed[i]
+                    = m_icubRightFingerAxisVelocityError[i];
             }
 
             //            std::vector<double> icubRightFingerAxisFeedback,
             //            icubRightFingerAxisReference;
 
-            for (int i = 0; i < m_icubRightFingerAxisValueReference.size(); i++)
-            {
-                m_icubRightFingerAxisValueError(i) = m_icubRightFingerAxisValueReference(i)
-                                                     - m_icubRightFingerAxisValueFeedback(i);
-                m_icubRightFingerAxisVelocityError(i) = m_icubRightFingerAxisVelocityReference(i)
-                                                        - m_icubRightFingerAxisVelocityFeedback(i);
-            }
-            m_rightAxisValueErrorSmoother->computeNextValues(m_icubRightFingerAxisValueError);
-            m_icubRightFingerAxisValueErrorSmoothed = m_rightAxisValueErrorSmoother->getPos();
+            //            for (int i = 0; i < m_icubRightFingerAxisValueReference.size(); i++)
+            //            {
+            //                m_icubRightFingerAxisValueError[i] =
+            //                m_icubRightFingerAxisValueReference(i)
+            //                                                     -
+            //                                                     m_icubRightFingerAxisValueFeedback(i);
+            //                m_icubRightFingerAxisVelocityError[i] =
+            //                m_icubRightFingerAxisVelocityReference(i)
+            //                                                        -
+            //                                                        m_icubRightFingerAxisVelocityFeedback(i);
+            //            }
+            //            m_rightAxisValueErrorSmoother->computeNextValues(m_icubRightFingerAxisValueError);
+            //            m_icubRightFingerAxisValueErrorSmoothed =
+            //            m_rightAxisValueErrorSmoother->getPos();
 
-            m_rightAxisVelocityErrorSmoother->computeNextValues(m_icubRightFingerAxisVelocityError);
-            m_icubRightFingerAxisVelocityErrorSmoothed = m_rightAxisVelocityErrorSmoother->getPos();
+            //            m_rightAxisVelocityErrorSmoother->computeNextValues(m_icubRightFingerAxisVelocityError);
+            //            m_icubRightFingerAxisVelocityErrorSmoothed =
+            //            m_rightAxisVelocityErrorSmoother->getPos();
 
             // FILTERS
             double velocity_threshold_transient = 0.6;
@@ -1537,8 +1534,8 @@ bool HapticGloveModule::updateModule()
                 // then we set the error to zero
                 if (m_icubRightFingerAxisValueReference(i) < 0)
                 {
-                    m_icubRightFingerAxisValueErrorSmoothed(i) = 0.0;
-                    m_icubRightFingerAxisVelocityErrorSmoothed(i) = 0.0;
+                    m_icubRightFingerAxisValueErrorSmoothed[i] = 0.0;
+                    m_icubRightFingerAxisVelocityErrorSmoothed[i] = 0.0;
                 }
 
                 bool isInContact = true;
@@ -1550,8 +1547,8 @@ bool HapticGloveModule::updateModule()
 
                 if (!isInContact)
                 {
-                    m_icubRightFingerAxisValueErrorSmoothed(i) = 0.0;
-                    m_icubRightFingerAxisVelocityErrorSmoothed(i) = 0.0;
+                    m_icubRightFingerAxisValueErrorSmoothed[i] = 0.0;
+                    m_icubRightFingerAxisVelocityErrorSmoothed[i] = 0.0;
                 }
 
                 //                if(std::abs(m_icubRightFingerAxisVelocityErrorSmoothed(i))
@@ -1718,8 +1715,7 @@ bool HapticGloveModule::updateModule()
         if (m_useLeftHand)
         {
             // set robot values
-            yInfo() << "m_icubLeftFingerJointsReference\n"
-                    << m_icubLeftFingerJointsReference.toString();
+            yInfo() << "m_icubLeftFingerJointsReference\n" << m_icubLeftFingerJointsReference;
 
             m_robotLeftHand->setFingersJointReference(m_icubLeftFingerJointsReference);
             m_robotLeftHand->move();
@@ -1734,8 +1730,7 @@ bool HapticGloveModule::updateModule()
         if (m_useRightHand)
         {
             // set robot values
-            yInfo() << "m_icubRightFingerJointsReference\n"
-                    << m_icubRightFingerJointsReference.toString();
+            yInfo() << "m_icubRightFingerJointsReference\n" << m_icubRightFingerJointsReference;
             m_robotRightHand->setFingersJointReference(m_icubRightFingerJointsReference);
             m_robotRightHand->move();
 

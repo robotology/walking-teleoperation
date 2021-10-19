@@ -23,9 +23,9 @@
 // iCub-ctrl
 #include <iCub/ctrl/pids.h>
 
+#include <LinearRegression.hpp>
 #include <RobotControlHelper_hapticGlove.hpp>
 #include <RobotMotorsEstimation.hpp>
-#include <LinearRegression.hpp>
 
 using namespace yarp::math;
 
@@ -41,14 +41,13 @@ private:
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m> n: number of
-                joints, m: number of motors; we have q= m_A x m + m_Bias where q is the joint values and m is
-                the motor values*/
+                joints, m: number of motors; we have q= m_A x m + m_Bias where q is the joint values
+                and m is the motor values*/
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_Bias; /**< Bias term of the coupling relationship from the motors to the joints; Dimension <n,1> n: number of
-                joints; we have q= m_A x m  m_Bias where q is the joint values and m is
-                the motor values*/
-
+        m_Bias; /**< Bias term of the coupling relationship from the motors to the joints; Dimension
+                <n,1> n: number of joints; we have q= m_A x m  m_Bias where q is the joint values
+                and m is the motor values*/
 
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
         m_Q; // weight matrix for desired states
@@ -72,18 +71,22 @@ private:
 
     yarp::sig::Vector motorVelocityReference;
 
-    std::unique_ptr<RobotMotorsEstimation> m_robotMotorFeedbackEstimator; /**< The KF estimated motor feedbacks*/
-    std::unique_ptr<RobotMotorsEstimation> m_robotMotorReferenceEstimator; /**< The KF estimated motor References*/
+    std::unique_ptr<RobotMotorsEstimation>
+        m_robotMotorFeedbackEstimator; /**< The KF estimated motor feedbacks*/
+    std::unique_ptr<RobotMotorsEstimation>
+        m_robotMotorReferenceEstimator; /**< The KF estimated motor References*/
 
-    std::unique_ptr<RobotMotorsEstimation> m_robotJointFeedbackEstimator; /**< The KF estimated joint feedbacks*/
-    std::unique_ptr<RobotMotorsEstimation> m_robotJointExpectedEstimator; /**< The KF estimated joint References*/
+    std::unique_ptr<RobotMotorsEstimation>
+        m_robotJointFeedbackEstimator; /**< The KF estimated joint feedbacks*/
+    std::unique_ptr<RobotMotorsEstimation>
+        m_robotJointExpectedEstimator; /**< The KF estimated joint References*/
 
     std::unique_ptr<LinearRegression> m_linearRegressor;
 
     bool m_robotPrepared;
 
-    double m_kGain;  /**< The gain of the exponential filter to set the robot reference position values */
-
+    double m_kGain; /**< The gain of the exponential filter to set the robot reference position
+                       values */
 
 public:
     /**
@@ -106,7 +109,7 @@ public:
      * @param fingersReference the reference value for the finger joints to follow
      * @return true in case of success and false otherwise.
      */
-    bool setFingersJointReference(const yarp::sig::Vector& fingersReference);
+    bool setFingersJointReference(const std::vector<double>& fingersReference);
 
     /**
      * Get the fingers' axis velocities or values
@@ -240,7 +243,6 @@ public:
      */
     void getFingerJointExpectedValue(std::vector<double>& fingerJointsExpectedValue);
 
-
     /**
      * Update the feedback values
      */
@@ -288,24 +290,34 @@ public:
      * get motor estimated states
      * @return true if the robot motor estimator is returned correctly
      */
-    bool getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF, Eigen::MatrixXd& feedbackAxisCovEstimationKF,
-                                 std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF, Eigen::MatrixXd& referenceAxisCovEstimationKF);
-
-
-    /**
-     * get joints estimated states
-     * @return true if the robot joints estimator is returned correctly
-     */
-    bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF, std::vector<double>&  feedbackJointVelocitiesEstimationKF, std::vector<double>&  feedbackJointAccelrationEstimationKF, Eigen::MatrixXd& feedbackJointCovEstimationKF,
-                                 std::vector<double>& expectedJointValuesEstimationKF, std::vector<double>&  expectedJointVelocitiesEstimationKF, std::vector<double>&  expectedJointAccelrationEstimationKF, Eigen::MatrixXd& expectedJointCovEstimationKF);
+    bool getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF,
+                                 std::vector<double>& feedbackAxisVelocitiesEstimationKF,
+                                 std::vector<double>& feedbackAxisAccelrationEstimationKF,
+                                 Eigen::MatrixXd& feedbackAxisCovEstimationKF,
+                                 std::vector<double>& referenceAxisValuesEstimationKF,
+                                 std::vector<double>& referenceAxisVelocitiesEstimationKF,
+                                 std::vector<double>& referenceAxisAccelrationEstimationKF,
+                                 Eigen::MatrixXd& referenceAxisCovEstimationKF);
 
     /**
      * get joints estimated states
      * @return true if the robot joints estimator is returned correctly
      */
     bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
-                                 std::vector<double>& expectedJointValuesEstimationKF);
+                                std::vector<double>& feedbackJointVelocitiesEstimationKF,
+                                std::vector<double>& feedbackJointAccelrationEstimationKF,
+                                Eigen::MatrixXd& feedbackJointCovEstimationKF,
+                                std::vector<double>& expectedJointValuesEstimationKF,
+                                std::vector<double>& expectedJointVelocitiesEstimationKF,
+                                std::vector<double>& expectedJointAccelrationEstimationKF,
+                                Eigen::MatrixXd& expectedJointCovEstimationKF);
 
+    /**
+     * get joints estimated states
+     * @return true if the robot joints estimator is returned correctly
+     */
+    bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
+                                std::vector<double>& expectedJointValuesEstimationKF);
 };
 
 #endif

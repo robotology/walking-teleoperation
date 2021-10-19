@@ -36,7 +36,6 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     }
     m_fingersScaling.resize(noActuatedAxis, fingerScaling);
 
-
     // check if the motors and joints are coupled
     m_motorJointsCoupled
         = config.check("motorsJointsCoupled", yarp::os::Value(0))
@@ -51,23 +50,24 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
                "between motors and joints "
             << m_motorJointsCoupled;
 
-    m_kGain =  config.check("expFilterGain", yarp::os::Value(0.9))
-            .asDouble(); /**<  true if the motors and joints of the robot are coupled*/
+    m_kGain = config.check("expFilterGain", yarp::os::Value(0.9))
+                  .asDouble(); /**<  true if the motors and joints of the robot are coupled*/
 
-    yInfo() << "[RobotController::configure]  robot controller exponential filter gain: m_kGain"<< m_kGain;
+    yInfo() << "[RobotController::configure]  robot controller exponential filter gain: m_kGain"
+            << m_kGain;
 
-    size_t noActuatedJoints=m_robotControlInterface->getNumberOfActuatedJoints();
+    size_t noActuatedJoints = m_robotControlInterface->getNumberOfActuatedJoints();
     if (m_motorJointsCoupled)
     {
         m_A.resize(noActuatedJoints, noActuatedAxis);
-        m_Bias.resize(noActuatedJoints,1);
+        m_Bias.resize(noActuatedJoints, 1);
 
         if (!m_doCalibration)
         {
             m_A.resize(noActuatedJoints, noActuatedAxis);
-            m_Bias.resize(noActuatedJoints,1);
+            m_Bias.resize(noActuatedJoints, 1);
             yarp::sig::Vector A_vector, Bias_vector;
-            A_vector.resize(noActuatedJoints* noActuatedAxis);
+            A_vector.resize(noActuatedJoints * noActuatedAxis);
             Bias_vector.resize(noActuatedJoints);
             if (!YarpHelper::getYarpVectorFromSearchable(config, "CouplingMatrix", A_vector))
             {
@@ -90,7 +90,6 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
                     m_A(i, j) = A_vector(element);
                 }
                 m_Bias(i) = Bias_vector(i);
-
             }
         }
     } else
@@ -98,11 +97,10 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
         // in this case the mapping between the motors and joints are identity matrix
         m_A = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis);
         m_Bias = Eigen::MatrixXd::Zero(noActuatedAxis, 1);
-
     }
 
-    yInfo()<<"noActuatedJoints"<<noActuatedJoints;
-    yInfo()<<"noActuatedAxis"<<noActuatedAxis;
+    yInfo() << "noActuatedJoints" << noActuatedJoints;
+    yInfo() << "noActuatedAxis" << noActuatedAxis;
 
     /*
      * commented to simplify the process of having custom set of motors to control.
@@ -145,19 +143,19 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
         return false;
     }
 
-    m_Q = Eigen::MatrixXd::Identity(noActuatedJoints, noActuatedJoints)*q;
-    m_R = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis)*r;
+    m_Q = Eigen::MatrixXd::Identity(noActuatedJoints, noActuatedJoints) * q;
+    m_R = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis) * r;
 
     m_desiredMotorValue.resize(noActuatedAxis);
     m_desiredJointValue.resize(m_robotControlInterface->getNumberOfActuatedJoints());
     yarp::sig::Vector buff(noActuatedAxis, 0.0);
 
-    if(!updateFeedback())
+    if (!updateFeedback())
     {
-        yError()<<"[RobotController::configure] Unable to get feedback: first trial";
-        if(!updateFeedback())
+        yError() << "[RobotController::configure] Unable to get feedback: first trial";
+        if (!updateFeedback())
         {
-            yError()<<"[RobotController::configure] Unable to get feedback: second trial";
+            yError() << "[RobotController::configure] Unable to get feedback: second trial";
             return false;
         }
     }
@@ -175,36 +173,28 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_jointsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfActuatedJoints());
     m_motorsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfActuatedAxis());
 
-
     // Estimaotr
-    std::cout<<"Estimators ... \n";
+    std::cout << "Estimators ... \n";
 
-
-    m_robotMotorFeedbackEstimator= std::make_unique<RobotMotorsEstimation> (noActuatedAxis);
-    m_robotMotorReferenceEstimator= std::make_unique<RobotMotorsEstimation> (noActuatedAxis);
+    m_robotMotorFeedbackEstimator = std::make_unique<RobotMotorsEstimation>(noActuatedAxis);
+    m_robotMotorReferenceEstimator = std::make_unique<RobotMotorsEstimation>(noActuatedAxis);
 
     m_robotJointFeedbackEstimator = std::make_unique<RobotMotorsEstimation>(noActuatedJoints);
-    m_robotJointExpectedEstimator= std::make_unique<RobotMotorsEstimation>(noActuatedJoints);
+    m_robotJointExpectedEstimator = std::make_unique<RobotMotorsEstimation>(noActuatedJoints);
 
-
-    std::cout<<"Initializing the motor reference and feedback estimators ... \n";
-    m_robotMotorFeedbackEstimator->configure(config, name);    
+    std::cout << "Initializing the motor reference and feedback estimators ... \n";
+    m_robotMotorFeedbackEstimator->configure(config, name);
     m_robotMotorReferenceEstimator->configure(config, name);
 
-    std::cout<<"Initializing the joints reference and feedback estimators ... \n";
-    m_robotJointFeedbackEstimator->configure(config, name) ;
+    std::cout << "Initializing the joints reference and feedback estimators ... \n";
+    m_robotJointFeedbackEstimator->configure(config, name);
     m_robotJointExpectedEstimator->configure(config, name);
 
+    std::cout << "Estimators: Configued";
 
+    m_linearRegressor = std::make_unique<LinearRegression>();
 
-    std::cout<<"Estimators: Configued";
-
-
-    m_linearRegressor =std::make_unique<LinearRegression>();
-
-
-
-    m_robotPrepared=false;
+    m_robotPrepared = false;
     return true;
 }
 
@@ -218,12 +208,13 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
         return false;
     }
 
-    yarp::sig::Vector motorFeedbackValue= controlHelper()->jointEncoders();
-//    m_kGain= 0.8;
+    yarp::sig::Vector motorFeedbackValue = controlHelper()->jointEncoders();
+    //    m_kGain= 0.8;
     for (unsigned i = 0; i < fingersReference.size(); i++)
     {
         m_desiredMotorValue(i) = fingersReference(i) * m_fingersScaling(i);
-        m_desiredMotorValue(i) =  (1-m_kGain)* motorFeedbackValue(i)+ m_kGain* m_desiredMotorValue(i);
+        m_desiredMotorValue(i)
+            = (1 - m_kGain) * motorFeedbackValue(i) + m_kGain * m_desiredMotorValue(i);
     }
 
     //    if (m_fingerIntegrator == nullptr)
@@ -242,7 +233,7 @@ bool RobotController::setFingersAxisReference(const yarp::sig::Vector& fingersRe
 
     return true;
 }
-bool RobotController::setFingersJointReference(const yarp::sig::Vector& fingersReference)
+bool RobotController::setFingersJointReference(const std::vector<double>& fingersReference)
 {
     if (fingersReference.size() != m_desiredJointValue.size())
     {
@@ -261,10 +252,10 @@ bool RobotController::setFingersJointReference(const yarp::sig::Vector& fingersR
 
     for (unsigned i = 0; i < noJoints; i++)
     {
-        fingersJointsRef(i, 0) = fingersReference(i);
-        m_desiredJointValue(i) = fingersReference(i);
+        fingersJointsRef(i, 0) = fingersReference[i];
+        m_desiredJointValue(i) = fingersReference[i];
     }
-    fingersMotorRef = m_controlCoeff * (fingersJointsRef-m_Bias);
+    fingersMotorRef = m_controlCoeff * (fingersJointsRef - m_Bias);
 
     yarp::sig::Vector fingersMotorsReference;
     fingersMotorsReference.resize(noMotors);
@@ -292,7 +283,6 @@ void RobotController::getFingerAxisValueReference(std::vector<double>& fingerAxi
     }
 }
 
-
 void RobotController::getFingerJointReference(yarp::sig::Vector& fingerJointsReference)
 {
     fingerJointsReference = m_desiredJointValue;
@@ -317,7 +307,6 @@ void RobotController::getFingerJointExpectedValue(yarp::sig::Vector& fingerJoint
     const int noMotors = m_robotControlInterface->getNumberOfActuatedAxis();
     fingerJointsExpectedValue.resize(noJoints, 0.0);
 
-
     Eigen::VectorXd fingerJointsExpectedValueEigen, fingersMotorFeedbackEigen;
 
     fingerJointsExpectedValueEigen.resize(noJoints, 1);
@@ -326,7 +315,7 @@ void RobotController::getFingerJointExpectedValue(yarp::sig::Vector& fingerJoint
     {
         fingersMotorFeedbackEigen(i) = fingerAxisValues(i);
     }
-    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen+ m_Bias;
+    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen + m_Bias;
 
     for (unsigned i = 0; i < noJoints; i++)
     {
@@ -352,7 +341,7 @@ void RobotController::getFingerJointExpectedValue(std::vector<double>& fingerJoi
     {
         fingersMotorFeedbackEigen(i) = fingerAxisValues(i);
     }
-    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen+ m_Bias;
+    fingerJointsExpectedValueEigen = m_A * fingersMotorFeedbackEigen + m_Bias;
 
     for (unsigned i = 0; i < noJoints; i++)
     {
@@ -490,7 +479,6 @@ void RobotController::getMotorPidOutputs(yarp::sig::Vector& motorPidOutputs)
 {
     motorPidOutputs.clear();
     motorPidOutputs = controlHelper()->motorPidOutputs();
-
 }
 
 void RobotController::getMotorPwmReference(yarp::sig::Vector& motorPWMReference)
@@ -589,7 +577,8 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
 
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] The integrator is not initialize "
+        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] The "
+                    "integrator is not initialize "
                     "please call configure() method";
         return false;
     }
@@ -621,18 +610,19 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
         return false;
 
     yarp::sig::Vector motorReference;
-    motorReference.resize(noAxis, 0.0); //0.0
+    motorReference.resize(noAxis, 0.0); // 0.0
     yarp::sig::Matrix limits;
-    if(!m_robotControlInterface->getLimits( limits))
+    if (!m_robotControlInterface->getLimits(limits))
     {
-        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] Cannot get the axis limits. ";
+        yError() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin] Cannot get "
+                    "the axis limits. ";
     }
-    for(size_t i= 0;i<noAxis; i++)
+    for (size_t i = 0; i < noAxis; i++)
     {
-        motorReference(i)=limits(i,0);
+        motorReference(i) = limits(i, 0);
     }
-    motorReference(axisNumber) = limits(axisNumber, 0) +
-            (limits(axisNumber, 1) - limits(axisNumber, 0))* sin(time);
+    motorReference(axisNumber)
+        = limits(axisNumber, 0) + (limits(axisNumber, 1) - limits(axisNumber, 0)) * sin(time);
 
     setFingersAxisReference(motorReference);
     move();
@@ -647,20 +637,19 @@ bool RobotController::trainCouplingMatrix()
     yInfo() << "[RobotController::trainCouplingMatrix()]";
 
     // adding bias term
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        motorsData, jointsData, A_Bias;
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> motorsData, jointsData,
+        A_Bias;
     yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
-    motorsData.setOnes(m_motorsData.rows(),m_motorsData.cols()+1);
-    motorsData.block(0,1,m_motorsData.rows(),m_motorsData.cols())= m_motorsData;
-    A_Bias.resize(m_A.rows(),m_A.cols()+1);
-    jointsData=m_jointsData;
+    motorsData.setOnes(m_motorsData.rows(), m_motorsData.cols() + 1);
+    motorsData.block(0, 1, m_motorsData.rows(), m_motorsData.cols()) = m_motorsData;
+    A_Bias.resize(m_A.rows(), m_A.cols() + 1);
+    jointsData = m_jointsData;
     yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
-
 
     m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A_Bias);
 
-    m_A     = A_Bias.block(0,1,m_A.rows(),m_A.cols());
-    m_Bias = A_Bias.block(0,0, m_Bias.rows(),1);
+    m_A = A_Bias.block(0, 1, m_A.rows(), m_A.cols());
+    m_Bias = A_Bias.block(0, 0, m_Bias.rows(), 1);
 
     yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
     yInfo() << "(m_A) matrix size:" << m_A.rows() << m_A.cols();
@@ -670,18 +659,17 @@ bool RobotController::trainCouplingMatrix()
     std::cout << "(A) matrix:\n" << m_A << std::endl;
     std::cout << "(Bias) matrix:\n" << m_Bias << std::endl;
 
+    //    m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
 
-//    m_linearRegressor->LearnOneShotMatrix(m_motorsData, m_jointsData, m_A);
-
-//    yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
-//    std::cout << "m_A matrix:\n" << m_A << std::endl;
+    //    yInfo() << "m_A matrix:" << m_A.rows() << m_A.cols();
+    //    std::cout << "m_A matrix:\n" << m_A << std::endl;
 
     m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
 
     yInfo() << "m_controlCoeff matrix:" << m_controlCoeff.rows() << m_controlCoeff.cols();
     std::cout << " control coefficient matrix:\n" << m_controlCoeff << std::endl;
 
-    m_robotPrepared=true;
+    m_robotPrepared = true;
     return true;
 }
 
@@ -690,15 +678,17 @@ bool RobotController::isRobotPrepared()
     return m_robotPrepared;
 }
 
-bool RobotController::initializeEstimators(){
-    std::cout<<"RobotController::initializeEstimator() \n";
-    if(!isRobotPrepared())
+bool RobotController::initializeEstimators()
+{
+    std::cout << "RobotController::initializeEstimator() \n";
+    if (!isRobotPrepared())
     {
-        yError()<<"[RobotController::initializeEstimators()] the robot should be prepared before initialization "
-                  "of the estimator";
+        yError() << "[RobotController::initializeEstimators()] the robot should be prepared before "
+                    "initialization "
+                    "of the estimator";
         return false;
     }
-    yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
+    yarp::sig::Vector axisReferenceVector, axisFeedbackVector;
     getFingerAxisValueReference(axisReferenceVector);
     getFingerAxisFeedback(axisFeedbackVector);
     m_robotMotorFeedbackEstimator->initialize(axisFeedbackVector);
@@ -714,26 +704,31 @@ bool RobotController::initializeEstimators(){
     return true;
 }
 
-bool RobotController::estimateNextStates(){
-    yarp::sig::Vector axisReferenceVector, axisFeedbackVector ;
-    yarp::sig::Vector JointsExpectedVector, jointsFeedbackVector ;
+bool RobotController::estimateNextStates()
+{
+    yarp::sig::Vector axisReferenceVector, axisFeedbackVector;
+    yarp::sig::Vector JointsExpectedVector, jointsFeedbackVector;
 
-    if(m_robotMotorFeedbackEstimator->isInitialized()){
+    if (m_robotMotorFeedbackEstimator->isInitialized())
+    {
         getFingerAxisFeedback(axisFeedbackVector);
         m_robotMotorFeedbackEstimator->estimateNextState(axisFeedbackVector);
     }
-    if(m_robotMotorReferenceEstimator->isInitialized()){
+    if (m_robotMotorReferenceEstimator->isInitialized())
+    {
         getFingerAxisValueReference(axisReferenceVector);
 
         m_robotMotorReferenceEstimator->estimateNextState(axisReferenceVector);
     }
 
-    if(m_robotJointFeedbackEstimator->isInitialized()){
+    if (m_robotJointFeedbackEstimator->isInitialized())
+    {
         getFingerJointsFeedback(jointsFeedbackVector);
         m_robotJointFeedbackEstimator->estimateNextState(jointsFeedbackVector);
     }
 
-    if(m_robotJointExpectedEstimator->isInitialized()){
+    if (m_robotJointExpectedEstimator->isInitialized())
+    {
         getFingerJointExpectedValue(JointsExpectedVector);
         m_robotJointExpectedEstimator->estimateNextState(JointsExpectedVector);
     }
@@ -741,48 +736,87 @@ bool RobotController::estimateNextStates(){
     return true;
 }
 
-bool RobotController::getEstimatedMotorsState(std::vector<double>& feedbackAxisValuesEstimationKF, std::vector<double>&  feedbackAxisVelocitiesEstimationKF, std::vector<double>&  feedbackAxisAccelrationEstimationKF, Eigen::MatrixXd& feedbackAxisCovEstimationKF,
-                                              std::vector<double>& referenceAxisValuesEstimationKF, std::vector<double>&  referenceAxisVelocitiesEstimationKF, std::vector<double>&  referenceAxisAccelrationEstimationKF, Eigen::MatrixXd& referenceAxisCovEstimationKF ){
+bool RobotController::getEstimatedMotorsState(
+    std::vector<double>& feedbackAxisValuesEstimationKF,
+    std::vector<double>& feedbackAxisVelocitiesEstimationKF,
+    std::vector<double>& feedbackAxisAccelrationEstimationKF,
+    Eigen::MatrixXd& feedbackAxisCovEstimationKF,
+    std::vector<double>& referenceAxisValuesEstimationKF,
+    std::vector<double>& referenceAxisVelocitiesEstimationKF,
+    std::vector<double>& referenceAxisAccelrationEstimationKF,
+    Eigen::MatrixXd& referenceAxisCovEstimationKF)
+{
 
-    if(m_robotMotorFeedbackEstimator->isInitialized()){
-        m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF, feedbackAxisVelocitiesEstimationKF,   feedbackAxisAccelrationEstimationKF,  feedbackAxisCovEstimationKF );
+    if (m_robotMotorFeedbackEstimator->isInitialized())
+    {
+        m_robotMotorFeedbackEstimator->getInfo(feedbackAxisValuesEstimationKF,
+                                               feedbackAxisVelocitiesEstimationKF,
+                                               feedbackAxisAccelrationEstimationKF,
+                                               feedbackAxisCovEstimationKF);
     }
 
-    if(m_robotMotorReferenceEstimator->isInitialized()){
-        m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF, referenceAxisVelocitiesEstimationKF,   referenceAxisAccelrationEstimationKF,  referenceAxisCovEstimationKF );
+    if (m_robotMotorReferenceEstimator->isInitialized())
+    {
+        m_robotMotorReferenceEstimator->getInfo(referenceAxisValuesEstimationKF,
+                                                referenceAxisVelocitiesEstimationKF,
+                                                referenceAxisAccelrationEstimationKF,
+                                                referenceAxisCovEstimationKF);
     }
 
     return true;
 }
 
-bool RobotController::getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF, std::vector<double>&  feedbackJointVelocitiesEstimationKF, std::vector<double>&  feedbackJointAccelrationEstimationKF, Eigen::MatrixXd& feedbackJointCovEstimationKF,
-                            std::vector<double>& expectedJointValuesEstimationKF, std::vector<double>&  expectedJointVelocitiesEstimationKF, std::vector<double>&  expectedJointAccelrationEstimationKF, Eigen::MatrixXd& expectedJointCovEstimationKF){
+bool RobotController::getEstimatedJointState(
+    std::vector<double>& feedbackJointValuesEstimationKF,
+    std::vector<double>& feedbackJointVelocitiesEstimationKF,
+    std::vector<double>& feedbackJointAccelrationEstimationKF,
+    Eigen::MatrixXd& feedbackJointCovEstimationKF,
+    std::vector<double>& expectedJointValuesEstimationKF,
+    std::vector<double>& expectedJointVelocitiesEstimationKF,
+    std::vector<double>& expectedJointAccelrationEstimationKF,
+    Eigen::MatrixXd& expectedJointCovEstimationKF)
+{
 
-    if(m_robotJointFeedbackEstimator->isInitialized()){
-        m_robotJointFeedbackEstimator->getInfo(feedbackJointValuesEstimationKF, feedbackJointVelocitiesEstimationKF,   feedbackJointAccelrationEstimationKF,  feedbackJointCovEstimationKF );
+    if (m_robotJointFeedbackEstimator->isInitialized())
+    {
+        m_robotJointFeedbackEstimator->getInfo(feedbackJointValuesEstimationKF,
+                                               feedbackJointVelocitiesEstimationKF,
+                                               feedbackJointAccelrationEstimationKF,
+                                               feedbackJointCovEstimationKF);
     }
 
-    if(m_robotJointExpectedEstimator->isInitialized()){
-        m_robotJointExpectedEstimator->getInfo(expectedJointValuesEstimationKF, expectedJointVelocitiesEstimationKF,   expectedJointAccelrationEstimationKF,  expectedJointCovEstimationKF );
+    if (m_robotJointExpectedEstimator->isInitialized())
+    {
+        m_robotJointExpectedEstimator->getInfo(expectedJointValuesEstimationKF,
+                                               expectedJointVelocitiesEstimationKF,
+                                               expectedJointAccelrationEstimationKF,
+                                               expectedJointCovEstimationKF);
     }
     return true;
 }
 
 bool RobotController::getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
-                            std::vector<double>& expectedJointValuesEstimationKF){
+                                             std::vector<double>& expectedJointValuesEstimationKF)
+{
 
     std::vector<double> feedbackJointVelocitiesEstimationKF, feedbackJointAccelrationEstimationKF;
-    std::vector<double> expectedJointVelocitiesEstimationKF,expectedJointAccelrationEstimationKF;
+    std::vector<double> expectedJointVelocitiesEstimationKF, expectedJointAccelrationEstimationKF;
     Eigen::MatrixXd feedbackJointCovEstimationKF, expectedJointCovEstimationKF;
 
-        if(m_robotJointFeedbackEstimator->isInitialized()){
-            m_robotJointFeedbackEstimator->getInfo(feedbackJointValuesEstimationKF, feedbackJointVelocitiesEstimationKF,   feedbackJointAccelrationEstimationKF,  feedbackJointCovEstimationKF );
-        }
+    if (m_robotJointFeedbackEstimator->isInitialized())
+    {
+        m_robotJointFeedbackEstimator->getInfo(feedbackJointValuesEstimationKF,
+                                               feedbackJointVelocitiesEstimationKF,
+                                               feedbackJointAccelrationEstimationKF,
+                                               feedbackJointCovEstimationKF);
+    }
 
-        if(m_robotJointExpectedEstimator->isInitialized()){
-            m_robotJointExpectedEstimator->getInfo(expectedJointValuesEstimationKF, expectedJointVelocitiesEstimationKF,   expectedJointAccelrationEstimationKF,  expectedJointCovEstimationKF );
-        }
-        return true;
+    if (m_robotJointExpectedEstimator->isInitialized())
+    {
+        m_robotJointExpectedEstimator->getInfo(expectedJointValuesEstimationKF,
+                                               expectedJointVelocitiesEstimationKF,
+                                               expectedJointAccelrationEstimationKF,
+                                               expectedJointCovEstimationKF);
+    }
+    return true;
 }
-
-
