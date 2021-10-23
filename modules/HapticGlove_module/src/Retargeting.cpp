@@ -404,21 +404,21 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
     return true;
 }
 
-bool Retargeting::getRobotJointReferences(std::vector<double>& robotJointReference)
+bool Retargeting::getRobotJointReferences(std::vector<double>& robotJointReferences)
 {
-    robotJointReference = m_robotRefJointAngles;
+    robotJointReferences = m_robotRefJointAngles;
     return true;
 }
 
-bool Retargeting::getForceFeedbackToHuman(std::vector<double>& forceFeedbackList)
+bool Retargeting::getForceFeedbackToHuman(std::vector<double>& forceFeedbacks)
 {
-    forceFeedbackList = m_fingerForceFeedback;
+    forceFeedbacks = m_fingerForceFeedback;
     return true;
 }
 
-bool Retargeting::getVibroTactileFeedbackToHuman(std::vector<double>& buzzFeedbackList)
+bool Retargeting::getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks)
 {
-    buzzFeedbackList = m_fingerVibrotactileFeedback;
+    vibrotactileFeedbacks = m_fingerVibrotactileFeedback;
     return true;
 }
 

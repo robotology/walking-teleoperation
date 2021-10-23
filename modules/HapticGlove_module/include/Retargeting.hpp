@@ -6,8 +6,8 @@
  * @date 2021
  */
 
-#ifndef RETARGETING_H
-#define RETARGETING_H
+#ifndef RETARGETING_HPP
+#define RETARGETING_HPP
 
 // std
 #include <map>
@@ -26,7 +26,19 @@ class Retargeting;
 
 class HapticGlove::Retargeting
 {
+    // member variables
     std::string m_logPrefix;
+
+    size_t m_numAllAxis; /**< the number of all available axis of the robot hand, regardless of
+                            actuated ones */
+    size_t m_numActuatedAxis; /**< the number of actuated (i.e., used) axis of the robot
+                            hand, regardless of actuated ones */
+    size_t m_numFingers; /**< number of human hand fingers */
+
+    size_t m_numActuatedJoints; /**< the number of actuated (i.e., used) joints of the robot hand,
+                            regardless of actuated ones */
+    size_t m_numAllJoints; /**< the number of all available joints of the robot hand,
+                           regardless of actuated ones */
 
     std::vector<double>
         m_gainTotalError; /**< each element of this vector is multiplied to the
@@ -51,72 +63,136 @@ class HapticGlove::Retargeting
     std::vector<double> m_robotJointsRangeMax; /**< the maximum value robot joints can have */
     std::vector<double> m_robotJointsRangeMin; /**< the minimum value robot joints can have */
 
-    size_t m_numAllAxis; /**< the number of all available axis of the robot hand, regardless of
-                            actuated ones */
-    size_t m_numActuatedAxis; /**< the number of actuated (i.e., used) axis of the robot
-                            hand, regardless of actuated ones */
-    size_t m_numFingers; /**< number of human hand fingers */
-    size_t m_numActuatedJoints; /**< the number of actuated (i.e., used) joints of the robot hand,
-                            regardless of actuated ones */
-    size_t m_numAllJoints; /**< the number of all available joints of the robot hand,
-                           regardless of actuated ones */
+    std::vector<std::string> m_robotActuatedAxisNames; /**< name of the robot actuator that has been
+                                                          used in teleoperation*/
 
-    std::vector<std::string> m_robotActuatedAxisNames;
+    std::map<size_t, size_t>
+        m_robotToHumanJointIndicesMap; /**< a map from the robot actuated joint index to the
+                                          associated human joint index*/
+    std::vector<std::string> m_humanJointNames; /**< the name of the all human joints */
 
-    std::map<size_t, size_t> m_robotToHumanJointIndicesMap; /**< comment here */
-    std::vector<std::string> m_humanJointNames;
-    std::vector<std::string> m_robotActuatedJointNames; /**< comment here */
+    std::vector<std::string> m_robotActuatedJointNames; /**< the name of the all robot joints that
+                                                           are used in teleoperation*/
 
-    std::vector<double> m_humanJointAngles;
-    std::vector<double> m_robotRefJointAngles;
-    std::vector<double> m_fingerForceFeedback;
-    std::vector<double> m_fingerVibrotactileFeedback;
+    std::vector<double> m_humanJointAngles; /**< values of the human joints */
+    std::vector<double> m_robotRefJointAngles; /**< the reference values for the actuated robot
+                                                  joints to follow (the retargeted values)*/
+    std::vector<double>
+        m_fingerForceFeedback; /**< values of force feedback for the human fingers */
+    std::vector<double>
+        m_fingerVibrotactileFeedback; /**< values of vibrotactile feedback for the human fingers */
 
     std::map<size_t, std::vector<size_t>>
         m_fingerAxesMap; /**< a map showing for each finger which axis of robot is relevant*/
 
-public:
+    // methods
+
     /**
-     * Constructor
-     * @param numAllAxis the number of all available axis/motors of the robot hand
-     * @param numActuatedAxis the number of all actuated (used) axis/motors of the robot hand
-     * @param
-     * @param
+     * get the custom set of vectors
+     * @param allListName the full vector names
+     * @param customListNames the custm members of the vector names
+     * @param allListVector the full vector values
+     * @param customListVector the custm members of the vector values
+     * @return true/false in case of success/failure
      */
-    Retargeting(const std::vector<std::string>& robotActuatedJointNameList,
-                const std::vector<std::string>& robotActuatedAxisNameList,
-                const std::vector<std::string>& humanJointNameList);
-
-    bool
-    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
-
-    bool retargetHumanMotionToRobot(const std::vector<double>& humanJointAngles);
-
-    bool retargetForceFeedbackFromRobotToHuman(const std::vector<double>& axisValueError,
-                                               const std::vector<double>& axisVelocityError);
-
-    bool retargetVibrotactileFeedbackFromRobotToHuman();
-
-    bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueError,
-                                                const std::vector<double>& axisVelocityError);
-
-    bool semanticMapFromRobotTHuman(const std::vector<std::string>& humanJointNames,
-                                    const std::vector<std::string>& robotJointNames,
-                                    std::map<size_t, size_t>& robotToHumanMap);
-
-    bool getRobotJointReferences(std::vector<double>& robotJointReference);
-
-    bool getForceFeedbackToHuman(std::vector<double>& forceFeedbackList);
-
-    bool getVibroTactileFeedbackToHuman(std::vector<double>& buzzFeedbackList);
-
     bool getCustomSetIndices(const std::vector<std::string>& allListName,
                              const std::vector<std::string>& customListNames,
                              const std::vector<double>& allListVector,
                              std::vector<double>& customListVector);
 
+    /**
+     * compute the retargeting force feedback to the human hand fingers
+     * @param axisValueError errors on the robot axes values
+     * @param axisVelocityError errors on the robot axes velocities
+     * @return true/false in case of success/failure
+     */
+    bool retargetForceFeedbackFromRobotToHuman(const std::vector<double>& axisValueError,
+                                               const std::vector<double>& axisVelocityError);
+
+    /**
+     * compute the retargeting vibrotactile feedback to the human hand fingers
+     * @return true/false in case of success/failure
+     */
+    bool retargetVibrotactileFeedbackFromRobotToHuman();
+
+    /**
+     * find the semantic map from the robot actuated joint names to the human joints
+     * @param humanJointNames human joint names
+     * @param robotJointNames robot actuated joint names
+     * @param robotToHumanMap a map from the indices of the actuated robot joints to the indices of
+     * the human joints
+     * @return true/false in case of success/failure
+     */
+    bool semanticMapFromRobotTHuman(const std::vector<std::string>& humanJointNames,
+                                    const std::vector<std::string>& robotJointNames,
+                                    std::map<size_t, size_t>& robotToHumanMap);
+
+public:
+    /**
+     * Constructor
+     * @param robotActuatedJointNameList the robot actuated (used) joint names
+     * @param robotActuatedAxisNameList the robot actuated (used) joint names
+     * hand
+     * @param humanJointNameList the names of the human joints
+     */
+    Retargeting(const std::vector<std::string>& robotActuatedJointNameList,
+                const std::vector<std::string>& robotActuatedAxisNameList,
+                const std::vector<std::string>& humanJointNameList);
+
+    /**
+     * Configure the retargeting class
+     * @param config configuration options
+     * @param name name of the robot
+     * @param rightHand if true the right hand is used
+     * @return true/false in case of success/failure
+     */
+    bool
+    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
+
+    /**
+     * Retarget the human joint motion to the corresponding actuated robot joint motion
+     * @param humanJointAngles the measured human joint angles [rad]
+     * @return true/false in case of success/failure
+     */
+    bool retargetHumanMotionToRobot(const std::vector<double>& humanJointAngles);
+
+    /**
+     * compute the retargeting haptic (force and vibrotactile)feedback to the human hand fingers
+     * @param axisValueError errors on the robot axes values
+     * @param axisVelocityError errors on the robot axes velocities
+     * @return true/false in case of success/failure
+     */
+    bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueError,
+                                                const std::vector<double>& axisVelocityError);
+    /**
+     * get the robot actuated joint references
+     * @param robotJointReferences robot actuated joint references
+     * @return true/false in case of success/failure
+     */
+    bool getRobotJointReferences(std::vector<double>& robotJointReferences);
+
+    /**
+     * get the desired force feedback to the human
+     * @param forceFeedbacks the desired force feedback to the human
+     * @return true/false in case of success/failure
+     */
+    bool getForceFeedbackToHuman(std::vector<double>& forceFeedbacks);
+
+    /**
+     * get the desired vibrotactile feedback to the human
+     * @param vibrotactileFeedbacks the desired vibrotactile feedback to the human
+     * @return true/false in case of success/failure
+     */
+    bool getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks);
+
+    /**
+     * compute the paramters for the linear configuration space retargeting
+     * @param humanHandJointRangeMin the minimum range human joint angles can reach
+     * @param humanHandJointRangeMax the maximum range human joint angles can reach
+     * @return true/false in case of success/failure
+     */
     bool computeJointAngleRetargetingParams(const std::vector<double>& humanHandJointRangeMin,
                                             const std::vector<double>& humanHandJointRangeMax);
 };
 
-#endif // RETARGETING_H
+#endif // RETARGETING_HPP

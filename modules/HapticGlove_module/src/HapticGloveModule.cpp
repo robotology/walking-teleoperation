@@ -1472,7 +1472,7 @@ bool HapticGloveModule::updateModule()
             m_retargetingLeftHand->retargetHapticFeedbackFromRobotToHuman(
                 m_icubLeftFingerAxisValueErrorSmoothed, m_icubLeftFingerAxisVelocityErrorSmoothed);
             m_retargetingLeftHand->getForceFeedbackToHuman(m_gloveLeftForceFeedbackReference);
-            m_retargetingLeftHand->getVibroTactileFeedbackToHuman(m_gloveLeftBuzzMotorReference);
+            m_retargetingLeftHand->getVibrotactileFeedbackToHuman(m_gloveLeftBuzzMotorReference);
         }
         if (m_useRightHand)
         {
@@ -1707,7 +1707,7 @@ bool HapticGloveModule::updateModule()
                 m_icubRightFingerAxisValueErrorSmoothed,
                 m_icubRightFingerAxisVelocityErrorSmoothed);
             m_retargetingRightHand->getForceFeedbackToHuman(m_gloveRightForceFeedbackReference);
-            m_retargetingRightHand->getVibroTactileFeedbackToHuman(m_gloveRightBuzzMotorReference);
+            m_retargetingRightHand->getVibrotactileFeedbackToHuman(m_gloveRightBuzzMotorReference);
         }
         double time3 = yarp::os::Time::now();
         yInfo() << "[updateModule] time retargeting r->h: " << time3 - time2;

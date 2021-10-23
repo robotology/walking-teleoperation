@@ -72,7 +72,7 @@ public:
 
     /**
      * Configure the helper
-     * @param config confifuration options
+     * @param config configuration options
      * @param name name of the robot
      * @param rightHand if true the right hand is used
      * @return true/false in case of success/failure
