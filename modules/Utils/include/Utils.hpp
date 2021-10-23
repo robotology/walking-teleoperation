@@ -177,6 +177,19 @@ void sendVariadicVector(yarp::os::BufferedPort<yarp::sig::Vector>& port, const A
  */
 void populateBottleWithStrings(yarp::os::Bottle& bottle,
                                const std::initializer_list<std::string>& strings);
+
+/**
+ * Check the size of a vector.
+ * @param variable the vector for checking the size.
+ * @param targetSize the desired size of the vector.
+ * @param name the name of the variable for check.
+ * @param prefix the prefix to print.
+ */
+template <typename T>
+bool checkSizeOfVector(const std::vector<T>& variable,
+                       const size_t& targetSize = 0,
+                       const char* name = "",
+                       const std::string& prefix = "");
 } // namespace YarpHelper
 
 #include "Utils.tpp"
