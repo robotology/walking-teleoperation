@@ -34,11 +34,6 @@
 #include <Retargeting.hpp>
 #include <iCub/ctrl/minJerkCtrl.h>
 
-#ifdef ENABLE_LOGGER
-#include <matlogger2/matlogger2.h>
-#include <matlogger2/utils/mat_appender.h>
-#endif
-
 /**
  * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
  * Oculus readouts, send the desired pose of the hands to the walking application, move the robot
@@ -93,9 +88,9 @@ private:
         InPreparation
     };
 
-    class LoggerImplementation;
+    class Logger;
 
-    std::unique_ptr<LoggerImplementation> m_loggerLeftHand, m_loggerRightHand;
+    std::unique_ptr<Logger> m_loggerLeftHand, m_loggerRightHand;
 
     HapticGloveFSM m_state; /**< State of the HapticGloveFSM */
 
@@ -120,11 +115,6 @@ private:
     bool m_useLeftHand,
         m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
     double m_calibrationTimePeriod; /**< calibration time period [sec] */
-#ifdef ENABLE_LOGGER
-    XBot::MatLogger2::Ptr m_logger; /**< */
-    XBot::MatAppender::Ptr m_appender;
-    std::string m_logger_prefix{"hapticGlove"};
-#endif
 
     /**
      * Get all the feedback signal from the interfaces
@@ -165,17 +155,6 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
-
-    //    /**
-    //     * Open the logger
-    //     * @return true if it could open the logger
-    //     */
-    //    bool openLogger();
-
-    //    /**
-    //     * Log the data
-    //     */
-    //    void logData();
 };
 
 inline std::string getTimeDateMatExtension()

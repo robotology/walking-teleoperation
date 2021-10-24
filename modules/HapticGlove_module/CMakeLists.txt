@@ -51,6 +51,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/Retargeting.cpp
   src/LinearRegression.cpp
   src/GloveWearable.cpp
+  src/Logger.cpp
   )
 
 # set hpp files
@@ -66,6 +67,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/Retargeting.hpp
   include/LinearRegression.hpp
   include/GloveWearable.hpp
+  include/Logger.hpp
   )
 
 # add include directories to the build.
@@ -114,10 +116,3 @@ endif()
 message("BIN: ${bin}")
 message(" {CMAKE_BUILD_TYPE}: ${CMAKE_BUILD_TYPE}")
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
-
-#install(FILES ${SenseGlove_LIBRARIES} DESTINATION lib RENAME libSGCore.so)
-#if(WIN32)
-#	install(FILES $ENV{SenseGlove_DIR}/SGCore.dll DESTINATION bin )
-#else()
-#        install(FILES ${SenseGlove} DESTINATION lib RENAME libSGCoreCpp.so)
-#endif()
