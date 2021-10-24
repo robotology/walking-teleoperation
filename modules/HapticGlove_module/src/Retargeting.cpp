@@ -317,7 +317,8 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
     for (const auto& i : m_fingerAxesMap)
         yInfo() << m_logPrefix << "m_fingerAxesMap: " << i.first << " :: " << i.second;
     for (const auto& i : m_robotToHumanJointIndicesMap)
-        yInfo() << m_logPrefix << "m_humanToRobotMap: " << i.first << " :: " << i.second;
+        yInfo() << m_logPrefix << "m_robotToHumanJointIndicesMap: " << i.first
+                << " :: " << i.second;
 
     yInfo() << m_logPrefix << "configuration is done.";
     return true;
@@ -442,7 +443,7 @@ bool Retargeting::semanticMapFromRobotTHuman(const std::vector<std::string>& hum
                      << " , element: " << i << ".";
             return false;
         }
-        size_t elementNumber = index - robotJointNames.begin();
+        size_t elementNumber = index - humanJointNames.begin();
 
         robotToHumanMap.insert(std::pair<size_t, size_t>(i, elementNumber));
     }

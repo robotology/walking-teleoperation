@@ -16,7 +16,7 @@ GloveControlHelper::GloveControlHelper()
     : m_numFingers(5)
     , m_numForceFeedback(5)
     , m_numVibrotactileFeedback(5)
-    , m_numHandJoints(16) // abduction joints are ignored
+    , m_numHandJoints(20) // abduction joints are ignored
     , m_maxForceFeedback(40) // Netwton
 {
     m_logPrefix = "GloveControlHelper::";
