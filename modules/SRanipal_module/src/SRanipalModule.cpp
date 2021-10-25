@@ -286,33 +286,40 @@ bool SRanipalModule::updateModule()
 
             if (m_useEyelids)
             {
-                double eye_openess = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
-                int eye_open_level = static_cast<int>(std::round(eye_openess / m_eyeOpenPrecision));
-                double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
-
-                if (eye_open_level != m_eyeOpenLevel)
+                bool eye_openness_validity = ViveSR::anipal::Eye::DecodeBitMask(eye_data_v2.verbose_data.left.eye_data_validata_bit_mask,
+                                                                               ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
+                                            ViveSR::anipal::Eye::DecodeBitMask(eye_data_v2.verbose_data.right.eye_data_validata_bit_mask,
+                                                                               ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY);
+                if (eye_openness_validity)
                 {
-                    if (m_useRawEyelids)
-                    {
-                        yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
-                        out.clear();
-                        double rawEyelidsValue
-                                = eye_openess_leveled * (static_cast<double>(m_rawEyelidsOpenValue) - m_rawEyelidsCloseValue)
-                                + m_rawEyelidsCloseValue;
-                        out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
-                        m_rawEyelidsOutputPort.write();
+                    double eye_openness = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
+                    int eye_open_level = static_cast<int>(std::round(eye_openness / m_eyeOpenPrecision));
+                    double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
 
-                        yDebug() << "Sending raw commands to eyelids:" << out.toString();
-                    } else
+                    if (eye_open_level != m_eyeOpenLevel)
                     {
-                        if (m_iPos)
+                        if (m_useRawEyelids)
                         {
-                            m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid); // because min-> open, max->closed
-                        }
-                    }
+                            yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
+                            out.clear();
+                            double rawEyelidsValue
+                                    = eye_openess_leveled * (static_cast<double>(m_rawEyelidsOpenValue) - m_rawEyelidsCloseValue)
+                                    + m_rawEyelidsCloseValue;
+                            out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
+                            m_rawEyelidsOutputPort.write();
 
-                    yInfo() << "Setting eye openess:" << eye_openess_leveled;
-                    m_eyeOpenLevel = eye_open_level;
+                            yDebug() << "Sending raw commands to eyelids:" << out.toString();
+                        } else
+                        {
+                            if (m_iPos)
+                            {
+                                m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid); // because min-> open, max->closed
+                            }
+                        }
+
+                        yInfo() << "Setting eye openess:" << eye_openess_leveled;
+                        m_eyeOpenLevel = eye_open_level;
+                    }
                 }
             }
         }
