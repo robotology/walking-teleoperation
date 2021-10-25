@@ -117,6 +117,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
     m_useEye = !rf.check("noEye") || (!rf.find("noEye").asBool()); //True if noEye is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
+    m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
     m_period = rf.check("period", yarp::os::Value(0.1)).asFloat64();
     m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
@@ -166,60 +167,64 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             }
         }
 
-        m_useRawEyelids
-            = rf.check("useRawEyelids")
-              && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
-
-        m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
-        m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
-        std::string rawEyelidsPortName = rf.check("rawEyelidsPortName", yarp::os::Value("/face/raw:o")).asString();
-        if (m_useRawEyelids)
+        if (m_useEyelids)
         {
-            if (!m_rawEyelidsOutputPort.open("/" + name + rawEyelidsPortName))
+            m_useRawEyelids
+                    = rf.check("useRawEyelids")
+                    && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
+
+            m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
+            m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
+            std::string rawEyelidsPortName = rf.check("rawEyelidsPortName", yarp::os::Value("/face/raw:o")).asString();
+            if (m_useRawEyelids)
             {
-                yError() << "[SRanipalModule::configure] Failed to open /" + name
+                if (!m_rawEyelidsOutputPort.open("/" + name + rawEyelidsPortName))
+                {
+                    yError() << "[SRanipalModule::configure] Failed to open /" + name
                                 + rawEyelidsPortName
                                 + " port.";
-                return false;
-            }
-
-        } else
-        {
-            yarp::os::Property rcb_face_conf{
-                {"device", yarp::os::Value("remote_controlboard")},
-                {"local", yarp::os::Value("/" + name + "/face/remoteControlBoard")},
-                {"remote", yarp::os::Value("/" + robot + "/face")},
-                {"part", yarp::os::Value("face")}};
-
-            if (m_poly.open(rcb_face_conf))
-            {
-                yarp::dev::IControlMode* iCM{nullptr};
-                yarp::dev::IControlLimits* iCtrlLim{nullptr};
-                bool ok = m_poly.view(iCM);
-                ok &= m_poly.view(m_iPos);
-                ok &= m_poly.view(iCtrlLim);
-                if (iCM)
-                    ok &= iCM->setControlMode(0, VOCAB_CM_POSITION);
-                if (iCtrlLim)
-                {
-                    ok &= iCtrlLim->getLimits(0, &m_minEyeLid, &m_maxEyeLid);
-                    m_maxEyeLid = 0.9 * m_maxEyeLid;
-                }
-                if (m_iPos)
-                {
-                    ok &= m_iPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
-                    ok &= m_iPos->setRefAcceleration(0, std::numeric_limits<double>::max());
-                }
-                if (!ok)
-                {
-                    yError() << "Failed to configure the remote_controlboard";
                     return false;
                 }
-            } else
+
+            }
+            else
             {
-                yError() << "Failed to connect to the face control board. Set useRawEyelids to "
-                            "true to avoid connecting to it.";
-                return false;
+                yarp::os::Property rcb_face_conf{
+                    {"device", yarp::os::Value("remote_controlboard")},
+                    {"local", yarp::os::Value("/" + name + "/face/remoteControlBoard")},
+                    {"remote", yarp::os::Value("/" + robot + "/face")},
+                    {"part", yarp::os::Value("face")}};
+
+                if (m_poly.open(rcb_face_conf))
+                {
+                    yarp::dev::IControlMode* iCM{nullptr};
+                    yarp::dev::IControlLimits* iCtrlLim{nullptr};
+                    bool ok = m_poly.view(iCM);
+                    ok &= m_poly.view(m_iPos);
+                    ok &= m_poly.view(iCtrlLim);
+                    if (iCM)
+                        ok &= iCM->setControlMode(0, VOCAB_CM_POSITION);
+                    if (iCtrlLim)
+                    {
+                        ok &= iCtrlLim->getLimits(0, &m_minEyeLid, &m_maxEyeLid);
+                        m_maxEyeLid = 0.9 * m_maxEyeLid;
+                    }
+                    if (m_iPos)
+                    {
+                        ok &= m_iPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
+                        ok &= m_iPos->setRefAcceleration(0, std::numeric_limits<double>::max());
+                    }
+                    if (!ok)
+                    {
+                        yError() << "Failed to configure the remote_controlboard";
+                        return false;
+                    }
+                } else
+                {
+                    yError() << "Failed to connect to the face control board. Set useRawEyelids to "
+                                "true to avoid connecting to it.";
+                    return false;
+                }
             }
         }
 
@@ -279,33 +284,36 @@ bool SRanipalModule::updateModule()
             sendFaceExpression("leb", leftEyeBrow);
             sendFaceExpression("reb", rightEyeBrow);
 
-            double eye_openess = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
-            int eye_open_level = static_cast<int>(std::round(eye_openess / m_eyeOpenPrecision));
-            double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
-
-            if (eye_open_level != m_eyeOpenLevel)
+            if (m_useEyelids)
             {
-                if (m_useRawEyelids)
-                {
-                    yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
-                    out.clear();
-                    double rawEyelidsValue
-                        = eye_openess_leveled * (static_cast<double>(m_rawEyelidsOpenValue) - m_rawEyelidsCloseValue)
-                          + m_rawEyelidsCloseValue;
-                    out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
-                    m_rawEyelidsOutputPort.write();
+                double eye_openess = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
+                int eye_open_level = static_cast<int>(std::round(eye_openess / m_eyeOpenPrecision));
+                double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
 
-                    yDebug() << "Sending raw commands to eyelids:" << out.toString();
-                } else
+                if (eye_open_level != m_eyeOpenLevel)
                 {
-                    if (m_iPos)
+                    if (m_useRawEyelids)
                     {
-                        m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid); // because min-> open, max->closed
-                    }
-                }
+                        yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
+                        out.clear();
+                        double rawEyelidsValue
+                                = eye_openess_leveled * (static_cast<double>(m_rawEyelidsOpenValue) - m_rawEyelidsCloseValue)
+                                + m_rawEyelidsCloseValue;
+                        out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
+                        m_rawEyelidsOutputPort.write();
 
-                yInfo() << "Setting eye openess:" << eye_openess_leveled;
-                m_eyeOpenLevel = eye_open_level;
+                        yDebug() << "Sending raw commands to eyelids:" << out.toString();
+                    } else
+                    {
+                        if (m_iPos)
+                        {
+                            m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid); // because min-> open, max->closed
+                        }
+                    }
+
+                    yInfo() << "Setting eye openess:" << eye_openess_leveled;
+                    m_eyeOpenLevel = eye_open_level;
+                }
             }
         }
     }

@@ -65,6 +65,7 @@ The following optional parameters can be inserted after calling with module, eac
 - ``robot``, prefix used to connect to the robot in the RFE case. Default ``icub``.
 - ``emotionsOutputPortName``, suffix used to open the port for communicating with the ``emotionInterface``. Default ``/emotions:o``).
 - ``noEye``, if specified without value (i.e. ``--noEye``) or with value ``true`` (i.e. ``--noEye true``), the module avoids to use the eye tracking device. By default it is ``false``.
+- ``noEyelids``, if specified without value (i.e. ``--noEyelids``) or with value ``true`` (i.e. ``--noEyelids true``), the module avoids to control the eyelids. By default it is ``false``.
 - ``noLip``, if specified without value (i.e. ``--noLip``) or with value ``true`` (i.e. ``--noLip true``), the module avoids to use the lip tracking device. By default it is ``false``.
 - ``period``, the update period of the module in seconds. Default ``0.1``.
 - ``lipExpressionThreshold``, minimum value for a blend shape weight to trigger an expression on the robot. The ``SRanipal`` SDK provides a set of weights in the range [0, 1] classifying the current operator's expression. This parameters define the minimul value for which an expression is considered active. Default ``0.2``.

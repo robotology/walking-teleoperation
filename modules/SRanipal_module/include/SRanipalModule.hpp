@@ -26,6 +26,7 @@ class SRanipalModule : public yarp::os::RFModule
     char m_lipImage[800 * 400];
     bool m_useEye;
     bool m_useLip;
+    bool m_useEyelids;
     bool m_useRawEyelids;
     double m_period;
     double m_lipExpressionThreshold;
