@@ -21,6 +21,7 @@
 #include <SRanipal_Lip.h>
 #include <SRanipal_Enums.h>
 #include <SRanipal_NotRelease.h>
+#include <cmath>
 
 const char * SRanipalModule::errorCodeToString(int error) const
 {
@@ -90,9 +91,9 @@ void SRanipalModule::sendFaceExpression(const std::string& part, const std::stri
     if (emotion != m_currentExpressions[part])
     {
         yarp::os::Bottle cmd, reply;
-        cmd.addVocab(yarp::os::Vocab::encode("set"));
-        cmd.addVocab(yarp::os::Vocab::encode(part));
-        cmd.addVocab(yarp::os::Vocab::encode(emotion));
+        cmd.addVocab32(yarp::os::Vocab32::encode("set"));
+        cmd.addVocab32(yarp::os::Vocab32::encode(part));
+        cmd.addVocab32(yarp::os::Vocab32::encode(emotion));
         m_emotionsOutputPort.write(cmd, reply);
         m_currentExpressions[part] = emotion;
         yInfo() << "Sending" << emotion << "to" << part;
@@ -116,10 +117,10 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
     m_useEye = !rf.check("noEye") || (!rf.find("noEye").asBool()); //True if noEye is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
-    m_period = rf.check("period", yarp::os::Value(0.1)).asDouble();
-    m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asDouble();
-    m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asDouble();
-    m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asDouble();
+    m_period = rf.check("period", yarp::os::Value(0.1)).asFloat64();
+    m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asFloat64();
+    m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
+    m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
 
     if (m_useEye)
     {
