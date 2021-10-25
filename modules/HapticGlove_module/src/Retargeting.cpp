@@ -223,6 +223,32 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         m_robotJointsRangeMax[i] = m_robotJointsRangeMax[i] * M_PI / 180.0;
     }
 
+    // get the robot axes minimum values
+    std::vector<double> robotAxesRangeMin;
+    if (!YarpHelper::getVectorFromSearchable(config, "axes_min_boundary_all", robotAxesRangeMin))
+    {
+        yError() << m_logPrefix
+                 << "initialization failed while reading "
+                    "axes_min_boundary_all vector of the hand.";
+        return false;
+    }
+    if (!YarpHelper::checkSizeOfVector<double>(
+            robotAxesRangeMin, m_numAllAxis, VAR_TO_STR(robotAxesRangeMin), m_logPrefix))
+    {
+        return false;
+    }
+    if (!this->getCustomSetIndices(
+            robotAllAxisNames, m_robotActuatedAxisNames, robotAxesRangeMin, m_robotAxesRangeMin))
+    {
+        yError() << m_logPrefix << "cannot get the custom set for" << VAR_TO_STR(robotAxesRangeMin);
+        return false;
+    }
+
+    for (size_t i = 0; i < m_numActuatedAxis; i++)
+    {
+        m_robotAxesRangeMin[i] = m_robotAxesRangeMin[i] * M_PI / 180.0;
+    }
+
     // get human and robot joint list and find the mapping between them
     if (!this->semanticMapFromRobotTHuman(
             m_humanJointNames, m_robotActuatedJointNames, m_robotToHumanJointIndicesMap))
@@ -301,14 +327,19 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    m_axisContactThreshold = config.check("axisContactThreshold", yarp::os::Value(0.1)).asDouble();
+
     // initialize the vectors
     m_robotRefJointAngles.resize(m_numActuatedJoints, 0.0);
     m_fingerForceFeedback.resize(m_numFingers, 0.0);
     m_fingerVibrotactileFeedback.resize(m_numFingers, 0.0);
+    m_axisValueErrors.resize(m_numActuatedAxis, 0.0);
+    m_axisVelocityErrors.resize(m_numActuatedAxis, 0.0);
 
     // print information
     yInfo() << m_logPrefix << "m_robotJointsRangeMax [rad]: " << m_robotJointsRangeMax;
     yInfo() << m_logPrefix << "m_robotJointsRangeMin [rad]: " << m_robotJointsRangeMin;
+    yInfo() << m_logPrefix << "m_robotAxesRangeMin [rad]: " << m_robotAxesRangeMin;
     yInfo() << m_logPrefix << "m_gainValueError: " << m_gainTotalError;
     yInfo() << m_logPrefix << "m_gainVelocityError: " << m_gainVelocityError;
     yInfo() << m_logPrefix << "m_gainVibrotactile: " << m_gainVibrotactile;
@@ -376,22 +407,54 @@ bool Retargeting::retargetVibrotactileFeedbackFromRobotToHuman()
     return true;
 }
 
-bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
-    const std::vector<double>& axisValueError, const std::vector<double>& axisVelocityError)
+bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueRef,
+                                                         const std::vector<double>& axisVelocityRef,
+                                                         const std::vector<double>& axisValueFb,
+                                                         const std::vector<double>& axisVelocityFb)
 {
     // check the input vector sizes
     if (!YarpHelper::checkSizeOfVector<double>(
-            axisValueError, m_numActuatedAxis, VAR_TO_STR(axisValueError), m_logPrefix))
+            axisValueRef, m_numActuatedAxis, VAR_TO_STR(axisValueRef), m_logPrefix))
     {
         return false;
     }
     if (!YarpHelper::checkSizeOfVector<double>(
-            axisVelocityError, m_numActuatedAxis, VAR_TO_STR(axisVelocityError), m_logPrefix))
+            axisVelocityRef, m_numActuatedAxis, VAR_TO_STR(axisVelocityRef), m_logPrefix))
+    {
+        return false;
+    }
+    if (!YarpHelper::checkSizeOfVector<double>(
+            axisValueFb, m_numActuatedAxis, VAR_TO_STR(axisValueFb), m_logPrefix))
+    {
+        return false;
+    }
+    if (!YarpHelper::checkSizeOfVector<double>(
+            axisVelocityFb, m_numActuatedAxis, VAR_TO_STR(axisVelocityFb), m_logPrefix))
     {
         return false;
     }
 
-    if (!this->retargetForceFeedbackFromRobotToHuman(axisValueError, axisVelocityError))
+    for (int i = 0; i < m_numActuatedAxis; i++)
+    {
+        m_axisValueErrors[i] = axisValueRef[i] - axisValueFb[i];
+        m_axisVelocityErrors[i] = axisVelocityRef[i] - axisVelocityFb[i];
+
+        // the robot cannot mechnically go below the minimum range, so if this is the case
+        // then we set the error to zero
+        if (axisValueRef[i] < m_robotAxesRangeMin[i])
+        {
+            m_axisValueErrors[i] = 0.0;
+            m_axisVelocityErrors[i] = 0.0;
+        }
+        bool isInContact = std::abs(m_axisValueErrors[i]) > m_axisContactThreshold;
+        if (!isInContact)
+        {
+            m_axisValueErrors[i] = 0.0;
+            m_axisVelocityErrors[i] = 0.0;
+        }
+    }
+
+    if (!this->retargetForceFeedbackFromRobotToHuman(m_axisValueErrors, m_axisVelocityErrors))
     {
         yError() << m_logPrefix << "cannot compute force feedback from robot to the human.";
         return false;
@@ -405,21 +468,29 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
     return true;
 }
 
-bool Retargeting::getRobotJointReferences(std::vector<double>& robotJointReferences)
+bool Retargeting::getRobotJointReferences(std::vector<double>& robotJointReferences) const
 {
     robotJointReferences = m_robotRefJointAngles;
     return true;
 }
 
-bool Retargeting::getForceFeedbackToHuman(std::vector<double>& forceFeedbacks)
+bool Retargeting::getForceFeedbackToHuman(std::vector<double>& forceFeedbacks) const
 {
     forceFeedbacks = m_fingerForceFeedback;
     return true;
 }
 
-bool Retargeting::getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks)
+bool Retargeting::getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks) const
 {
     vibrotactileFeedbacks = m_fingerVibrotactileFeedback;
+    return true;
+}
+
+bool Retargeting::getAxisError(std::vector<double>& axisValueErrors,
+                               std::vector<double>& axisVelocityErrors) const
+{
+    axisValueErrors = m_axisValueErrors;
+    axisVelocityErrors = m_axisVelocityErrors;
     return true;
 }
 

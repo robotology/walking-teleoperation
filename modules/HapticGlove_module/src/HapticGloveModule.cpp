@@ -1102,11 +1102,8 @@ bool HapticGloveModule::updateModule()
                 }
 
                 bool isInContact = true;
-                isInContact =
-                    //                        (std::abs(axisFeedbackVelocitiesEstimationKF[i])
-                    //                        < m_velocity_threshold_transient) &&
-                    (std::abs(m_icubRightFingerAxisValueErrorSmoothed[i])
-                     > m_Value_error_threshold_transient);
+                isInContact = std::abs(m_icubRightFingerAxisValueErrorSmoothed[i])
+                              > m_Value_error_threshold_transient;
 
                 if (!isInContact)
                 {
@@ -1348,7 +1345,7 @@ bool HapticGloveModule::updateModule()
 
         if (m_useLeftHand)
         {
-            if (!m_gloveLeftHand->prepareGlove())
+            if (!m_gloveLeftHand->setupGlove())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot setup the left "
                             "hand glove.";
@@ -1358,7 +1355,7 @@ bool HapticGloveModule::updateModule()
 
         if (m_useRightHand)
         {
-            if (!m_gloveRightHand->prepareGlove())
+            if (!m_gloveRightHand->setupGlove())
             {
                 yError() << "[HapticGloveModule::updateModule()] cannot setup the "
                             "right hand glove.";

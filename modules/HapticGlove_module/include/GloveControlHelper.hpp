@@ -142,10 +142,10 @@ public:
     bool stopForceFeedback();
 
     /**
-     * Prepare glove helper for running
+     * Setup glove helper for running
      * @return true/false in case of success/failure
      */
-    bool prepareGlove();
+    bool setupGlove();
 
     /**
      * Get the name of a joint given the index of the joint in the list

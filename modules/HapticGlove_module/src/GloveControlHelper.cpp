@@ -93,6 +93,13 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    if (!this->setupGlove())
+    {
+        yError() << m_logPrefix << "cannot setup the glove.";
+        return false;
+    }
+    yInfo() << m_logPrefix << "configuration is done.";
+
     return true;
 }
 
@@ -220,7 +227,7 @@ bool GloveControlHelper::close()
     return true;
 }
 
-bool GloveControlHelper::prepareGlove()
+bool GloveControlHelper::setupGlove()
 {
     std::vector<double> jointAngleList;
     this->getHandJointAngles(jointAngleList);

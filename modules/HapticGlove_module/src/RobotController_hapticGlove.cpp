@@ -195,6 +195,7 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
     m_linearRegressor = std::make_unique<LinearRegression>();
 
     m_robotPrepared = false;
+    m_areEstimatorsInitialized = false;
     return true;
 }
 
@@ -673,7 +674,7 @@ bool RobotController::trainCouplingMatrix()
     return true;
 }
 
-bool RobotController::isRobotPrepared()
+bool RobotController::isRobotPrepared() const
 {
     return m_robotPrepared;
 }
@@ -701,7 +702,13 @@ bool RobotController::initializeEstimators()
     m_robotJointFeedbackEstimator->initialize(jointsFeedbackVector);
     m_robotJointExpectedEstimator->initialize(jointsExpectedVector);
 
+    m_areEstimatorsInitialized = true;
     return true;
+}
+
+bool RobotController::areEstimatorsInitialized() const
+{
+    return m_areEstimatorsInitialized;
 }
 
 bool RobotController::estimateNextStates()

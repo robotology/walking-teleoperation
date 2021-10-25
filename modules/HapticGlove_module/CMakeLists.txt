@@ -52,6 +52,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/LinearRegression.cpp
   src/GloveWearable.cpp
   src/Logger.cpp
+  src/BilateralTeleoperation.cpp
   )
 
 # set hpp files
@@ -68,6 +69,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/LinearRegression.hpp
   include/GloveWearable.hpp
   include/Logger.hpp
+  include/BilateralTeleoperation.hpp
   )
 
 # add include directories to the build.

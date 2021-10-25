@@ -11,6 +11,7 @@
 // yarp
 #include <yarp/os/LogStream.h>
 
+using namespace HapticGlove;
 HapticGloveModule::Logger::Logger(const HapticGloveModule& module, const bool isRightHand)
     : hapticModule(module)
 {

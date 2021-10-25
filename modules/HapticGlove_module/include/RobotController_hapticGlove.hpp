@@ -85,6 +85,8 @@ private:
 
     bool m_robotPrepared;
 
+    bool m_areEstimatorsInitialized;
+
     double m_kGain; /**< The gain of the exponential filter to set the robot reference position
                        values */
 
@@ -272,7 +274,13 @@ public:
      * check if the robot is prepared
      * @return true if the robot is prepared
      */
-    bool isRobotPrepared();
+    bool isRobotPrepared() const;
+
+    /**
+     * check if estimators are initialized
+     * @return true if estimators are initialized
+     */
+    bool areEstimatorsInitialized() const;
 
     /**
      * initialize the estimator of the motors

@@ -40,6 +40,9 @@ class HapticGlove::Retargeting
     size_t m_numAllJoints; /**< the number of all available joints of the robot hand,
                            regardless of actuated ones */
 
+    double m_axisContactThreshold; /**< the threshold on the axis value errors in order to be
+                                  considered the axis is in contact */
+
     std::vector<double>
         m_gainTotalError; /**< each element of this vector is multiplied to the
                            error for each motor/axis value error to compute the
@@ -53,6 +56,10 @@ class HapticGlove::Retargeting
                                compute the vibrotactile feedback associated with each finger, size:
                                number of fingers */
 
+    std::vector<double> m_axisValueErrors; /**< the error of the actuated axes values [rad]*/
+
+    std::vector<double> m_axisVelocityErrors; /**< the error of the actuated axes velocities [rad]*/
+
     std::vector<double>
         m_retargetingScaling; /**< the scale term used to map human joint values to
                                the corresponding robot joint motions, size: actuated joints */
@@ -61,7 +68,10 @@ class HapticGlove::Retargeting
                                corresponding robot joint motions, size: actuated joints */
 
     std::vector<double> m_robotJointsRangeMax; /**< the maximum value robot joints can have */
+
     std::vector<double> m_robotJointsRangeMin; /**< the minimum value robot joints can have */
+
+    std::vector<double> m_robotAxesRangeMin; /**< the minimum value robot axes can have */
 
     std::vector<std::string> m_robotActuatedAxisNames; /**< name of the robot actuator that has been
                                                           used in teleoperation*/
@@ -158,32 +168,45 @@ public:
 
     /**
      * compute the retargeting haptic (force and vibrotactile)feedback to the human hand fingers
-     * @param axisValueError errors on the robot axes values
-     * @param axisVelocityError errors on the robot axes velocities
+     * @param axisValueRef reference robot axes values
+     * @param axisVelocityRef reference robot axes velocities
+     * @param axisValueFb feedback robot axes values
+     * @param axisVelocityFb feedback robot axes velocities
      * @return true/false in case of success/failure
      */
-    bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueError,
-                                                const std::vector<double>& axisVelocityError);
+    bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueRef,
+                                                const std::vector<double>& axisVelocityRef,
+                                                const std::vector<double>& axisValueFb,
+                                                const std::vector<double>& axisVelocityFb);
     /**
      * get the robot actuated joint references
      * @param robotJointReferences robot actuated joint references
      * @return true/false in case of success/failure
      */
-    bool getRobotJointReferences(std::vector<double>& robotJointReferences);
+    bool getRobotJointReferences(std::vector<double>& robotJointReferences) const;
 
     /**
      * get the desired force feedback to the human
      * @param forceFeedbacks the desired force feedback to the human
      * @return true/false in case of success/failure
      */
-    bool getForceFeedbackToHuman(std::vector<double>& forceFeedbacks);
+    bool getForceFeedbackToHuman(std::vector<double>& forceFeedbacks) const;
 
     /**
      * get the desired vibrotactile feedback to the human
      * @param vibrotactileFeedbacks the desired vibrotactile feedback to the human
      * @return true/false in case of success/failure
      */
-    bool getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks);
+    bool getVibrotactileFeedbackToHuman(std::vector<double>& vibrotactileFeedbacks) const;
+
+    /**
+     * get the axes errors
+     * @param axisValueErrors the axis value errors
+     * @param axisVelocityErrors the axis velocity errors
+     * @return true/false in case of success/failure
+     */
+    bool getAxisError(std::vector<double>& axisValueErrors,
+                      std::vector<double>& axisVelocityErrors) const;
 
     /**
      * compute the paramters for the linear configuration space retargeting
