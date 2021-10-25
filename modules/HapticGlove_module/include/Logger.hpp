@@ -13,7 +13,7 @@
 #include <vector>
 
 // teleoperation
-#include <HapticGloveModule.hpp>
+#include <Teleoperation.hpp>
 
 // matlogger
 #ifdef ENABLE_LOGGER
@@ -21,10 +21,10 @@
 #include <matlogger2/utils/mat_appender.h>
 #endif
 
-class HapticGloveModule::Logger
+class HapticGlove::Teleoperation::Logger
 {
 public:
-    Logger(const HapticGloveModule& module, const bool isRightHand);
+    Logger(const Teleoperation& module, const bool isRightHand);
     ~Logger();
     bool openLogger();
     bool updateData();
@@ -33,7 +33,9 @@ public:
 
     bool isRightHand;
     std::string handName;
-    const HapticGloveModule& hapticModule;
+    std::string logPrefix;
+
+    const Teleoperation& teleoperation;
 
     size_t numOfRobotActuatedAxis;
     size_t numOfRobotActuatedJoints;
@@ -69,8 +71,8 @@ public:
         std::vector<double> robotAxisAccelerationFeedbackKF;
         Eigen::MatrixXd robotAxisCovFeedbackKF;
 
-        std::vector<double> robotAxisError;
-        std::vector<double> robotAxisErrorSmoothed;
+        std::vector<double> robotAxisValueError; // to check: axis Value Error
+        std::vector<double> robotAxisVelocityError; // to check: axis Velocity Error
 
         std::vector<double> robotJointsReference;
         std::vector<double> robotJointsFeedback;

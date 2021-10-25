@@ -702,7 +702,10 @@ bool RobotController::initializeEstimators()
     m_robotJointFeedbackEstimator->initialize(jointsFeedbackVector);
     m_robotJointExpectedEstimator->initialize(jointsExpectedVector);
 
-    m_areEstimatorsInitialized = true;
+    m_areEstimatorsInitialized = m_robotJointFeedbackEstimator->isInitialized()
+                                 && m_robotJointExpectedEstimator->isInitialized()
+                                 && m_robotMotorFeedbackEstimator->isInitialized()
+                                 && m_robotMotorReferenceEstimator->isInitialized();
     return true;
 }
 
