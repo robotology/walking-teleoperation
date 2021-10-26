@@ -114,7 +114,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-    m_useEye = !rf.check("noEye") || (!rf.find("noEye").asBool()); //True if noEye is not set or set to false
+    m_useEyebrows = !rf.check("noEyebrows") || (!rf.find("noEyebrows").asBool()); //True if noEyebrows is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
     m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
     m_useRawEyelids = rf.check("useRawEyelids")
@@ -130,7 +130,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
 
-    if (m_useEye)
+    if (m_useEyebrows || m_useEyelids)
     {
         output = ViveSR::anipal::Initial(ViveSR::anipal::Eye::ANIPAL_TYPE_EYE_V2, NULL);
         if (output != ViveSR::Error::WORK) {
@@ -313,21 +313,25 @@ bool SRanipalModule::updateModule()
     lip_data.image = m_lipImage;
 
     int result = ViveSR::Error::WORK;
-    if (m_useEye) {
+    if (m_useEyebrows || m_useEyelids) {
         int result = ViveSR::anipal::Eye::GetEyeData_v2(&eye_data_v2);
         if (result == ViveSR::Error::WORK) {
-            std::string leftEyeBrow = "neu";
-            std::string rightEyeBrow = "neu";
 
-            if ((eye_data_v2.expression_data.left.eye_wide > m_eyeWideSurprisedThreshold) ||
-                (eye_data_v2.expression_data.right.eye_wide > m_eyeWideSurprisedThreshold))
+            if (m_useEyebrows)
             {
-                leftEyeBrow = "sur";
-                rightEyeBrow = "sur";
-            }
+                std::string leftEyeBrow = "neu";
+                std::string rightEyeBrow = "neu";
 
-            sendFaceExpression("leb", leftEyeBrow);
-            sendFaceExpression("reb", rightEyeBrow);
+                if ((eye_data_v2.expression_data.left.eye_wide > m_eyeWideSurprisedThreshold) ||
+                    (eye_data_v2.expression_data.right.eye_wide > m_eyeWideSurprisedThreshold))
+                {
+                    leftEyeBrow = "sur";
+                    rightEyeBrow = "sur";
+                }
+
+                sendFaceExpression("leb", leftEyeBrow);
+                sendFaceExpression("reb", rightEyeBrow);
+            }
 
             if (m_useEyelids)
             {
