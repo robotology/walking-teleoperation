@@ -64,7 +64,7 @@ The following optional parameters can be inserted after calling with module, eac
 - ``name``,  prefix used to open the ports. Default ``SRanipalModule``.
 - ``robot``, prefix used to connect to the robot in the RFE case. Default ``icub``.
 - ``emotionsOutputPortName``, suffix used to open the port for communicating with the ``emotionInterface``. Default ``/emotions:o``).
-- ``noEye``, if specified without value (i.e. ``--noEye``) or with value ``true`` (i.e. ``--noEye true``), the module avoids to use the eye tracking device. By default it is ``false``.
+- ``noEyebrows``, if specified without value (i.e. ``--noEyebrows``) or with value ``true`` (i.e. ``--noEyebrows true``), the module avoids to set the eyebrows expressions. By default it is ``false``.
 - ``noEyelids``, if specified without value (i.e. ``--noEyelids``) or with value ``true`` (i.e. ``--noEyelids true``), the module avoids to control the eyelids. By default it is ``false``.
 - ``noLip``, if specified without value (i.e. ``--noLip``) or with value ``true`` (i.e. ``--noLip true``), the module avoids to use the lip tracking device. By default it is ``false``.
 - ``period``, the update period of the module in seconds. Default ``0.1``.
