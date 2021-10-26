@@ -32,11 +32,14 @@
 
 namespace HapticGlove
 {
+class RobotControlInterface;
+struct axisSensorData;
+} // namespace HapticGlove
 
 /**
  * Data structure the name of the all the sesnors (analog, encoders) assosiated with the axes list.
  */
-struct axisSensorData
+struct HapticGlove::axisSensorData
 {
     std::string axisName;
     bool useAnalog;
@@ -47,7 +50,7 @@ struct axisSensorData
 /**
  * RobotControlInterface is an helper class for controlling the robot.
  */
-class RobotControlInterface
+class HapticGlove::RobotControlInterface
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
     yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
@@ -58,7 +61,14 @@ class RobotControlInterface
                              encoders sensors) */
     size_t m_noAllAxis;
 
-    std::vector<std::string> m_axesList; /**< Vector containing the name of the controlled axes. */
+    std::vector<std::string>
+        m_actuatedAxisNames; /**< Vector containing the name of the controlled axes. */
+
+    std::vector<std::string>
+        m_allAxisNames; /**< Vector containing the name of the controlled axes. */
+
+    std::vector<std::string>
+        m_allJointNames; /**< Vector containing the name of the controlled axes. */
 
     std::vector<std::string>
         m_actuatedJointList; /**< Vector containing the names of the activated joints (activated
@@ -214,6 +224,14 @@ public:
     bool getLimits(yarp::sig::Matrix& limits);
 
     /**
+     * Get the joint limits
+     * @param minLimits vector containing the joint minimum limits in radian
+     * @param maxLimits vector containing the joint maximum limits in radian
+     * @return true / false in case of success / failure
+     */
+    bool getLimits(std::vector<double> minLimits, std::vector<double> maxLimits);
+
+    /**
      * Get the joint velocity limits
      * @param limits matrix containing the joint velocity limits in radian/sec
      * @return true / false in case of success / failure
@@ -302,15 +320,18 @@ public:
 
     const int getNumberOfActuatedJoints() const;
 
-    void getActuatedJointNameList(std::vector<std::string>& robotActuatedJointNameList) const;
+    void getActuatedJointNames(std::vector<std::string>& names) const;
 
-    void getActuatedAxisNameList(std::vector<std::string>& robotActuatedAxisNameList) const;
+    void getAllJointNames(std::vector<std::string>& names) const;
+
+    void getActuatedAxisNames(std::vector<std::string>& names) const;
+
+    void getAllAxisNames(std::vector<std::string>& names) const;
 
     /**
      * Close the helper
      */
     bool close();
 };
-} // namespace HapticGlove
 
 #endif

@@ -158,9 +158,9 @@ bool Teleoperation::Logger::openLogger()
     std::vector<std::string> humanJointNames;
     std::vector<std::string> humanFingerNames;
 
-    m_teleoperation.m_robotController->controlHelper()->getActuatedAxisNameList(
+    m_teleoperation.m_robotController->controlHelper()->getActuatedAxisNames(
         robotActuatedAxisNames);
-    m_teleoperation.m_robotController->controlHelper()->getActuatedJointNameList(
+    m_teleoperation.m_robotController->controlHelper()->getActuatedJointNames(
         robotActuatedJointNames);
     m_teleoperation.m_humanGlove->getHumanHandJointsNames(humanJointNames);
     m_teleoperation.m_humanGlove->getHumanHandFingerNames(humanFingerNames);

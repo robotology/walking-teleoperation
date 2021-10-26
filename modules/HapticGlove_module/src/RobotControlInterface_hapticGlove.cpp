@@ -95,19 +95,25 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
 
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
-    yarp::os::Value* axesListYarp;
-    if (!config.check("axis_list", axesListYarp))
+
+    if (!YarpHelper::getVectorFromSearchable(config, "axis_list", m_actuatedAxisNames))
     {
-        yError() << "[RobotControlInterface::configure] Unable to find axis_list "
-                    "into config file.";
+        yError() << "[RobotControlInterface::configure] Unable to get  axis_list "
+                    " from the configuration file.";
         return false;
     }
 
-    if (!YarpHelper::yarpListToStringVector(axesListYarp, m_axesList))
+    if (!YarpHelper::getVectorFromSearchable(config, "all_axis_list", m_allAxisNames))
     {
-        yError() << "[RobotControlInterface::configure] Unable to convert yarp "
-                    "list into a "
-                    "vector of strings.";
+        yError() << "[RobotControlInterface::configure] Unable to get  all_axis_list "
+                    " from the configuration file..";
+        return false;
+    }
+
+    if (!YarpHelper::getVectorFromSearchable(config, "joint_list", m_allJointNames))
+    {
+        yError() << "[RobotControlInterface::configure] Unable to get  joint_list "
+                    " from the configuration file..";
         return false;
     }
 
@@ -168,10 +174,10 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         jointFeedbackIsAnalog.push_back(*it == "analog");
     }
 
-    for (size_t i = 0; i < m_axesList.size(); i++)
+    for (size_t i = 0; i < m_actuatedAxisNames.size(); i++)
     {
         axisSensorData axisInfoObj;
-        axisInfoObj.axisName = m_axesList[i];
+        axisInfoObj.axisName = m_actuatedAxisNames[i];
         axisInfoObj.useAnalog = false;
         yarp::os::Value* axisJointListYarp;
         if (!config.check(axisInfoObj.axisName, axisJointListYarp))
@@ -301,7 +307,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
 
     optionsRobotDevice.put("device", "remotecontrolboardremapper");
 
-    YarpHelper::addVectorOfStringToProperty(optionsRobotDevice, "axesNames", m_axesList);
+    YarpHelper::addVectorOfStringToProperty(optionsRobotDevice, "axesNames", m_actuatedAxisNames);
 
     // prepare the remotecontrolboards
     yarp::os::Bottle remoteControlBoards;
@@ -316,7 +322,7 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
     remoteControlBoardsOpts.put("writeStrict", "on");
 
-    m_noActuatedAxis = m_axesList.size();
+    m_noActuatedAxis = m_actuatedAxisNames.size();
 
     bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
     m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
@@ -871,16 +877,23 @@ const int RobotControlInterface::getNumberOfActuatedJoints() const
     return m_noActuatedJoints;
 }
 
-void RobotControlInterface::getActuatedJointNameList(
-    std::vector<std::string>& robotActuatedJointNameList) const
+void RobotControlInterface::getActuatedJointNames(std::vector<std::string>& names) const
 {
-    robotActuatedJointNameList = m_actuatedJointList;
+    names = m_actuatedJointList;
+}
+void RobotControlInterface::getAllJointNames(std::vector<std::string>& names) const
+{
+    names = m_allJointNames;
 }
 
-void RobotControlInterface::getActuatedAxisNameList(
-    std::vector<std::string>& robotActuatedAxisNameList) const
+void RobotControlInterface::getActuatedAxisNames(std::vector<std::string>& names) const
 {
-    robotActuatedAxisNameList = m_axesList;
+    names = m_actuatedAxisNames;
+}
+
+void RobotControlInterface::getAllAxisNames(std::vector<std::string>& names) const
+{
+    names = m_allAxisNames;
 }
 
 bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
@@ -903,14 +916,15 @@ bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
         {
             if (m_isMandatory)
             {
-                yError() << "[RobotControlInterface::getLimits] Unable get " << m_axesList[i]
-                         << " joint limits.";
+                yError() << "[RobotControlInterface::getLimits] Unable get "
+                         << m_actuatedAxisNames[i] << " joint limits.";
                 return false;
             } else
             {
                 limits(i, 0) = m_encoderPositionFeedbackInRadians(i);
                 limits(i, 1) = m_encoderPositionFeedbackInRadians(i);
-                yWarning() << "[RobotControlInterface::getLimits] Unable get " << m_axesList[i]
+                yWarning() << "[RobotControlInterface::getLimits] Unable get "
+                           << m_actuatedAxisNames[i]
                            << " joint limits. The current joint value is used as lower "
                               "and upper limits.";
             }
@@ -919,6 +933,26 @@ bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
             limits(i, 0) = iDynTree::deg2rad(minLimitInDegree);
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
         }
+    }
+    return true;
+}
+
+bool RobotControlInterface::getLimits(std::vector<double> minLimits, std::vector<double> maxLimits)
+{
+    minLimits.resize(m_noActuatedAxis, 0.0);
+    maxLimits.resize(m_noActuatedAxis, 0.0);
+
+    yarp::sig::Matrix limits;
+    if (!this->getLimits(limits))
+    {
+        yInfo() << "unable to get the robot axis limits";
+        return false;
+    }
+
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        minLimits[i] = limits(i, 0);
+        maxLimits[i] = limits(i, 1);
     }
     return true;
 }
@@ -941,8 +975,8 @@ bool RobotControlInterface::getVelocityLimits(yarp::sig::Matrix& limits)
         // get position limits
         if (!m_limitsInterface->getVelLimits(i, &minLimitInDegree, &maxLimitInDegree))
         {
-            yError() << "[RobotControlInterface::getVelocityLimits] Unable get " << m_axesList[i]
-                     << " joint limits.";
+            yError() << "[RobotControlInterface::getVelocityLimits] Unable get "
+                     << m_actuatedAxisNames[i] << " joint limits.";
             return false;
 
         } else

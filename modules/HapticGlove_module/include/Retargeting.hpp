@@ -71,7 +71,9 @@ class HapticGlove::Retargeting
 
     std::vector<double> m_robotJointsRangeMin; /**< the minimum value robot joints can have */
 
-    std::vector<double> m_robotAxesRangeMin; /**< the minimum value robot axes can have */
+    std::vector<double> m_robotAxesMinLimit; /**< the minimum value robot axes can have */
+
+    std::vector<double> m_robotAxesMaxLimit; /**< the maximum value robot axes can have */
 
     std::vector<std::string> m_robotActuatedAxisNames; /**< name of the robot actuator that has been
                                                           used in teleoperation*/
@@ -216,6 +218,9 @@ public:
      */
     bool computeJointAngleRetargetingParams(const std::vector<double>& humanHandJointRangeMin,
                                             const std::vector<double>& humanHandJointRangeMax);
+
+    bool setRobotAxisLimits(const std::vector<double>& robotAxisMinLimit,
+                            const std::vector<double>& robotAxisMaxLimit);
 
     /**
      * close the retageting class

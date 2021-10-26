@@ -223,32 +223,6 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         m_robotJointsRangeMax[i] = m_robotJointsRangeMax[i] * M_PI / 180.0;
     }
 
-    // get the robot axes minimum values
-    std::vector<double> robotAxesRangeMin;
-    if (!YarpHelper::getVectorFromSearchable(config, "axes_min_boundary_all", robotAxesRangeMin))
-    {
-        yError() << m_logPrefix
-                 << "initialization failed while reading "
-                    "axes_min_boundary_all vector of the hand.";
-        return false;
-    }
-    if (!YarpHelper::checkSizeOfVector<double>(
-            robotAxesRangeMin, m_numAllAxis, VAR_TO_STR(robotAxesRangeMin), m_logPrefix))
-    {
-        return false;
-    }
-    if (!this->getCustomSetIndices(
-            robotAllAxisNames, m_robotActuatedAxisNames, robotAxesRangeMin, m_robotAxesRangeMin))
-    {
-        yError() << m_logPrefix << "cannot get the custom set for" << VAR_TO_STR(robotAxesRangeMin);
-        return false;
-    }
-
-    for (size_t i = 0; i < m_numActuatedAxis; i++)
-    {
-        m_robotAxesRangeMin[i] = m_robotAxesRangeMin[i] * M_PI / 180.0;
-    }
-
     // get human and robot joint list and find the mapping between them
     if (!this->semanticMapFromRobotTHuman(
             m_humanJointNames, m_robotActuatedJointNames, m_robotToHumanJointIndicesMap))
@@ -339,7 +313,6 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
     // print information
     yInfo() << m_logPrefix << "m_robotJointsRangeMax [rad]: " << m_robotJointsRangeMax;
     yInfo() << m_logPrefix << "m_robotJointsRangeMin [rad]: " << m_robotJointsRangeMin;
-    yInfo() << m_logPrefix << "m_robotAxesRangeMin [rad]: " << m_robotAxesRangeMin;
     yInfo() << m_logPrefix << "m_gainValueError: " << m_gainTotalError;
     yInfo() << m_logPrefix << "m_gainVelocityError: " << m_gainVelocityError;
     yInfo() << m_logPrefix << "m_gainVibrotactile: " << m_gainVibrotactile;
@@ -439,18 +412,25 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const std::vector<doubl
         m_axisValueErrors[i] = axisValueRef[i] - axisValueFb[i];
         m_axisVelocityErrors[i] = axisVelocityRef[i] - axisVelocityFb[i];
 
-        // the robot cannot mechnically go below the minimum range, so if this is the case
-        // then we set the error to zero
-        if (axisValueRef[i] < m_robotAxesRangeMin[i])
-        {
-            m_axisValueErrors[i] = 0.0;
-            m_axisVelocityErrors[i] = 0.0;
-        }
         bool isInContact = std::abs(m_axisValueErrors[i]) > m_axisContactThreshold;
         if (!isInContact)
         {
             m_axisValueErrors[i] = 0.0;
             m_axisVelocityErrors[i] = 0.0;
+        }
+
+        // the robot cannot mechnically go below the minimum range, so if this is the case
+        // then we set the error to zero
+        // higher priority, so added at the last step check
+        if (axisValueRef[i] < m_robotAxesMinLimit[i])
+        {
+            m_axisValueErrors[i] = 0.0;
+            m_axisVelocityErrors[i] = 0.0;
+        }
+        if (axisValueRef[i] > m_robotAxesMaxLimit[i])
+        {
+            m_axisValueErrors[i] = 100.0;
+            m_axisVelocityErrors[i] = 100.0;
         }
     }
 
@@ -619,6 +599,29 @@ bool Retargeting::computeJointAngleRetargetingParams(
 
     yInfo() << m_logPrefix << "m_retargetingScaling: " << m_retargetingScaling;
     yInfo() << m_logPrefix << "m_retargetingBias: " << m_retargetingBias;
+
+    return true;
+}
+
+bool Retargeting::setRobotAxisLimits(const std::vector<double>& robotAxisMinLimit,
+                                     const std::vector<double>& robotAxisMaxLimit)
+{
+    if (!YarpHelper::checkSizeOfVector<double>(
+            robotAxisMinLimit, m_numActuatedAxis, VAR_TO_STR(robotAxisMinLimit), m_logPrefix))
+    {
+        return false;
+    }
+
+    if (!YarpHelper::checkSizeOfVector<double>(
+            robotAxisMaxLimit, m_numActuatedAxis, VAR_TO_STR(robotAxisMaxLimit), m_logPrefix))
+    {
+        return false;
+    }
+    m_robotAxesMinLimit = robotAxisMinLimit;
+    m_robotAxesMaxLimit = robotAxisMaxLimit;
+
+    yInfo() << m_logPrefix << "m_robotAxesRangeMin [rad]: " << m_robotAxesMinLimit;
+    yInfo() << m_logPrefix << "m_robotAxesRangeMax[rad]: " << m_robotAxesMaxLimit;
 
     return true;
 }

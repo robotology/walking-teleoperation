@@ -53,7 +53,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     // initialize the robot controller object
     m_robotController = std::make_unique<RobotController>();
-    if (!m_robotController->configure(config, m_robot))
+    if (!m_robotController->configure(config, m_robot, rightHand))
     {
         yError() << m_logPrefix << "unable to initialize robot controller.";
         return false;
@@ -72,8 +72,8 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     std::vector<std::string> robotActuatedAxisNameList;
     std::vector<std::string> humanJointNameList;
 
-    m_robotController->controlHelper()->getActuatedJointNameList(robotActuatedJointNameList);
-    m_robotController->controlHelper()->getActuatedAxisNameList(robotActuatedAxisNameList);
+    m_robotController->controlHelper()->getActuatedJointNames(robotActuatedJointNameList);
+    m_robotController->controlHelper()->getActuatedAxisNames(robotActuatedAxisNameList);
     m_humanGlove->getHumanHandJointsNames(humanJointNameList);
 
     m_retargeting = std::make_unique<HapticGlove::Retargeting>(
@@ -81,6 +81,20 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     if (!m_retargeting->configure(config, m_robot, rightHand))
     {
         yError() << m_logPrefix << "unable to initialize retargeting class.";
+        return false;
+    }
+
+    std::vector<double> minLimits, maxLimits;
+    if (!m_robotController->controlHelper()->getLimits(minLimits, maxLimits))
+    {
+        yError() << m_logPrefix << "unable to get the limits from the robot controller.";
+        return false;
+    }
+
+    if (!m_retargeting->setRobotAxisLimits(minLimits, maxLimits))
+    {
+        yError() << m_logPrefix
+                 << "unable to set limits ofrobot actuated axes for retargeting class.";
         return false;
     }
 

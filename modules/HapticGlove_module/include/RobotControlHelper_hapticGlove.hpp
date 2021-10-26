@@ -27,7 +27,8 @@ using namespace yarp::math;
 class RobotControlHelper
 {
 protected:
-    std::unique_ptr<HapticGlove::RobotControlInterface> m_robotControlInterface; /**< Controller helper */
+    std::unique_ptr<HapticGlove::RobotControlInterface>
+        m_robotControlInterface; /**< Controller helper */
     yarp::sig::Vector m_desiredMotorValue; /** Desired Motor value in radiant or radiant/s  */
     yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
 
@@ -37,7 +38,9 @@ public:
      * @param config is the reference to a resource finder object.
      * @return true in case of success and false otherwise.
      */
-    virtual bool configure(const yarp::os::Searchable& config, const std::string& name) = 0;
+    virtual bool
+    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand)
+        = 0;
 
     /**
      * Move the robot part

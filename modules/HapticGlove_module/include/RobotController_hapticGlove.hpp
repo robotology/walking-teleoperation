@@ -29,20 +29,28 @@
 
 using namespace yarp::math;
 
+namespace HapticGlove
+{
+class RobotController;
+}
+
 /**
  * Class useful to manage the control of the retargeting robot fingers.
  */
-class RobotController : public RobotControlHelper
+class HapticGlove::RobotController : public RobotControlHelper
 {
 private:
     std::string m_logPrefix;
+
     bool m_robotPrepared;
+
+    bool m_rightHand;
 
     bool m_estimatorsInitialized;
 
     bool m_doCalibration; /**< check if we need to do calibraition */
 
-    bool m_motorJointsCoupled; /**< check if the motors and joints are coupled */
+    bool m_axesJointsCoupled; /**< check if the axis and joints are coupled */
 
     size_t m_numAllAxis;
     size_t m_numActuatedAxis;
@@ -69,7 +77,7 @@ private:
                             Dimension <m,q> q: number of joints, m: number of motors*/
 
     Eigen::MatrixXd
-        m_motorsData; /**< The logged data for calibration; the motors values; Dimension <o, m> o:
+        m_axesData; /**< The logged data for calibration; the motors values; Dimension <o, m> o:
                          number of observations (logged data), m: number of motors */
 
     Eigen::MatrixXd
@@ -89,6 +97,19 @@ private:
     double m_kGain; /**< The gain of the exponential filter to set the robot reference position
                        values */
 
+    /**
+     * get the custom set of vectors
+     * @param allListName the full vector names
+     * @param customListNames the custm members of the vector names
+     * @param allListVector the full vector values
+     * @param customListVector the custm members of the vector values
+     * @return true/false in case of success/failure
+     */
+    bool getCustomSetIndices(const std::vector<std::string>& allListName,
+                             const std::vector<std::string>& customListNames,
+                             const std::vector<double>& allListVector,
+                             std::vector<double>& customListVector);
+
 public:
     /**
      * Configure the object.
@@ -96,7 +117,9 @@ public:
      * @param name name of the robot
      * @return true in case of success and false otherwise.
      */
-    bool configure(const yarp::os::Searchable& config, const std::string& name) override;
+    bool configure(const yarp::os::Searchable& config,
+                   const std::string& name,
+                   const bool& rightHand) override;
 
     /**
      * Set the fingers axis reference value

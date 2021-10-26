@@ -6,94 +6,121 @@
  * @date 2020
  */
 
+// teleoperation
 #include <RobotController_hapticGlove.hpp>
 #include <Utils.hpp>
 
-bool RobotController::configure(const yarp::os::Searchable& config, const std::string& name)
-{
-    m_logPrefix = "RobotController:: ";
+// std
+#include <thread>
 
-    m_robotControlInterface = std::make_unique<HapticGlove::RobotControlInterface>();
+using namespace HapticGlove;
+
+bool RobotController::configure(const yarp::os::Searchable& config,
+                                const std::string& name,
+                                const bool& rightHand)
+{
+    m_rightHand = rightHand;
+
+    m_logPrefix = "RobotController::";
+    m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
+
+    m_robotControlInterface = std::make_unique<RobotControlInterface>();
     if (!m_robotControlInterface->configure(config, name, false))
     {
-        yError() << "[RobotController::configure] Unable to configure the control helper";
+        yError() << m_logPrefix << "unable to intialized and configure the control.";
         return false;
     }
 
-    size_t noActuatedAxis = m_robotControlInterface->getNumberOfActuatedAxis();
+    m_numAllAxis = m_robotControlInterface->getNumberOfAllAxis();
+    m_numActuatedAxis = m_robotControlInterface->getNumberOfActuatedAxis();
 
-    double samplingTime;
-    if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
-    {
-        yError() << "[RobotController::configure] Unable to find the sampling time";
-        return false;
-    }
+    m_numAllJoints = m_robotControlInterface->getNumberOfAllJoints();
+    m_numActuatedJoints = m_robotControlInterface->getNumberOfActuatedJoints();
 
     // check if the motors and joints are coupled
-    m_motorJointsCoupled
-        = config.check("motorsJointsCoupled", yarp::os::Value(0))
-              .asBool(); /**<  true if the motors and joints of the robot are coupled*/
-    yInfo() << "[RobotController::configure] motor and joints of the robot are coupled: "
-            << m_motorJointsCoupled;
+    m_axesJointsCoupled = config.check("motorsJointsCoupled", yarp::os::Value(0)).asBool();
 
-    // check if we need to do calibraition
-    m_doCalibration = config.check("doCalibration", yarp::os::Value(0))
-                          .asBool(); /**<  true if the motors and joints of the robot are coupled*/
-    yInfo() << "[RobotController::configure] to find the coupling "
-               "between motors and joints "
-            << m_motorJointsCoupled;
-
-    m_kGain = config.check("expFilterGain", yarp::os::Value(0.9))
-                  .asDouble(); /**<  true if the motors and joints of the robot are coupled*/
-
-    yInfo() << "[RobotController::configure]  robot controller exponential filter gain: m_kGain"
-            << m_kGain;
-
-    size_t noActuatedJoints = m_robotControlInterface->getNumberOfActuatedJoints();
-    if (m_motorJointsCoupled)
+    if (!m_axesJointsCoupled)
     {
-        m_A.resize(noActuatedJoints, noActuatedAxis);
-        m_Bias.resize(noActuatedJoints, 1);
+        if (m_numActuatedAxis != m_numActuatedJoints)
+        {
+            // in the case we assume it is NOT underactuated.
+            yError() << m_logPrefix
+                     << "the robot joints and axes are not coupled, so the number actuated axes "
+                        "and actuated joints should be equal; m_numActuatedAxis: "
+                     << m_numActuatedAxis << "m_numActuatedJoints: " << m_numActuatedJoints;
+            return false;
+        }
+    }
+
+    // check if we need to do calibration
+    m_doCalibration = config.check("doCalibration", yarp::os::Value(0)).asBool();
+
+    m_kGain = config.check("exponentialFilterGain", yarp::os::Value(0.9)).asDouble();
+
+    if (m_axesJointsCoupled)
+    {
+        m_A.resize(m_numActuatedJoints, m_numActuatedAxis);
+        m_Bias.resize(m_numActuatedJoints, 1);
 
         if (!m_doCalibration)
         {
-            m_A.resize(noActuatedJoints, noActuatedAxis);
-            m_Bias.resize(noActuatedJoints, 1);
-            yarp::sig::Vector A_vector, Bias_vector;
-            A_vector.resize(noActuatedJoints * noActuatedAxis);
-            Bias_vector.resize(noActuatedJoints);
-            if (!YarpHelper::getYarpVectorFromSearchable(config, "CouplingMatrix", A_vector))
+            if (m_numActuatedAxis != m_numAllAxis && m_numActuatedJoints != m_numAllJoints)
             {
-                yError() << "[RobotController::configure] Initialization failed while reading "
-                            "CouplingMatrix vector.";
+                yError() << m_logPrefix
+                         << "if you do not want to learn the model of coupling betwen robot joints "
+                            "and axes, all of them should be actuated. You have two options: \n"
+                            "    - learn the model: enable the option `doCalibration` \n"
+                            "    - use all the axes for the robot control";
                 return false;
             }
-            if (!YarpHelper::getYarpVectorFromSearchable(config, "CouplingBias", Bias_vector))
+            std::vector<double> A_vector, Bias_vector;
+            A_vector.resize(m_numActuatedJoints * m_numActuatedAxis);
+            Bias_vector.resize(m_numActuatedJoints);
+            if (!YarpHelper::getVectorFromSearchable(config, "CouplingMatrix", A_vector))
             {
-                yError() << "[RobotController::configure] Initialization failed while reading "
+                yError() << m_logPrefix
+                         << "initialization failed while reading CouplingMatrix vector.";
+                return false;
+            }
+            if (A_vector.size() != m_numActuatedJoints * m_numActuatedAxis)
+            {
+                yError() << m_logPrefix
+                         << "the size of the A_vector (CouplingMatrix) and (m_numActuatedJoints * "
+                            "m_numActuatedAxis) are not equal.";
+                return false;
+            }
+            if (!YarpHelper::getVectorFromSearchable(config, "CouplingBias", Bias_vector))
+            {
+                yError() << "initialization failed while reading "
                             "CouplingBias vector.";
                 return false;
             }
-
-            for (size_t i = 0; i < noActuatedJoints; i++)
+            if (Bias_vector.size() != m_numActuatedJoints)
             {
-                for (size_t j = 0; j < noActuatedAxis; j++)
+                yError() << m_logPrefix
+                         << "the size of the Bias_vector (CouplingBias) and m_numActuatedJoints "
+                            "are not equal.";
+                return false;
+            }
+
+            size_t idx = 0;
+            for (size_t i = 0; i < m_numActuatedJoints; i++)
+            {
+                for (size_t j = 0; j < m_numActuatedAxis; j++)
                 {
-                    size_t element = i * noActuatedAxis + j;
-                    m_A(i, j) = A_vector(element);
+                    m_A(i, j) = A_vector[idx];
+                    idx++;
                 }
-                m_Bias(i) = Bias_vector(i);
+                m_Bias(i) = Bias_vector[i];
             }
         }
     } else
     {
         // in this case the mapping between the motors and joints are identity matrix
-        m_A = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis);
-        m_Bias = Eigen::MatrixXd::Zero(noActuatedAxis, 1);
+        m_A = Eigen::MatrixXd::Identity(m_numActuatedAxis, m_numActuatedAxis);
+        m_Bias = Eigen::MatrixXd::Zero(m_numActuatedJoints, 1);
     }
-
-    yInfo() << "noActuatedJoints" << noActuatedJoints;
-    yInfo() << "noActuatedAxis" << noActuatedAxis;
 
     /*
      * commented to simplify the process of having custom set of motors to control.
@@ -124,71 +151,110 @@ bool RobotController::configure(const yarp::os::Searchable& config, const std::s
         m_R(i, i) = R_vector(i);
     }
 */
-    double q, r;
-    if (!YarpHelper::getDoubleFromSearchable(config, "q_joint_motor", q))
+    std::vector<std::string> allAxisNames, actuatedAxisNames;
+    std::vector<std::string> allJointNames, actuatedJointNames;
+    m_robotControlInterface->getAllAxisNames(allAxisNames);
+    m_robotControlInterface->getAllAxisNames(actuatedAxisNames);
+    m_robotControlInterface->getAllJointNames(allJointNames);
+    m_robotControlInterface->getActuatedJointNames(actuatedJointNames);
+
+    std::vector<double> q, r;
+    std::vector<double> qTmp, rTmp;
+
+    if (!YarpHelper::getVectorFromSearchable(config, "q_qp_control", q))
     {
-        yError() << "[RobotController::configure] Unable to find the q_joint_motor";
+        yError() << m_logPrefix << "unable to find the q_qp_control";
         return false;
     }
-    if (!YarpHelper::getDoubleFromSearchable(config, "r_joint_motor", r))
+    if (!YarpHelper::getVectorFromSearchable(config, "r_qp_control", r))
     {
-        yError() << "[RobotController::configure] Unable to find the r_joint_motor";
+        yError() << m_logPrefix << "unable to find the r_qp_control";
         return false;
     }
+    this->getCustomSetIndices(allJointNames, actuatedJointNames, q, qTmp);
+    this->getCustomSetIndices(allAxisNames, actuatedAxisNames, r, rTmp);
 
-    m_Q = Eigen::MatrixXd::Identity(noActuatedJoints, noActuatedJoints) * q;
-    m_R = Eigen::MatrixXd::Identity(noActuatedAxis, noActuatedAxis) * r;
+    m_Q = Eigen::MatrixXd::Identity(m_numActuatedJoints, m_numActuatedJoints);
+    m_R = Eigen::MatrixXd::Identity(m_numActuatedAxis, m_numActuatedAxis);
 
-    m_desiredMotorValue.resize(noActuatedAxis);
-    m_desiredJointValue.resize(m_robotControlInterface->getNumberOfActuatedJoints());
-    yarp::sig::Vector buff(noActuatedAxis, 0.0);
+    for (size_t i = 0; i < m_numActuatedJoints; i++)
+        m_Q(i, i) = qTmp[i];
+    for (size_t i = 0; i < m_numActuatedAxis; i++)
+        m_R(i, i) = rTmp[i];
 
-    if (!updateFeedback())
+    // initialize the vectors
+    m_desiredMotorValue.resize(m_numActuatedAxis);
+    m_desiredJointValue.resize(m_numActuatedJoints);
+
+    // check if robot is working
+    bool tmp = false;
+    for (size_t i = 0; i < 10; i++)
     {
-        yError() << "[RobotController::configure] Unable to get feedback: first trial";
         if (!updateFeedback())
         {
-            yError() << "[RobotController::configure] Unable to get feedback: second trial";
-            return false;
+            yWarning() << m_logPrefix << "unable to get feedback: " << i
+                       << "'th trial, waiting for 10 ms.";
+            std::this_thread::sleep_for(std::chrono::milliseconds(10)); // wait for 100ms.
+
+        } else
+        {
+            tmp = true;
+            break;
         }
     }
-    getFingerAxisFeedback(buff);
-
-    yarp::sig::Matrix limits(noActuatedAxis, 2);
-    if (!m_robotControlInterface->getLimits(limits))
+    if (!tmp)
     {
-        yError() << "[RobotController::configure] Unable to get the joint limits.";
+        yError() << m_logPrefix << "unable to get feedback from the robot";
         return false;
     }
 
+    //    yarp::sig::Vector buff(m_numActuatedAxis, 0.0);
+    //    getFingerAxisFeedback(buff);
+    //    yarp::sig::Matrix limits(m_numActuatedAxis, 2);
+    //    if (!m_robotControlInterface->getLimits(limits))
+    //    {
+    //        yError() << "[RobotController::configure] Unable to get the joint limits.";
+    //        return false;
+    //    }
     //    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
 
-    m_jointsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfActuatedJoints());
-    m_motorsData.resize(Eigen::NoChange, m_robotControlInterface->getNumberOfActuatedAxis());
+    m_jointsData.resize(Eigen::NoChange, m_numActuatedJoints);
+    m_axesData.resize(Eigen::NoChange, m_numActuatedAxis);
 
-    // Estimaotr
-    std::cout << "Estimators ... \n";
+    // estimaotr
+    m_axisFeedbackEstimators = std::make_unique<Estimators>(m_numActuatedAxis);
+    m_axisReferenceEstimators = std::make_unique<Estimators>(m_numActuatedAxis);
 
-    m_axisFeedbackEstimators = std::make_unique<Estimators>(noActuatedAxis);
-    m_axisReferenceEstimators = std::make_unique<Estimators>(noActuatedAxis);
+    m_jointFeedbackEstimators = std::make_unique<Estimators>(m_numActuatedJoints);
+    m_jointExpectedEstimators = std::make_unique<Estimators>(m_numActuatedJoints);
 
-    m_jointFeedbackEstimators = std::make_unique<Estimators>(noActuatedJoints);
-    m_jointExpectedEstimators = std::make_unique<Estimators>(noActuatedJoints);
-
-    std::cout << "Initializing the motor reference and feedback estimators ... \n";
     m_axisFeedbackEstimators->configure(config, name);
     m_axisReferenceEstimators->configure(config, name);
 
-    std::cout << "Initializing the joints reference and feedback estimators ... \n";
     m_jointFeedbackEstimators->configure(config, name);
     m_jointExpectedEstimators->configure(config, name);
 
-    std::cout << "Estimators: Configued";
-
+    // linear regression
     m_linearRegressor = std::make_unique<LinearRegression>();
 
     m_robotPrepared = false;
     m_estimatorsInitialized = false;
+
+    // print info
+    yInfo() << m_logPrefix << "number of all axis" << m_numAllAxis;
+    yInfo() << m_logPrefix << "number of actuated axis" << m_numActuatedAxis;
+    yInfo() << m_logPrefix << "number of all joints: " << m_numAllJoints;
+    yInfo() << m_logPrefix << "number of actuated joints: " << m_numActuatedJoints;
+
+    yInfo() << m_logPrefix << "axes and joints of the robot are coupled: " << m_axesJointsCoupled;
+    yInfo() << m_logPrefix
+            << "the coupling model between the robot axes and joints should be found: "
+            << m_axesJointsCoupled;
+    yInfo() << m_logPrefix << "robot controller exponential filter gain: " << m_kGain;
+
+    //
+    yInfo() << m_logPrefix << "configuration is done.";
+
     return true;
 }
 
@@ -561,7 +627,7 @@ void RobotController::getMotorPwmReference(yarp::sig::Vector& motorPWMReference)
 bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time, int axisNumber)
 {
     yInfo() << "[RobotController::LogDataToCalibrateRobotMotorsJointsCoupling()]";
-    if (!m_motorJointsCoupled)
+    if (!m_axesJointsCoupled)
         return true;
     if (!m_doCalibration)
         return true;
@@ -587,7 +653,7 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
         fingerJointsValuesEigen(0, i) = fingerJointsValues(i);
     }
 
-    if (!push_back_row(m_motorsData, fingerAxisValuesEigen))
+    if (!push_back_row(m_axesData, fingerAxisValuesEigen))
         return false;
 
     if (!push_back_row(m_jointsData, fingerJointsValuesEigen))
@@ -610,7 +676,7 @@ bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingSin(double time
 
     setFingersAxisReference(motorReference);
     move();
-    yInfo() << "m_motorsData.size() : " << m_motorsData.rows() << m_motorsData.cols();
+    yInfo() << "m_motorsData.size() : " << m_axesData.rows() << m_axesData.cols();
     yInfo() << "m_jointsData.size() : " << m_jointsData.rows() << m_jointsData.cols();
 
     return true;
@@ -624,8 +690,8 @@ bool RobotController::trainCouplingMatrix()
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> motorsData, jointsData,
         A_Bias;
     yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
-    motorsData.setOnes(m_motorsData.rows(), m_motorsData.cols() + 1);
-    motorsData.block(0, 1, m_motorsData.rows(), m_motorsData.cols()) = m_motorsData;
+    motorsData.setOnes(m_axesData.rows(), m_axesData.cols() + 1);
+    motorsData.block(0, 1, m_axesData.rows(), m_axesData.cols()) = m_axesData;
     A_Bias.resize(m_A.rows(), m_A.cols() + 1);
     jointsData = m_jointsData;
     yInfo() << "(Bias+ A) matrix size:" << A_Bias.rows() << A_Bias.cols();
@@ -811,5 +877,56 @@ bool RobotController::getEstimatedJointState(std::vector<double>& feedbackJointV
                                            expectedJointAccelrationEstimationKF,
                                            expectedJointCovEstimationKF);
     }
+    return true;
+}
+
+bool RobotController::getCustomSetIndices(const std::vector<std::string>& allListName,
+                                          const std::vector<std::string>& customListNames,
+                                          const std::vector<double>& allListVector,
+                                          std::vector<double>& customListVector)
+{
+    // check the sizes
+    customListVector.clear();
+    if (allListName.empty())
+    {
+        yError() << m_logPrefix << " allListName is empty.";
+        return false;
+    }
+    if (allListVector.empty())
+    {
+        yError() << m_logPrefix << " allListVector is empty.";
+        return false;
+    }
+    if (allListVector.size() != allListName.size())
+    {
+        yError() << m_logPrefix << " allListVector and allListName do not have similar sizes..";
+        return false;
+    }
+
+    // find the custom vector
+    for (unsigned i = 0; i < customListNames.size(); i++)
+    {
+        auto index = std::find(std::begin(allListName), std::end(allListName), customListNames[i]);
+
+        if (index == std::end(allListName))
+        {
+            yError() << m_logPrefix << "cannot find a match for: " << customListNames[i]
+                     << " , element: " << i << " in the allListName.";
+            return false;
+        }
+        size_t element = index - allListName.begin();
+
+        customListVector.push_back(allListVector[element]);
+    }
+
+    // one last final check
+    if (customListNames.size() != customListVector.size())
+    {
+        yError() << m_logPrefix
+                 << "customListName and customListVector "
+                    "do not have similar sizes.";
+        return false;
+    }
+
     return true;
 }
