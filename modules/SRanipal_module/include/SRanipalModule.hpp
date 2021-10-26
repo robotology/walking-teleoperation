@@ -9,6 +9,7 @@
 #ifndef SRANIPALMODULE_HPP
 #define SRANIPALMODULE_HPP
 
+#include <SRanipalInterface.hpp>
 #include <yarp/os/BufferedPort.h> /** Needed to open the input port. **/
 #include <yarp/os/RFModule.h> /** We inherit from this. **/
 #include <yarp/os/RpcClient.h> /** Needed to control the face expressions. **/
@@ -26,8 +27,8 @@
 class SRanipalModule : public yarp::os::RFModule
 {
 
-    char m_lipImage[800 * 400];
-    bool m_useEye;
+    SRanipalInterface m_sranipalInterface;
+    bool m_useEyebrows;
     bool m_useLip;
     bool m_useEyelids;
     bool m_useRawEyelids;
@@ -52,8 +53,6 @@ class SRanipalModule : public yarp::os::RFModule
     double m_minEyeLid, m_maxEyeLid;
     std::unordered_map<std::string, std::string> m_currentExpressions;
     std::mutex m_mutex;
-
-    const char * errorCodeToString(int error) const;
 
     void sendFaceExpression(const std::string& part, const std::string& emotion);
 
