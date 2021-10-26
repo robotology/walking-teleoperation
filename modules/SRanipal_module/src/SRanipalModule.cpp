@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <thread>
 #include <yarp/os/LogStream.h>
-#include <yarp/dev/IControlMode.h>
 #include <yarp/dev/IControlLimits.h>
 #include <SRanipal.h>
 #include <SRanipal_Eye.h>
@@ -118,7 +117,15 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     m_useEye = !rf.check("noEye") || (!rf.find("noEye").asBool()); //True if noEye is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
     m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
-    m_period = rf.check("period", yarp::os::Value(0.1)).asFloat64();
+    m_useRawEyelids = rf.check("useRawEyelids")
+            && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
+    m_useEyelidsPositionControl = rf.check("useEyelidsPositionControl")
+            && (rf.find("useEyelidsPositionControl").isNull() || rf.find("useEyelidsPositionControl").asBool());
+    m_eyelidsMaxVelocity = rf.check("eyelidsMaxVelocity", yarp::os::Value(75.0)).asFloat64();
+    m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(10.0)).asFloat64();
+    bool eyelidsVelocityControl = m_useEyelids && !(m_useRawEyelids || m_useEyelidsPositionControl);
+    double defaultPeriod = eyelidsVelocityControl ? 0.01 : 0.1; //If we control the eyelids in velocity control, we use higher loops.
+    m_period = rf.check("period", yarp::os::Value(defaultPeriod)).asFloat64();
     m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
@@ -169,10 +176,6 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
         if (m_useEyelids)
         {
-            m_useRawEyelids
-                    = rf.check("useRawEyelids")
-                    && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
-
             m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
             m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
             std::string rawEyelidsPortName = rf.check("rawEyelidsPortName", yarp::os::Value("/face/raw:o")).asString();
@@ -185,7 +188,6 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
                                 + " port.";
                     return false;
                 }
-
             }
             else
             {
@@ -195,40 +197,83 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
                     {"remote", yarp::os::Value("/" + robot + "/face")},
                     {"part", yarp::os::Value("face")}};
 
-                if (m_poly.open(rcb_face_conf))
+                if (m_eyelidsDriver.open(rcb_face_conf))
                 {
-                    yarp::dev::IControlMode* iCM{nullptr};
                     yarp::dev::IControlLimits* iCtrlLim{nullptr};
-                    bool ok = m_poly.view(iCM);
-                    ok &= m_poly.view(m_iPos);
-                    ok &= m_poly.view(iCtrlLim);
-                    if (iCM)
-                        ok &= iCM->setControlMode(0, VOCAB_CM_POSITION);
+                    bool ok = m_eyelidsDriver.view(m_eyelidsMode);
+                    ok &= m_eyelidsDriver.view(m_eyelidsPos);
+                    ok &= m_eyelidsDriver.view(m_eyelidsVel);
+                    ok &= m_eyelidsDriver.view(m_eyelidsEnc);
+                    ok &= m_eyelidsDriver.view(iCtrlLim);
+
+                    if (!ok)
+                    {
+                        yError() << "Failed to configure the eyelids remote_controlboard.";
+                        return false;
+                    }
+
+                    if (m_eyelidsMode)
+                    {
+                        if (m_useEyelidsPositionControl)
+                        {
+                            ok &= m_eyelidsMode->setControlMode(0, VOCAB_CM_POSITION);
+                            if (m_eyelidsPos)
+                            {
+                                ok &= m_eyelidsPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
+                                ok &= m_eyelidsPos->setRefAcceleration(0, std::numeric_limits<double>::max());
+                            }
+                            else
+                            {
+                                ok = false;
+                            }
+                        }
+                        else
+                        {
+                            ok &= m_eyelidsMode->setControlMode(0, VOCAB_CM_VELOCITY);
+                            if (m_eyelidsVel)
+                            {
+                                ok &= m_eyelidsVel->setRefAcceleration(0, std::numeric_limits<double>::max());
+                            }
+                            else
+                            {
+                                ok = false;
+                            }
+                        }
+
+                        if (!ok)
+                        {
+                            yError() << "Failed to configure the eyelids control.";
+                            return false;
+                        }
+                    }
+
                     if (iCtrlLim)
                     {
                         ok &= iCtrlLim->getLimits(0, &m_minEyeLid, &m_maxEyeLid);
                         m_maxEyeLid = 0.9 * m_maxEyeLid;
                     }
-                    if (m_iPos)
+                    else
                     {
-                        ok &= m_iPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
-                        ok &= m_iPos->setRefAcceleration(0, std::numeric_limits<double>::max());
+                        ok = false;
                     }
+
                     if (!ok)
                     {
-                        yError() << "Failed to configure the remote_controlboard";
+                        yError() << "Failed to get the eyelids limits.";
                         return false;
                     }
-                } else
+
+                }
+                else
                 {
-                    yError() << "Failed to connect to the face control board. Set useRawEyelids to "
+                    yError() << "Failed to connect to the face control board. Set noEyelids to "
                                 "true to avoid connecting to it.";
                     return false;
                 }
             }
-        }
 
-        yInfo() << "Using Eye tracking.";
+            yInfo() << "Controlling the eyelids.";
+        }
     }
 
     if (m_useLip)
@@ -287,18 +332,20 @@ bool SRanipalModule::updateModule()
             if (m_useEyelids)
             {
                 bool eye_openness_validity = ViveSR::anipal::Eye::DecodeBitMask(eye_data_v2.verbose_data.left.eye_data_validata_bit_mask,
-                                                                               ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
-                                            ViveSR::anipal::Eye::DecodeBitMask(eye_data_v2.verbose_data.right.eye_data_validata_bit_mask,
-                                                                               ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY);
+                                                                                ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
+                        ViveSR::anipal::Eye::DecodeBitMask(eye_data_v2.verbose_data.right.eye_data_validata_bit_mask,
+                                                           ViveSR::anipal::Eye::SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
+                        !eye_data_v2.no_user;
+
                 if (eye_openness_validity)
                 {
                     double eye_openness = std::min(eye_data_v2.verbose_data.left.eye_openness, eye_data_v2.verbose_data.right.eye_openness);
                     int eye_open_level = static_cast<int>(std::round(eye_openness / m_eyeOpenPrecision));
                     double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
 
-                    if (eye_open_level != m_eyeOpenLevel)
+                    if (m_useRawEyelids)
                     {
-                        if (m_useRawEyelids)
+                        if (eye_open_level != m_eyeOpenLevel)
                         {
                             yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
                             out.clear();
@@ -307,18 +354,49 @@ bool SRanipalModule::updateModule()
                                     + m_rawEyelidsCloseValue;
                             out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
                             m_rawEyelidsOutputPort.write();
-
+                            m_eyeOpenLevel = eye_open_level;
+                            yInfo() << "Setting eye openess (raw):" << eye_openess_leveled;
                             yDebug() << "Sending raw commands to eyelids:" << out.toString();
-                        } else
+                        }
+                    }
+                    else
+                    {
+                        double eyelidsReference = (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid; // because min-> open, max->closed
+                        if (m_useEyelidsPositionControl)
                         {
-                            if (m_iPos)
+                            if (eye_open_level != m_eyeOpenLevel)
                             {
-                                m_iPos->positionMove(0, (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid); // because min-> open, max->closed
+                                if (m_eyelidsPos)
+                                {
+                                    m_eyelidsPos->positionMove(0, eyelidsReference); // because min-> open, max->closed
+                                }
+                                m_eyeOpenLevel = eye_open_level;
+                                yInfo() << "Setting eye openess (position):" << eye_openess_leveled;
                             }
                         }
+                        else
+                        {
+                            if (m_eyelidsVel && m_eyelidsEnc)
+                            {
+                                if (eye_open_level != m_eyeOpenLevel)
+                                {
+                                    m_eyeOpenLevel = eye_open_level;
+                                    yInfo() << "Setting eye openess (velocity):" << eye_openess_leveled;
+                                }
 
-                        yInfo() << "Setting eye openess:" << eye_openess_leveled;
-                        m_eyeOpenLevel = eye_open_level;
+                                double currentEyelidPos = 0;
+                                if (m_eyelidsEnc->getEncoder(0, &currentEyelidPos))
+                                {
+                                    double eyelidsVelocityReference = m_eyelidsVelocityGain * (eyelidsReference - currentEyelidPos);
+                                    double eyelidsVelClamped = std::max(-m_eyelidsMaxVelocity, std::min(eyelidsVelocityReference, m_eyelidsMaxVelocity)); //Clamp the velocity reference in [-max, +max];
+                                    m_eyelidsVel->velocityMove(0, eyelidsVelClamped);
+                                }
+                                else
+                                {
+                                    yWarning() << "Failed to get eyelids encoder value. Skipping control.";
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -366,10 +444,15 @@ bool SRanipalModule::close()
     ViveSR::anipal::Release(ViveSR::anipal::Eye::ANIPAL_TYPE_EYE_V2);
     ViveSR::anipal::Release(ViveSR::anipal::Lip::ANIPAL_TYPE_LIP);
     m_emotionsOutputPort.close();
-    m_poly.close();
+    if (m_eyelidsMode)
+    {
+        m_eyelidsMode->setControlMode(0, VOCAB_CM_POSITION);
+        m_eyelidsMode = nullptr;
+    }
+    m_eyelidsDriver.close();
     m_lipImagePort.close();
     m_rawEyelidsOutputPort.close();
-    m_iPos = nullptr;
+    m_eyelidsPos = nullptr;
     yInfo() << "Closing";
     return true;
 }
