@@ -309,7 +309,7 @@ public:
     /**
      * Close the helper
      */
-    void close();
+    bool close();
 };
 } // namespace HapticGlove
 

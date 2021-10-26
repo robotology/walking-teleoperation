@@ -15,62 +15,65 @@
 
 using namespace HapticGlove;
 Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHand)
-    : teleoperation(module)
+    : m_teleoperation(module)
 {
-    this->isRightHand = isRightHand;
-    this->handName = this->isRightHand ? "Right" : "Left";
-    // Robot hand axis
-    this->robotPrefix = "robot" + this->handName + "Hand";
-    this->humanPrefix = "human" + this->handName + "Hand";
+    m_isRightHand = isRightHand;
+    m_handName = m_isRightHand ? "Right" : "Left";
 
-    this->logPrefix = "Logger::" + this->handName + ":: ";
+    m_robotPrefix = "robot" + m_handName + "Hand";
+    m_humanPrefix = "human" + m_handName + "Hand";
 
-    this->numOfRobotActuatedAxis
-        = teleoperation.m_robotController->controlHelper()->getNumberOfActuatedAxis();
-    this->numOfRobotActuatedJoints
-        = teleoperation.m_robotController->controlHelper()->getNumberOfActuatedJoints();
-    this->numOfHumanHandFingers = teleoperation.m_humanGlove->getNumOfFingers();
-    this->numOfHumanHandJoints = teleoperation.m_humanGlove->getNumOfHandJoints();
+    m_logPrefix = "Logger::" + m_handName + ":: ";
 
-    // initialize the data structure sizes
-    data.time = yarp::os::Time::now();
-    data.robotAxisReference.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisFeedback.resize(this->numOfRobotActuatedAxis, 0.0);
+    m_numRobotActuatedAxes
+        = m_teleoperation.m_robotController->controlHelper()->getNumberOfActuatedAxis();
+    m_numRobotActuatedJoints
+        = m_teleoperation.m_robotController->controlHelper()->getNumberOfActuatedJoints();
 
-    data.robotMotorCurrnetReference.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotMotorCurrnetFeedback.resize(this->numOfRobotActuatedAxis, 0.0);
+    m_numHumanHandFingers = m_teleoperation.m_humanGlove->getNumOfFingers();
+    m_numHumanHandJoints = m_teleoperation.m_humanGlove->getNumOfHandJoints();
+    m_numHumanVibrotactileFeedback = m_teleoperation.m_humanGlove->getNumOfVibrotactileFeedbacks();
+    m_numHumanForceFeedback = m_teleoperation.m_humanGlove->getNumOfForceFeedback();
 
-    data.robotMotorPWMReference.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotMotorPWMFeedback.resize(this->numOfRobotActuatedAxis, 0.0);
+    // initialize the data structure
+    m_data.time = yarp::os::Time::now();
+    // robot
+    m_data.robotAxisReferences.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisFeedbacks.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisVelocityFeedbacks.resize(m_numRobotActuatedAxes, 0.0);
 
-    data.robotMotorPidOutputs.resize(this->numOfRobotActuatedAxis, 0.0);
+    m_data.robotJointReferences.resize(m_numRobotActuatedJoints, 0.0);
+    m_data.robotJointFeedbacks.resize(m_numRobotActuatedJoints, 0.0);
 
-    data.robotAxisVelocityFeedback.resize(this->numOfRobotActuatedAxis, 0.0);
+    m_data.robotAxisValueErrors.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisVelocityErrors.resize(m_numRobotActuatedAxes, 0.0);
 
-    data.robotAxisValuesReferenceKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisVelocitiesReferenceKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisAccelerationReferenceKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisCovReferenceKF = Eigen::MatrixXd::Zero(this->numOfRobotActuatedAxis, 9);
+    m_data.robotMotorCurrentReferences.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotMotorCurrentFeedbacks.resize(m_numRobotActuatedAxes, 0.0);
 
-    data.robotAxisValuesFeedbackKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisVelocitiesFeedbackKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisAccelerationFeedbackKF.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisCovFeedbackKF = Eigen::MatrixXd::Zero(this->numOfRobotActuatedAxis, 9);
+    m_data.robotMotorPwmReferences.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotMotorPwmFeedbacks.resize(m_numRobotActuatedAxes, 0.0);
 
-    data.robotAxisValueError.resize(this->numOfRobotActuatedAxis, 0.0);
-    data.robotAxisVelocityError.resize(this->numOfRobotActuatedAxis, 0.0);
+    m_data.robotMotorPidOutputs.resize(m_numRobotActuatedAxes, 0.0);
 
-    data.robotJointsReference.resize(this->numOfRobotActuatedJoints, 0.0);
-    data.robotJointsFeedback.resize(this->numOfRobotActuatedJoints, 0.0);
+    m_data.robotAxisValueReferencesKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisVelocityReferencesKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisAccelerationReferencesKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisCovReferencesKf = Eigen::MatrixXd::Zero(m_numRobotActuatedAxes, 9);
 
-    data.robotJointsExpectedKF.resize(this->numOfRobotActuatedJoints, 0.0);
-    data.robotJointsFeedbackKF.resize(this->numOfRobotActuatedJoints, 0.0);
+    m_data.robotAxisValueFeedbacksKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisVelocityFeedbacksKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisAccelerationFeedbacksKf.resize(m_numRobotActuatedAxes, 0.0);
+    m_data.robotAxisCovFeedbacksKf = Eigen::MatrixXd::Zero(m_numRobotActuatedAxes, 9);
 
-    data.humanJointValues.resize(this->numOfHumanHandJoints, 0.0);
-    data.humanFingertipPose = Eigen::MatrixXd::Zero(this->numOfHumanHandFingers, 7);
-    data.humanForceFeedback.resize(this->numOfHumanHandFingers, 0.0);
-    data.humanVibrotactileFeedback.resize(this->numOfHumanHandFingers, 0.0);
-    data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
+    m_data.robotJointsExpectedKf.resize(m_numRobotActuatedJoints, 0.0);
+    m_data.robotJointsFeedbackKf.resize(m_numRobotActuatedJoints, 0.0);
+    // human
+    m_data.humanJointValues.resize(m_numHumanHandJoints, 0.0);
+    m_data.humanFingertipPoses = Eigen::MatrixXd::Zero(m_numHumanHandFingers, 7);
+    m_data.humanForceFeedbacks.resize(m_numHumanForceFeedback, 0.0);
+    m_data.humanVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
+    m_data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
 }
 
 Teleoperation::Logger::~Logger()
@@ -81,83 +84,102 @@ bool Teleoperation::Logger::openLogger()
 {
 #ifdef ENABLE_LOGGER
     std::string currentTime = YarpHelper::getTimeDateMatExtension();
-    std::string fileName
-        = "HapticGloveModule_" + this->handName + "Hand_" + currentTime + "_log.mat";
+    m_logFileName = "HapticGloveModule_" + m_handName + "Hand_" + currentTime + "_log.mat";
 
-    yInfo() << "log file name: " << currentTime << fileName;
-    this->logger = XBot::MatLogger2::MakeLogger(fileName);
-    this->appender = XBot::MatAppender::MakeInstance();
-    this->appender->add_logger(this->logger);
-    this->appender->start_flush_thread();
+    yInfo() << "log file name: " << currentTime << m_logFileName;
+
+    m_logger = XBot::MatLogger2::MakeLogger(m_logFileName);
+    m_appender = XBot::MatAppender::MakeInstance();
+    m_appender->add_logger(m_logger);
+    m_appender->start_flush_thread();
+
+    // create the data structures to save
     // time
-    this->logger->create("time", 1);
+    m_logger->create("time", 1);
 
     // axis
-    this->logger->create(this->robotPrefix + "AxisReference", this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisFeedback", this->numOfRobotActuatedAxis);
+    m_logger->create(m_robotPrefix + "AxisReferences", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisFeedbacks", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisVelocityFeedbacks", m_numRobotActuatedAxes);
+
+    // robot hand joints
+    m_logger->create(m_robotPrefix + "JointReferences", m_numRobotActuatedJoints);
+    m_logger->create(m_robotPrefix + "JointFeedbacks", m_numRobotActuatedJoints);
+
+    // robot axis errors
+    m_logger->create(m_robotPrefix + "AxisValueErrors", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisVelocityErrors", m_numRobotActuatedAxes);
 
     // to check if it is real robot or simulation
-    if (this->teleoperation.m_robot == "icub")
+    if (m_teleoperation.m_robot == "icub")
     {
         // current
-        this->logger->create(this->robotPrefix + "MotorCurrnetReference",
-                             this->numOfRobotActuatedAxis);
-        this->logger->create(this->robotPrefix + "MotorCurrnetFeedback",
-                             this->numOfRobotActuatedAxis);
+        m_logger->create(m_robotPrefix + "MotorCurrentReferences", m_numRobotActuatedAxes);
+        m_logger->create(m_robotPrefix + "MotorCurrentFeedbacks", m_numRobotActuatedAxes);
+
         // pwm
-        this->logger->create(this->robotPrefix + "MotorPWMReference", this->numOfRobotActuatedAxis);
-        this->logger->create(this->robotPrefix + "MotorPWMFeedback", this->numOfRobotActuatedAxis);
+        m_logger->create(m_robotPrefix + "MotorPwmReferences", m_numRobotActuatedAxes);
+        m_logger->create(m_robotPrefix + "MotorPwmFeedbacks", m_numRobotActuatedAxes);
     }
 
     // pid
-    this->logger->create(this->robotPrefix + "MotorPidOutputs", this->numOfRobotActuatedAxis);
-
-    // velocity feedback
-    this->logger->create(this->robotPrefix + "AxisVelocityFeedback", this->numOfRobotActuatedAxis);
+    m_logger->create(m_robotPrefix + "MotorPidOutputs", m_numRobotActuatedAxes);
 
     // axis reference KF
-    this->logger->create(this->robotPrefix + "AxisValuesReferenceKF", this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisVelocitiesReferenceKF",
-                         this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisAccelerationReferenceKF",
-                         this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisCovReferenceKF",
-                         this->numOfRobotActuatedAxis,
-                         9); // states: value, velocity, acceleration --> cov matrix size: 3X3=9
+    m_logger->create(m_robotPrefix + "AxisValueReferencesKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisVelocityReferencesKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisAccelerationReferencesKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisCovReferencesKf",
+                     m_numRobotActuatedAxes,
+                     9); // states: value, velocity, acceleration --> cov matrix size: 3X3=9
 
     // axis feedback KF
-    this->logger->create(this->robotPrefix + "AxisValuesFeedbackKF", this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisVelocitiesFeedbackKF",
-                         this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisAccelerationFeedbackKF",
-                         this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisCovFeedbackKF",
-                         this->numOfRobotActuatedAxis,
-                         9); // states: value, velocity, acceleration --> cov matrix size: 3X3=9
+    m_logger->create(m_robotPrefix + "AxisValueFeedbacksKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisVelocityFeedbacksKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisAccelerationFeedbacksKf", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "AxisCovFeedbacksKf",
+                     m_numRobotActuatedAxes,
+                     9); // states: value, velocity, acceleration --> cov matrix size: 3X3=9
 
-    // robot axis errors
-    this->logger->create(this->robotPrefix + "AxisValueError", this->numOfRobotActuatedAxis);
-    this->logger->create(this->robotPrefix + "AxisVelocityError", this->numOfRobotActuatedAxis);
-
-    // robot hand joints
-    this->logger->create(this->robotPrefix + "JointsReference", this->numOfRobotActuatedJoints);
-    this->logger->create(this->robotPrefix + "JointsFeedback", this->numOfRobotActuatedJoints);
-    this->logger->create(this->robotPrefix + "JointsExpectedKF", this->numOfRobotActuatedJoints);
-    this->logger->create(this->robotPrefix + "JointsFeedbackKF", this->numOfRobotActuatedJoints);
+    // joints KF
+    m_logger->create(m_robotPrefix + "JointsExpectedKf", m_numRobotActuatedJoints);
+    m_logger->create(m_robotPrefix + "JointsFeedbackKf", m_numRobotActuatedJoints);
 
     // Human data
-    this->logger->create(this->humanPrefix + "JointValues", this->numOfHumanHandJoints);
-    this->logger->create(this->humanPrefix + "FingertipPose", this->numOfHumanHandFingers, 7);
-    this->logger->create(this->humanPrefix + "ForceFeedback", this->numOfHumanHandFingers);
-    this->logger->create(this->humanPrefix + "VibrotactileFeedback", this->numOfHumanHandFingers);
-    this->logger->create(this->humanPrefix + "PalmRotation", 4);
+    m_logger->create(m_humanPrefix + "JointValues", m_numHumanHandJoints);
+    m_logger->create(m_humanPrefix + "FingertipPoses", m_numHumanHandFingers, 7);
+    m_logger->create(m_humanPrefix + "ForceFeedbacks", m_numHumanForceFeedback);
+    m_logger->create(m_humanPrefix + "VibrotactileFeedbacks", m_numHumanVibrotactileFeedback);
+    m_logger->create(m_humanPrefix + "PalmRotation", 4);
 
-    // add here a part for adding the name of the robot and human fingers and joints.
+    // add the robot and human fingers, axes, joints.
+    std::vector<std::string> robotActuatedAxisNames;
+    std::vector<std::string> robotActuatedJointNames;
+    std::vector<std::string> humanJointNames;
+    std::vector<std::string> humanFingerNames;
 
-    yInfo() << this->logPrefix << "logging is active.";
+    m_teleoperation.m_robotController->controlHelper()->getActuatedAxisNameList(
+        robotActuatedAxisNames);
+    m_teleoperation.m_robotController->controlHelper()->getActuatedJointNameList(
+        robotActuatedJointNames);
+    m_teleoperation.m_humanGlove->getHumanHandJointsNames(humanJointNames);
+    m_teleoperation.m_humanGlove->getHumanHandFingerNames(humanFingerNames);
+
+    m_logger->create(m_robotPrefix + "ActuatedAxisNames", m_numRobotActuatedAxes);
+    m_logger->create(m_robotPrefix + "ActuatedJointNames", m_numRobotActuatedJoints);
+    m_logger->create(m_humanPrefix + "JointNames", m_numHumanHandJoints);
+    m_logger->create(m_humanPrefix + "FingerNames", m_numHumanHandFingers);
+
+    //    m_logger->add(m_robotPrefix + "ActuatedAxisNames", robotActuatedAxisNames);
+    //    m_logger->add(m_robotPrefix + "ActuatedJointNames", robotActuatedJointNames);
+    //    m_logger->add(m_humanPrefix + "JointNames", humanJointNames);
+    //    m_logger->add(m_humanPrefix + "FingerNames", humanFingerNames);
+
+    // print
+    yInfo() << m_logPrefix << "logging is active.";
 
 #else
-    yInfo() << "[LoggerImplementation::openLogger] option is not active in CMakeLists.";
+    yInfo() << m_logPrefix << " logging option is not active in CMakeLists.";
 
 #endif
 
@@ -166,66 +188,61 @@ bool Teleoperation::Logger::openLogger()
 
 bool Teleoperation::Logger::updateData()
 {
-    // initialize the data structure sizes
+    m_data.time = yarp::os::Time::now();
 
-    data.time = yarp::os::Time::now();
+    // robot
+    m_teleoperation.m_robotController->getFingerAxisValueReference(m_data.robotAxisReferences);
 
-    this->teleoperation.m_robotController->getFingerAxisValueReference(data.robotAxisReference);
+    m_teleoperation.m_robotController->getFingerAxisFeedback(m_data.robotAxisFeedbacks);
 
-    this->teleoperation.m_robotController->getFingerAxisFeedback(data.robotAxisFeedback);
+    m_teleoperation.m_robotController->getFingerAxisVelocityFeedback(
+        m_data.robotAxisVelocityFeedbacks);
 
-    if (this->teleoperation.m_robot == "icub")
+    m_teleoperation.m_robotController->getFingerJointReference(m_data.robotJointReferences);
 
+    m_teleoperation.m_robotController->getFingerJointsFeedback(m_data.robotJointFeedbacks);
+
+    m_teleoperation.m_retargeting->getAxisError(m_data.robotAxisValueErrors,
+                                                m_data.robotAxisVelocityErrors);
+
+    if (m_teleoperation.m_robot == "icub")
     {
+        m_teleoperation.m_robotController->getMotorCurrentReference(
+            m_data.robotMotorCurrentReferences);
 
-        this->teleoperation.m_robotController->getMotorCurrentReference(
-            data.robotMotorCurrnetReference);
+        m_teleoperation.m_robotController->getMotorCurrentFeedback(
+            m_data.robotMotorCurrentFeedbacks);
 
-        this->teleoperation.m_robotController->getMotorCurrentFeedback(
-            data.robotMotorCurrnetFeedback);
+        m_teleoperation.m_robotController->getMotorPwmReference(m_data.robotMotorPwmReferences);
 
-        this->teleoperation.m_robotController->getMotorPwmReference(data.robotMotorPWMReference);
-
-        this->teleoperation.m_robotController->getMotorPwmFeedback(data.robotMotorPWMFeedback);
+        m_teleoperation.m_robotController->getMotorPwmFeedback(m_data.robotMotorPwmFeedbacks);
     }
 
-    this->teleoperation.m_robotController->getMotorPidOutputs(data.robotMotorPidOutputs);
+    m_teleoperation.m_robotController->getMotorPidOutputs(m_data.robotMotorPidOutputs);
 
-    this->teleoperation.m_robotController->getFingerAxisVelocityFeedback(
-        data.robotAxisVelocityFeedback);
+    m_teleoperation.m_robotController->getEstimatedMotorsState(
+        m_data.robotAxisValueFeedbacksKf,
+        m_data.robotAxisVelocityFeedbacksKf,
+        m_data.robotAxisAccelerationFeedbacksKf,
+        m_data.robotAxisCovFeedbacksKf,
+        m_data.robotAxisValueReferencesKf,
+        m_data.robotAxisVelocityReferencesKf,
+        m_data.robotAxisAccelerationReferencesKf,
+        m_data.robotAxisCovReferencesKf);
 
-    this->teleoperation.m_robotController->getEstimatedMotorsState(
-        data.robotAxisValuesFeedbackKF,
-        data.robotAxisVelocitiesFeedbackKF,
-        data.robotAxisAccelerationFeedbackKF,
-        data.robotAxisCovFeedbackKF,
-        data.robotAxisValuesReferenceKF,
-        data.robotAxisVelocitiesReferenceKF,
-        data.robotAxisAccelerationReferenceKF,
-        data.robotAxisCovReferenceKF);
+    m_teleoperation.m_robotController->getEstimatedJointState(m_data.robotJointsExpectedKf,
+                                                              m_data.robotJointsFeedbackKf);
+    // human
+    m_teleoperation.m_humanGlove->getHandJointAngles(m_data.humanJointValues);
 
-    for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
-        data.robotAxisValueError[i] = this->teleoperation.m_robotAxisValueErrors[i];
+    m_teleoperation.m_humanGlove->getFingertipPoses(m_data.humanFingertipPoses);
 
-    for (size_t i = 0; i < this->numOfRobotActuatedAxis; i++)
-        data.robotAxisVelocityError[i] = this->teleoperation.m_robotAxisVelocityErrors[i];
+    m_teleoperation.m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks);
 
-    this->teleoperation.m_robotController->getFingerJointReference(data.robotJointsReference);
+    m_teleoperation.m_retargeting->getVibrotactileFeedbackToHuman(
+        m_data.humanVibrotactileFeedbacks);
 
-    this->teleoperation.m_robotController->getFingerJointsFeedback(data.robotJointsFeedback);
-
-    this->teleoperation.m_robotController->getEstimatedJointState(data.robotJointsFeedbackKF,
-                                                                  data.robotJointsExpectedKF);
-
-    this->teleoperation.m_humanGlove->getHandJointAngles(data.humanJointValues);
-
-    this->teleoperation.m_humanGlove->getHandJointAngles(data.humanJointValues);
-
-    data.humanFingertipPose = Eigen::MatrixXd::Zero(this->numOfHumanHandFingers, 7); // to implement
-    data.humanForceFeedback.resize(this->numOfHumanHandFingers, 0.0); // to implement
-    data.humanVibrotactileFeedback.resize(this->numOfHumanHandFingers, 0.0); // to implement
-
-    this->teleoperation.m_humanGlove->getHandPalmRotation(data.humanPalmRotation);
+    m_teleoperation.m_humanGlove->getHandPalmRotation(m_data.humanPalmRotation);
 
     return true;
 }
@@ -235,67 +252,65 @@ bool Teleoperation::Logger::logData()
 
     if (!this->updateData())
     {
-        yError() << this->logPrefix << "cannot update the data.";
+        yWarning() << m_logPrefix << "cannot update the data.";
     }
 
-    this->logger->add("time", this->data.time);
+    // time
+    m_logger->add("time", m_data.time);
 
-    this->logger->add(this->robotPrefix + "AxisReference", this->data.robotAxisReference);
-    this->logger->add(this->robotPrefix + "AxisFeedback", this->data.robotAxisFeedback);
+    // axis
+    m_logger->add(m_robotPrefix + "AxisReferences", m_data.robotAxisReferences);
+    m_logger->add(m_robotPrefix + "AxisFeedbacks", m_data.robotAxisFeedbacks);
+    m_logger->add(m_robotPrefix + "AxisVelocityFeedbacks", m_data.robotAxisVelocityFeedbacks);
 
-    // to check if it is real robot or simulation
-    if (this->teleoperation.m_robot == "icub")
-    {
-        this->logger->add(this->robotPrefix + "MotorCurrnetReference",
-                          this->data.robotMotorCurrnetReference);
-        this->logger->add(this->robotPrefix + "MotorCurrnetFeedback",
-                          this->data.robotMotorCurrnetFeedback);
-
-        this->logger->add(this->robotPrefix + "MotorPWMReference",
-                          this->data.robotMotorPWMReference);
-        this->logger->add(this->robotPrefix + "MotorPWMFeedback", this->data.robotMotorPWMFeedback);
-    }
-
-    this->logger->add(this->robotPrefix + "MotorPidOutputs", this->data.robotMotorPidOutputs);
-
-    this->logger->add(this->robotPrefix + "AxisVelocityFeedback",
-                      this->data.robotAxisVelocityFeedback);
-
-    this->logger->add(this->robotPrefix + "AxisValuesReferenceKF",
-                      this->data.robotAxisValuesReferenceKF);
-    this->logger->add(this->robotPrefix + "AxisVelocitiesReferenceKF",
-                      this->data.robotAxisVelocitiesReferenceKF);
-    this->logger->add(this->robotPrefix + "AxisAccelerationReferenceKF",
-                      this->data.robotAxisAccelerationReferenceKF);
-    this->logger->add(this->robotPrefix + "AxisCovReferenceKF", this->data.robotAxisCovReferenceKF);
-
-    this->logger->add(this->robotPrefix + "AxisValuesFeedbackKF",
-                      this->data.robotAxisValuesFeedbackKF);
-    this->logger->add(this->robotPrefix + "AxisVelocitiesFeedbackKF",
-                      this->data.robotAxisVelocitiesFeedbackKF);
-    this->logger->add(this->robotPrefix + "AxisAccelerationFeedbackKF",
-                      this->data.robotAxisAccelerationFeedbackKF);
-    this->logger->add(this->robotPrefix + "AxisCovFeedbackKF",
-                      this->data.robotAxisCovFeedbackKF); // states: value, velocity, acceleration
-    // --> cov matrix size: 3X3=9
+    // robot hand joints
+    m_logger->add(m_robotPrefix + "JointReferences", m_data.robotJointReferences);
+    m_logger->add(m_robotPrefix + "JointFeedbacks", m_data.robotJointFeedbacks);
 
     // robot axis errors
-    this->logger->add(this->robotPrefix + "AxisValueError", this->data.robotAxisValueError);
-    this->logger->add(this->robotPrefix + "AxisVelocityError", this->data.robotAxisVelocityError);
+    m_logger->add(m_robotPrefix + "AxisValueErrors", m_data.robotAxisValueErrors);
+    m_logger->add(m_robotPrefix + "AxisVelocityErrors", m_data.robotAxisVelocityErrors);
 
-    // Robot hand joints
-    this->logger->add(this->robotPrefix + "JointsReference", this->data.robotJointsReference);
-    this->logger->add(this->robotPrefix + "JointsFeedback", this->data.robotJointsFeedback);
-    this->logger->add(this->robotPrefix + "JointsExpectedKF", this->data.robotJointsExpectedKF);
-    this->logger->add(this->robotPrefix + "JointsFeedbackKF", this->data.robotJointsFeedbackKF);
+    // to check if it is real robot or simulation
+    if (m_teleoperation.m_robot == "icub")
+    {
+        // current
+        m_logger->add(m_robotPrefix + "MotorCurrentReferences", m_data.robotMotorCurrentReferences);
+        m_logger->add(m_robotPrefix + "MotorCurrentFeedbacks", m_data.robotMotorCurrentFeedbacks);
 
-    // Human info comming from Glove
-    this->logger->add(this->humanPrefix + "JointValues", this->data.humanJointValues);
-    this->logger->add(this->humanPrefix + "FingertipPose", this->data.humanFingertipPose);
-    this->logger->add(this->humanPrefix + "ForceFeedback", this->data.humanForceFeedback);
-    this->logger->add(this->humanPrefix + "VibrotactileFeedback",
-                      this->data.humanVibrotactileFeedback);
-    this->logger->add(this->humanPrefix + "PalmRotation", data.humanPalmRotation);
+        // pwm
+        m_logger->add(m_robotPrefix + "MotorPwmReferences", m_data.robotMotorPwmReferences);
+        m_logger->add(m_robotPrefix + "MotorPwmFeedbacks", m_data.robotMotorPwmFeedbacks);
+    }
+
+    // pid
+    m_logger->add(m_robotPrefix + "MotorPidOutputs", m_data.robotMotorPidOutputs);
+
+    // axis reference KF
+    m_logger->add(m_robotPrefix + "AxisValueReferencesKf", m_data.robotAxisValueReferencesKf);
+    m_logger->add(m_robotPrefix + "AxisVelocityReferencesKf", m_data.robotAxisVelocityReferencesKf);
+    m_logger->add(m_robotPrefix + "AxisAccelerationReferencesKf",
+                  m_data.robotAxisAccelerationReferencesKf);
+    m_logger->add(m_robotPrefix + "AxisCovReferencesKf", m_data.robotAxisCovReferencesKf);
+
+    // axis feedback KF
+    m_logger->add(m_robotPrefix + "AxisValueFeedbacksKf", m_data.robotAxisValueFeedbacksKf);
+    m_logger->add(m_robotPrefix + "AxisVelocityFeedbacksKf", m_data.robotAxisVelocityFeedbacksKf);
+    m_logger->add(m_robotPrefix + "AxisAccelerationFeedbacksKf",
+                  m_data.robotAxisAccelerationFeedbacksKf);
+    m_logger->add(m_robotPrefix + "AxisCovFeedbacksKf", m_data.robotAxisCovFeedbacksKf);
+
+    // joints KF
+    m_logger->add(m_robotPrefix + "JointsExpectedKf", m_data.robotJointsExpectedKf);
+    m_logger->add(m_robotPrefix + "JointsFeedbackKf", m_data.robotJointsFeedbackKf);
+
+    // Human data
+    m_logger->add(m_humanPrefix + "JointValues", m_data.humanJointValues);
+    m_logger->add(m_humanPrefix + "FingertipPoses", m_data.humanFingertipPoses);
+    m_logger->add(m_humanPrefix + "ForceFeedbacks", m_data.humanForceFeedbacks);
+    m_logger->add(m_humanPrefix + "VibrotactileFeedbacks", m_data.humanVibrotactileFeedbacks);
+    m_logger->add(m_humanPrefix + "PalmRotation", m_data.humanPalmRotation);
+
 #endif
 
     return true;
@@ -305,8 +320,9 @@ bool Teleoperation::Logger::closeLogger()
 {
 
 #ifdef ENABLE_LOGGER
-    this->logger->flush_available_data();
+    m_logger->flush_available_data();
 #endif
-    yInfo() << this->logPrefix << "logger is closing.";
+    yInfo() << m_logPrefix << "logger is closing.";
+    yInfo() << m_logPrefix << "log file is saved in: " << m_logFileName;
     return true;
 }

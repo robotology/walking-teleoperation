@@ -1,6 +1,15 @@
-﻿#include <Logger.hpp>
+﻿/**
+ * @file Teleoperation.cpp
+ * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
+ * @copyright 2021 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
+ *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * @date 2021
+ */
+
+#include <Logger.hpp>
 #include <Teleoperation.hpp>
 
+#define _USE_MATH_DEFINES // for C++
 // std
 #include <cmath>
 // yarp
@@ -87,30 +96,30 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     // initialize the vectors
     // robot
-    m_robotJointReferences.resize(numRobotActuatedJoints, 0.0);
-    m_robotJointFeedbacks.resize(numRobotActuatedJoints, 0.0);
+    m_data.robotAxisReferences.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisFeedbacks.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisVelocityFeedbacks.resize(numRobotActuatedAxis, 0.0);
 
-    m_robotAxisReference.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisFeedback.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisVelocityFeedback.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotJointReferences.resize(numRobotActuatedJoints, 0.0);
+    m_data.robotJointFeedbacks.resize(numRobotActuatedJoints, 0.0);
 
-    m_robotAxisValueErrors.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisVelocityErrors.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisValueErrors.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisVelocityErrors.resize(numRobotActuatedAxis, 0.0);
 
-    m_robotAxisValuesFeedbackKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisVelocitiesFeedbackKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisAccelerationFeedbackKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisCovFeedbackKF.resize(std::pow(numRobotActuatedAxis, 2), 0.0);
+    m_data.robotAxisValueFeedbacksKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisVelocityFeedbacksKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisAccelerationFeedbacksKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisCovFeedbacksKf = Eigen::MatrixXd::Zero(numRobotActuatedAxis, 9);
 
-    m_robotAxisValuesReferenceKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisVelocitiesReferenceKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisAccelerationReferenceKF.resize(numRobotActuatedAxis, 0.0);
-    m_robotAxisCovReferenceKF.resize(std::pow(numRobotActuatedAxis, 2), 0.0);
+    m_data.robotAxisValueReferencesKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisVelocityReferencesKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisAccelerationReferencesKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotAxisCovReferencesKf = Eigen::MatrixXd::Zero(numRobotActuatedAxis, 9);
 
     // human
-    m_humanJointValues.resize(numHumanHandJoints, 0.0);
-    m_humanVibrotactileFeedbacks.resize(numHumanVibrotactileFeedback, 0.0);
-    m_humanForceFeedbacks.resize(numHumanForceFeedback, 0.0);
+    m_data.humanJointValues.resize(numHumanHandJoints, 0.0);
+    m_data.humanVibrotactileFeedbacks.resize(numHumanVibrotactileFeedback, 0.0);
+    m_data.humanForceFeedbacks.resize(numHumanForceFeedback, 0.0);
 
     // set up the glove
     if (!m_humanGlove->setupGlove())
@@ -154,23 +163,23 @@ bool Teleoperation::getFeedbacks()
         yWarning() << m_logPrefix << "unable to perform the estimation.";
     }
 
-    m_robotController->getFingerAxisValueReference(m_robotAxisReference);
+    m_robotController->getFingerAxisValueReference(m_data.robotAxisReferences);
 
-    m_robotController->getFingerAxisFeedback(m_robotAxisFeedback);
+    m_robotController->getFingerAxisFeedback(m_data.robotAxisFeedbacks);
 
-    m_robotController->getFingerAxisVelocityFeedback(m_robotAxisVelocityFeedback);
+    m_robotController->getFingerAxisVelocityFeedback(m_data.robotAxisVelocityFeedbacks);
 
-    m_robotController->getFingerJointsFeedback(m_robotJointFeedbacks);
+    m_robotController->getFingerJointsFeedback(m_data.robotJointFeedbacks);
 
     // get the estimation values
-    m_robotController->getEstimatedMotorsState(m_robotAxisValuesFeedbackKF,
-                                               m_robotAxisVelocitiesFeedbackKF,
-                                               m_robotAxisAccelerationFeedbackKF,
-                                               m_robotAxisCovFeedbackKF,
-                                               m_robotAxisValuesReferenceKF,
-                                               m_robotAxisVelocitiesReferenceKF,
-                                               m_robotAxisAccelerationReferenceKF,
-                                               m_robotAxisCovReferenceKF);
+    m_robotController->getEstimatedMotorsState(m_data.robotAxisValueFeedbacksKf,
+                                               m_data.robotAxisVelocityFeedbacksKf,
+                                               m_data.robotAxisAccelerationFeedbacksKf,
+                                               m_data.robotAxisCovFeedbacksKf,
+                                               m_data.robotAxisValueReferencesKf,
+                                               m_data.robotAxisVelocityReferencesKf,
+                                               m_data.robotAxisAccelerationReferencesKf,
+                                               m_data.robotAxisCovReferencesKf);
 
     return true;
 }
@@ -179,22 +188,22 @@ bool Teleoperation::run()
 {
 
     // retarget human motion to the robot
-    if (!m_humanGlove->getHandJointAngles(m_humanJointValues))
+    if (!m_humanGlove->getHandJointAngles(m_data.humanJointValues))
     {
         yWarning() << m_logPrefix << "unable to get human latest joint angles.";
     }
 
-    if (!m_retargeting->retargetHumanMotionToRobot(m_humanJointValues))
+    if (!m_retargeting->retargetHumanMotionToRobot(m_data.humanJointValues))
     {
         yWarning() << m_logPrefix << "unable to retaget human motion to robot motions.";
     }
 
-    if (!m_retargeting->getRobotJointReferences(m_robotJointReferences))
+    if (!m_retargeting->getRobotJointReferences(m_data.robotJointReferences))
     {
         yWarning() << m_logPrefix << "unable to get the robot joint references from retargeting.";
     }
 
-    if (!m_robotController->setFingersJointReference(m_robotJointReferences))
+    if (!m_robotController->setFingersJointReference(m_data.robotJointReferences))
     {
         yWarning() << m_logPrefix << "unable to set the joint references to the robot.";
     }
@@ -206,21 +215,21 @@ bool Teleoperation::run()
     }
 
     // compute the haptic feedback
-    if (!m_retargeting->retargetHapticFeedbackFromRobotToHuman(m_robotAxisValuesReferenceKF,
-                                                               m_robotAxisVelocitiesReferenceKF,
-                                                               m_robotAxisValuesFeedbackKF,
-                                                               m_robotAxisVelocitiesFeedbackKF))
+    if (!m_retargeting->retargetHapticFeedbackFromRobotToHuman(m_data.robotAxisValueReferencesKf,
+                                                               m_data.robotAxisVelocityReferencesKf,
+                                                               m_data.robotAxisValueFeedbacksKf,
+                                                               m_data.robotAxisVelocityFeedbacksKf))
     {
         yWarning() << m_logPrefix
                    << "unable to retarget haptic feedback from the robot to the human.";
     }
 
-    if (!m_retargeting->getForceFeedbackToHuman(m_humanForceFeedbacks))
+    if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the force feedback from retargeting.";
     }
 
-    if (!m_retargeting->getVibrotactileFeedbackToHuman(m_humanVibrotactileFeedbacks))
+    if (!m_retargeting->getVibrotactileFeedbackToHuman(m_data.humanVibrotactileFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the vibrotactile feedback from retargeting.";
     }
@@ -229,8 +238,8 @@ bool Teleoperation::run()
     if (m_moveRobot)
     {
         m_robotController->move();
-        m_humanGlove->setFingertipForceFeedbackReferences(m_humanForceFeedbacks);
-        m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_humanVibrotactileFeedbacks);
+        m_humanGlove->setFingertipForceFeedbackReferences(m_data.humanForceFeedbacks);
+        m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_data.humanVibrotactileFeedbacks);
     }
 
     if (m_enableLogger)
@@ -318,6 +327,8 @@ bool Teleoperation::prepare(bool& isPrepared)
 bool Teleoperation::close()
 {
     // close the logger.
+    yInfo() << m_logPrefix << "trying to close.";
+
     if (m_enableLogger)
     {
         if (!m_loggerLeftHand->closeLogger())
@@ -329,6 +340,26 @@ bool Teleoperation::close()
     m_humanGlove->stopHapticFeedback();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for 100ms.
+
+    if (!m_robotController->controlHelper()->close())
+    {
+        yError() << m_logPrefix << "unable to close the robot controller.";
+        return false;
+    }
+
+    if (!m_humanGlove->close())
+    {
+        yError() << m_logPrefix << "unable to close the human  and glove control helper.";
+        return false;
+    }
+
+    if (!m_retargeting->close())
+    {
+        yError() << m_logPrefix << "unable to close the retargeting.";
+        return false;
+    }
+
+    yInfo() << m_logPrefix << "closed successfully.";
 
     return true;
 }

@@ -23,74 +23,65 @@
 
 class HapticGlove::Teleoperation::Logger
 {
-public:
-    Logger(const Teleoperation& module, const bool isRightHand);
-    ~Logger();
-    bool openLogger();
-    bool updateData();
-    bool logData();
-    bool closeLogger();
+    bool m_isRightHand; /// <summary> check if the left or right hand
+    std::string m_handName; /// <summary> the hand name (.eg., left or right)
+    std::string m_logPrefix; /// <summary> logging prefix
 
-    bool isRightHand;
-    std::string handName;
-    std::string logPrefix;
+    const Teleoperation&
+        m_teleoperation; /// <summary> the constant reference to the parent teleoperation object
 
-    const Teleoperation& teleoperation;
+    size_t m_numRobotActuatedAxes; /// <summary> the number of robot actuated axis
+    size_t m_numRobotActuatedJoints; /// <summary> the number of robot actuated joints
 
-    size_t numOfRobotActuatedAxis;
-    size_t numOfRobotActuatedJoints;
-    size_t numOfHumanHandFingers;
-    size_t numOfHumanHandJoints;
+    size_t m_numHumanHandJoints; /// <summary> the number of human hand joints
+    size_t m_numHumanHandFingers; /// <summary> the number of human hand finger
+    size_t m_numHumanVibrotactileFeedback; /// <summary> the number of vibrotactile feedbacks to the
+                                           /// user
+    size_t m_numHumanForceFeedback; /// <summary> the number of force feedback to the user
 
-    std::string robotPrefix;
-    std::string humanPrefix;
-    struct Data
-    {
-        double time;
+    std::string m_robotPrefix; /// <summary> robot prefix for logging
+    std::string m_humanPrefix; /// <summary> human prefix for logging
+    std::string m_logFileName; /// <summary> the file name where the data is saved
 
-        std::vector<double> robotAxisReference;
-        std::vector<double> robotAxisFeedback;
+    Data m_data; /// <summary> the data structure
 
-        std::vector<double> robotMotorCurrnetReference;
-        std::vector<double> robotMotorCurrnetFeedback;
-
-        std::vector<double> robotMotorPWMReference;
-        std::vector<double> robotMotorPWMFeedback;
-
-        std::vector<double> robotMotorPidOutputs;
-
-        std::vector<double> robotAxisVelocityFeedback;
-
-        std::vector<double> robotAxisValuesReferenceKF;
-        std::vector<double> robotAxisVelocitiesReferenceKF;
-        std::vector<double> robotAxisAccelerationReferenceKF;
-        Eigen::MatrixXd robotAxisCovReferenceKF;
-
-        std::vector<double> robotAxisValuesFeedbackKF;
-        std::vector<double> robotAxisVelocitiesFeedbackKF;
-        std::vector<double> robotAxisAccelerationFeedbackKF;
-        Eigen::MatrixXd robotAxisCovFeedbackKF;
-
-        std::vector<double> robotAxisValueError; // to check: axis Value Error
-        std::vector<double> robotAxisVelocityError; // to check: axis Velocity Error
-
-        std::vector<double> robotJointsReference;
-        std::vector<double> robotJointsFeedback;
-
-        std::vector<double> robotJointsExpectedKF;
-        std::vector<double> robotJointsFeedbackKF;
-
-        std::vector<double> humanJointValues;
-        Eigen::MatrixXd humanFingertipPose;
-        std::vector<double> humanForceFeedback;
-        std::vector<double> humanVibrotactileFeedback;
-        std::vector<double> humanPalmRotation;
-
-    } data;
 #ifdef ENABLE_LOGGER
-    XBot::MatLogger2::Ptr logger; /**< the pointer to the logger */
-    XBot::MatAppender::Ptr appender;
+    XBot::MatLogger2::Ptr m_logger; /**< the pointer to the logger */
+    XBot::MatAppender::Ptr m_appender;
 #endif
+
+    /**
+     * update the data structure of the logger
+     * */
+    bool updateData();
+
+public:
+    /**
+     * Constructor
+     * @param module a constant reference to the parent teleoperation object
+     * @param isRightHand check if the right hand or the left hand
+     */
+    Logger(const Teleoperation& module, const bool isRightHand);
+
+    /**
+     * Destructor
+     * */
+    ~Logger();
+
+    /**
+     * open the logger
+     * */
+    bool openLogger();
+
+    /**
+     * log the data
+     * */
+    bool logData();
+
+    /**
+     * close the logger
+     * */
+    bool closeLogger();
 };
 
 #endif // LOGGER_HPP

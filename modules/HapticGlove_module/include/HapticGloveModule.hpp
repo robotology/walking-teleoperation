@@ -9,38 +9,21 @@
 #ifndef HAPTIC_GLOVE_MODULE_HPP
 #define HAPTIC_GLOVE_MODULE_HPP
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 // std
-#include <chrono>
-#include <ctime>
 #include <memory>
-#include <vector>
 
 // YARP
-#include <yarp/dev/IFrameTransform.h>
-#include <yarp/dev/IJoypadController.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/os/Bottle.h>
-#include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
-#include <yarp/os/RpcClient.h>
-#include <yarp/sig/Vector.h>
 
-#include <GloveControlHelper.hpp>
-#include <RobotController_hapticGlove.hpp>
+// teleoperation
 #include <Teleoperation.hpp>
 
-#include <Retargeting.hpp>
-#include <iCub/ctrl/minJerkCtrl.h>
-
 /**
- * OculusModule is the main core of the Oculus application. It is goal is to evaluate retrieve the
- * Oculus readouts, send the desired pose of the hands to the walking application, move the robot
- * fingers and move the robot head
+ * HapticGloveModule is the main core application of the bilateral teleoperation of the human hand
+ * and robot hand . It is goal is to evaluate retrieve the sense glove readouts, send the desired
+ * axis values to the robot hand, and provide the force feedback and vibrotactile feedback to the
+ * human.
  */
-
 class HapticGloveModule : public yarp::os::RFModule
 {
 private:
@@ -58,15 +41,23 @@ private:
 
     HapticGloveFSM m_state; /**< State of the HapticGloveFSM */
 
-    bool m_useLeftHand,
-        m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
+    bool m_useLeftHand;
+    bool m_useRightHand; /**< use the specided hand if the flag is ON (default value is ON)*/
 
     std::unique_ptr<HapticGlove::Teleoperation> m_leftHand;
     std::unique_ptr<HapticGlove::Teleoperation> m_rightHand;
 
 public:
+    /**
+     * Constructor
+     */
     HapticGloveModule();
+
+    /**
+     * Destructor
+     * */
     ~HapticGloveModule();
+
     /**
      * Get the period of the RFModule.
      * @return the period of the module.

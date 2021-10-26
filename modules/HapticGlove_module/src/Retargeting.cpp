@@ -622,3 +622,9 @@ bool Retargeting::computeJointAngleRetargetingParams(
 
     return true;
 }
+
+bool Retargeting::close()
+{
+    yInfo() << m_logPrefix << "closing.";
+    return true;
+}

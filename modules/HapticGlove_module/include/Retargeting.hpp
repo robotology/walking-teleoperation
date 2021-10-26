@@ -216,6 +216,11 @@ public:
      */
     bool computeJointAngleRetargetingParams(const std::vector<double>& humanHandJointRangeMin,
                                             const std::vector<double>& humanHandJointRangeMax);
+
+    /**
+     * close the retageting class
+     */
+    bool close();
 };
 
 #endif // RETARGETING_HPP

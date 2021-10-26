@@ -21,7 +21,7 @@
 #include <yarp/os/Bottle.h>
 
 // iCub-ctrl
-#include <iCub/ctrl/pids.h>
+//#include <iCub/ctrl/pids.h>
 
 #include <LinearRegression.hpp>
 #include <RobotControlHelper_hapticGlove.hpp>
@@ -30,62 +30,61 @@
 using namespace yarp::math;
 
 /**
- * Class useful to manage the retargeting of fingers.
+ * Class useful to manage the control of the retargeting robot fingers.
  */
 class RobotController : public RobotControlHelper
 {
 private:
-    yarp::sig::Vector m_fingersScaling; /**< It contains the finger velocity scaling. */
+    std::string m_logPrefix;
+    bool m_robotPrepared;
 
-    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity integrator */
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m> n: number of
-                joints, m: number of motors; we have q= m_A x m + m_Bias where q is the joint values
-                and m is the motor values*/
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_Bias; /**< Bias term of the coupling relationship from the motors to the joints; Dimension
-                <n,1> n: number of joints; we have q= m_A x m  m_Bias where q is the joint values
-                and m is the motor values*/
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_Q; // weight matrix for desired states
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_R; // wieght for control output
-
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-        m_controlCoeff; /**< control coeeficient matrix from the joints to the motors; Dimension
-                <m,q> q: number of joints, m: number of motors*/
+    bool m_estimatorsInitialized;
 
     bool m_doCalibration; /**< check if we need to do calibraition */
+
     bool m_motorJointsCoupled; /**< check if the motors and joints are coupled */
 
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+    size_t m_numAllAxis;
+    size_t m_numActuatedAxis;
+    size_t m_numAllJoints;
+    size_t m_numActuatedJoints;
+
+    // TO CHECK: maybe delete later
+    //    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity
+    //    integrator */
+
+    Eigen::MatrixXd m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m> n:
+                            number of joints, m: number of motors; we have q= m_A x m + m_Bias where
+                            q is the joint values and m is the motor values*/
+
+    Eigen::MatrixXd m_Bias; /**< Bias term of the coupling relationship from the motors to the
+                            joints; Dimension <n,1> n: number of joints; we have q= m_A x m  m_Bias
+                            where q is the joint values and m is the motor values*/
+
+    Eigen::MatrixXd m_Q; // weight matrix for desired states
+
+    Eigen::MatrixXd m_R; // wieght for control output
+
+    Eigen::MatrixXd m_controlCoeff; /**< control coeeficient matrix from the joints to the motors;
+                            Dimension <m,q> q: number of joints, m: number of motors*/
+
+    Eigen::MatrixXd
         m_motorsData; /**< The logged data for calibration; the motors values; Dimension <o, m> o:
                          number of observations (logged data), m: number of motors */
 
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
+    Eigen::MatrixXd
         m_jointsData; /**< The logged data for calibration; joints values; Dimension <o, n> o:
                          number of observations (logged data), n: number of joints */
 
     yarp::sig::Vector motorVelocityReference;
 
-    std::unique_ptr<RobotMotorsEstimation>
-        m_robotMotorFeedbackEstimator; /**< The KF estimated motor feedbacks*/
-    std::unique_ptr<RobotMotorsEstimation>
-        m_robotMotorReferenceEstimator; /**< The KF estimated motor References*/
+    std::unique_ptr<Estimators> m_axisFeedbackEstimators; /**< The KF estimated motor feedbacks*/
+    std::unique_ptr<Estimators> m_axisReferenceEstimators; /**< The KF estimated motor References*/
 
-    std::unique_ptr<RobotMotorsEstimation>
-        m_robotJointFeedbackEstimator; /**< The KF estimated joint feedbacks*/
-    std::unique_ptr<RobotMotorsEstimation>
-        m_robotJointExpectedEstimator; /**< The KF estimated joint References*/
+    std::unique_ptr<Estimators> m_jointFeedbackEstimators; /**< The KF estimated joint feedbacks*/
+    std::unique_ptr<Estimators> m_jointExpectedEstimators; /**< The KF estimated joint References*/
 
     std::unique_ptr<LinearRegression> m_linearRegressor;
-
-    bool m_robotPrepared;
-
-    bool m_areEstimatorsInitialized;
 
     double m_kGain; /**< The gain of the exponential filter to set the robot reference position
                        values */
@@ -250,11 +249,11 @@ public:
      */
     bool updateFeedback(void);
 
-    /**
-     * Find the coupling relationship bwtween the motors and joitns of the robots
-     * @return true if it could open the logger
-     */
-    bool LogDataToCalibrateRobotMotorsJointsCouplingRandom(const bool generateRandomVelocity);
+    //    /**
+    //     * Find the coupling relationship bwtween the motors and joitns of the robots
+    //     * @return true if it could open the logger
+    //     */
+    //    bool LogDataToCalibrateRobotMotorsJointsCouplingRandom(const bool generateRandomVelocity);
 
     /**
      * Find the coupling relationship bwtween the motors and joitns of the robots using sin input

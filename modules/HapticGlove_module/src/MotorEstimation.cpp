@@ -9,7 +9,7 @@
 
 #include <MotorEstimation.hpp>
 #include <iostream>
-MotorEstimation::MotorEstimation(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q){
+Estimator::Estimator(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q){
 
     m_n = 3;
     m_m = 3;
@@ -30,7 +30,7 @@ MotorEstimation::MotorEstimation(const double& dt, const Eigen::MatrixXd& R, con
     m_kf= std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, R, Q);
 }
 
-MotorEstimation::MotorEstimation(const MotorEstimation& O){
+Estimator::Estimator(const Estimator& O){
     m_n = O.m_n;
     m_m = O.m_m;
     m_p = O.m_p;
@@ -46,7 +46,7 @@ MotorEstimation::MotorEstimation(const MotorEstimation& O){
     m_kf=std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, m_R, m_Q);
 }
 
-bool MotorEstimation::Initialize(const Eigen::MatrixXd& z0){
+bool Estimator::Initialize(const Eigen::MatrixXd& z0){
 
     Eigen::MatrixXd x0= m_H * z0;
     Eigen::MatrixXd  M0=Eigen::MatrixXd::Identity(m_n,m_n);
@@ -54,18 +54,18 @@ bool MotorEstimation::Initialize(const Eigen::MatrixXd& z0){
     return m_kf->Initialize(x0,M0);
 }
 
-bool MotorEstimation::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat){
+bool Estimator::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat){
 
     return m_kf->EstimateNextState(z, x_hat);
 }
 
-bool MotorEstimation::EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+bool Estimator::EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
     return m_kf->EstimateNextSteadyState(z, x_hat);
 
 }
 
-bool  MotorEstimation::GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P){
+bool  Estimator::GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P){
 
     return m_kf->GetInfo( x_hat, P);
 }

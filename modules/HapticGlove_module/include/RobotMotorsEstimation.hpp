@@ -6,7 +6,6 @@
  * @date 2020
  */
 
-
 #ifndef ROBOTOTORSESTIMATION_HPP
 #define ROBOTMOTORSESTIMATION_HPP
 #include <memory>
@@ -17,13 +16,12 @@
 
 #include <yarp/os/Property.h>
 
-
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Eigen_Mat;
 
-class RobotMotorsEstimation{
+class Estimators
+{
 private:
-
-    std::vector<MotorEstimation> m_motorEstimatorVector;
+    std::vector<Estimator> m_motorEstimatorVector;
     yarp::sig::Vector m_motorValueMeasured;
     yarp::sig::Vector m_motorValueEstimation;
     yarp::sig::Vector m_motorVelocityEstimation;
@@ -35,23 +33,30 @@ private:
     bool m_isInitialized;
 
 public:
-    RobotMotorsEstimation(const int noMotors);
+    Estimators(const int noMotors);
     bool configure(const yarp::os::Searchable& config, const std::string& name);
 
     bool initialize(const yarp::sig::Vector& z0);
 
     bool estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat);
 
-    bool estimateNextState(const yarp::sig::Vector z );
+    bool estimateNextState(const yarp::sig::Vector z);
 
-    bool estimateNextSteadyState(const yarp::sig::Vector z );
+    bool estimateNextSteadyState(const yarp::sig::Vector z);
 
-
-    bool  getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P);
-    bool  getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P);
-    bool  getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P);
+    bool getInfo(Eigen::VectorXd& estimatedMotorValue,
+                 Eigen::VectorXd& estimatedMotorVelocity,
+                 Eigen::VectorXd& estimatedMotorAcceleration,
+                 Eigen::MatrixXd& P);
+    bool getInfo(yarp::sig::Vector& estimatedMotorValue,
+                 yarp::sig::Vector& estimatedMotorVelocity,
+                 yarp::sig::Vector& estimatedMotorAcceleration,
+                 Eigen::MatrixXd& P);
+    bool getInfo(std::vector<double>& estimatedMotorValue,
+                 std::vector<double>& estimatedMotorVelocity,
+                 std::vector<double>& estimatedMotorAcceleration,
+                 Eigen::MatrixXd& P);
 
     bool isInitialized();
-
 };
 #endif // ROBOTMOTORSESTIMATION_HPP

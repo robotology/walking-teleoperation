@@ -11,12 +11,12 @@
 
 #include <RobotMotorsEstimation.hpp>
 
-RobotMotorsEstimation::RobotMotorsEstimation(const int noMotors){
+Estimators::Estimators(const int noMotors){
     m_numerOfMotors=noMotors;
     m_isInitialized=false;
 }
 
-bool RobotMotorsEstimation::configure(const yarp::os::Searchable& config, const std::string& name){
+bool Estimators::configure(const yarp::os::Searchable& config, const std::string& name){
 
     size_t no_states_kf, no_measurement_kf;
     double dt;
@@ -59,7 +59,7 @@ bool RobotMotorsEstimation::configure(const yarp::os::Searchable& config, const 
     for (int i=0; i<m_numerOfMotors; i++)
     {
         std::cout<<"MotorEstimation initialization ...  \n";
-        MotorEstimation motorEstimator(dt, R, Q);
+        Estimator motorEstimator(dt, R, Q);
         m_motorEstimatorVector.push_back(motorEstimator);
     }
     std::cout<<"All Motor Estimation are initialized. \n";
@@ -74,7 +74,7 @@ bool RobotMotorsEstimation::configure(const yarp::os::Searchable& config, const 
     return true;
 }
 
-bool RobotMotorsEstimation::initialize(const yarp::sig::Vector& z0){
+bool Estimators::initialize(const yarp::sig::Vector& z0){
 
     m_motorValueMeasured= z0;
 
@@ -87,7 +87,7 @@ bool RobotMotorsEstimation::initialize(const yarp::sig::Vector& z0){
     return true;
 }
 
-bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat){
+bool Estimators::estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat){
 
     Eigen::MatrixXd x_hat_mat;
     for(size_t i=0; i<m_numerOfMotors;i++)
@@ -102,7 +102,7 @@ bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z, yarp::s
     return true;
 }
 
-bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z ){
+bool Estimators::estimateNextState(const yarp::sig::Vector z ){
 
     Eigen::MatrixXd x_hat_mat;
     for(size_t i=0; i<m_numerOfMotors;i++)
@@ -117,7 +117,7 @@ bool RobotMotorsEstimation::estimateNextState(const yarp::sig::Vector z ){
     return true;
 }
 
-bool RobotMotorsEstimation::estimateNextSteadyState(const yarp::sig::Vector z )
+bool Estimators::estimateNextSteadyState(const yarp::sig::Vector z )
 {
 
     Eigen::MatrixXd x_hat_mat;
@@ -130,7 +130,7 @@ bool RobotMotorsEstimation::estimateNextSteadyState(const yarp::sig::Vector z )
 }
 
 
-bool  RobotMotorsEstimation::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P){
+bool  Estimators::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
@@ -152,7 +152,7 @@ bool  RobotMotorsEstimation::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen
 return true;
 }
 
-bool  RobotMotorsEstimation::getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P){
+bool  Estimators::getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
@@ -174,7 +174,7 @@ bool  RobotMotorsEstimation::getInfo(yarp::sig::Vector& estimatedMotorValue, yar
 return true;
 }
 
-bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P){
+bool  Estimators::getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P){
 
     estimatedMotorValue.clear();
     estimatedMotorVelocity.clear();
@@ -199,7 +199,7 @@ bool  RobotMotorsEstimation::getInfo(std::vector<double>& estimatedMotorValue, s
     }
     return true;
 }
-bool RobotMotorsEstimation::isInitialized(){
+bool Estimators::isInitialized(){
 
     return m_isInitialized;
 }

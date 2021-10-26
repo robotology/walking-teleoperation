@@ -6,24 +6,15 @@
  * @date 2020
  */
 
-// YARP
-#include <yarp/os/Bottle.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/os/Property.h>
-#include <yarp/os/Stamp.h>
+// std
+#include <thread>
 
-// iDynTree
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/yarp/YARPEigenConversions.h>
+// yarp
+#include <yarp/os/LogStream.h>
 
 // teleoperation
 #include <HapticGloveModule.hpp>
 #include <Utils.hpp>
-
-// Eigen
-#include <Eigen/Dense>
-#include <thread>
 
 HapticGloveModule::HapticGloveModule()
 {
