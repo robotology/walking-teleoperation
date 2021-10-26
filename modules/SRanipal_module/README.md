@@ -73,9 +73,12 @@ The following optional parameters can be inserted after calling with module, eac
 - ``eyeOpenPrecision``, it determines the minimum variation of the measured eye openness of the operator (in the range [0, 1]), to command a variation in the robot eye lids. Default ``0.1``.
 - ``skipEyeCalibration``, if set without value (i.e. ``--skipEyeCalibration``), or with value ``true`` (i.e. ``--skipEyeCalibration true``), it avoids starting the eye calibration procedure on the headset. Default ``false``.
 - ``forceEyeCalibration``, if set without value (i.e. ``--forceEyeCalibration``), or with value ``true`` (i.e. ``--forceEyeCalibration true``), it forces the eye calibration procedure on the headset at startup. Default ``false``.
+- ``useEyelidsPositionControl``, if set without value (i.e. ``--useEyelidsPositionControl``), or with value ``true`` (i.e. ``--useEyelidsPositionControl true``), the module will control the eyelids using position control instead of velocity. This has an effect only if ``useRawEyelids`` is not set, or set to ``false``. Default ``false``.
 - ``useRawEyelids``,  if set without value (i.e. ``--useRawEyelids``), or with value ``true`` (i.e. ``--useRawEyelids true``), it avoids connecting to the robot face remote control board to control the eyelids. This is needed in case the robot face uses servomotors to control the eyelids. Default ``false``.
 - ``rawEyelidsCloseValue``, the raw value for which the eyelids are completely closed in the servomotor case. This value can be found by connecting to the ``/icub/face/raw/in`` port and sending commands like ``S50`` (note the capital S in front of the number). Default ``35``, found on ``iCubGenova04``.
 - ``rawEyelidsOpenValue``, the raw value for which the eyelids are completely opened in the servomotor case. This value can be found by connecting to the ``/icub/face/raw/in`` port and sending commands like ``S50`` (note the capital S in front of the number). Default ``60``, found on ``iCubGenova04``.
+- ``eyelidsMaxVelocity``, the maximum velocity used when controlling the eyelids. Default ``75.0``.
+- ``eyelidsVelocityGain``, the gain used when controlling the eyelids velocity. Default ``10.0``.
 - ``lipImagePortName``, it sets the suffix for the port streaming the lip camera image (stereo camera in grayscale).  Default ``/lipImage:o``.
 
 ## Common issues
