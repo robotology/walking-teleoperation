@@ -594,7 +594,7 @@ struct OpenXRModule::Impl
 
         // try to read the transform
         std::size_t counter = 0;
-        constexpr unsigned int maxAttempt = 20;
+        constexpr unsigned int maxAttempt = 1000;
         while (!readTransforms(headOpenXR_T_expectedLeftHandOpenXR, headOpenXR_T_expectedRightHandOpenXR))
         {
             if (++counter == maxAttempt)
@@ -605,7 +605,7 @@ struct OpenXRModule::Impl
             }
 
             // Sleep for some while
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         // check if the left joypad is on the left and the right is on the right. If not we have to
