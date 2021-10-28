@@ -140,7 +140,12 @@ bool EyelidsRetargeting::usingEylidsVelocityControl()
     return m_configured && !(m_useRawEyelids || m_useEyelidsPositionControl);
 }
 
-bool EyelidsRetargeting::update(double eyeOpennes)
+void EyelidsRetargeting::setDesiredEyeOpennes(double eyeOpennes)
+{
+    m_desiredEyeOpennes = eyeOpennes;
+}
+
+bool EyelidsRetargeting::update()
 {
     if (!m_configured)
     {
@@ -148,7 +153,7 @@ bool EyelidsRetargeting::update(double eyeOpennes)
         return false;
     }
 
-    int eye_open_level = static_cast<int>(std::round(eyeOpennes / m_eyeOpenPrecision));
+    int eye_open_level = static_cast<int>(std::round(m_desiredEyeOpennes / m_eyeOpenPrecision));
     double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
 
     if (m_useRawEyelids)

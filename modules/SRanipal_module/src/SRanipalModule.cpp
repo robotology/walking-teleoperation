@@ -124,8 +124,13 @@ bool SRanipalModule::updateModule()
         double eye_openness;
         if (m_useEyelids && m_sranipalInterface.getEyeOpenness(eye_openness))
         {
-            m_eyelidsRetargeting.update(eye_openness);
+            m_eyelidsRetargeting.setDesiredEyeOpennes(eye_openness);
         }
+    }
+
+    if (m_useEyelids)
+    {
+        m_eyelidsRetargeting.update();
     }
 
     SRanipalInterface::LipExpressions lipExpressions;
