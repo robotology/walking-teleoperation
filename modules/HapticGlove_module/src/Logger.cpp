@@ -191,16 +191,15 @@ bool Teleoperation::Logger::updateData()
     m_data.time = yarp::os::Time::now();
 
     // robot
-    m_teleoperation.m_robotController->getFingerAxisValueReference(m_data.robotAxisReferences);
+    m_teleoperation.m_robotController->getAxisValueReferences(m_data.robotAxisReferences);
 
-    m_teleoperation.m_robotController->getFingerAxisFeedback(m_data.robotAxisFeedbacks);
+    m_teleoperation.m_robotController->getAxisValueFeedbacks(m_data.robotAxisFeedbacks);
 
-    m_teleoperation.m_robotController->getFingerAxisVelocityFeedback(
-        m_data.robotAxisVelocityFeedbacks);
+    m_teleoperation.m_robotController->getAxisVelocityFeedbacks(m_data.robotAxisVelocityFeedbacks);
 
-    m_teleoperation.m_robotController->getFingerJointReference(m_data.robotJointReferences);
+    m_teleoperation.m_robotController->getJointReferences(m_data.robotJointReferences);
 
-    m_teleoperation.m_robotController->getFingerJointsFeedback(m_data.robotJointFeedbacks);
+    m_teleoperation.m_robotController->getJointValueFeedbacks(m_data.robotJointFeedbacks);
 
     m_teleoperation.m_retargeting->getAxisError(m_data.robotAxisValueErrors,
                                                 m_data.robotAxisVelocityErrors);
@@ -230,7 +229,7 @@ bool Teleoperation::Logger::updateData()
         m_data.robotAxisAccelerationReferencesKf,
         m_data.robotAxisCovReferencesKf);
 
-    m_teleoperation.m_robotController->getEstimatedJointState(m_data.robotJointsExpectedKf,
+    m_teleoperation.m_robotController->getEstimatedJointValuesKf(m_data.robotJointsExpectedKf,
                                                               m_data.robotJointsFeedbackKf);
     // human
     m_teleoperation.m_humanGlove->getHandJointAngles(m_data.humanJointValues);

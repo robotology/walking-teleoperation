@@ -254,13 +254,25 @@ public:
      * Get the joint encoders value
      * @return the joint encoder value
      */
-    const yarp::sig::Vector& jointEncoders() const;
+    const yarp::sig::Vector& axisFeedbacks() const;
+
+    /**
+     * Get the joint encoders value
+     * @return the joint encoder value
+     */
+    void axisFeedbacks(std::vector<double>& axisFeedbacks) const;
 
     /**
      * Get the joint encoders speed
      * @return the joint encoder speed
      */
     const yarp::sig::Vector& jointEncodersSpeed() const;
+
+    /**
+     * Get the joint encoders speed
+     * @return the joint encoder speed
+     */
+    void jointEncodersSpeed(std::vector<double>& axisVelocityFeedbacks) const;
 
     /**
      * Get the analog sensors value
@@ -275,10 +287,22 @@ public:
     const yarp::sig::Vector& allSensors() const;
 
     /**
+     * Get all the intersted joints sensors value (including analog+encoders)
+     * @return all the intersted sensor values
+     */
+    void allSensors(std::vector<double>& jointsFeedbacks) const;
+
+    /**
      * Get all the intersted motor current values
      * @return all the motor current values
      */
     const yarp::sig::Vector& motorCurrents() const;
+
+    /**
+     * Get all the intersted motor current values
+     * @return all the motor current values
+     */
+    void motorCurrents(std::vector<double>& motorCurrents) const;
 
     /**
      * Get all the actuated motor current References
@@ -287,10 +311,22 @@ public:
     const yarp::sig::Vector& motorCurrentReference() const;
 
     /**
+     * Get all the actuated motor current References
+     * @return all the motor current References
+     */
+    void motorCurrentReference(std::vector<double>& motorCurrentReferences) const;
+
+    /**
      * Get all the actuated motor PWM values
      * @return all the motor PWM values
      */
     const yarp::sig::Vector& motorPwm() const;
+
+    /**
+     * Get all the actuated motor PWM values
+     * @return all the motor PWM values
+     */
+    void motorPwm(std::vector<double>& motorPwm) const;
 
     /**
      * Get all the actuated motor low level pid outputs
@@ -299,10 +335,22 @@ public:
     const yarp::sig::Vector& motorPidOutputs() const;
 
     /**
+     * Get all the actuated motor low level pid outputs
+     * @return all the motor pid outputs
+     */
+    void motorPidOutputs(std::vector<double>& motorPidOutputs) const;
+
+    /**
      * Get all the actuated motor PWM References
      * @return all the motor PWM References
      */
     const yarp::sig::Vector& motorPwmReference() const;
+
+    /**
+     * Get all the actuated motor PWM References
+     * @return all the motor PWM References
+     */
+    void motorPwmReference(std::vector<double>& motorPwmReference) const;
 
     /**
      * Get the number of actuated degree of freedom (motors)

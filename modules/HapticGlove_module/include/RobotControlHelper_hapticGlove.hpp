@@ -14,8 +14,10 @@
 
 // YARP
 #include <yarp/sig/Vector.h>
-
+// teleoperation
 #include <RobotControlInterface_hapticGlove.hpp>
+// eigen
+#include <Eigen/Dense>
 
 using namespace yarp::math;
 // using namespace HapticGlove;
@@ -29,8 +31,25 @@ class RobotControlHelper
 protected:
     std::unique_ptr<HapticGlove::RobotControlInterface>
         m_robotControlInterface; /**< Controller helper */
-    yarp::sig::Vector m_desiredMotorValue; /** Desired Motor value in radiant or radiant/s  */
-    yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
+    std::vector<double> m_axisValueReferences; /** Reference axis value in radiant or radiant/s  */
+    std::vector<double> m_axisValueFeedbacks; /** Feedback axis value in radiant or radiant/s  */
+
+    Eigen::VectorXd m_axisValueReferencesEigen; /** Reference axis value in radiant or radiant/s  */
+    Eigen::VectorXd m_axisValueFeedbacksEigen; /** Feedback axis value in radiant or radiant/s  */
+
+    std::vector<double>
+        m_jointValueReferences; /** Reference joint values in radiant or radiant/s  */
+
+    std::vector<double>
+        m_jointValuesExpected; /** Reference joint values in radiant or radiant/s  */
+
+    std::vector<double> m_jointValueFeedbacks; /** Feedback joint values in radiant or radiant/s  */
+
+    Eigen::VectorXd
+        m_jointValueReferencesEigen; /** Reference joint values in radiant or radiant/s  */
+    Eigen::VectorXd m_jointValuesExpectedEigen;
+    Eigen::VectorXd
+        m_jointValueFeedbacksEigen; /** Feedback joint values in radiant or radiant/s  */
 
 public:
     /**

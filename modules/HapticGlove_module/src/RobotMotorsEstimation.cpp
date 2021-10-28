@@ -6,17 +6,19 @@
  * @date 2020
  */
 
-#include <yarp/os/LogStream.h>
 #include <Utils.hpp>
+#include <yarp/os/LogStream.h>
 
 #include <RobotMotorsEstimation.hpp>
 
-Estimators::Estimators(const int noMotors){
-    m_numerOfMotors=noMotors;
-    m_isInitialized=false;
+Estimators::Estimators(const int noMotors)
+{
+    m_numerOfMotors = noMotors;
+    m_isInitialized = false;
 }
 
-bool Estimators::configure(const yarp::os::Searchable& config, const std::string& name){
+bool Estimators::configure(const yarp::os::Searchable& config, const std::string& name)
+{
 
     size_t no_states_kf, no_measurement_kf;
     double dt;
@@ -27,8 +29,8 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
         return false;
     }
 
-    no_states_kf=config.check("no_states_kf", yarp::os::Value(3)).asInt();
-    no_measurement_kf=config.check("no_measurement_kf", yarp::os::Value(1)).asInt();
+    no_states_kf = config.check("no_states_kf", yarp::os::Value(3)).asInt();
+    no_measurement_kf = config.check("no_measurement_kf", yarp::os::Value(1)).asInt();
 
     yarp::sig::Vector Q_vector(no_states_kf, 0.0), R_vector(no_measurement_kf, 0.0);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "r_matrix_kf", R_vector))
@@ -45,7 +47,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
         return false;
     }
 
-    Eigen::MatrixXd Q= Eigen::MatrixXd::Identity(no_states_kf, no_states_kf);
+    Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(no_states_kf, no_states_kf);
     Eigen::MatrixXd R = Eigen::MatrixXd::Identity(no_measurement_kf, no_measurement_kf);
     for (int i = 0; i < no_states_kf; i++)
     {
@@ -56,125 +58,129 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
         R(i, i) = R_vector(i);
     }
 
-    for (int i=0; i<m_numerOfMotors; i++)
+    for (int i = 0; i < m_numerOfMotors; i++)
     {
-        std::cout<<"MotorEstimation initialization ...  \n";
+        std::cout << "MotorEstimation initialization ...  \n";
         Estimator motorEstimator(dt, R, Q);
         m_motorEstimatorVector.push_back(motorEstimator);
     }
-    std::cout<<"All Motor Estimation are initialized. \n";
+    std::cout << "All Motor Estimation are initialized. \n";
 
-
-    m_motorValueMeasured.resize(m_numerOfMotors*no_measurement_kf, 0.0);
-    m_motorValueEstimation.resize(m_numerOfMotors, 0.0);
-    m_motorVelocityEstimation.resize(m_numerOfMotors, 0.0);
-    m_motorAccelerationEstimation.resize(m_numerOfMotors, 0.0);
-
-    z_mat=Eigen::MatrixXd::Zero(no_measurement_kf,1);
+    z_mat = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
     return true;
 }
 
-bool Estimators::initialize(const yarp::sig::Vector& z0){
-
-    m_motorValueMeasured= z0;
-
-    for(size_t i=0; i<m_numerOfMotors;i++)
+bool Estimators::initialize(const std::vector<double>& z0)
+{
+    for (size_t i = 0; i < m_numerOfMotors; i++)
     {
-        z_mat(0,0)=z0(i);
+        z_mat(0, 0) = z0[i];
         m_motorEstimatorVector[i].Initialize(z_mat);
     }
-    m_isInitialized=true;
+    m_isInitialized = true;
     return true;
 }
 
-bool Estimators::estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat){
-
-    Eigen::MatrixXd x_hat_mat;
-    for(size_t i=0; i<m_numerOfMotors;i++)
-    {
-        z_mat(0,0)=z(i);
-        m_motorEstimatorVector[i].EstimateNextState(z_mat, x_hat_mat);
-
-//        m_motorValueEstimation[i]=x_hat[0];
-//        m_motorVelocityEstimation[i]=x_hat[1];
-//        m_motorAccelerationEstimation[i]=x_hat[2];
-    }
-    return true;
-}
-
-bool Estimators::estimateNextState(const yarp::sig::Vector z ){
-
-    Eigen::MatrixXd x_hat_mat;
-    for(size_t i=0; i<m_numerOfMotors;i++)
-    {
-        z_mat(0,0)=z(i);
-        m_motorEstimatorVector[i].EstimateNextState(z_mat, x_hat_mat);
-
-//        m_motorValueEstimation[i]=x_hat[0];
-//        m_motorVelocityEstimation[i]=x_hat[1];
-//        m_motorAccelerationEstimation[i]=x_hat[2];
-    }
-    return true;
-}
-
-bool Estimators::estimateNextSteadyState(const yarp::sig::Vector z )
+bool Estimators::estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat)
 {
 
     Eigen::MatrixXd x_hat_mat;
-    for(size_t i=0; i<m_numerOfMotors;i++)
+    for (size_t i = 0; i < m_numerOfMotors; i++)
     {
-        z_mat(0,0)=z(i);
+        z_mat(0, 0) = z(i);
+        m_motorEstimatorVector[i].EstimateNextState(z_mat, x_hat_mat);
+
+        //        m_motorValueEstimation[i]=x_hat[0];
+        //        m_motorVelocityEstimation[i]=x_hat[1];
+        //        m_motorAccelerationEstimation[i]=x_hat[2];
+    }
+    return true;
+}
+
+bool Estimators::estimateNextState(const std::vector<double>& z)
+{
+
+    Eigen::MatrixXd x_hat_mat;
+    for (size_t i = 0; i < m_numerOfMotors; i++)
+    {
+        z_mat(0, 0) = z[i];
+        m_motorEstimatorVector[i].EstimateNextState(z_mat, x_hat_mat);
+
+        //        m_motorValueEstimation[i]=x_hat[0];
+        //        m_motorVelocityEstimation[i]=x_hat[1];
+        //        m_motorAccelerationEstimation[i]=x_hat[2];
+    }
+    return true;
+}
+
+bool Estimators::estimateNextSteadyState(const yarp::sig::Vector z)
+{
+
+    Eigen::MatrixXd x_hat_mat;
+    for (size_t i = 0; i < m_numerOfMotors; i++)
+    {
+        z_mat(0, 0) = z(i);
         m_motorEstimatorVector[i].EstimateNextSteadyState(z_mat, x_hat_mat);
     }
     return true;
 }
 
-
-bool  Estimators::getInfo(Eigen::VectorXd& estimatedMotorValue, Eigen::VectorXd& estimatedMotorVelocity, Eigen::VectorXd& estimatedMotorAcceleration, Eigen::MatrixXd& P){
-
-    estimatedMotorValue.resize(m_numerOfMotors, 0.0);
-    estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
-    estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
-    P.resize(m_numerOfMotors, 9);
-
-    for(size_t i=0; i<m_numerOfMotors;i++)
-    {
-        Eigen::VectorXd x_hat;
-        Eigen::VectorXd P_tmp;
-        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
-
-        estimatedMotorValue[i]=x_hat[0];
-        estimatedMotorVelocity[i]=x_hat[1];
-        estimatedMotorAcceleration[i]=x_hat[2];
-        P.row(i)= P_tmp;
-    }
-
-return true;
-}
-
-bool  Estimators::getInfo(yarp::sig::Vector& estimatedMotorValue, yarp::sig::Vector& estimatedMotorVelocity, yarp::sig::Vector& estimatedMotorAcceleration, Eigen::MatrixXd& P){
+bool Estimators::getInfo(Eigen::VectorXd& estimatedMotorValue,
+                         Eigen::VectorXd& estimatedMotorVelocity,
+                         Eigen::VectorXd& estimatedMotorAcceleration,
+                         Eigen::MatrixXd& P)
+{
 
     estimatedMotorValue.resize(m_numerOfMotors, 0.0);
     estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
     estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
     P.resize(m_numerOfMotors, 9);
 
-    for(size_t i=0; i<m_numerOfMotors;i++)
+    for (size_t i = 0; i < m_numerOfMotors; i++)
     {
         Eigen::VectorXd x_hat;
         Eigen::VectorXd P_tmp;
         m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
 
-        estimatedMotorValue(i)=x_hat[0];
-        estimatedMotorVelocity(i)=x_hat[1];
-        estimatedMotorAcceleration(i)=x_hat[2];
-        P.row(i)= P_tmp;
-
+        estimatedMotorValue[i] = x_hat[0];
+        estimatedMotorVelocity[i] = x_hat[1];
+        estimatedMotorAcceleration[i] = x_hat[2];
+        P.row(i) = P_tmp;
     }
-return true;
+
+    return true;
 }
 
-bool  Estimators::getInfo(std::vector<double>& estimatedMotorValue, std::vector<double>&  estimatedMotorVelocity, std::vector<double>& estimatedMotorAcceleration, Eigen::MatrixXd& P){
+bool Estimators::getInfo(yarp::sig::Vector& estimatedMotorValue,
+                         yarp::sig::Vector& estimatedMotorVelocity,
+                         yarp::sig::Vector& estimatedMotorAcceleration,
+                         Eigen::MatrixXd& P)
+{
+
+    estimatedMotorValue.resize(m_numerOfMotors, 0.0);
+    estimatedMotorVelocity.resize(m_numerOfMotors, 0.0);
+    estimatedMotorAcceleration.resize(m_numerOfMotors, 0.0);
+    P.resize(m_numerOfMotors, 9);
+
+    for (size_t i = 0; i < m_numerOfMotors; i++)
+    {
+        Eigen::VectorXd x_hat;
+        Eigen::VectorXd P_tmp;
+        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
+
+        estimatedMotorValue(i) = x_hat[0];
+        estimatedMotorVelocity(i) = x_hat[1];
+        estimatedMotorAcceleration(i) = x_hat[2];
+        P.row(i) = P_tmp;
+    }
+    return true;
+}
+
+bool Estimators::getInfo(std::vector<double>& estimatedMotorValue,
+                         std::vector<double>& estimatedMotorVelocity,
+                         std::vector<double>& estimatedMotorAcceleration,
+                         Eigen::MatrixXd& P)
+{
 
     estimatedMotorValue.clear();
     estimatedMotorVelocity.clear();
@@ -186,20 +192,38 @@ bool  Estimators::getInfo(std::vector<double>& estimatedMotorValue, std::vector<
     P.resize(m_numerOfMotors, 9);
     P.setZero(m_numerOfMotors, 9);
 
-    for(size_t i=0; i<m_numerOfMotors;i++)
+    for (size_t i = 0; i < m_numerOfMotors; i++)
     {
         Eigen::VectorXd x_hat;
         Eigen::VectorXd P_tmp;
         m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
 
-        estimatedMotorValue[i]=x_hat[0];
-        estimatedMotorVelocity[i]=x_hat[1];
-        estimatedMotorAcceleration[i]=x_hat[2];
-        P.row(i)= P_tmp;
+        estimatedMotorValue[i] = x_hat[0];
+        estimatedMotorVelocity[i] = x_hat[1];
+        estimatedMotorAcceleration[i] = x_hat[2];
+        P.row(i) = P_tmp;
     }
     return true;
 }
-bool Estimators::isInitialized(){
+
+bool Estimators::getMotorValueInfo(std::vector<double>& estimatedMotorValue)
+{
+    estimatedMotorValue.clear();
+    estimatedMotorValue.resize(m_numerOfMotors, 0.0);
+    for (size_t i = 0; i < m_numerOfMotors; i++)
+    {
+        Eigen::VectorXd x_hat;
+        Eigen::VectorXd P_tmp;
+        m_motorEstimatorVector[i].GetInfo(x_hat, P_tmp);
+
+        estimatedMotorValue[i] = x_hat[0];
+    }
+
+    return true;
+}
+
+bool Estimators::isInitialized()
+{
 
     return m_isInitialized;
 }

@@ -66,7 +66,7 @@ private:
                             q is the joint values and m is the motor values*/
 
     Eigen::MatrixXd m_Bias; /**< Bias term of the coupling relationship from the motors to the
-                            joints; Dimension <n,1> n: number of joints; we have q= m_A x m  m_Bias
+                            joints; Dimension <n,1> n: number of joints; we have q= m_A x m+m_Bias
                             where q is the joint values and m is the motor values*/
 
     Eigen::MatrixXd m_Q; // weight matrix for desired states
@@ -110,6 +110,10 @@ private:
                              const std::vector<double>& allListVector,
                              std::vector<double>& customListVector);
 
+    Eigen::Map<Eigen::VectorXd> toEigen(std::vector<double>& vec);
+
+    void toStd(Eigen::VectorXd& vecEigen, std::vector<double>& vecStd);
+
 public:
     /**
      * Configure the object.
@@ -126,50 +130,45 @@ public:
      * @param fingersReference the reference value for the finger axis to follow
      * @return true in case of success and false otherwise.
      */
-    bool setFingersAxisReference(const yarp::sig::Vector& fingersReference);
+    bool setAxisReferences(const std::vector<double>& axisReferences);
+
+    /**
+     * Set the fingers axis reference value
+     * @param fingersReference the reference value for the finger axis to follow
+     * @return true in case of success and false otherwise.
+     */
+    bool setAxisReferences(const Eigen::VectorXd& axisReferences);
 
     /**
      * Set the fingers joint reference value
      * @param fingersReference the reference value for the finger joints to follow
      * @return true in case of success and false otherwise.
      */
-    bool setFingersJointReference(const std::vector<double>& fingersReference);
+    bool setJointReferences(const std::vector<double>& fingersReferences);
+
+    /**
+     * Perform computations to find the control signals
+     * @return true in case of success and false otherwise.
+     */
+    bool computeControlSignals();
 
     /**
      * Get the fingers' axis velocities or values
      * @param fingerValue get the fingers' axis velocity or value
      */
-    void getFingerAxisFeedback(yarp::sig::Vector& fingerValues);
-
-    /**
-     * Get the fingers' axis velocities or values
-     * @param fingerValue get the fingers' axis velocity or value
-     */
-    void getFingerAxisFeedback(std::vector<double>& fingerValues);
+    void getAxisValueFeedbacks(std::vector<double>& fingerValues);
 
     /**
      * Get the fingers axis velocity feedback values
      * @param fingerAxisVelocityFeedback get the finger motor velocity feedback
      */
-    void getFingerAxisVelocityFeedback(yarp::sig::Vector& fingerAxisVelocityFeedback);
-
-    /**
-     * Get the fingers axis velocity feedback values
-     * @param fingerAxisVelocityFeedback get the finger motor velocity feedback
-     */
-    void getFingerAxisVelocityFeedback(std::vector<double>& fingerAxisVelocityFeedback);
+    void getAxisVelocityFeedbacks(std::vector<double>& fingerAxisVelocityFeedback);
 
     /**
      * Get the fingers joint velocities or values
      * @param fingerValue get the finger joint velocity or value
      */
-    void getFingerJointsFeedback(yarp::sig::Vector& fingerValues);
-
-    /**
-     * Get the fingers joint velocities or values
-     * @param fingerValue get the finger joint velocity or value
-     */
-    void getFingerJointsFeedback(std::vector<double>& fingerValues);
+    void getJointValueFeedbacks(std::vector<double>& fingerValues);
 
     /**
      * Get the motor current Feedback values
@@ -178,22 +177,10 @@ public:
     void getMotorCurrentFeedback(std::vector<double>& motorCurrentFeedback);
 
     /**
-     * Get the motor current Feedback values
-     * @param motorCurrentFeedback get the motor current feedback values
-     */
-    void getMotorCurrentFeedback(yarp::sig::Vector& motorCurrentFeedback);
-
-    /**
      * Get the motor current Refernce values
      * @param motorCurrentReference get the motor current reference values
      */
     void getMotorCurrentReference(std::vector<double>& motorCurrentReference);
-
-    /**
-     * Get the motor current Refernce values
-     * @param motorReferenceFeedback get the motor current reference values
-     */
-    void getMotorCurrentReference(yarp::sig::Vector& motorCurrentReference);
 
     /**
      * Get the motor PWM values
@@ -202,22 +189,10 @@ public:
     void getMotorPwmFeedback(std::vector<double>& motorPWMFeedback);
 
     /**
-     * Get the motor PWM values
-     * @param motorPWMFeedback get the motor PWM feedback values
-     */
-    void getMotorPwmFeedback(yarp::sig::Vector& motorPWMFeedback);
-
-    /**
      * Get the motor pid outputs
      * @param motorPidOutputs get the motor pid output values
      */
     void getMotorPidOutputs(std::vector<double>& motorPidOutputs);
-
-    /**
-     * Get the motor pid outputs
-     * @param motorPidOutputs get the motor pid output values
-     */
-    void getMotorPidOutputs(yarp::sig::Vector& motorPidOutputs);
 
     /**
      * Get the motor PWM Reference values
@@ -226,46 +201,22 @@ public:
     void getMotorPwmReference(std::vector<double>& motorPWMReference);
 
     /**
-     * Get the motor PWM Refernce values
-     * @param motorPWMReference get the motor PWM reference values
-     */
-    void getMotorPwmReference(yarp::sig::Vector& motorPWMReference);
-
-    /**
      * Get the fingers joint reference values
      * @param fingerJointsReference get the finger joint velocity or value
      */
-    void getFingerAxisValueReference(yarp::sig::Vector& fingerAxisReference);
-
-    /**
-     * Get the fingers joint reference values
-     * @param fingerJointsReference get the finger joint velocity or value
-     */
-    void getFingerAxisValueReference(std::vector<double>& fingerAxisReference);
+    void getAxisValueReferences(std::vector<double>& axisReferences);
 
     /**
      * Get the fingers joint velocities or values
      * @param fingerJointsReference get the finger joint velocity or value
      */
-    void getFingerJointReference(yarp::sig::Vector& fingerJointsReference);
-
-    /**
-     * Get the fingers joint velocities or values
-     * @param fingerJointsReference get the finger joint velocity or value
-     */
-    void getFingerJointReference(std::vector<double>& fingerJointsReference);
+    void getJointReferences(std::vector<double>& fingerJointsReference);
 
     /**
      * Get the fingers joint values computed from the axis feedback
      * @param fingerJointsExpectedValue get the finger joint value
      */
-    void getFingerJointExpectedValue(yarp::sig::Vector& fingerJointsExpectedValue);
-
-    /**
-     * Get the fingers joint values computed from the axis feedback
-     * @param fingerJointsExpectedValue get the finger joint value
-     */
-    void getFingerJointExpectedValue(std::vector<double>& fingerJointsExpectedValue);
+    void getJointExpectedValues(std::vector<double>& jointsValuesExpected);
 
     /**
      * Update the feedback values
@@ -285,7 +236,7 @@ public:
      * @param axisNumber the axis to control and give input
      * @return true if it could open the logger
      */
-    bool LogDataToCalibrateRobotMotorsJointsCouplingSin(double time, int axisNumber);
+    bool LogDataToCalibrateRobotAxesJointsCoupling(double time, int axisNumber);
 
     /**
      * Solving the linear regression problem to compute the matrix m_A
@@ -333,21 +284,21 @@ public:
      * get joints estimated states
      * @return true if the robot joints estimator is returned correctly
      */
-    bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
-                                std::vector<double>& feedbackJointVelocitiesEstimationKF,
-                                std::vector<double>& feedbackJointAccelrationEstimationKF,
-                                Eigen::MatrixXd& feedbackJointCovEstimationKF,
-                                std::vector<double>& expectedJointValuesEstimationKF,
-                                std::vector<double>& expectedJointVelocitiesEstimationKF,
-                                std::vector<double>& expectedJointAccelrationEstimationKF,
-                                Eigen::MatrixXd& expectedJointCovEstimationKF);
+    bool getEstimatedJointValuesKf(std::vector<double>& feedbackJointValuesEstimationKF,
+                                   std::vector<double>& feedbackJointVelocitiesEstimationKF,
+                                   std::vector<double>& feedbackJointAccelrationEstimationKF,
+                                   Eigen::MatrixXd& feedbackJointCovEstimationKF,
+                                   std::vector<double>& expectedJointValuesEstimationKF,
+                                   std::vector<double>& expectedJointVelocitiesEstimationKF,
+                                   std::vector<double>& expectedJointAccelrationEstimationKF,
+                                   Eigen::MatrixXd& expectedJointCovEstimationKF);
 
     /**
      * get joints estimated states
      * @return true if the robot joints estimator is returned correctly
      */
-    bool getEstimatedJointState(std::vector<double>& feedbackJointValuesEstimationKF,
-                                std::vector<double>& expectedJointValuesEstimationKF);
+    bool getEstimatedJointValuesKf(std::vector<double>& feedbackJointValuesEstimationKF,
+                                   std::vector<double>& expectedJointValuesEstimationKF);
 };
 
 #endif

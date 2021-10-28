@@ -22,10 +22,7 @@ class Estimators
 {
 private:
     std::vector<Estimator> m_motorEstimatorVector;
-    yarp::sig::Vector m_motorValueMeasured;
-    yarp::sig::Vector m_motorValueEstimation;
-    yarp::sig::Vector m_motorVelocityEstimation;
-    yarp::sig::Vector m_motorAccelerationEstimation;
+
     size_t m_numerOfMotors;
 
     Eigen::MatrixXd z_mat;
@@ -34,13 +31,14 @@ private:
 
 public:
     Estimators(const int noMotors);
+
     bool configure(const yarp::os::Searchable& config, const std::string& name);
 
-    bool initialize(const yarp::sig::Vector& z0);
+    bool initialize(const std::vector<double>& z0);
 
     bool estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat);
 
-    bool estimateNextState(const yarp::sig::Vector z);
+    bool estimateNextState(const std::vector<double>& z);
 
     bool estimateNextSteadyState(const yarp::sig::Vector z);
 
@@ -56,6 +54,8 @@ public:
                  std::vector<double>& estimatedMotorVelocity,
                  std::vector<double>& estimatedMotorAcceleration,
                  Eigen::MatrixXd& P);
+
+    bool getMotorValueInfo(std::vector<double>& estimatedMotorValue);
 
     bool isInitialized();
 };

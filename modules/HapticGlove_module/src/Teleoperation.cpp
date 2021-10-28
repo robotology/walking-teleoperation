@@ -177,13 +177,13 @@ bool Teleoperation::getFeedbacks()
         yWarning() << m_logPrefix << "unable to perform the estimation.";
     }
 
-    m_robotController->getFingerAxisValueReference(m_data.robotAxisReferences);
+    m_robotController->getAxisValueReferences(m_data.robotAxisReferences);
 
-    m_robotController->getFingerAxisFeedback(m_data.robotAxisFeedbacks);
+    m_robotController->getAxisValueFeedbacks(m_data.robotAxisFeedbacks);
 
-    m_robotController->getFingerAxisVelocityFeedback(m_data.robotAxisVelocityFeedbacks);
+    m_robotController->getAxisVelocityFeedbacks(m_data.robotAxisVelocityFeedbacks);
 
-    m_robotController->getFingerJointsFeedback(m_data.robotJointFeedbacks);
+    m_robotController->getJointValueFeedbacks(m_data.robotJointFeedbacks);
 
     // get the estimation values
     m_robotController->getEstimatedMotorsState(m_data.robotAxisValueFeedbacksKf,
@@ -217,7 +217,7 @@ bool Teleoperation::run()
         yWarning() << m_logPrefix << "unable to get the robot joint references from retargeting.";
     }
 
-    if (!m_robotController->setFingersJointReference(m_data.robotJointReferences))
+    if (!m_robotController->setJointReferences(m_data.robotJointReferences))
     {
         yWarning() << m_logPrefix << "unable to set the joint references to the robot.";
     }
@@ -226,6 +226,11 @@ bool Teleoperation::run()
     if (!this->getFeedbacks())
     {
         yWarning() << m_logPrefix << "unable to get the feedback";
+    }
+
+    if (!m_robotController->computeControlSignals())
+    {
+        yWarning() << m_logPrefix << "unable to compute the control signals.";
     }
 
     // compute the haptic feedback
@@ -309,7 +314,7 @@ bool Teleoperation::prepare(bool& isPrepared)
         double time = double(dTime % CouplingConstant) * m_dT * (M_PI / m_calibrationTimePeriod);
         //                time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
 
-        m_robotController->LogDataToCalibrateRobotMotorsJointsCouplingSin(time, axisNumber);
+        m_robotController->LogDataToCalibrateRobotAxesJointsCoupling(time, axisNumber);
         if (m_getHumanMotionRange)
         {
             m_humanGlove->findHumanMotionRange();

@@ -796,14 +796,32 @@ yarp::os::Stamp& RobotControlInterface::timeStamp()
     return m_timeStamp;
 }
 
-const yarp::sig::Vector& RobotControlInterface::jointEncoders() const
+const yarp::sig::Vector& RobotControlInterface::axisFeedbacks() const
 {
     return m_encoderPositionFeedbackInRadians;
+}
+
+void RobotControlInterface::axisFeedbacks(std::vector<double>& axisFeedbacks) const
+{
+    axisFeedbacks.resize(m_noActuatedAxis, 0.0);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        axisFeedbacks[i] = m_encoderPositionFeedbackInRadians(i);
+    }
 }
 
 const yarp::sig::Vector& RobotControlInterface::jointEncodersSpeed() const
 {
     return m_encoderVelocityFeedbackInRadians;
+}
+
+void RobotControlInterface::jointEncodersSpeed(std::vector<double>& axisVelocityFeedbacks) const
+{
+    axisVelocityFeedbacks.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        axisVelocityFeedbacks[i] = m_encoderVelocityFeedbackInRadians(i);
+    }
 }
 
 const yarp::sig::Vector& RobotControlInterface::analogSensors() const
@@ -816,9 +834,27 @@ const yarp::sig::Vector& RobotControlInterface::allSensors() const
     return m_SensorActuatedJointFeedbackInRadians;
 }
 
+void RobotControlInterface::allSensors(std::vector<double>& jointsFeedbacks) const
+{
+    jointsFeedbacks.resize(m_noActuatedJoints);
+    for (size_t i = 0; i < m_noActuatedJoints; i++)
+    {
+        jointsFeedbacks[i] = m_SensorActuatedJointFeedbackInRadians[i];
+    }
+}
+
 const yarp::sig::Vector& RobotControlInterface::motorCurrents() const
 {
     return m_currentFeedback;
+}
+
+void RobotControlInterface::motorCurrents(std::vector<double>& motorCurrents) const
+{
+    motorCurrents.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        motorCurrents[i] = m_currentFeedback(i);
+    }
 }
 
 const yarp::sig::Vector& RobotControlInterface::motorCurrentReference() const
@@ -826,9 +862,27 @@ const yarp::sig::Vector& RobotControlInterface::motorCurrentReference() const
     return m_desiredCurrentInterface;
 }
 
+void RobotControlInterface::motorCurrentReference(std::vector<double>& motorCurrentReferences) const
+{
+    motorCurrentReferences.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        motorCurrentReferences[i] = m_desiredCurrentInterface(i);
+    }
+}
+
 const yarp::sig::Vector& RobotControlInterface::motorPwm() const
 {
     return m_pwmFeedback;
+}
+
+void RobotControlInterface::motorPwm(std::vector<double>& motorPwm) const
+{
+    motorPwm.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        motorPwm[i] = m_pwmFeedback(i);
+    }
 }
 
 const yarp::sig::Vector& RobotControlInterface::motorPidOutputs() const
@@ -836,9 +890,27 @@ const yarp::sig::Vector& RobotControlInterface::motorPidOutputs() const
     return m_pidOutput;
 }
 
+void RobotControlInterface::motorPidOutputs(std::vector<double>& motorPidOutputs) const
+{
+    motorPidOutputs.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        motorPidOutputs[i] = m_pidOutput(i);
+    }
+}
+
 const yarp::sig::Vector& RobotControlInterface::motorPwmReference() const
 {
     return m_pwmDesiredInterface;
+}
+
+void RobotControlInterface::motorPwmReference(std::vector<double>& motorPwmReference) const
+{
+    motorPwmReference.resize(m_noActuatedAxis);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        motorPwmReference[i] = m_pwmDesiredInterface(i);
+    }
 }
 
 bool RobotControlInterface::close()
