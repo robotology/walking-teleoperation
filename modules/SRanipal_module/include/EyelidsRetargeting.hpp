@@ -30,6 +30,7 @@ class EyelidsRetargeting
     int m_rawEyelidsCloseValue;
     int m_rawEyelidsOpenValue;
     int m_eyeOpenLevel{-1};
+    double m_desiredEyeOpennes{1.0};
     yarp::os::BufferedPort<yarp::os::Bottle> m_rawEyelidsOutputPort;
     yarp::dev::PolyDriver m_eyelidsDriver;
     yarp::dev::IPositionControl* m_eyelidsPos{nullptr};
@@ -56,7 +57,9 @@ public:
 
     bool usingEylidsVelocityControl();
 
-    bool update(double eyeOpennes);
+    void setDesiredEyeOpennes(double eyeOpennes);
+
+    bool update();
 
     void close();
 };
