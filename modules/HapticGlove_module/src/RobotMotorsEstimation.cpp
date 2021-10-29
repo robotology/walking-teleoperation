@@ -26,16 +26,20 @@ Estimators::~Estimators()
 bool Estimators::configure(const yarp::os::Searchable& config, const std::string& name)
 {
 
+    m_logPrefix = name + "::";
+    m_logPrefix += "Estimators:: ";
+
     size_t no_states_kf, no_measurement_kf;
     double dt;
 
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", dt))
     {
-        yError() << "[RobotMotorsEstimation::configure] Unable to find the samplingTime";
+        yError() << m_logPrefix << "unable to find the samplingTime";
         return false;
     }
 
     no_states_kf = config.check("no_states_kf", yarp::os::Value(3)).asInt();
+
     no_measurement_kf = config.check("no_measurement_kf", yarp::os::Value(1)).asInt();
 
     yarp::sig::Vector Q_vector(no_states_kf, 0.0), R_vector(no_measurement_kf, 0.0);
@@ -67,6 +71,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
     for (int i = 0; i < m_numOfMotors; i++)
     {
         std::cout << "MotorEstimation initialization ...  \n";
+
         Estimator motorEstimator(dt, R, Q);
         m_motorEstimatorVector.push_back(motorEstimator);
     }
@@ -75,7 +80,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
     m_z = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
 
     m_x_hat = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
-    m_P;
+    m_P.resize(std::pow(no_states_kf, 2));
 
     return true;
 }
@@ -88,22 +93,6 @@ bool Estimators::initialize(const std::vector<double>& z0)
         m_motorEstimatorVector[i].initialize(m_z);
     }
     m_isInitialized = true;
-    return true;
-}
-
-bool Estimators::estimateNextState(const std::vector<double>& z, std::vector<double>& x_hat)
-{
-
-    Eigen::MatrixXd x_hat_mat;
-    for (size_t i = 0; i < m_numOfMotors; i++)
-    {
-        m_z(0, 0) = z[i];
-        m_motorEstimatorVector[i].estimateNextState(m_z, m_x_hat);
-
-        //        m_motorValueEstimation[i]=x_hat[0];
-        //        m_motorVelocityEstimation[i]=x_hat[1];
-        //        m_motorAccelerationEstimation[i]=x_hat[2];
-    }
     return true;
 }
 
@@ -229,7 +218,7 @@ bool Estimators::getMotorValueInfo(std::vector<double>& estimatedValue)
     return true;
 }
 
-inline bool Estimators::isInitialized()
+bool Estimators::isInitialized() const
 {
     return m_isInitialized;
 }

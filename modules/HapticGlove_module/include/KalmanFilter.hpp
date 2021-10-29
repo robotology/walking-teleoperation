@@ -16,11 +16,10 @@
 #ifndef KALMANFILTER_HPP
 #define KALMANFILTER_HPP
 
-#include <Eigen/Dense>
+#include <ControlHelper.hpp>
 
 namespace HapticGlove
 {
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Eigen_Mat;
 class KalmanFilter;
 } // namespace HapticGlove
 
@@ -33,33 +32,35 @@ private:
     size_t m_p; /// <summary>  Size of measure vector(z)
     double m_dt; /// <summary>  sampling time
 
-    Eigen_Mat
+    CtrlHelper::Eigen_Mat
         m_F; /// <summary>  LTI Continuous system dynamics Matrix Dx(t)= Fx(t)+ Gw(t), size: n*n
-    Eigen_Mat m_G; /// <summary>  LTI Continuous system input Matrix Dx(t)= Fx(t)+ Gw(t), size:  n*m
-    Eigen_Mat m_H; /// <summary>  Measurement Matrix Z(t)= Hx(t)+ v(t), size: p*n
+    CtrlHelper::Eigen_Mat
+        m_G; /// <summary>  LTI Continuous system input Matrix Dx(t)= Fx(t)+ Gw(t), size:  n*m
+    CtrlHelper::Eigen_Mat m_H; /// <summary>  Measurement Matrix Z(t)= Hx(t)+ v(t), size: p*n
 
-    Eigen_Mat m_Phi; /// <summary>  LTI Discrete system dynamics Matrix x(i+1)= Phi X(i)+ Gamma
-                     /// w(i), size: n*n
-    Eigen_Mat m_Gamma; /// <summary>  LTI Discrete system input Matrix x(i+1)= Phi X(i)+ Gamma w(i),
-                       /// size: n*m
+    CtrlHelper::Eigen_Mat m_Phi; /// <summary>  LTI Discrete system dynamics Matrix x(i+1)= Phi
+                                 /// X(i)+ Gamma w(i), size: n*n
+    CtrlHelper::Eigen_Mat m_Gamma; /// <summary>  LTI Discrete system input Matrix x(i+1)= Phi X(i)+
+                                   /// Gamma w(i), size: n*m
 
-    Eigen_Mat
+    CtrlHelper::Eigen_Mat
         m_M; /// <summary>  E[ (x(t)- x_bar(t))(x(t)- x_bar(t))^T ], size:  n*n positive matrix
-    Eigen_Mat m_R; /// <summary>  E[ v(t) v(t)^T ], size:  p*p positive matrix */
-    Eigen_Mat
+    CtrlHelper::Eigen_Mat m_R; /// <summary>  E[ v(t) v(t)^T ], size:  p*p positive matrix */
+    CtrlHelper::Eigen_Mat
         m_Q; /// <summary>  E[ (w(t) -w_bar(t)) (w(t) -w_bar(t))^T ], size:  m*m positive matrix
 
-    Eigen_Mat m_P; /// <summary>  P_inv= M_inv + H^T R_inv H, size: n*n
-    Eigen_Mat m_K; /// <summary>  P H^T R_inv, size: n*p
+    CtrlHelper::Eigen_Mat m_P; /// <summary>  P_inv= M_inv + H^T R_inv H, size: n*n
+    CtrlHelper::Eigen_Mat m_K; /// <summary>  P H^T R_inv, size: n*p
 
-    Eigen_Mat m_x_bar; /// <summary>  state estimation before using the measurements, size: n*1
-    Eigen_Mat m_x_hat; /// <summary>  E[x(t)], size: n*1
-    Eigen_Mat m_w_bar; /// <summary>  E[w(t)], size: m*1
-    Eigen_Mat m_z; /// <summary>  z(t) measurement vector, size: p*1
+    CtrlHelper::Eigen_Mat
+        m_x_bar; /// <summary>  state estimation before using the measurements, size: n*1
+    CtrlHelper::Eigen_Mat m_x_hat; /// <summary>  E[x(t)], size: n*1
+    CtrlHelper::Eigen_Mat m_w_bar; /// <summary>  E[w(t)], size: m*1
+    CtrlHelper::Eigen_Mat m_z; /// <summary>  z(t) measurement vector, size: p*1
 
-    Eigen_Mat m_Ht_Rinv; /// <summary>  H^T R^(-1), size: n*p
-    Eigen_Mat m_Ht_Rinv_H; /// <summary>  H^T R^(-1), size: n*n
-    Eigen_Mat Gamma_Q_GammaT; /// <summary>  Gamma Q Gamma^T, size: n*n
+    CtrlHelper::Eigen_Mat m_Ht_Rinv; /// <summary>  H^T R^(-1), size: n*p
+    CtrlHelper::Eigen_Mat m_Ht_Rinv_H; /// <summary>  H^T R^(-1), size: n*n
+    CtrlHelper::Eigen_Mat Gamma_Q_GammaT; /// <summary>  Gamma Q Gamma^T, size: n*n
 
 public:
     /**
@@ -101,12 +102,6 @@ public:
      * @param z new measurement vector
      */
     bool setNewMeasurements(const Eigen::MatrixXd& z);
-
-    /**
-     * perform an estimation step and get the updated expected state.
-     * @param x_hat updated expected state
-     */
-    bool estimateNextState(Eigen::MatrixXd& x_hat);
 
     /**
      * set the measurement vector and perform an estimation step and get the updated expected state.

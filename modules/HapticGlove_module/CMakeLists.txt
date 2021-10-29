@@ -53,6 +53,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/GloveWearable.cpp
   src/Logger.cpp
   src/Teleoperation.cpp
+  src/ControlHelper.cpp
   )
 
 # set hpp files
@@ -70,6 +71,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/GloveWearable.hpp
   include/Logger.hpp
   include/Teleoperation.hpp
+  include/ControlHelper.hpp
   )
 
 # add include directories to the build.
@@ -97,7 +99,7 @@ if(ENABLE_LOGGER)
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
-    walking-teleoperation::ML
+#    walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
     )
@@ -109,7 +111,7 @@ else(ENABLE_LOGGER)
 #    SenseGlove
     ctrlLib
     UtilityLibrary
-    walking-teleoperation::ML
+#    walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
 )

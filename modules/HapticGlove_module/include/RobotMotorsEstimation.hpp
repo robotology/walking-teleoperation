@@ -8,13 +8,16 @@
 
 #ifndef ROBOTOTORSESTIMATION_HPP
 #define ROBOTMOTORSESTIMATION_HPP
+// std
 #include <memory>
 #include <vector>
 
-#include <Eigen/Dense>
-#include <MotorEstimation.hpp>
-
+// yarp
 #include <yarp/os/Property.h>
+
+// teleoperation
+#include <ControlHelper.hpp>
+#include <MotorEstimation.hpp>
 
 namespace HapticGlove
 {
@@ -23,13 +26,16 @@ class Estimators;
 
 class HapticGlove::Estimators
 {
+
+    std::string m_logPrefix;
+
     std::vector<Estimator> m_motorEstimatorVector; /// <summary> vector of motor/joint estimators
 
     size_t m_numOfMotors; /// <summary> number of motor/joint
 
     size_t m_n; /// <summary> number of states
 
-    Eigen::MatrixXd m_z; /// <summary> vector of motor/joint measurements
+    CtrlHelper::Eigen_Mat m_z; /// <summary> vector of motor/joint measurements
 
     bool m_isInitialized; /// <summary> estimators are initialized
 
@@ -61,13 +67,6 @@ public:
      * @param  z0 initial measurements
      */
     bool initialize(const std::vector<double>& z0);
-
-    /**
-     * perform the estimatatiom step
-     * @param  z measurements
-     * @param  x_hat estimated states
-     */
-    bool estimateNextState(const std::vector<double>& z, std::vector<double>& x_hat);
 
     /**
      * perform the estimatatiom step
@@ -114,6 +113,6 @@ public:
     /**
      * check if the estimators are initialized
      */
-    bool isInitialized();
+    bool isInitialized() const;
 };
 #endif // ROBOTMOTORSESTIMATION_HPP

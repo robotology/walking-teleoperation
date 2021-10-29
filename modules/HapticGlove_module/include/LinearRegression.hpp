@@ -1,11 +1,15 @@
 #ifndef LINEARREGRESSION_HPP
 #define LINEARREGRESSION_HPP
 
-#include <Eigen/Dense>
+#include <ControlHelper.hpp>
 #include <iostream>
+namespace HapticGlove
+{
+class LinearRegression;
+}
 
-class LinearRegression{
-
+class HapticGlove::LinearRegression
+{
 
 public:
     LinearRegression();
@@ -13,14 +17,13 @@ public:
 
     bool Initialize();
 
-    bool LearnOneShot( const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& inputData,
-                       const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& outputData,
-                       Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& tetha);
+    bool LearnOneShot(const CtrlHelper::Eigen_Mat& inputData,
+                      const CtrlHelper::Eigen_Mat& outputData,
+                      CtrlHelper::Eigen_Mat& tetha);
 
-
-    bool LearnOneShotMatrix(const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>&  inputData,
-                            const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>&  ouputData,
-                            Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>& theta); // A size: <n,m>
+    bool LearnOneShotMatrix(const CtrlHelper::Eigen_Mat& inputData,
+                            const CtrlHelper::Eigen_Mat& ouputData,
+                            CtrlHelper::Eigen_Mat& theta); // A size: <n,m>
 
     bool LearnIncrementally();
 };

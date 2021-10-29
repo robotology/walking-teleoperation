@@ -13,16 +13,11 @@
 #include <iostream>
 #include <memory>
 
-// Eigen
-#include <Eigen/Dense>
-
 // YARP
-#include <yarp/math/Math.h>
-#include <yarp/os/Bottle.h>
+#include <yarp/os/Searchable.h>
 
-// iCub-ctrl
-//#include <iCub/ctrl/pids.h>
-
+// teleoperation
+#include <ControlHelper.hpp>
 #include <LinearRegression.hpp>
 #include <RobotControlHelper_hapticGlove.hpp>
 #include <RobotMotorsEstimation.hpp>
@@ -61,30 +56,28 @@ private:
     //    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity
     //    integrator */
 
-    Eigen::MatrixXd m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m> n:
-                            number of joints, m: number of motors; we have q= m_A x m + m_Bias where
-                            q is the joint values and m is the motor values*/
+    CtrlHelper::Eigen_Mat m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m>
+                            n: number of joints, m: number of motors; we have q= m_A x m + m_Bias
+                            where q is the joint values and m is the motor values*/
 
-    Eigen::MatrixXd m_Bias; /**< Bias term of the coupling relationship from the motors to the
+    CtrlHelper::Eigen_Mat m_Bias; /**< Bias term of the coupling relationship from the motors to the
                             joints; Dimension <n,1> n: number of joints; we have q= m_A x m+m_Bias
                             where q is the joint values and m is the motor values*/
 
-    Eigen::MatrixXd m_Q; // weight matrix for desired states
+    CtrlHelper::Eigen_Mat m_Q; // weight matrix for desired states
 
-    Eigen::MatrixXd m_R; // wieght for control output
+    CtrlHelper::Eigen_Mat m_R; // wieght for control output
 
-    Eigen::MatrixXd m_controlCoeff; /**< control coeeficient matrix from the joints to the motors;
-                            Dimension <m,q> q: number of joints, m: number of motors*/
+    CtrlHelper::Eigen_Mat m_controlCoeff; /**< control coeeficient matrix from the joints to the
+                            motors; Dimension <m,q> q: number of joints, m: number of motors*/
 
-    Eigen::MatrixXd
+    CtrlHelper::Eigen_Mat
         m_axesData; /**< The logged data for calibration; the motors values; Dimension <o, m> o:
                          number of observations (logged data), m: number of motors */
 
-    Eigen::MatrixXd
+    CtrlHelper::Eigen_Mat
         m_jointsData; /**< The logged data for calibration; joints values; Dimension <o, n> o:
                          number of observations (logged data), n: number of joints */
-
-    yarp::sig::Vector motorVelocityReference;
 
     std::unique_ptr<Estimators> m_axisFeedbackEstimators; /**< The KF estimated motor feedbacks*/
     std::unique_ptr<Estimators> m_axisReferenceEstimators; /**< The KF estimated motor References*/
@@ -109,10 +102,6 @@ private:
                              const std::vector<std::string>& customListNames,
                              const std::vector<double>& allListVector,
                              std::vector<double>& customListVector);
-
-    Eigen::Map<Eigen::VectorXd> toEigen(std::vector<double>& vec);
-
-    void toStd(Eigen::VectorXd& vecEigen, std::vector<double>& vecStd);
 
 public:
     /**

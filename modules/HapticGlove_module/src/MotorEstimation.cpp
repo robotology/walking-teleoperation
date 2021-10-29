@@ -63,37 +63,37 @@ bool Estimator::initialize(const Eigen::MatrixXd& z0)
     return m_kf->initialize(x0, M0);
 }
 
-inline bool Estimator::estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+bool Estimator::estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
     return m_kf->estimateNextState(z, x_hat);
 }
 
-inline bool Estimator::estimateNextState(const Eigen::MatrixXd& z)
+bool Estimator::estimateNextState(const Eigen::MatrixXd& z)
 {
     return m_kf->estimateNextState(z);
 }
 
-inline bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
     return m_kf->estimateNextSteadyState(z, x_hat);
 }
 
-inline bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z)
+bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z)
 {
     return m_kf->estimateNextSteadyState(z);
 }
 
-inline void Estimator::getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
+void Estimator::getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
 {
     return m_kf->getInfo(x_hat, P);
 }
 
-inline void Estimator::getExpetedStateInfo(Eigen::VectorXd& x_hat)
+void Estimator::getExpetedStateInfo(Eigen::VectorXd& x_hat)
 {
     return m_kf->getExpetedStateInfo(x_hat);
 }
 
-inline void Estimator::getCovInfo(Eigen::VectorXd& P)
+void Estimator::getCovInfo(Eigen::VectorXd& P)
 {
     return m_kf->getCovInfo(P);
 }

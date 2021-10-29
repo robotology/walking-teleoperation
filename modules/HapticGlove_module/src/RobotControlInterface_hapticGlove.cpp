@@ -1060,8 +1060,20 @@ bool RobotControlInterface::getVelocityLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotControlInterface::setJointReference(const yarp::sig::Vector& desiredValue)
+bool RobotControlInterface::setJointReference(const std::vector<double>& desiredValues)
 {
+    if (desiredValues.size() != m_noActuatedAxis)
+    {
+        yError() << "RobotControlInterface:: the number of input data is not equal to the desired "
+                    "number of robot axis";
+        return false;
+    }
+    yarp::sig::Vector desiredValue(m_noActuatedAxis, 0.0);
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        desiredValue(i) = desiredValues[i];
+    }
+
     switch (m_controlMode)
     {
     case VOCAB_CM_POSITION_DIRECT:

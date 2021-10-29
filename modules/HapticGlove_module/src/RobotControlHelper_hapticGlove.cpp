@@ -10,7 +10,8 @@
 
 bool RobotControlHelper::move()
 {
-    return m_robotControlInterface->setJointReference(m_referenceAxisValues);
+    return m_robotControlInterface->setJointReference(m_axisValueReferences);
+    return true;
 }
 
 const std::unique_ptr<HapticGlove::RobotControlInterface>& RobotControlHelper::controlHelper() const

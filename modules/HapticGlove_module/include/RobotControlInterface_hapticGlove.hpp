@@ -190,7 +190,7 @@ public:
      * @param desiredValue desired joint velocity or position (radiant or radiant/s)
      * @return true / false in case of success / failure
      */
-    bool setJointReference(const yarp::sig::Vector& desiredValue);
+    bool setJointReference(const std::vector<double>& desiredValues);
 
     /**
      * Check if the velocity control is used

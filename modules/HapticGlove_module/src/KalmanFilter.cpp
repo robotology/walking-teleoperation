@@ -62,24 +62,6 @@ bool KalmanFilter::setNewMeasurements(const Eigen::MatrixXd& z)
     return true;
 }
 
-bool KalmanFilter::estimateNextState(Eigen::MatrixXd& x_hat)
-{
-
-    /*
-     * J= 1/2 [(x-x_bar) M^(-1)(x-x_bar) + (z-Hx) R^(-1)(z-Hx)]
-     */
-
-    m_P = (m_M.inverse() + m_Ht_Rinv_H).inverse();
-    m_K = m_P * m_Ht_Rinv;
-    m_x_hat = m_x_bar + m_K * (m_z - m_H * m_x_bar);
-    m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
-    m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
-
-    x_hat = m_x_hat;
-
-    return true;
-}
-
 bool KalmanFilter::estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
     /*
@@ -147,19 +129,19 @@ bool KalmanFilter::estimateNextSteadyState(const Eigen::MatrixXd& z)
     return true;
 }
 
-inline void KalmanFilter::getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
+void KalmanFilter::getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
 {
     this->getExpetedStateInfo(x_hat);
 
     this->getCovInfo(P);
 }
 
-inline void KalmanFilter::getExpetedStateInfo(Eigen::VectorXd& x_hat)
+void KalmanFilter::getExpetedStateInfo(Eigen::VectorXd& x_hat)
 {
     x_hat = Eigen::Map<Eigen::VectorXd>(m_x_hat.data(), m_x_hat.cols() * m_x_hat.rows());
 }
 
-inline void KalmanFilter::getCovInfo(Eigen::VectorXd& P)
+void KalmanFilter::getCovInfo(Eigen::VectorXd& P)
 {
     P = Eigen::Map<Eigen::VectorXd>(m_P.data(), m_P.cols() * m_P.rows());
 }

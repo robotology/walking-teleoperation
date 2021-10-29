@@ -8,7 +8,7 @@
 
 #ifndef MOTORESTIMATION_HPP
 #define MOTORESTIMATION_HPP
-#include <Eigen/Dense>
+#include <ControlHelper.hpp>
 #include <KalmanFilter.hpp>
 #include <memory>
 
@@ -24,16 +24,17 @@ class HapticGlove::Estimator
     size_t m_m; /// <summary>  number of input vector w
     size_t m_p; /// <summary>  number of measures
 
-    Eigen_Mat
+    CtrlHelper::Eigen_Mat
         m_F; /// <summary>  LTI Continuous system dynamics Matrix Dx(t)= Fx(t)+ Gw(t), size: n*n
-    Eigen_Mat m_G; /// <summary>  LTI Continuous system input Matrix Dx(t)= Fx(t)+ Gw(t), size:  n*m
-    Eigen_Mat m_H; /// <summary>  Measurement Matrix Z(t)= Hx(t)+ v(t), size: p*n
+    CtrlHelper::Eigen_Mat
+        m_G; /// <summary>  LTI Continuous system input Matrix Dx(t)= Fx(t)+ Gw(t), size:  n*m
+    CtrlHelper::Eigen_Mat m_H; /// <summary>  Measurement Matrix Z(t)= Hx(t)+ v(t), size: p*n
 
     std::unique_ptr<KalmanFilter>
         m_kf; /// <summary> vector of kalman filters for each joint estimation
 
-    Eigen_Mat m_R; /// <summary>  E[ v(t) v(t)^T ], size:  p*p positive matrix
-    Eigen_Mat
+    CtrlHelper::Eigen_Mat m_R; /// <summary>  E[ v(t) v(t)^T ], size:  p*p positive matrix
+    CtrlHelper::Eigen_Mat
         m_Q; /// <summary>  E[ (w(t) -w_bar(t)) (w(t) -w_bar(t))^T ], size:  m*m positive matrix
 
 public:

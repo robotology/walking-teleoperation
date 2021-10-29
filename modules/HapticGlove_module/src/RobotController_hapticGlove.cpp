@@ -272,7 +272,7 @@ bool RobotController::setAxisReferences(const std::vector<double>& axisReference
     }
     m_axisValueReferences = axisReferences;
 
-    return this->setAxisReferences(this->toEigen(m_axisValueReferences));
+    return this->setAxisReferences(CtrlHelper::toEigen(m_axisValueReferences));
 }
 
 bool RobotController::setAxisReferences(const Eigen::VectorXd& axisReferences)
@@ -286,13 +286,13 @@ bool RobotController::setAxisReferences(const Eigen::VectorXd& axisReferences)
     m_axisValueReferencesEigen = axisReferences;
 
     // axis feedbacks are already updated
-    m_axisValueFeedbacksEigen = this->toEigen(m_axisValueFeedbacks);
+    m_axisValueFeedbacksEigen = CtrlHelper::toEigen(m_axisValueFeedbacks);
 
     // exponential filter
     m_axisValueReferencesEigen
         = (1 - m_kGain) * m_axisValueFeedbacksEigen + m_kGain * m_axisValueReferencesEigen;
 
-    this->toStd(m_axisValueReferencesEigen, m_axisValueReferences);
+    CtrlHelper::toStd(m_axisValueReferencesEigen, m_axisValueReferences);
 
     return true;
 }
@@ -307,7 +307,7 @@ bool RobotController::setJointReferences(const std::vector<double>& jointReferen
         return false;
     }
     m_jointValueReferences = jointReferences;
-    m_jointValueReferencesEigen = this->toEigen(m_jointValueReferences);
+    m_jointValueReferencesEigen = CtrlHelper::toEigen(m_jointValueReferences);
 
     return true;
 }
@@ -332,10 +332,10 @@ void RobotController::getJointReferences(std::vector<double>& fingerJointsRefere
 void RobotController::getJointExpectedValues(std::vector<double>& jointsValuesExpected)
 {
     this->getAxisValueFeedbacks(m_axisValueFeedbacks);
-    m_axisValueFeedbacksEigen = this->toEigen(m_axisValueFeedbacks);
+    m_axisValueFeedbacksEigen = CtrlHelper::toEigen(m_axisValueFeedbacks);
 
     m_jointValuesExpectedEigen = m_A * m_axisValueFeedbacksEigen + m_Bias;
-    this->toStd(m_jointValuesExpectedEigen, m_jointValuesExpected);
+    CtrlHelper::toStd(m_jointValuesExpectedEigen, m_jointValuesExpected);
     jointsValuesExpected = m_jointValuesExpected;
 }
 
@@ -489,8 +489,8 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
     this->getAxisValueFeedbacks(m_axisValueFeedbacks);
     this->getJointValueFeedbacks(m_jointValueFeedbacks);
 
-    m_axisValueFeedbacksEigen = this->toEigen(m_axisValueFeedbacks);
-    m_jointValueFeedbacksEigen = this->toEigen(m_jointValueFeedbacks);
+    m_axisValueFeedbacksEigen = CtrlHelper::toEigen(m_axisValueFeedbacks);
+    m_jointValueFeedbacksEigen = CtrlHelper::toEigen(m_jointValueFeedbacks);
 
     if (!push_back_row(m_axesData, m_axisValueFeedbacksEigen))
     {
@@ -746,18 +746,4 @@ bool RobotController::getCustomSetIndices(const std::vector<std::string>& allLis
     }
 
     return true;
-}
-
-inline Eigen::Map<Eigen::VectorXd> RobotController::toEigen(std::vector<double>& vec)
-{
-    return Eigen::Map<Eigen::VectorXd>(vec.data(), vec.size());
-}
-
-inline void RobotController::toStd(Eigen::VectorXd& vecEigen, std::vector<double>& vecStd)
-{
-    if (vecStd.size() != vecEigen.size())
-    {
-        vecStd.resize(vecEigen.size());
-    }
-    Eigen::VectorXd::Map(&vecStd[0], vecEigen.size()) = vecEigen;
 }
