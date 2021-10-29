@@ -16,47 +16,104 @@
 
 #include <yarp/os/Property.h>
 
-typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Eigen_Mat;
-
-class Estimators
+namespace HapticGlove
 {
-private:
-    std::vector<Estimator> m_motorEstimatorVector;
+class Estimators;
+}
 
-    size_t m_numerOfMotors;
+class HapticGlove::Estimators
+{
+    std::vector<Estimator> m_motorEstimatorVector; /// <summary> vector of motor/joint estimators
 
-    Eigen::MatrixXd z_mat;
+    size_t m_numOfMotors; /// <summary> number of motor/joint
 
-    bool m_isInitialized;
+    size_t m_n; /// <summary> number of states
+
+    Eigen::MatrixXd m_z; /// <summary> vector of motor/joint measurements
+
+    bool m_isInitialized; /// <summary> estimators are initialized
+
+    Eigen::VectorXd m_x_hat; /// <summary> vector of motor/joint expected values
+
+    Eigen::VectorXd m_P; /// <summary>  vectorized version of the motor/joint estimation covariances
 
 public:
+    /**
+     * constructor.
+     * @param noMotors number of motors or joints
+     */
     Estimators(const int noMotors);
 
+    /**
+     * destructor.
+     */
+    ~Estimators();
+
+    /**
+     * Configure the class
+     * @param config configuration options
+     * @param name name of the module
+     */
     bool configure(const yarp::os::Searchable& config, const std::string& name);
 
+    /**
+     * intialize the motor/joint estimators
+     * @param  z0 initial measurements
+     */
     bool initialize(const std::vector<double>& z0);
 
-    bool estimateNextState(const yarp::sig::Vector z, yarp::sig::Vector& x_hat);
+    /**
+     * perform the estimatatiom step
+     * @param  z measurements
+     * @param  x_hat estimated states
+     */
+    bool estimateNextState(const std::vector<double>& z, std::vector<double>& x_hat);
 
+    /**
+     * perform the estimatatiom step
+     * @param  z measurements
+     */
     bool estimateNextState(const std::vector<double>& z);
 
-    bool estimateNextSteadyState(const yarp::sig::Vector z);
+    /**
+     * perform an estimation step assuming stochastic steady state system
+     * @param z new measurement vector
+     */
+    bool estimateNextSteadyState(const std::vector<double>& z);
 
-    bool getInfo(Eigen::VectorXd& estimatedMotorValue,
-                 Eigen::VectorXd& estimatedMotorVelocity,
-                 Eigen::VectorXd& estimatedMotorAcceleration,
-                 Eigen::MatrixXd& P);
-    bool getInfo(yarp::sig::Vector& estimatedMotorValue,
-                 yarp::sig::Vector& estimatedMotorVelocity,
-                 yarp::sig::Vector& estimatedMotorAcceleration,
-                 Eigen::MatrixXd& P);
-    bool getInfo(std::vector<double>& estimatedMotorValue,
-                 std::vector<double>& estimatedMotorVelocity,
-                 std::vector<double>& estimatedMotorAcceleration,
+    /**
+     * get the estimation results
+     * @param estimatedValue expected value
+     * @param estimatedVelocity expected velocity
+     * @param estimatedAcceleration expected acceleration
+     * @param P covariance of the estimated state
+     */
+    bool getInfo(Eigen::VectorXd& estimatedValue,
+                 Eigen::VectorXd& estimatedVelocity,
+                 Eigen::VectorXd& estimatedAcceleration,
                  Eigen::MatrixXd& P);
 
-    bool getMotorValueInfo(std::vector<double>& estimatedMotorValue);
+    /**
+     * get the estimation results
+     * @param estimatedValue expected value
+     * @param estimatedVelocity expected velocity
+     * @param estimatedAcceleration expected acceleration
+     * @param P covariance of the estimated state
+     */
+    bool getInfo(std::vector<double>& estimatedValue,
+                 std::vector<double>& estimatedVelocity,
+                 std::vector<double>& estimatedAcceleration,
+                 Eigen::MatrixXd& P);
 
+    /**
+     * get the estimation results of the expected motor/joint values
+     * @param estimatedValue expected value
+     */
+    bool getMotorValueInfo(std::vector<double>& estimatedValue);
+
+    /**
+     * check if the estimators are initialized
+     */
     bool isInitialized();
 };
 #endif // ROBOTMOTORSESTIMATION_HPP

@@ -1,7 +1,7 @@
 /**
  * @file KalmanFilter.hpp
  * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
- * @copyright 2020 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
+ * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2020
  */
@@ -30,7 +30,7 @@ private:
     std::string m_logPrefix;
     size_t m_n; /// <summary>  size state vector (x)
     size_t m_m; /// <summary>  size of w vector
-    size_t m_p; /// <summary>  Size of measure vecotr(z)
+    size_t m_p; /// <summary>  Size of measure vector(z)
     double m_dt; /// <summary>  sampling time
 
     Eigen_Mat
@@ -60,6 +60,7 @@ private:
     Eigen_Mat m_Ht_Rinv; /// <summary>  H^T R^(-1), size: n*p
     Eigen_Mat m_Ht_Rinv_H; /// <summary>  H^T R^(-1), size: n*n
     Eigen_Mat Gamma_Q_GammaT; /// <summary>  Gamma Q Gamma^T, size: n*n
+
 public:
     /**
      * constructor.
@@ -115,12 +116,25 @@ public:
     bool estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
 
     /**
-     * set the measurement vector and perform an estimation step assuming stocastic steady state
+     * set the measurement vector and perform an estimation step and get the updated expected state.
+     * @param z new measurement vector
+     */
+    bool estimateNextState(const Eigen::MatrixXd& z);
+
+    /**
+     * set the measurement vector and perform an estimation step assuming stochastic steady state
      * system and get the updated expected state.
      * @param z new measurement vector
      * @param x_hat updated expected state
      */
     bool estimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
+
+    /**
+     * set the measurement vector and perform an estimation step assuming stochastic steady state
+     * system and get the updated expected state.
+     * @param z new measurement vector
+     */
+    bool estimateNextSteadyState(const Eigen::MatrixXd& z);
 
     /**
      * get the estimation results

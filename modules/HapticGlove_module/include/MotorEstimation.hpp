@@ -19,7 +19,6 @@ class Estimator;
 
 class HapticGlove::Estimator
 {
-public:
     double m_dt; /// <summary> sampling time
     size_t m_n; /// <summary>  number of states
     size_t m_m; /// <summary>  number of input vector w
@@ -37,16 +36,77 @@ public:
     Eigen_Mat
         m_Q; /// <summary>  E[ (w(t) -w_bar(t)) (w(t) -w_bar(t))^T ], size:  m*m positive matrix
 
+public:
+    /**
+     * constructor.
+     * @param dt sampling time
+     * @param R E[ v(t) v(t)^T ],
+     * @param Q E[ (w(t) -w_bar(t)) (w(t) -w_bar(t))^T ]
+     */
     Estimator(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q);
 
+    /**
+     * copy constructor.
+     * @param O an estimator constant reference
+     */
     Estimator(const Estimator& O);
 
-    bool Initialize(const Eigen::MatrixXd& z0);
+    /**
+     * destructor.
+     */
+    ~Estimator();
 
-    bool EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
+    /**
+     * intialize the motor/joint estimator
+     * @param  z0 initial measurements
+     */
+    bool initialize(const Eigen::MatrixXd& z0);
 
-    bool EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
+    /**
+     * perform the estimatatiom step
+     * @param  z measurements
+     * @param  x_hat estimated states
+     */
+    bool estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
 
-    void GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P);
+    /**
+     * perform the estimatatiom step
+     * @param  z measurements
+     */
+    bool estimateNextState(const Eigen::MatrixXd& z);
+
+    /**
+     * set the measurement vector and perform an estimation step assuming stochastic steady state
+     * system and get the updated expected state.
+     * @param z new measurement vector
+     * @param x_hat updated expected state
+     */
+    bool estimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat);
+
+    /**
+     * set the measurement vector and perform an estimation step assuming stochastic steady state
+     * system and get the updated expected state.
+     * @param z new measurement vector
+     */
+    bool estimateNextSteadyState(const Eigen::MatrixXd& z);
+
+    /**
+     * get the estimation results
+     * @param x_hat expected state results
+     * @param P covariance of the estimated state
+     */
+    void getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P);
+
+    /**
+     * get the estimation results
+     * @param x_hat expected state results
+     */
+    void getExpetedStateInfo(Eigen::VectorXd& x_hat);
+
+    /**
+     * get the estimation results
+     * @param P covariance of the estimated state
+     */
+    void getCovInfo(Eigen::VectorXd& P);
 };
 #endif // MOTORESTIMATION_HPP

@@ -12,7 +12,9 @@ using namespace HapticGlove;
 
 Estimator::Estimator(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q)
 {
-    m_n = 3;
+    // hard coded model
+    // reference issue: https://github.com/ami-iit/element_retargeting-from-human/issues/145
+    m_n = 3; // joint/motor position, velocity, acceleration
     m_m = 3;
     m_p = 1;
 
@@ -48,7 +50,11 @@ Estimator::Estimator(const Estimator& O)
     m_kf = std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, m_R, m_Q);
 }
 
-bool Estimator::Initialize(const Eigen::MatrixXd& z0)
+Estimator::~Estimator()
+{
+}
+
+bool Estimator::initialize(const Eigen::MatrixXd& z0)
 {
 
     Eigen::MatrixXd x0 = m_H * z0;
@@ -57,19 +63,37 @@ bool Estimator::Initialize(const Eigen::MatrixXd& z0)
     return m_kf->initialize(x0, M0);
 }
 
-bool Estimator::EstimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+inline bool Estimator::estimateNextState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
-
     return m_kf->estimateNextState(z, x_hat);
 }
 
-bool Estimator::EstimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
+inline bool Estimator::estimateNextState(const Eigen::MatrixXd& z)
+{
+    return m_kf->estimateNextState(z);
+}
+
+inline bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z, Eigen::MatrixXd& x_hat)
 {
     return m_kf->estimateNextSteadyState(z, x_hat);
 }
 
-void Estimator::GetInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
+inline bool Estimator::estimateNextSteadyState(const Eigen::MatrixXd& z)
 {
+    return m_kf->estimateNextSteadyState(z);
+}
 
+inline void Estimator::getInfo(Eigen::VectorXd& x_hat, Eigen::VectorXd& P)
+{
     return m_kf->getInfo(x_hat, P);
+}
+
+inline void Estimator::getExpetedStateInfo(Eigen::VectorXd& x_hat)
+{
+    return m_kf->getExpetedStateInfo(x_hat);
+}
+
+inline void Estimator::getCovInfo(Eigen::VectorXd& P)
+{
+    return m_kf->getCovInfo(P);
 }
