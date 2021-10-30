@@ -21,7 +21,7 @@ set (${EXE_TARGET_NAME}_HDR include/SRanipalModule.hpp
                             include/GazeRetargeting.hpp)
 
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
-target_link_libraries(${EXE_TARGET_NAME} PUBLIC ${YARP_LIBRARIES} SRanipalSDK::SRanipalSDK)
+target_link_libraries(${EXE_TARGET_NAME} PUBLIC ${YARP_LIBRARIES} Eigen3::Eigen iDynTree::idyntree-core SRanipalSDK::SRanipalSDK)
 target_include_directories(${EXE_TARGET_NAME} PUBLIC include)
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)

@@ -19,17 +19,36 @@
 #include <yarp/dev/IPositionControl.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IControlMode.h>
+#include <iDynTree/Core/Axis.h>
+#include <iDynTree/Core/Transform.h>
+#include <iDynTree/Core/VectorFixSize.h>
 
 class GazeRetargeting
 {
     class VRInterface
     {
+        struct EyeControl
+        {
+            yarp::os::BufferedPort<yarp::sig::Vector> controlPort;
+            double elevation;
+            double azimuth;
+            iDynTree::Position eyePosition;
+            iDynTree::Position imageRelativePosition;
+
+            void sendAngles();
+
+            iDynTree::Transform currentImageTransform(); //With respect to the headset frame
+
+            bool intersectionInImage(const iDynTree::Axis& gazeInHeadsetFrame, iDynTree::Vector2 &output);
+
+            void close();
+        };
+
         std::string m_name;
         bool m_isActive = false;
         double m_lastActiveCheck{-1.0};
-        double m_IPD, m_eyesZPosition;
         yarp::os::RpcClient m_VRDeviceRPCOutputPort;
-        yarp::os::BufferedPort<yarp::sig::Vector> m_leftEyeControlPort, m_rightEyeControlPort;
+        EyeControl m_leftEye, m_rightEye;
 
         bool getValueFromRPC(const std::string& query, yarp::os::Value& value);
 
@@ -42,6 +61,11 @@ class GazeRetargeting
     public:
 
         bool configure(yarp::os::ResourceFinder& rf);
+
+        void setVRImagesPose(double vergenceInRad, double versionInRad, double tiltInRad);
+
+        bool computeDesiredEyeVelocities(const iDynTree::Axis& leftEyeGaze, const iDynTree::Axis& rightEyeGaze,
+                                         double& vergenceSpeed, double& versionSpeed, double& tiltSpeed);
 
         bool isActive();
 
@@ -56,10 +80,21 @@ class GazeRetargeting
     yarp::dev::IEncoders* m_eyesEnc{nullptr};
     yarp::dev::IControlMode* m_eyesMode{nullptr};
     int m_eyeVersIndex, m_eyeVergIndex, m_eyeTiltIndex;
+    double m_eyeVersInRad, m_eyeVergInRad, m_eyeTiltInRad;
+    std::vector<double> m_encodersInDeg;
+    double m_maxEyeSpeed;
+    iDynTree::Axis m_leftGaze, m_rightGaze;
+    bool m_gazeSet{false};
 
     VRInterface m_VRInterface;
 
     void setEyeControlMode(int controlMode);
+
+    bool homeEyes();
+
+    bool updateEyeEncoders();
+
+    bool setDesiredEyeVelocities(double vergenceSpeed, double versionSpeed, double tiltSpeed);
 
 public:
 
@@ -76,6 +111,8 @@ public:
     GazeRetargeting& operator=(GazeRetargeting&& other) = delete;
 
     bool configure(yarp::os::ResourceFinder& rf);
+
+    void setEyeGazeAxes(const iDynTree::Axis& leftGaze, const iDynTree::Axis& rightGaze);
 
     bool update();
 

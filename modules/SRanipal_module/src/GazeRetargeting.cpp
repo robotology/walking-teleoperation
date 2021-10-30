@@ -9,7 +9,11 @@
 #include <GazeRetargeting.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/IAxisInfo.h>
+#include <iDynTree/Core/Utils.h>
 #include <yarp/os/Time.h>
+#include <cmath>
+#include <algorithm>
+
 
 void GazeRetargeting::setEyeControlMode(int controlMode)
 {
@@ -19,6 +23,65 @@ void GazeRetargeting::setEyeControlMode(int controlMode)
         int controlModes[] = {controlMode, controlMode, controlMode};
         m_eyesMode->setControlModes(3, eyeAxis, controlModes);
     }
+}
+
+bool GazeRetargeting::homeEyes()
+{
+    if (!m_eyesPos)
+    {
+        return false;
+    }
+
+    if (!updateEyeEncoders())
+    {
+        return false;
+    }
+
+    int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
+    double speeds[] = {m_maxEyeSpeed, m_maxEyeSpeed, m_maxEyeSpeed};
+    double references[] = {0.0, 0.0, 0.0};
+
+    double maxError = std::max({m_eyeTiltInRad, m_eyeVersInRad, m_eyeVergInRad});
+    double expectedTime = maxError / iDynTree::deg2rad(m_maxEyeSpeed);
+
+
+    m_eyesPos->setRefSpeeds(3, eyeAxis, speeds);
+
+    if (!m_eyesPos->positionMove(3, eyeAxis, references))
+    {
+        return false;
+    }
+
+    yarp::os::Time::delay(3.0 * expectedTime); //Just give some time for it to go to home
+
+    return true;
+}
+
+bool GazeRetargeting::updateEyeEncoders()
+{
+    if (!m_eyesEnc || !m_eyesEnc->getEncoders(m_encodersInDeg.data()))
+    {
+        return false;
+    }
+
+    m_eyeVersInRad = iDynTree::deg2rad(m_encodersInDeg[m_eyeVersIndex]);
+    m_eyeVergInRad = iDynTree::deg2rad(m_encodersInDeg[m_eyeVergIndex]);
+    m_eyeTiltInRad = iDynTree::deg2rad(m_encodersInDeg[m_eyeTiltIndex]);
+
+    return true;
+}
+
+bool GazeRetargeting::setDesiredEyeVelocities(double vergenceSpeed, double versionSpeed, double tiltSpeed)
+{
+    if (!m_eyesVel)
+    {
+        return false;
+    }
+
+    double velRefs[] = {vergenceSpeed, versionSpeed, tiltSpeed};
+    int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
+
+    return m_eyesVel->velocityMove(3, eyeAxis, velRefs);
 }
 
 GazeRetargeting::~GazeRetargeting()
@@ -40,6 +103,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     std::string eyes_version_name =  rf.check("eyes_version_name", yarp::os::Value("eyes_vers")).asString();
     std::string eyes_vergence_name = rf.check("eyes_vergence_name", yarp::os::Value("eyes_verg")).asString();
     std::string eyes_tilt_name = rf.check("eyes_tilt_name", yarp::os::Value("eyes_tilt")).asString();
+
+    m_maxEyeSpeed = rf.check("eyeMaxVelocity", yarp::os::Value(50.0)).asFloat64();
 
     yarp::os::Property rcb_head_conf{
         {"device", yarp::os::Value("remote_controlboard")},
@@ -73,6 +138,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    m_eyesVel->setRefAcceleration(0, std::numeric_limits<double>::max());
+
     if (!m_eyesDriver.view(m_eyesEnc) || !m_eyesEnc)
     {
         yError() << "[GazeRetargeting::configure] Failed to view the IEncoders interface. Use noGaze to avoid connecting to it.";
@@ -92,6 +159,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to get the number of axes. Use noGaze to avoid connecting to it.";
         return false;
     }
+
+    m_encodersInDeg.resize(nAxes);
 
     m_eyeTiltIndex = -1;
     m_eyeVergIndex = -1;
@@ -141,6 +210,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    homeEyes();
+
     setEyeControlMode(VOCAB_CM_VELOCITY);
 
     m_configured = true;
@@ -148,24 +219,46 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
+void GazeRetargeting::setEyeGazeAxes(const iDynTree::Axis &leftGaze, const iDynTree::Axis &rightGaze)
+{
+    m_leftGaze.setDirection(leftGaze.getDirection());
+    m_leftGaze.setOrigin(leftGaze.getOrigin());
+    m_rightGaze.setDirection(rightGaze.getDirection());
+    m_rightGaze.setOrigin(rightGaze.getOrigin());
+    m_gazeSet = true;
+}
+
 bool GazeRetargeting::update()
 {
-    //I could check if left and right images are active, if not, skip until the first time they are active
-    //the first time they are active, ask from RPC the offset of the eyes.
+    if (!m_VRInterface.isActive())
+    {
+        return true; //do nothing
+    }
 
-    //get the eyes encoders
-    //compute the single eye angles
-    //set the eye angles in the port to command the display position
+    double vergenceSpeed = 0.0, versionSpeed = 0.0, tiltSpeed = 0.0;
 
-    //get current left and right eye gaze direction and origin
-    //get left and right image pose from transform server
-    //transform the gaze rays in the image frame
-    //compute the intersection between the gaze ray and the xy plane of the image
-    //compute the desired aiming point according to the eyes offset
-    //Get the errors between the current intersection and the desired aim point
-    //Compute the single eye velocity according to the error (if the error is small, do nothing)
-    //Compute the dual eye velocity
-    //Set the dual eye velocity to the robot
+    if (m_gazeSet)
+    {
+        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeed, versionSpeed, tiltSpeed))
+        {
+            yError() << "[GazeRetargeting::update] Failed to compute the desired eye velocity.";
+            return false;
+        }
+    }
+
+    if (!setDesiredEyeVelocities(vergenceSpeed, versionSpeed, tiltSpeed))
+    {
+        yError() << "[GazeRetargeting::update] Failed to set the desired eye velocity.";
+        return false;
+    }
+
+    if (!updateEyeEncoders())
+    {
+        yError() << "[GazeRetargeting::update] Failed to get eye encoders.";
+        return false;
+    }
+
+    m_VRInterface.setVRImagesPose(m_eyeVergInRad, m_eyeVersInRad, m_eyeTiltInRad);
 
     return true;
 }
@@ -174,7 +267,12 @@ void GazeRetargeting::close()
 {
     m_VRInterface.close();
     setEyeControlMode(VOCAB_CM_POSITION);
+    homeEyes();
     m_eyesDriver.close();
+    m_eyesVel = nullptr;
+    m_eyesPos = nullptr;
+    m_eyesMode = nullptr;
+    m_eyesEnc = nullptr;
     m_configured = false;
 }
 
@@ -247,6 +345,42 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
+void GazeRetargeting::VRInterface::setVRImagesPose(double vergenceInRad, double versionInRad, double tiltInRad)
+{
+    m_leftEye.elevation = tiltInRad;
+    m_rightEye.elevation = tiltInRad;
+
+    // See https://icub-tech-iit.github.io/documentation/icub_kinematics/icub-vergence-version/icub-vergence-version/#converting-vergenceversion-to-decoupled-lr
+    // In the documentation above, the angle is positive clockwise, while the angles we send are positive anticlockwise
+    m_leftEye.azimuth = -(versionInRad + vergenceInRad/2.0);
+    m_rightEye.azimuth = -(versionInRad - vergenceInRad/2.0);
+
+    m_leftEye.sendAngles();
+    m_rightEye.sendAngles();
+
+}
+
+bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::Axis &leftEyeGaze, const iDynTree::Axis &rightEyeGaze,
+                                                               double &vergenceSpeed, double &versionSpeed, double &tiltSpeed)
+{
+    //compute the intersection between the gaze ray and the xy plane of the image
+    iDynTree::Vector2 leftImageIntersection, rightImageIntersection;
+    bool okL = m_leftEye.intersectionInImage(leftEyeGaze, leftImageIntersection);
+    bool okR = m_rightEye.intersectionInImage(rightEyeGaze, rightImageIntersection);
+    if (!okL || !okR)
+    {
+        yError() << "[GazeRetargeting::VRInterface::computeDesiredEyeVelocities] Failed to compute the intersection between the gaze and the images.";
+        return false;
+    }
+
+
+    //Compute the single eye velocity according to the error (if the error is small, do nothing)
+    //Compute the dual eye velocity
+    //Saturate the dual eye velocity also according to the kinematic limits (tanh trick)
+
+    return true;
+}
+
 bool GazeRetargeting::VRInterface::isActive()
 {
     if (m_isActive)
@@ -279,18 +413,31 @@ bool GazeRetargeting::VRInterface::isActive()
         return false;
     }
 
-    if (!getValueFromRPC("getIPD", m_IPD))
+    double ipd = 0.0;
+
+    if (!getValueFromRPC("getIPD", ipd))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to retrieve the IPD from the VR device.";
         return false;
     }
 
+    m_leftEye.eyePosition.zero();
+    m_leftEye.eyePosition(0) = -ipd/2.0;
+    m_rightEye.eyePosition.zero();
+    m_rightEye.eyePosition(0) = ipd/2.0;
 
-    if (!getValueFromRPC("getEyesZPosition", m_eyesZPosition))
+    double eyesZPosition = -1.0;
+
+    if (!getValueFromRPC("getEyesZPosition", eyesZPosition))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to retrieve the eyes Z position from the VR device.";
         return false;
     }
+
+    m_leftEye.imageRelativePosition.zero();
+    m_leftEye.imageRelativePosition(2) = eyesZPosition;
+    m_rightEye.imageRelativePosition.zero();
+    m_rightEye.imageRelativePosition(2) = eyesZPosition;
 
     std::string leftEyePortName;
 
@@ -303,7 +450,7 @@ bool GazeRetargeting::VRInterface::isActive()
 
     std::string leftEyeOutputPortName = m_name + "/leftEye/control:o";
 
-    if (!m_leftEyeControlPort.open(leftEyeOutputPortName))
+    if (!m_leftEye.controlPort.open(leftEyeOutputPortName))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to open the port" << leftEyeOutputPortName;
         return false;
@@ -326,7 +473,7 @@ bool GazeRetargeting::VRInterface::isActive()
 
     std::string rightEyeOutputPortName = m_name + "/rightEye/control:o";
 
-    if (!m_rightEyeControlPort.open(rightEyeOutputPortName))
+    if (!m_rightEye.controlPort.open(rightEyeOutputPortName))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to open the port" << rightEyeOutputPortName;
         return false;
@@ -338,6 +485,8 @@ bool GazeRetargeting::VRInterface::isActive()
         return false;
     }
 
+    setVRImagesPose(0.0, 0.0, 0.0);
+
     m_isActive = true;
     return true;;
 }
@@ -345,6 +494,54 @@ bool GazeRetargeting::VRInterface::isActive()
 void GazeRetargeting::VRInterface::close()
 {
     m_VRDeviceRPCOutputPort.close();
-    m_leftEyeControlPort.close();
-    m_rightEyeControlPort.close();
+    m_leftEye.close();
+    m_rightEye.close();
+}
+
+void GazeRetargeting::VRInterface::EyeControl::sendAngles()
+{
+    yarp::sig::Vector& output = controlPort.prepare();
+
+    output.resize(2);
+    output(0) = azimuth;
+    output(1) = elevation;
+
+    controlPort.write();
+}
+
+iDynTree::Transform GazeRetargeting::VRInterface::EyeControl::currentImageTransform()
+{
+    //The X axis is pointing to the right in the VIEW space, the Y axis is pointing upwards in the VIEW space
+    iDynTree::Rotation rotation = iDynTree::Rotation::RotX(elevation) * iDynTree::Rotation::RotY(azimuth);
+    iDynTree::Position position = rotation * imageRelativePosition + eyePosition;
+
+    return iDynTree::Transform(rotation, position);
+}
+
+bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTree::Axis &gazeInHeadsetFrame, iDynTree::Vector2& output)
+{
+    output.zero();
+
+    iDynTree::Axis gazeInImage = currentImageTransform().inverse() * gazeInHeadsetFrame;
+
+    const iDynTree::Position& origin = gazeInImage.getOrigin();
+    const iDynTree::Direction& direction = gazeInImage.getDirection();
+
+    if (std::abs(direction(2)) < 1e-15)
+    {
+        return false;
+    }
+
+    double alpha = -origin(2) / direction(2);
+
+    output(0) = origin(0) + alpha * direction(0);
+    output(1) = origin(1) + alpha * direction(1);
+
+    return true;
+
+}
+
+void GazeRetargeting::VRInterface::EyeControl::close()
+{
+    controlPort.close();
 }

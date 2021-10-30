@@ -231,6 +231,53 @@ bool SRanipalInterface::getEyeWideness(double &wideness)
     return true;
 }
 
+bool SRanipalInterface::getGazeAxes(iDynTree::Axis &leftEyeGaze, iDynTree::Axis &rightEyeGaze)
+{
+    using namespace ViveSR::anipal::Eye;
+    bool eye_gaze_validity = m_eyeUpdated &&
+            DecodeBitMask(m_eyeData_v2.verbose_data.left.eye_data_validata_bit_mask,
+                          SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY) &&
+            DecodeBitMask(m_eyeData_v2.verbose_data.left.eye_data_validata_bit_mask,
+                          SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_ORIGIN_VALIDITY) &&
+            DecodeBitMask(m_eyeData_v2.verbose_data.right.eye_data_validata_bit_mask,
+                          SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY) &&
+            DecodeBitMask(m_eyeData_v2.verbose_data.right.eye_data_validata_bit_mask,
+                          SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_ORIGIN_VALIDITY) &&
+            !m_eyeData_v2.no_user;
+
+    if (!eye_gaze_validity)
+    {
+        return false;
+    }
+
+    iDynTree::Position origin;
+    iDynTree::Direction direction;
+
+    origin[0] = m_eyeData_v2.verbose_data.left.gaze_origin_mm.x/1000.0;
+    origin[1] = m_eyeData_v2.verbose_data.left.gaze_origin_mm.y/1000.0;
+    origin[2] = m_eyeData_v2.verbose_data.left.gaze_origin_mm.z/1000.0;
+    leftEyeGaze.setOrigin(origin);
+
+
+    direction[0] = m_eyeData_v2.verbose_data.left.gaze_direction_normalized.x;
+    direction[1] = m_eyeData_v2.verbose_data.left.gaze_direction_normalized.y;
+    direction[2] = m_eyeData_v2.verbose_data.left.gaze_direction_normalized.z;
+    leftEyeGaze.setDirection(direction);
+
+    origin[0] = m_eyeData_v2.verbose_data.right.gaze_origin_mm.x/1000.0;
+    origin[1] = m_eyeData_v2.verbose_data.right.gaze_origin_mm.y/1000.0;
+    origin[2] = m_eyeData_v2.verbose_data.right.gaze_origin_mm.z/1000.0;
+    rightEyeGaze.setOrigin(origin);
+
+
+    direction[0] = m_eyeData_v2.verbose_data.right.gaze_direction_normalized.x;
+    direction[1] = m_eyeData_v2.verbose_data.right.gaze_direction_normalized.y;
+    direction[2] = m_eyeData_v2.verbose_data.right.gaze_direction_normalized.z;
+    rightEyeGaze.setDirection(direction);
+
+    return true;
+}
+
 bool SRanipalInterface::getLipExpressions(LipExpressions &expressions)
 {
     using namespace ViveSR::anipal::Lip;
