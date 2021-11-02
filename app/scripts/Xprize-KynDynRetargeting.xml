@@ -26,7 +26,7 @@
 
   <module>
     <name>OculusRetargetingModule</name>
-    <node>icub-console-gui</node>
+    <node>icub-console</node>
     <parameters> --OPENXR::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
