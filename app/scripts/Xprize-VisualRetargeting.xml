@@ -19,13 +19,13 @@
   </module>
 
   <module>
-    <name>camCalibWithPose</name>
+    <name>camCalib</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
     <node>icub-console</node>
   </module>
 
   <module>
-    <name>camCalibWithPose</name>
+    <name>camCalib</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
     <node>icub-console</node>
   </module>
@@ -52,32 +52,6 @@
     <from>/icub/cam/right</from>
     <to>/icub/camcalib/right/in</to>
     <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/head/state:o</from>
-    <to>/icub/camcalib/left/head_encs/in</to>
-    <protocol>udp</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/head/state:o</from>
-    <to>/icub/camcalib/right/head_encs/in</to>
-    <protocol>udp</protocol>
-  </connection>
-
-  <connection>
-    <!-- <from>/icub/inertial</from> -->
-    <from>/oculusRetargeting/imagesOrientation:o</from>
-    <to>/icub/camcalib/left/imu/in</to>
-    <protocol>udp</protocol>
-  </connection>
-
-  <connection>
-    <!-- <from>/icub/inertial</from> -->
-    <from>/oculusRetargeting/imagesOrientation:o</from>
-    <to>/icub/camcalib/right/imu/in</to>
-    <protocol>udp</protocol>
   </connection>
 
   <connection>
