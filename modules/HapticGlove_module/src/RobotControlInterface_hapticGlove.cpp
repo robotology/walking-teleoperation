@@ -649,7 +649,8 @@ void RobotControlInterface::updateTimeStamp()
 bool RobotControlInterface::getFeedback()
 {
     double time0 = yarp::os::Time::now();
-
+    bool verbose=false;
+     
     if (!m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data())
         && m_isMandatory)
     {
@@ -661,6 +662,8 @@ bool RobotControlInterface::getFeedback()
         m_encoderPositionFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
 
+    if(verbose)	
+    {
     if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data())
         && m_isMandatory)
     {
@@ -672,6 +675,7 @@ bool RobotControlInterface::getFeedback()
     for (unsigned j = 0; j < m_noActuatedAxis; ++j)
         m_encoderVelocityFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
+    }
 
     if (!(m_AnalogSensorInterface->read(m_analogSensorFeedbackRaw)
           == yarp::dev::IAnalogSensor::AS_OK))
@@ -697,11 +701,14 @@ bool RobotControlInterface::getFeedback()
         return false;
     }
 
+    if (verbose)
+    {
     if (!m_currentInterface->getCurrents(m_currentFeedback.data()) && m_isMandatory)
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor "
                     "current feedbacks";
         return false;
+    }
     }
 
     // removing the getRefCurrents since it takes 0.04 seconds to read
@@ -713,11 +720,14 @@ bool RobotControlInterface::getFeedback()
     //        return false;
     //    }
 
+    if(verbose)
+    {
     if (!m_pwmInterface->getDutyCycles(m_pwmFeedback.data()) && m_isMandatory)
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor PWM "
                     "feedbacks";
         return false;
+    }
     }
 
     // removing the getRefDutyCycles since it takes 0.04 seconds to read
@@ -728,10 +738,13 @@ bool RobotControlInterface::getFeedback()
     //        motor desired PWM from the interface"; return false;
     //    }
 
+    if(verbose)
+    {
     if (!m_pidInterface->getPidOutputs(m_pidControlMode, m_pidOutput.data()) && m_isMandatory)
     {
         yError() << "[RobotControlInterface::getFeedbacks] Unable to get pid outputs";
         return false;
+    }
     }
 
     return true;
@@ -739,7 +752,6 @@ bool RobotControlInterface::getFeedback()
 
 bool RobotControlInterface::getCalibratedFeedback()
 {
-    yInfo() << "getCalibratedFeedback(): " << m_noAnalogSensor;
 
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {

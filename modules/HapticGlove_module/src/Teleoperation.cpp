@@ -186,6 +186,7 @@ bool Teleoperation::getFeedbacks()
     m_robotController->getJointValueFeedbacks(m_data.robotJointFeedbacks);
 
     // get the estimation values
+    double t1= yarp::os::Time::now();
     m_robotController->getEstimatedMotorsState(m_data.robotAxisValueFeedbacksKf,
                                                m_data.robotAxisVelocityFeedbacksKf,
                                                m_data.robotAxisAccelerationFeedbacksKf,
@@ -194,6 +195,8 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisVelocityReferencesKf,
                                                m_data.robotAxisAccelerationReferencesKf,
                                                m_data.robotAxisCovReferencesKf);
+    double t2= yarp::os::Time::now();
+    yInfo()<<"KF time: "<<t2-t1;
 
     return true;
 }
@@ -224,10 +227,13 @@ bool Teleoperation::run()
 
     // since we have estimators for the references, we put the getFeedback method at this point.
 
+    double t1= yarp::os::Time::now();
     if (!this->getFeedbacks())
     {
         yWarning() << m_logPrefix << "unable to get the feedback";
     }
+    double t2= yarp::os::Time::now();
+    yInfo()<<"fb time: "<<t2-t1;
 
     if (!m_robotController->computeControlSignals())
     {
