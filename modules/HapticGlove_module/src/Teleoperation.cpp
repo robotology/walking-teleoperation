@@ -235,7 +235,6 @@ bool Teleoperation::run()
         yWarning() << m_logPrefix << "unable to get the feedback";
     }
     double t2 = yarp::os::Time::now();
-    std::cout << "feedback time: " << t2 - t1 << "\n";
 
     std::cout << "debug 06 \n ";
 
@@ -254,18 +253,23 @@ bool Teleoperation::run()
         yWarning() << m_logPrefix
                    << "unable to retarget haptic feedback from the robot to the human.";
     }
+    yInfo() << "val ref:" << m_data.robotAxisValueReferencesKf;
+    yInfo() << "val fb:" << m_data.robotAxisValueFeedbacksKf;
+
     std::cout << "debug 08 \n ";
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the force feedback from retargeting.";
     }
+    yInfo() << "ffb: " << m_data.humanForceFeedbacks;
     std::cout << "debug 09 \n ";
 
     if (!m_retargeting->getVibrotactileFeedbackToHuman(m_data.humanVibrotactileFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the vibrotactile feedback from retargeting.";
     }
+    yInfo() << "vtfb: " << m_data.humanVibrotactileFeedbacks;
     std::cout << "debug 10 \n ";
 
     // set the values
