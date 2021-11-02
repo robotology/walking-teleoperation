@@ -578,10 +578,17 @@ bool RobotController::initializeEstimators()
     getJointValueFeedbacks(m_jointValueFeedbacks);
     getJointExpectedValues(m_jointValuesExpected);
 
-    m_axisFeedbackEstimators->initialize(m_axisValueFeedbacks);
-    m_axisReferenceEstimators->initialize(m_axisValueReferences);
-    m_jointFeedbackEstimators->initialize(m_jointValueFeedbacks);
-    m_jointExpectedEstimators->initialize(m_jointValuesExpected);
+    if (!m_axisReferenceEstimators->isInitialized())
+        m_axisReferenceEstimators->initialize(m_jointValuesExpected);
+
+    if (!m_axisFeedbackEstimators->isInitialized())
+        m_axisFeedbackEstimators->initialize(m_axisValueFeedbacks);
+
+    if (!m_jointExpectedEstimators->isInitialized())
+        m_jointExpectedEstimators->initialize(m_axisValueReferences);
+
+    if (!m_jointFeedbackEstimators->isInitialized())
+        m_jointFeedbackEstimators->initialize(m_jointValueFeedbacks);
 
     m_estimatorsInitialized = m_jointFeedbackEstimators->isInitialized()
                               && m_jointExpectedEstimators->isInitialized()
