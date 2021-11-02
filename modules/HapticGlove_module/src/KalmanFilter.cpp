@@ -97,6 +97,13 @@ bool KalmanFilter::estimateNextState(const Eigen::MatrixXd& z)
     m_x_bar = m_Phi * m_x_hat + m_Gamma * m_w_bar;
     m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
 
+    std::cout << "m_z : " << m_z.transpose() << "\n";
+    std::cout << "m_K : " << m_K << "\n";
+    std::cout << "m_x_hat transpose: " << m_x_hat.transpose() << "\n";
+    std::cout << "m_x_bar transpose: " << m_x_bar.transpose() << "\n";
+    std::cout << "m_P: " << m_P << "\n";
+    std::cout << "m_M: " << m_M << "\n";
+
     return true;
 }
 
