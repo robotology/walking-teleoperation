@@ -19,8 +19,8 @@
   </module>
 
   <module>
-    <name>OpenXRModule</name>
-    <node>icub-console-gui</node>
+    <name>OpenXRRetargetingModule</name>
+    <node>icub-head</node>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
