@@ -594,7 +594,7 @@ struct OpenXRModule::Impl
 
         // try to read the transform
         std::size_t counter = 0;
-        constexpr unsigned int maxAttempt = 20;
+        constexpr unsigned int maxAttempt = 1000;
         while (!readTransforms(headOpenXR_T_expectedLeftHandOpenXR, headOpenXR_T_expectedRightHandOpenXR))
         {
             if (++counter == maxAttempt)
@@ -605,7 +605,7 @@ struct OpenXRModule::Impl
             }
 
             // Sleep for some while
-            std::this_thread::sleep_for(std::chrono::microseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         // check if the left joypad is on the left and the right is on the right. If not we have to
@@ -1191,19 +1191,62 @@ bool OpenXRModule::updateModule()
             // get only the yaw axis
             iDynTree::Rotation tempRot;
             iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
-            double yaw = 0;
-            double dummy = 0;
-            tempRot.getRPY(dummy, yaw, dummy);
+            
+             double r, p, y;
+            
+            // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
+            // Section 2.2
+            auto inverseKinematicsXZY = [](const iDynTree::Rotation &chest_R_head,
+                                           double &neckPitch,
+                                           double &neckRoll,
+                                           double &neckYaw)
+            {
+                if (chest_R_head(0,1) < +1.0)
+                {
+                    if (chest_R_head(0, 1) > -1.0)
+                    {
+                        neckRoll  = std::asin(-chest_R_head(0, 1)); //The roll is thetaZ
+                        neckPitch = std::atan2(chest_R_head(2, 1), chest_R_head(1, 1)); //The pitch is thetaX
+                        neckYaw   = std::atan2(chest_R_head(0, 2), chest_R_head(0, 0)); //The yaw is thetay
+                    }
+                    else
+                    {
+                        neckRoll  = M_PI/2.0;
+                        neckPitch = -std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+                        neckYaw   = 0.0;
+                    }
+                }
+                else
+                {
+                    neckRoll  = -M_PI/2.0;
+                    neckPitch = std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+                    neckYaw   = 0.0;
+                }
+            
+            };
+            
+            inverseKinematicsXZY(tempRot, p,r,y);
+
 
             iDynTree::Transform tempTransform;
-            tempTransform.setRotation(iDynTree::Rotation::RotY(
-                yaw)); // We remove only the initial rotation of the person head around gravity.
-            tempTransform.setPosition(iDynTree::make_span(
-                getPosition(openXrHeadInitialTransform))); // We remove the initial position between
-                                                           // the head and the reference frame.
+            tempTransform.setRotation(iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of the person head around gravity.
+                
+            iDynTree::Position tmpPos;
+            iDynTree::toEigen(tmpPos) = getPosition(openXrHeadInitialTransform);
+            tempTransform.setPosition(tmpPos);
+                                                           
+//            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Posizione da root a head  --> " << std::endl << iDynTree::toEigen(openXrHeadInitialTransform).col(3) << std::endl;
+//            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> getPosition  --> " << std::endl << getPosition(openXrHeadInitialTransform) << std::endl;
+//            std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> tmpPos  --> " << std::endl << iDynTree::toEigen(tmpPos) << std::endl;
 
             iDynTree::toEigen(m_pImpl->openXRInitialAlignement)
                 = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+                
+//            std::cout << "------------------------------- Initial alignment m_pImpl->openXRInitialAlignement --> " << std::endl << iDynTree::toEigen(m_pImpl->openXRInitialAlignement);
+//            std::cout << "------------------------------- Initial alignment position --> " << std::endl << iDynTree::toEigen(m_pImpl->openXRInitialAlignement).col(3);
+                      
+            
+//            yInfo() << "------------------------------- Initial alignment (deg): roll=" << iDynTree::rad2deg(r) << "  pitch=" << iDynTree::rad2deg(p) << "  yaw=" << iDynTree::rad2deg(y); 
 
             if (m_pImpl->moveRobot)
             {
