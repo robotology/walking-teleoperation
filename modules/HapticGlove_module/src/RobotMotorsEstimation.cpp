@@ -75,7 +75,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
         Estimator motorEstimator(dt, R, Q);
         m_motorEstimatorVector.push_back(motorEstimator);
     }
-    std::cout << "All Motor Estimation are initialized. \n";
+    std::cout << "All Motor Estimation are configured. \n";
 
     m_z = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
 

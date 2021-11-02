@@ -54,6 +54,8 @@ bool KalmanFilter::initialize(const Eigen::MatrixXd& x0, const Eigen::MatrixXd& 
     m_P = (m_M.inverse() + m_Ht_Rinv_H).inverse();
     m_K = m_P * m_Ht_Rinv;
     m_M = m_Phi * m_P * m_Phi.transpose() + m_Gamma * m_Q * m_Gamma.transpose();
+    std::cout << "initialize::  m_x_bar" << m_x_bar.transpose() << "\n";
+    std::cout << "initialize::  m_M" << m_M << "\n";
 
     return true;
 }
@@ -90,6 +92,10 @@ bool KalmanFilter::estimateNextState(const Eigen::MatrixXd& z)
      */
 
     m_z = z;
+    std::cout << "*************** \n";
+
+    std::cout << "m_x_bar transpose: " << m_x_bar.transpose() << "\n";
+    std::cout << "m_x_hat transpose: " << m_x_hat.transpose() << "\n";
 
     m_P = (m_M.inverse() + m_Ht_Rinv_H).inverse();
     m_K = m_P * m_Ht_Rinv;
