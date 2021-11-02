@@ -2,7 +2,7 @@
 # All Rights Reserved.
 
 if (NOT WIN32)
-#    message(FATAL_ERROR "The SRanipalModule is available only on Windows")
+    message(FATAL_ERROR "The SRanipalModule is available only on Windows")
 endif()
 
 set(EXE_TARGET_NAME SRanipalModule)

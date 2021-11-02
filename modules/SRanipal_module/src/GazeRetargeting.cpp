@@ -9,7 +9,10 @@
 #include <GazeRetargeting.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/IAxisInfo.h>
+#include <yarp/dev/IControlLimits.h>
 #include <iDynTree/Core/Utils.h>
+#include <Eigen/Dense>
+#include <iDynTree/Core/EigenHelpers.h>
 #include <yarp/os/Time.h>
 #include <cmath>
 #include <algorithm>
@@ -38,11 +41,11 @@ bool GazeRetargeting::homeEyes()
     }
 
     int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
-    double speeds[] = {m_maxEyeSpeed, m_maxEyeSpeed, m_maxEyeSpeed};
+    double speeds[] = {m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS};
     double references[] = {0.0, 0.0, 0.0};
 
     double maxError = std::max({m_eyeTiltInRad, m_eyeVersInRad, m_eyeVergInRad});
-    double expectedTime = maxError / iDynTree::deg2rad(m_maxEyeSpeed);
+    double expectedTime = maxError / iDynTree::deg2rad(m_maxEyeSpeedInDegS);
 
 
     m_eyesPos->setRefSpeeds(3, eyeAxis, speeds);
@@ -71,17 +74,26 @@ bool GazeRetargeting::updateEyeEncoders()
     return true;
 }
 
-bool GazeRetargeting::setDesiredEyeVelocities(double vergenceSpeed, double versionSpeed, double tiltSpeed)
+bool GazeRetargeting::setDesiredEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg)
 {
     if (!m_eyesVel)
     {
         return false;
     }
 
-    double velRefs[] = {vergenceSpeed, versionSpeed, tiltSpeed};
+    double velRefs[] = {tiltSpeedInDeg, versionSpeedInDeg, vergenceSpeedInDeg};
     int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
 
     return m_eyesVel->velocityMove(3, eyeAxis, velRefs);
+}
+
+double GazeRetargeting::saturateEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double kinematicLowerBound, double kinematicUpperBound)
+{
+    //See https://github.com/ami-iit/element_qp-reactive-control/issues/51
+    double velocityLowerLimit = std::tanh(m_tanhGain * (inputPosition - kinematicLowerBound)) * (-maxVelocity);
+    double velocityUpperLimit = std::tanh(m_tanhGain * (kinematicUpperBound - inputPosition)) * maxVelocity;
+
+    return std::max(velocityLowerLimit, std::min(inputPosition, velocityUpperLimit));
 }
 
 GazeRetargeting::~GazeRetargeting()
@@ -100,11 +112,15 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     std::string name = rf.check("name", yarp::os::Value("SRanipalModule"), "The name of the module.").asString();
     std::string robot = rf.check("robot", yarp::os::Value("icub"), "The name of the robot to connect to.").asString();
 
-    std::string eyes_version_name =  rf.check("eyes_version_name", yarp::os::Value("eyes_vers")).asString();
-    std::string eyes_vergence_name = rf.check("eyes_vergence_name", yarp::os::Value("eyes_verg")).asString();
-    std::string eyes_tilt_name = rf.check("eyes_tilt_name", yarp::os::Value("eyes_tilt")).asString();
+    std::string eyes_version_name =  rf.check("eyesVersionName", yarp::os::Value("eyes_vers")).asString();
+    std::string eyes_vergence_name = rf.check("eyesVergenceName", yarp::os::Value("eyes_verg")).asString();
+    std::string eyes_tilt_name = rf.check("eyesTiltName", yarp::os::Value("eyes_tilt")).asString();
 
-    m_maxEyeSpeed = rf.check("eyeMaxVelocity", yarp::os::Value(50.0)).asFloat64();
+    m_maxEyeSpeedInDegS = rf.check("eyeMaxVelocity", yarp::os::Value(50.0)).asFloat64();
+    double userMaxVergInDeg = rf.check("eyeMaxVergence", yarp::os::Value(45.0)).asFloat64();
+    double userMaxVersInDeg = rf.check("eyeMaxVersion", yarp::os::Value(30.0)).asFloat64();
+    double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(30.0)).asFloat64();
+    m_tanhGain = rf.check("eyeKinematicSaturationGain", yarp::os::Value(20.0)).asFloat64();
 
     yarp::os::Property rcb_head_conf{
         {"device", yarp::os::Value("remote_controlboard")},
@@ -119,10 +135,18 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     }
 
     yarp::dev::IAxisInfo* axisInfo{nullptr};
+    yarp::dev::IControlLimits* controlLimits{nullptr};
+
 
     if (!m_eyesDriver.view(axisInfo) || !axisInfo)
     {
         yError() << "[GazeRetargeting::configure] Failed to view the IAxisInfo interface. Use noGaze to avoid connecting to it.";
+        return false;
+    }
+
+    if (!m_eyesDriver.view(controlLimits) || !controlLimits)
+    {
+        yError() << "[GazeRetargeting::configure] Failed to view the IControlLimits interface. Use noGaze to avoid connecting to it.";
         return false;
     }
 
@@ -145,7 +169,6 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to view the IEncoders interface. Use noGaze to avoid connecting to it.";
         return false;
     }
-
 
     if (!m_eyesDriver.view(m_eyesMode) || !m_eyesMode)
     {
@@ -205,6 +228,30 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    double robotMinVergInDeg, robotMaxVergInDeg,
+            robotMinVersInDeg, robotMaxVersInDeg,
+            robotMinTiltInDeg, robotMaxTiltInDeg;
+
+    if (!controlLimits->getLimits(m_eyeVersIndex, &robotMinVersInDeg, &robotMaxVersInDeg))
+    {
+        yError() << "[GazeRetargeting::configure] Failed to get the control limits of the eyes version.";
+        return false;
+    }
+    if (!controlLimits->getLimits(m_eyeVergIndex, &robotMinVergInDeg, &robotMaxVergInDeg))
+    {
+        yError() << "[GazeRetargeting::configure] Failed to get the control limits of the eyes vergence.";
+        return false;
+    }
+    if (!controlLimits->getLimits(m_eyeVersIndex, &robotMinTiltInDeg, &robotMaxTiltInDeg))
+    {
+        yError() << "[GazeRetargeting::configure] Failed to get the control limits of the eyes tilt.";
+        return false;
+    }
+
+    m_maxVergInDeg = std::min(userMaxVergInDeg, robotMaxVergInDeg); //The min vergence is supposed to be 0.0
+    m_maxVersInDeg = std::min({userMaxVersInDeg, std::abs(robotMinVersInDeg), std::abs(robotMaxVersInDeg)});
+    m_maxTiltInDeg = std::min({userMaxTiltInDeg, std::abs(robotMinTiltInDeg), std::abs(robotMaxTiltInDeg)});
+
     if (!m_VRInterface.configure(rf))
     {
         return false;
@@ -235,29 +282,42 @@ bool GazeRetargeting::update()
         return true; //do nothing
     }
 
-    double vergenceSpeed = 0.0, versionSpeed = 0.0, tiltSpeed = 0.0;
-
-    if (m_gazeSet)
-    {
-        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeed, versionSpeed, tiltSpeed))
-        {
-            yError() << "[GazeRetargeting::update] Failed to compute the desired eye velocity.";
-            return false;
-        }
-    }
-
-    if (!setDesiredEyeVelocities(vergenceSpeed, versionSpeed, tiltSpeed))
-    {
-        yError() << "[GazeRetargeting::update] Failed to set the desired eye velocity.";
-        return false;
-    }
-
+    //Get the current eye encoder values
     if (!updateEyeEncoders())
     {
         yError() << "[GazeRetargeting::update] Failed to get eye encoders.";
         return false;
     }
 
+    double vergenceSpeedInRad = 0.0, versionSpeedInRad = 0.0, tiltSpeedInRad = 0.0;
+
+    //Compute the desired eye speed according to the user gaze
+    if (m_gazeSet) //The desired gaze has been set at least once.
+    {
+        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeedInRad, versionSpeedInRad, tiltSpeedInRad))
+        {
+            yError() << "[GazeRetargeting::update] Failed to compute the desired eye velocity.";
+            return false;
+        }
+    }
+
+    double vergenceSpeedInDeg = iDynTree::rad2deg(vergenceSpeedInRad);
+    double versionSpeedInDeg = iDynTree::rad2deg(versionSpeedInRad);
+    double tiltSpeedInDeg = iDynTree::rad2deg(tiltSpeedInRad);
+
+    //We saturate the desired eye velocities according to the limits too
+    vergenceSpeedInDeg = saturateEyeVelocity(vergenceSpeedInDeg, m_encodersInDeg[m_eyeVergIndex], m_maxEyeSpeedInDegS, 0.0, m_maxVergInDeg);
+    versionSpeedInDeg = saturateEyeVelocity(versionSpeedInDeg, m_encodersInDeg[m_eyeVersIndex], m_maxEyeSpeedInDegS, -m_maxVersInDeg, m_maxVersInDeg);
+    tiltSpeedInDeg = saturateEyeVelocity(tiltSpeedInDeg, m_encodersInDeg[m_eyeTiltIndex], m_maxEyeSpeedInDegS, -m_maxTiltInDeg, m_maxTiltInDeg);
+
+    //Set the desired velocitites to the robot
+    if (!setDesiredEyeVelocities(vergenceSpeedInDeg, versionSpeedInDeg, tiltSpeedInDeg))
+    {
+        yError() << "[GazeRetargeting::update] Failed to set the desired eye velocity.";
+        return false;
+    }
+
+    //Update the orientation of the images in the VR view.
     m_VRInterface.setVRImagesPose(m_eyeVergInRad, m_eyeVersInRad, m_eyeTiltInRad);
 
     return true;
@@ -331,6 +391,23 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, std
     return true;
 }
 
+iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Vector2 &input)
+{
+    iDynTree::Vector2 output;
+    output.zero();
+
+    Eigen::Map<const Eigen::Vector2d> map = iDynTree::toEigen(input);
+    Eigen::Map<Eigen::Vector2d> outputMap = iDynTree::toEigen(output);
+
+    double inputNorm = map.norm();
+    if (inputNorm > m_errorDeadzone)
+    {
+        outputMap = (1.0 - m_errorDeadzone / inputNorm) * map;
+    }
+
+    return output;
+}
+
 bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 {
     m_name = rf.check("name", yarp::os::Value("SRanipalModule"), "The name of the module.").asString();
@@ -341,6 +418,9 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to open /" + m_name + VRDeviceRPCOutputPort + " port.";
         return false;
     }
+
+    m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(1.0)).asFloat64();
+    m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.01)).asFloat64();
 
     return true;
 }
@@ -361,7 +441,7 @@ void GazeRetargeting::VRInterface::setVRImagesPose(double vergenceInRad, double 
 }
 
 bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::Axis &leftEyeGaze, const iDynTree::Axis &rightEyeGaze,
-                                                               double &vergenceSpeed, double &versionSpeed, double &tiltSpeed)
+                                                               double &vergenceSpeedInRadS, double &versionSpeedInRadS, double &tiltSpeedInRadS)
 {
     //compute the intersection between the gaze ray and the xy plane of the image
     iDynTree::Vector2 leftImageIntersection, rightImageIntersection;
@@ -373,10 +453,26 @@ bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::A
         return false;
     }
 
+    //First, apply a deadzone on the intersection with the image to unwanted motions
+    leftImageIntersection = applyDeadzone(leftImageIntersection);
+    rightImageIntersection = applyDeadzone(rightImageIntersection);
 
-    //Compute the single eye velocity according to the error (if the error is small, do nothing)
+
+    //Compute the desired single eye velocity
+    double leftElevationVelocity, rightElevationVelocity, leftAzimuthVelocity, rightAzimuthVelocity;
+    leftElevationVelocity = m_velocityGain * leftImageIntersection(1); //The Y axis is pointing upward. If the operator is intersecting the image above the center, moves the eye up
+    rightElevationVelocity = m_velocityGain * rightImageIntersection(1);
+
+    leftAzimuthVelocity = -m_velocityGain * leftImageIntersection(0); //The X axis is pointing to the right. If the operator is looking on the right of the center, moves the eye clockwise (hence the minus sign).
+    rightAzimuthVelocity = -m_velocityGain * rightImageIntersection(0);
+
     //Compute the dual eye velocity
-    //Saturate the dual eye velocity also according to the kinematic limits (tanh trick)
+    tiltSpeedInRadS = 0.5 * (leftElevationVelocity + rightElevationVelocity); //Ideally they should be equal. Set the desired velocity to the average value.
+    //Compute the version and vergence velocity according to https://icub-tech-iit.github.io/documentation/icub_kinematics/icub-vergence-version/icub-vergence-version
+    double leftVersVelocity = -leftAzimuthVelocity; //According to https://icub-tech-iit.github.io/documentation/icub_kinematics/icub-vergence-version/icub-vergence-version, positive version is clockwise, while positive azimuth is anticlockwise
+    double rightVersVelocity = -rightAzimuthVelocity;
+    versionSpeedInRadS = 0.5 * (leftVersVelocity + rightVersVelocity);
+    vergenceSpeedInRadS = leftVersVelocity - rightVersVelocity;
 
     return true;
 }

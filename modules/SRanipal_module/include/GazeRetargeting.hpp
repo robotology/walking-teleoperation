@@ -47,6 +47,8 @@ class GazeRetargeting
         std::string m_name;
         bool m_isActive = false;
         double m_lastActiveCheck{-1.0};
+        double m_velocityGain{0.0};
+        double m_errorDeadzone{0.01};
         yarp::os::RpcClient m_VRDeviceRPCOutputPort;
         EyeControl m_leftEye, m_rightEye;
 
@@ -58,6 +60,8 @@ class GazeRetargeting
 
         bool getValueFromRPC(const std::string& query, std::string& value);
 
+        iDynTree::Vector2 applyDeadzone(const iDynTree::Vector2& input);
+
     public:
 
         bool configure(yarp::os::ResourceFinder& rf);
@@ -65,7 +69,7 @@ class GazeRetargeting
         void setVRImagesPose(double vergenceInRad, double versionInRad, double tiltInRad);
 
         bool computeDesiredEyeVelocities(const iDynTree::Axis& leftEyeGaze, const iDynTree::Axis& rightEyeGaze,
-                                         double& vergenceSpeed, double& versionSpeed, double& tiltSpeed);
+                                         double& vergenceSpeedInRadS, double& versionSpeedInRadS, double& tiltSpeedInRadS);
 
         bool isActive();
 
@@ -81,8 +85,10 @@ class GazeRetargeting
     yarp::dev::IControlMode* m_eyesMode{nullptr};
     int m_eyeVersIndex, m_eyeVergIndex, m_eyeTiltIndex;
     double m_eyeVersInRad, m_eyeVergInRad, m_eyeTiltInRad;
+    double m_maxTiltInDeg, m_maxVersInDeg, m_maxVergInDeg;
+    double m_tanhGain;
     std::vector<double> m_encodersInDeg;
-    double m_maxEyeSpeed;
+    double m_maxEyeSpeedInDegS;
     iDynTree::Axis m_leftGaze, m_rightGaze;
     bool m_gazeSet{false};
 
@@ -94,7 +100,10 @@ class GazeRetargeting
 
     bool updateEyeEncoders();
 
-    bool setDesiredEyeVelocities(double vergenceSpeed, double versionSpeed, double tiltSpeed);
+    bool setDesiredEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg);
+
+    double saturateEyeVelocity(double inputVelocity, double inputPosition,
+                               double maxVelocity, double kinematicLowerBound, double kinematicUpperBound);
 
 public:
 
