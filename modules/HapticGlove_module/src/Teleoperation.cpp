@@ -202,36 +202,48 @@ bool Teleoperation::run()
 {
 
     // retarget human motion to the robot
+    std::cout << "debug 01 \n ";
     if (!m_humanGlove->getHandJointAngles(m_data.humanJointValues))
     {
         yWarning() << m_logPrefix << "unable to get human latest joint angles.";
     }
+    std::cout << "debug 02 \n ";
 
     if (!m_retargeting->retargetHumanMotionToRobot(m_data.humanJointValues))
     {
         yWarning() << m_logPrefix << "unable to retaget human motion to robot motions.";
     }
+    std::cout << "debug 03 \n ";
 
     if (!m_retargeting->getRobotJointReferences(m_data.robotJointReferences))
     {
         yWarning() << m_logPrefix << "unable to get the robot joint references from retargeting.";
     }
+    std::cout << "debug 04 \n ";
 
     if (!m_robotController->setJointReferences(m_data.robotJointReferences))
     {
         yWarning() << m_logPrefix << "unable to set the joint references to the robot.";
     }
+    std::cout << "debug 05 \n ";
 
     // since we have estimators for the references, we put the getFeedback method at this point.
+    double t1 = yarp::os::Time::now();
+
     if (!this->getFeedbacks())
     {
         yWarning() << m_logPrefix << "unable to get the feedback";
     }
+    double t2 = yarp::os::Time::now();
+    std::cout << "feedback time: " << t2 - t1 << "\n";
+
+    std::cout << "debug 06 \n ";
 
     if (!m_robotController->computeControlSignals())
     {
         yWarning() << m_logPrefix << "unable to compute the control signals.";
     }
+    std::cout << "debug 07 \n ";
 
     // compute the haptic feedback
     if (!m_retargeting->retargetHapticFeedbackFromRobotToHuman(m_data.robotAxisValueReferencesKf,
@@ -242,16 +254,19 @@ bool Teleoperation::run()
         yWarning() << m_logPrefix
                    << "unable to retarget haptic feedback from the robot to the human.";
     }
+    std::cout << "debug 08 \n ";
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the force feedback from retargeting.";
     }
+    std::cout << "debug 09 \n ";
 
     if (!m_retargeting->getVibrotactileFeedbackToHuman(m_data.humanVibrotactileFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the vibrotactile feedback from retargeting.";
     }
+    std::cout << "debug 10 \n ";
 
     // set the values
     if (m_moveRobot)
@@ -260,6 +275,7 @@ bool Teleoperation::run()
         m_humanGlove->setFingertipForceFeedbackReferences(m_data.humanForceFeedbacks);
         m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_data.humanVibrotactileFeedbacks);
     }
+    std::cout << "debug 11 \n ";
 
     if (m_enableLogger)
     {
@@ -268,6 +284,7 @@ bool Teleoperation::run()
             yWarning() << m_logPrefix << "unable to log the data.";
         }
     }
+    std::cout << "debug 12 \n ";
 
     return true;
 }

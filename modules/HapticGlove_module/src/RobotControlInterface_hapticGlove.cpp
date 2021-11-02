@@ -705,12 +705,13 @@ bool RobotControlInterface::getFeedback()
     }
 
     // removing the getRefCurrents since it takes 0.04 seconds to read
-    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) && m_isMandatory)
-    {
-        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor "
-                    "desired current from the interface";
-        return false;
-    }
+    //    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) &&
+    //    m_isMandatory)
+    //    {
+    //        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor "
+    //                    "desired current from the interface";
+    //        return false;
+    //    }
 
     if (!m_pwmInterface->getDutyCycles(m_pwmFeedback.data()) && m_isMandatory)
     {
