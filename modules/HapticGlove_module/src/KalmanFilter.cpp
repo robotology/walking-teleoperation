@@ -37,6 +37,8 @@ KalmanFilter::KalmanFilter(const double dt,
     m_Ht_Rinv_H = m_H.transpose() * m_R.inverse() * m_H;
     Gamma_Q_GammaT = m_Gamma * m_Q * m_Gamma.transpose();
 
+    m_w_bar = Eigen::MatrixXd::Zero(m_m, 1);
+
     std::cout << m_logPrefix << "constructed.\n";
 }
 
