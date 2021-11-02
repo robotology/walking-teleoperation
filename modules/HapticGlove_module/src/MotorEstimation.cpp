@@ -57,7 +57,9 @@ Estimator::~Estimator()
 bool Estimator::initialize(const Eigen::MatrixXd& z0)
 {
 
-    Eigen::MatrixXd x0 = (m_H.transpose() * m_H).inverse() * m_H.transpose() * z0;
+    Eigen::MatrixXd x0 = Eigen::MatrixXd::Zero(m_n, 1);
+    x0(0, 0) = z0(0, 0);
+    //(m_H.transpose() * m_H).inverse() * m_H.transpose() * z0;
     Eigen::MatrixXd M0 = Eigen::MatrixXd::Identity(m_n, m_n);
 
     return m_kf->initialize(x0, M0);
