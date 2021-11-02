@@ -146,7 +146,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_enableLogger = config.check("enableLogger", yarp::os::Value(0)).asBool();
     if (m_enableLogger)
     {
-        m_loggerLeftHand = std::make_unique<Logger>(*this, false);
+        m_loggerLeftHand = std::make_unique<Logger>(*this, rightHand);
         if (!m_loggerLeftHand->openLogger())
         {
             yError() << m_logPrefix << "unable to open the logger.";

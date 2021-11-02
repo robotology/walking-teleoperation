@@ -229,7 +229,7 @@ public:
      * @param maxLimits vector containing the joint maximum limits in radian
      * @return true / false in case of success / failure
      */
-    bool getLimits(std::vector<double> minLimits, std::vector<double> maxLimits);
+    bool getLimits(std::vector<double>& minLimits, std::vector<double>& maxLimits);
 
     /**
      * Get the joint velocity limits

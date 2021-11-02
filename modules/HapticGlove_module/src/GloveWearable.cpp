@@ -200,15 +200,15 @@ bool GloveWearableImpl::initializeWearableSensors()
     // intialize fingertip link sensors
     {
         m_fingertipLinkSensors.reserve(m_numFingers);
-        for (auto fingerName : m_humanFingerNameList)
+        for (const auto& fingerName : m_humanFingerNameList)
         {
             std::string wearableSensorName = m_wearablePrefix
                                              + wearable::sensor::IVirtualLinkKinSensor::getPrefix()
-                                             + fingerName;
+                                             + fingerName + "::fingertip";
             auto sensor = m_iWear->getVirtualLinkKinSensor(wearableSensorName);
             if (!sensor)
             {
-                yError() << m_logPrefix << "failed to find sensor associated to joint"
+                yError() << m_logPrefix << "failed to find sensor associated to link"
                          << wearableSensorName << "from the IWear interface";
                 return false;
             }
@@ -224,7 +224,7 @@ bool GloveWearableImpl::initializeWearableSensors()
     // intialize joints sensors
     {
         m_jointSensors.reserve(m_numHandJoints);
-        for (auto jointName : m_humanJointNameList)
+        for (const auto& jointName : m_humanJointNameList)
         {
             std::string wearableSensorName = m_wearablePrefix
                                              + wearable::sensor::IVirtualJointKinSensor::getPrefix()
@@ -253,7 +253,7 @@ bool GloveWearableImpl::getJointValues(std::vector<double>& values)
         values.resize(m_numHandJoints, 0.0);
 
     size_t i = 0;
-    for (auto sensor : m_jointSensors)
+    for (const auto& sensor : m_jointSensors)
     {
         if (sensor->getSensorStatus() != wearable::sensor::SensorStatus::Ok)
         {
@@ -271,6 +271,12 @@ bool GloveWearableImpl::getPalmImuRotationValues(std::vector<double>& values)
     if (values.size() != 4) // quaternion size
         values.resize(4, 0.0);
 
+    if (m_handPalmSensor->getSensorStatus() != wearable::sensor::SensorStatus::Ok)
+    {
+        std::string sName = m_handPalmSensor->getSensorName();
+        yError() << m_logPrefix << "sensor status is not OK, sensor name: " << sName;
+    }
+
     wearable::Quaternion orientation;
     m_handPalmSensor->getLinkOrientation(orientation);
     for (size_t i = 0; i < 4; i++)
@@ -284,13 +290,43 @@ bool GloveWearableImpl::getFingertipPoseValues(Eigen::MatrixXd& values)
         values.resize(m_numFingers, 7);
 
     size_t i = 0;
-    for (auto sensor : m_fingertipLinkSensors)
+    for (const auto& sensor : m_fingertipLinkSensors)
     {
         if (sensor->getSensorStatus() != wearable::sensor::SensorStatus::Ok)
         {
             std::string sName = sensor->getSensorName();
             yError() << m_logPrefix << "sensor status is not OK, sensor name: " << sName;
+
+            wearable::sensor::SensorStatus status = sensor->getSensorStatus();
+            switch (status)
+            {
+            case wearable::sensor::SensorStatus::Ok:
+                yInfo() << "sensor status: ok";
+                break;
+            case wearable::sensor::SensorStatus::Error:
+                yInfo() << "sensor status: Error";
+                break;
+            case wearable::sensor::SensorStatus::Calibrating:
+                yInfo() << "sensor status: Calibrating";
+                break;
+            case wearable::sensor::SensorStatus::Overflow:
+                yInfo() << "sensor status: Overflow";
+                break;
+            case wearable::sensor::SensorStatus::Timeout:
+                yInfo() << "sensor status: Timeout";
+                break;
+            case wearable::sensor::SensorStatus::Unknown:
+                yInfo() << "sensor status: Unknown";
+                break;
+            case wearable::sensor::SensorStatus::WaitingForFirstRead:
+                yInfo() << "sensor status: WaitingForFirstRead";
+                break;
+            default:
+                yInfo() << "default case!";
+                break;
+            }
         }
+
         wearable::Quaternion orientation;
         wearable::Vector3 position;
         sensor->getLinkPose(position, orientation);

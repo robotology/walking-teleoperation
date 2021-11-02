@@ -491,14 +491,18 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
 
     m_axisValueFeedbacksEigen = CtrlHelper::toEigen(m_axisValueFeedbacks);
     m_jointValueFeedbacksEigen = CtrlHelper::toEigen(m_jointValueFeedbacks);
+    std::cout << "logged data for LR: m_axisValueFeedbacksEigen:"
+              << m_axisValueFeedbacksEigen.transpose() << "\n";
+    std::cout << "logged data for LR: m_jointValueFeedbacksEigen:"
+              << m_jointValueFeedbacksEigen.transpose() << "\n";
 
-    if (!push_back_row(m_axesData, m_axisValueFeedbacksEigen))
+    if (!push_back_row(m_axesData, m_axisValueFeedbacksEigen.transpose()))
     {
         yError() << m_logPrefix
                  << "cannot add new axes feedback values to the collected axes data .";
         return false;
     }
-    if (!push_back_row(m_jointsData, m_jointValueFeedbacksEigen))
+    if (!push_back_row(m_jointsData, m_jointValueFeedbacksEigen.transpose()))
     {
         yError() << m_logPrefix
                  << "cannot add new joints feedback values to the collected joints data .";
@@ -518,6 +522,9 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
         = minLimit[axisNumber] + (maxLimit[axisNumber] - minLimit[axisNumber]) * sin(time);
 
     setAxisReferences(m_axisValueReferences);
+    yInfo() << "logged data for LR: m_axisValueReferences:" << m_axisValueReferences;
+    //    std::cout << "logged data for LR: m_jointsData:" << m_jointsData << "\n";
+    //    std::cout << "logged data for LR: m_axisValueReferences:" << m_axesData << "\n";
 
     move();
 
@@ -536,6 +543,8 @@ bool RobotController::trainCouplingMatrix()
     jointsData = m_jointsData;
 
     m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A_Bias);
+
+    std::cout << m_logPrefix << "[axes-joints coupling] A_Bias:\n" << A_Bias << std::endl;
 
     m_A = A_Bias.block(0, 1, m_A.rows(), m_A.cols());
     m_Bias = A_Bias.block(0, 0, m_Bias.rows(), 1);
@@ -588,8 +597,6 @@ bool RobotController::areEstimatorsInitialized() const
 
 bool RobotController::estimateNextStates()
 {
-    yarp::sig::Vector axisReferenceVector, axisFeedbackVector;
-    yarp::sig::Vector JointsExpectedVector, jointsFeedbackVector;
 
     if (m_axisFeedbackEstimators->isInitialized())
     {

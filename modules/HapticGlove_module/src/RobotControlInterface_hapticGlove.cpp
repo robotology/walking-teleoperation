@@ -1009,7 +1009,8 @@ bool RobotControlInterface::getLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotControlInterface::getLimits(std::vector<double> minLimits, std::vector<double> maxLimits)
+bool RobotControlInterface::getLimits(std::vector<double>& minLimits,
+                                      std::vector<double>& maxLimits)
 {
     minLimits.resize(m_noActuatedAxis, 0.0);
     maxLimits.resize(m_noActuatedAxis, 0.0);
