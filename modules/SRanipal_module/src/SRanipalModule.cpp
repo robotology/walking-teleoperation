@@ -19,10 +19,11 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     m_useEyebrows = !rf.check("noEyebrows") || (!rf.find("noEyebrows").asBool()); //True if noEyebrows is not set or set to false
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
     m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
+    m_useGaze = !rf.check("noGaze") || (!rf.find("noGaze").asBool()); //True if noGaze is not set or set to false
 
     double defaultPeriod = 0.1;
 
-    if (m_useEyebrows || m_useEyelids)
+    if (m_useEyebrows || m_useEyelids || m_useGaze)
     {
         if (!m_sranipalInterface.initializeEyeEngine())
         {
@@ -69,6 +70,17 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             }
             yInfo() << "[SRanipalModule::configure] Controlling the eyelids.";
         }
+
+        if (m_useGaze)
+        {
+            if (!m_gazeRetargeting.configure(rf))
+            {
+                yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
+                return false;
+            }
+
+            defaultPeriod = 0.01; //Since we use velocity control for the gaze, we use faster loops
+        }
     }
 
     if (m_useLip)
@@ -113,7 +125,7 @@ bool SRanipalModule::updateModule()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    if ((m_useEyebrows || m_useEyelids) && m_sranipalInterface.updateEyeData()) {
+    if ((m_useEyebrows || m_useEyelids || m_useGaze) && m_sranipalInterface.updateEyeData()) {
 
         double eyeWideness{0.0};
         if (m_useEyebrows && m_sranipalInterface.getEyeWideness(eyeWideness))
@@ -126,11 +138,22 @@ bool SRanipalModule::updateModule()
         {
             m_eyelidsRetargeting.setDesiredEyeOpennes(eye_openness);
         }
+
+        iDynTree::Axis leftGaze, rightGaze;
+        if (m_useGaze && m_sranipalInterface.getGazeAxes(leftGaze, rightGaze))
+        {
+            m_gazeRetargeting.setEyeGazeAxes(leftGaze, rightGaze);
+        }
     }
 
     if (m_useEyelids)
     {
         m_eyelidsRetargeting.update();
+    }
+
+    if (m_useGaze)
+    {
+        m_gazeRetargeting.update();
     }
 
     SRanipalInterface::LipExpressions lipExpressions;
@@ -152,6 +175,7 @@ bool SRanipalModule::close()
     std::lock_guard<std::mutex> lock(m_mutex);
     m_sranipalInterface.close();
     m_eyelidsRetargeting.close();
+    m_gazeRetargeting.close();
     m_faceExpressions.close();
     m_lipImagePort.close();
     yInfo() << "Closing";
