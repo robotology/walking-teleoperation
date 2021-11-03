@@ -344,7 +344,7 @@ void GazeRetargeting::close()
 bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, yarp::os::Value &value)
 {
     yarp::os::Bottle cmd, reply;
-    cmd.addVocab32(yarp::os::Vocab32::encode(query));
+    cmd.addVocab(yarp::os::Vocab::encode(query));
     bool okWrite = m_VRDeviceRPCOutputPort.write(cmd, reply);
 
     if (!okWrite || reply.size() == 0)
