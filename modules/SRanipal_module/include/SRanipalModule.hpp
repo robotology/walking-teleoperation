@@ -12,6 +12,7 @@
 #include <SRanipalInterface.hpp>
 #include <EyelidsRetargeting.hpp>
 #include <FaceExpressionsRetargeting.hpp>
+#include <GazeRetargeting.hpp>
 #include <yarp/os/BufferedPort.h> /** Needed to open the input port. **/
 #include <yarp/os/RFModule.h> /** We inherit from this. **/
 #include <yarp/sig/Image.h> /** To send the lip image. **/
@@ -26,10 +27,12 @@ class SRanipalModule : public yarp::os::RFModule
     SRanipalInterface m_sranipalInterface;
     EyelidsRetargeting m_eyelidsRetargeting;
     FaceExpressionsRetargeting m_faceExpressions;
+    GazeRetargeting m_gazeRetargeting;
 
     bool m_useEyebrows;
     bool m_useLip;
     bool m_useEyelids;
+    bool m_useGaze;
 
     double m_period;
     yarp::os::BufferedPort<yarp::sig::FlexImage> m_lipImagePort;

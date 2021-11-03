@@ -137,7 +137,6 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     yarp::dev::IAxisInfo* axisInfo{nullptr};
     yarp::dev::IControlLimits* controlLimits{nullptr};
 
-
     if (!m_eyesDriver.view(axisInfo) || !axisInfo)
     {
         yError() << "[GazeRetargeting::configure] Failed to view the IAxisInfo interface. Use noGaze to avoid connecting to it.";
@@ -242,7 +241,7 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to get the control limits of the eyes vergence.";
         return false;
     }
-    if (!controlLimits->getLimits(m_eyeVersIndex, &robotMinTiltInDeg, &robotMaxTiltInDeg))
+    if (!controlLimits->getLimits(m_eyeTiltIndex, &robotMinTiltInDeg, &robotMaxTiltInDeg))
     {
         yError() << "[GazeRetargeting::configure] Failed to get the control limits of the eyes tilt.";
         return false;
@@ -277,6 +276,12 @@ void GazeRetargeting::setEyeGazeAxes(const iDynTree::Axis &leftGaze, const iDynT
 
 bool GazeRetargeting::update()
 {
+    if (!m_configured)
+    {
+        yError() << "[GazeRetargeting::update] The gaze retargeting module is not initialized.";
+        return false;
+    }
+
     if (!m_VRInterface.isActive())
     {
         return true; //do nothing
@@ -484,10 +489,11 @@ bool GazeRetargeting::VRInterface::isActive()
         return true;
     }
 
-    if ((yarp::os::Time::now() - m_lastActiveCheck) < 1.0)
+    if ((yarp::os::Time::now() - m_lastActiveCheck) < 1.0) //Check once per second
     {
         return false;
     }
+    m_lastActiveCheck = yarp::os::Time::now();
 
     if (m_VRDeviceRPCOutputPort.getOutputCount() == 0)
     {
@@ -536,7 +542,6 @@ bool GazeRetargeting::VRInterface::isActive()
     m_rightEye.imageRelativePosition(2) = eyesZPosition;
 
     std::string leftEyePortName;
-
 
     if (!getValueFromRPC("getLeftImageControlPortName", leftEyePortName))
     {
