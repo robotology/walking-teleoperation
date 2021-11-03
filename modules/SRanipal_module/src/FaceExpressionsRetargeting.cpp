@@ -9,15 +9,16 @@
 #include <FaceExpressionsRetargeting.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Bottle.h>
+#include <yarp/os/Vocab.h>
 
 void FaceExpressionsRetargeting::sendFaceExpression(const std::string &part, const std::string &emotion)
 {
     if (emotion != m_currentExpressions[part])
     {
         yarp::os::Bottle cmd, reply;
-        cmd.addVocab32(yarp::os::Vocab32::encode("set"));
-        cmd.addVocab32(yarp::os::Vocab32::encode(part));
-        cmd.addVocab32(yarp::os::Vocab32::encode(emotion));
+        cmd.addVocab(yarp::os::Vocab::encode("set"));
+        cmd.addVocab(yarp::os::Vocab::encode(part));
+        cmd.addVocab(yarp::os::Vocab::encode(emotion));
         m_emotionsOutputPort.write(cmd, reply);
         m_currentExpressions[part] = emotion;
         yInfo() << "[FaceExpressionsRetargeting::sendFaceExpression] Sending" << emotion << "to" << part;
@@ -48,6 +49,8 @@ bool FaceExpressionsRetargeting::configure(yarp::os::ResourceFinder &rf)
 
     m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
+
+    m_configured = true;
 
     return true;
 }
