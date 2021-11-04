@@ -18,17 +18,17 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     setName(name.c_str());
     std::string robot = rf.check("robot", yarp::os::Value("icub"), "The name of the robot to connect to.").asString();
 
-    m_useEyebrows = !rf.check("noEyebrows") || (!rf.find("noEyebrows").asBool()); //True if noEyebrows is not set or set to false
-    m_useLip = !rf.check("noLip") || (!rf.find("noLip").asBool()); //True if noLip is not set or set to false
-    m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
-    m_useGaze = rf.findGroup("noGaze").isNull() || (!rf.find("noGaze").asBool()); // True if noGaze is not set or set to false
+    m_useEyebrows = !rf.check("noEyebrows") || (!rf.find("noEyebrows").isNull() && !rf.find("noEyebrows").asBool()); //True if noEyebrows is not set or set to false
+    m_useLip = !rf.check("noLip") || (!rf.find("noLip").isNull() && !rf.find("noLip").asBool()); //True if noLip is not set or set to false
+    m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").isNull() && !rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
+    m_useGaze = !rf.check("noGaze") || (!rf.find("noGaze").isNull() && !rf.find("noGaze").asBool()); // True if noGaze is not set or set to false
 
     double defaultPeriod = 0.1;
 
     if (m_useEyebrows)
     {
         yInfo() << "[SRanipalModule::configure] Controlling the eyebrows.";
-    } 
+    }
     else
     {
         yInfo() << "[SRanipalModule::configure] Skipping eyebrows control.";
@@ -96,7 +96,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
             defaultPeriod = 0.01; //Since we use velocity control for the gaze, we use faster loops
             yInfo() << "[SRanipalModule::configure] Controlling the gaze.";
-        } 
+        }
         else
         {
             yInfo() << "[SRanipalModule::configure] Skipping gaze control.";
@@ -118,7 +118,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         }
 
         yInfo() << "[SRanipalModule::configure] Using Lip tracking.";
-    } 
+    }
     else
     {
         yInfo() << "[SRanipalModule::configure] Skipping lip control.";
@@ -181,7 +181,7 @@ bool SRanipalModule::updateModule()
     }
 
     SRanipalInterface::LipExpressions lipExpressions;
-    if (m_useLip && m_sranipalInterface.getLipExpressions(lipExpressions))
+    if (m_useLip && m_sranipalInterface.updateLipData() && m_sranipalInterface.getLipExpressions(lipExpressions))
     {
         m_faceExpressions.updateLip(lipExpressions);
 
