@@ -206,13 +206,13 @@ bool SRanipalInterface::getEyeOpenness(double &openness)
                           SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
             DecodeBitMask(m_eyeData_v2.verbose_data.right.eye_data_validata_bit_mask,
                           SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
-            !m_eyeData_v2.no_user;
+            m_eyeData_v2.no_user; //no user is false if the headset is removed
 
     openness = 1.0;
 
     if (eye_openness_validity)
     {
-        double openness = std::min(m_eyeData_v2.verbose_data.left.eye_openness, m_eyeData_v2.verbose_data.right.eye_openness);
+        openness = std::min(m_eyeData_v2.verbose_data.left.eye_openness, m_eyeData_v2.verbose_data.right.eye_openness);
     }
 
     return eye_openness_validity;
@@ -243,7 +243,7 @@ bool SRanipalInterface::getGazeAxes(iDynTree::Axis &leftEyeGaze, iDynTree::Axis 
                           SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_DIRECTION_VALIDITY) &&
             DecodeBitMask(m_eyeData_v2.verbose_data.right.eye_data_validata_bit_mask,
                           SingleEyeDataValidity::SINGLE_EYE_DATA_GAZE_ORIGIN_VALIDITY) &&
-            !m_eyeData_v2.no_user;
+            m_eyeData_v2.no_user; //no user is false if the headset is removed
 
     if (!eye_gaze_validity)
     {
