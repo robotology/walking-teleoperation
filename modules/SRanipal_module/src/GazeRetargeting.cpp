@@ -344,13 +344,20 @@ void GazeRetargeting::close()
 bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, yarp::os::Value &value)
 {
     yarp::os::Bottle cmd, reply;
-    cmd.addVocab(yarp::os::Vocab::encode(query));
+    cmd.addString(query);
     bool okWrite = m_VRDeviceRPCOutputPort.write(cmd, reply);
+    yDebug() << "[GazeRetargeting::VRInterface::getValueFromRPC] Sent the following command to RPC:"
+             << query;
 
     if (!okWrite || reply.size() == 0)
     {
+        yDebug()
+            << "[GazeRetargeting::VRInterface::getValueFromRPC] Failed to get an answer. (okWrite ="
+            << okWrite << "reply.size()" << reply.size(); 
         return false;
     }
+
+    yDebug() << "[GazeRetargeting::VRInterface::getValueFromRPC] Received answer:" << reply.toString();
 
     value = reply.get(0);
 
@@ -360,12 +367,22 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, yar
 bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, bool &value)
 {
     yarp::os::Value output;
-    if (!getValueFromRPC(query, output) || !output.isBool())
+    if (!getValueFromRPC(query, output))
     {
         return false;
     }
 
-    value = output.asBool();
+    if (output.isBool())
+    {
+        value = output.asBool();
+    } 
+    else if (output.isString())
+    {
+        value = output.asString() == "ok";
+    } else
+    {
+        return false;
+    }
 
     return true;
 }
