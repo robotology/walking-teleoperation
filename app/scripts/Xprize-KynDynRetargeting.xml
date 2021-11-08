@@ -29,22 +29,22 @@
     <node>icub-console</node>
     <parameters> --OPENXR::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
     <dependencies>
-      <port timeout="5.0">/transformServer/transforms:o</port>
-      <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
-      <port timeout="5.0">/icub/cam/left</port>
-      <port timeout="5.0">/icub/cam/right</port>
+      <port timeout="15.0">/transformServer/transforms:o</port>
+      <port timeout="15.0">/joypadDevice/Oculus/rpc:i</port>
+      <port timeout="15.0">/icub/cam/left</port>
+      <port timeout="15.0">/icub/cam/right</port>
     </dependencies>
   </module>
 
    <module>
      <name>XsensRetargetingModule</name>
      <parameters>--from iFeelRetargetingWalking.ini</parameters>
-     <node>icub-console-gui</node>
+     <node>icub-console</node>
    </module>
    
    <module>
      <name>HapticGloveModule</name>
-     <node>icub-console-gui</node>
+     <node>icub-head</node>
    </module>
    
   <!-- Connections -->
@@ -80,16 +80,6 @@
   </connection>
 
   <connection>
-    <from>/oculus/headpose/orientation:o</from>
-    <to>/oculusRetargeting/oculusOrientation:i</to>
-  </connection>
-
-  <connection>
-    <from>/oculus/headpose/position:o</from>
-    <to>/oculusRetargeting/oculusPosition:i</to>
-  </connection>
-  
-    <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
     <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
   </connection>
