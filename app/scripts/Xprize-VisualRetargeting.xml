@@ -38,7 +38,7 @@
   
   <module>
      <name>idyntree-yarp-visualizer</name>
-     <node>icub-console-gui</node>
+     <node>icub-console</node>
   </module>
 
   <!-- Connections -->
