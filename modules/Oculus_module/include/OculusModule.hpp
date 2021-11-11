@@ -13,6 +13,7 @@
 // std
 #include <ctime>
 #include <memory>
+#include <mutex>
 
 // YARP
 #include <yarp/dev/IFrameTransform.h>
@@ -22,11 +23,14 @@
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/RpcClient.h>
+#include <yarp/os/RpcServer.h>
 #include <yarp/sig/Vector.h>
 
 #include <FingersRetargeting.hpp>
 #include <HandRetargeting.hpp>
 #include <HeadRetargeting.hpp>
+
+#include <thrifts/TeleoperationCommands.h>
 
 #ifdef ENABLE_LOGGER
 #include <matlogger2/matlogger2.h>
@@ -38,7 +42,7 @@
  * Oculus readouts, send the desired pose of the hands to the walking application, move the robot
  * fingers and move the robot head
  */
-class OculusModule : public yarp::os::RFModule
+class OculusModule : public yarp::os::RFModule, public TeleoperationCommands
 {
 private:
     double m_dT; /**< Module period. */
@@ -129,11 +133,7 @@ private:
     yarp::os::RpcClient
         m_rpcVirtualizerClient; /**< Rpc client used for sending command to the virtualizer */
 
-    /** Port used to retrieve the human whole body joint pose. */
-    yarp::os::BufferedPort<yarp::os::Bottle> m_wholeBodyHumanJointsPort;
-
-    /** Port used to retrieve the human whole body joint pose. */
-    yarp::os::BufferedPort<yarp::sig::Vector> m_wholeBodyHumanSmoothedJointsPort;
+    yarp::os::RpcServer m_rpcOculusServerPort; /**< RPC port to control Oculus FSM. */
 
     double m_robotYaw; /**< Yaw angle of the robot base */
 
@@ -151,6 +151,9 @@ private:
     double m_playerOrientationThreshold; /**< Player orientation threshold. */
 
     bool m_enableLogger; /**< log the data (if ON) */
+
+    std::mutex m_mutex; /**< Mutex. */
+
 #ifdef ENABLE_LOGGER
     XBot::MatLogger2::Ptr m_logger; /**< */
     XBot::MatAppender::Ptr m_appender;
@@ -244,6 +247,37 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
+
+    /**
+     * This method prepares the Oculus Module for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    virtual bool prepareTeleoperation() override;
+
+    /**
+     * This method runs the entire Oculus Module for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    virtual bool runTeleoperation() override;
+
+    /**
+     * This method is called in order to prepare the Oculus Module FSM for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    bool preparingModule();
+
+    /**
+     * This method is called in order to run the Oculus Module FSM for Teleoperation.
+     * @return true/false in case of success/failure;
+     */
+    bool runningModule();
+
+    /**
+     * to get the Oculus FSM in string format
+     * @param OculusFSM to get the string value
+     * @return string associated with the inpute sate
+     */
+    std::string getStringFromOculusState(const OculusFSM state);
 };
 
 inline std::string getTimeDateMatExtension()
