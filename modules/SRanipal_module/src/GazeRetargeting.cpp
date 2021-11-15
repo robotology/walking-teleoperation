@@ -10,6 +10,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/IAxisInfo.h>
 #include <yarp/dev/IControlLimits.h>
+#include <yarp/os/Vocab.h>
 #include <iDynTree/Core/Utils.h>
 #include <Eigen/Dense>
 #include <iDynTree/Core/EigenHelpers.h>
@@ -353,7 +354,7 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, yar
     {
         yDebug()
             << "[GazeRetargeting::VRInterface::getValueFromRPC] Failed to get an answer. (okWrite ="
-            << okWrite << "reply.size()" << reply.size(); 
+            << okWrite << "reply.size()" << reply.size();
         return false;
     }
 
@@ -372,14 +373,19 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, boo
         return false;
     }
 
+    if (output.isVocab())
+    {
+        value = yarp::os::Vocab::decode(output.asVocab()).find("ok") != std::string::npos;
+    }
     if (output.isBool())
     {
         value = output.asBool();
-    } 
+    }
     else if (output.isString())
     {
-        value = output.asString() == "ok";
-    } else
+        value = output.asString().find("ok") != std::string::npos;
+    }
+    else
     {
         return false;
     }
