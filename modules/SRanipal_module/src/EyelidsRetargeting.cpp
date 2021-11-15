@@ -229,6 +229,11 @@ void EyelidsRetargeting::close()
     if (m_eyelidsMode)
     {
         m_eyelidsMode->setControlMode(0, VOCAB_CM_POSITION);
+
+        if (m_eyelidsPos)
+        {
+            m_eyelidsPos->positionMove(0, 0.0); //Set the eyes open before closing
+        }
         m_eyelidsMode = nullptr;
     }
     m_eyelidsDriver.close();
