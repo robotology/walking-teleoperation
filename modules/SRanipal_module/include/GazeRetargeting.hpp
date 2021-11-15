@@ -39,7 +39,7 @@ class GazeRetargeting
 
             iDynTree::Transform currentImageTransform(); //With respect to the headset frame
 
-            bool intersectionInImage(const iDynTree::Axis& gazeInHeadsetFrame, iDynTree::Vector2 &output);
+            bool intersectionInImage(const iDynTree::Axis& gazeInSRanipalFrame, iDynTree::Vector2 &output);
 
             void close();
         };

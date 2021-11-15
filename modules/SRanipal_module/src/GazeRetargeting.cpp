@@ -6,6 +6,10 @@
  * @date 2021
  */
 
+#ifndef _USE_MATH_DEFINES //for using M_PI
+#define _USE_MATH_DEFINES
+#endif
+
 #include <GazeRetargeting.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/dev/IAxisInfo.h>
@@ -94,7 +98,7 @@ double GazeRetargeting::saturateEyeVelocity(double inputVelocity, double inputPo
     double velocityLowerLimit = std::tanh(m_tanhGain * (inputPosition - kinematicLowerBound)) * (-maxVelocity);
     double velocityUpperLimit = std::tanh(m_tanhGain * (kinematicUpperBound - inputPosition)) * maxVelocity;
 
-    return std::max(velocityLowerLimit, std::min(inputPosition, velocityUpperLimit));
+    return std::max(velocityLowerLimit, std::min(inputVelocity, velocityUpperLimit));
 }
 
 GazeRetargeting::~GazeRetargeting()
@@ -377,7 +381,7 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, boo
     {
         value = yarp::os::Vocab::decode(output.asVocab()).find("ok") != std::string::npos;
     }
-    if (output.isBool())
+    else if (output.isBool())
     {
         value = output.asBool();
     }
@@ -481,7 +485,7 @@ bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::A
         return false;
     }
 
-    //First, apply a deadzone on the intersection with the image to unwanted motions
+    //First, apply a deadzone on the intersection with the image to avoid unwanted motions
     leftImageIntersection = applyDeadzone(leftImageIntersection);
     rightImageIntersection = applyDeadzone(rightImageIntersection);
 
@@ -572,7 +576,7 @@ bool GazeRetargeting::VRInterface::isActive()
         return false;
     }
 
-    std::string leftEyeOutputPortName = m_name + "/leftEye/control:o";
+    std::string leftEyeOutputPortName = "/" + m_name + "/leftEye/control:o";
 
     if (!m_leftEye.controlPort.open(leftEyeOutputPortName))
     {
@@ -595,7 +599,7 @@ bool GazeRetargeting::VRInterface::isActive()
         return false;
     }
 
-    std::string rightEyeOutputPortName = m_name + "/rightEye/control:o";
+    std::string rightEyeOutputPortName = "/" + m_name + "/rightEye/control:o";
 
     if (!m_rightEye.controlPort.open(rightEyeOutputPortName))
     {
@@ -612,6 +616,9 @@ bool GazeRetargeting::VRInterface::isActive()
     setVRImagesPose(0.0, 0.0, 0.0);
 
     m_isActive = true;
+
+    yInfo() << "[GazeRetargeting::VRInterface::isActive] Gaze retargeting ready!";
+
     return true;;
 }
 
@@ -642,11 +649,17 @@ iDynTree::Transform GazeRetargeting::VRInterface::EyeControl::currentImageTransf
     return iDynTree::Transform(rotation, position);
 }
 
-bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTree::Axis &gazeInHeadsetFrame, iDynTree::Vector2& output)
+bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTree::Axis &gazeInSRanipalFrame, iDynTree::Vector2& output)
 {
     output.zero();
 
-    iDynTree::Axis gazeInImage = currentImageTransform().inverse() * gazeInHeadsetFrame;
+    iDynTree::Transform headsetToSranipalTransform(iDynTree::Rotation::RotY(M_PI), //The frame in which gazeInSRanipalFrame has the Y pointing up and the Z forward. The headset frame has the Z backward
+                                                   iDynTree::Position::Zero());    //See https://www.researchgate.net/figure/Coordinate-system-of-HTC-VIVE-Pro-Eye-based-on-the-manual-of-SRanipal-SDK-A_fig1_346058398
+
+    iDynTree::Axis gazeInHeadsetFrame = headsetToSranipalTransform * gazeInSRanipalFrame;
+
+    iDynTree::Axis gazeInImage
+        = currentImageTransform().inverse() * gazeInHeadsetFrame;
 
     const iDynTree::Position& origin = gazeInImage.getOrigin();
     const iDynTree::Direction& direction = gazeInImage.getDirection();
