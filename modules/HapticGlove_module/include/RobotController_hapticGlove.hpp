@@ -13,16 +13,14 @@
 #include <iostream>
 #include <memory>
 
-// YARP
-#include <yarp/os/Searchable.h>
-
 // teleoperation
 #include <ControlHelper.hpp>
 #include <LinearRegression.hpp>
-#include <RobotControlHelper_hapticGlove.hpp>
+#include <RobotControlInterface_hapticGlove.hpp>
 #include <RobotMotorsEstimation.hpp>
 
-using namespace yarp::math;
+// yarp
+#include <yarp/os/Searchable.h>
 
 namespace HapticGlove
 {
@@ -32,7 +30,7 @@ class RobotController;
 /**
  * Class useful to manage the control of the retargeting robot fingers.
  */
-class HapticGlove::RobotController : public RobotControlHelper
+class HapticGlove::RobotController
 {
 private:
     std::string m_logPrefix;
@@ -55,6 +53,8 @@ private:
     // TO CHECK: maybe delete later
     //    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity
     //    integrator */
+
+    std::unique_ptr<RobotControlInterface> m_robotControlInterface; /**< robot control interface */
 
     CtrlHelper::Eigen_Mat m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m>
                             n: number of joints, m: number of motors; we have q= m_A x m + m_Bias
@@ -90,6 +90,8 @@ private:
     double m_kGain; /**< The gain of the exponential filter to set the robot reference position
                        values */
 
+    std::unique_ptr<CtrlHelper::Data> m_data;
+
     /**
      * get the custom set of vectors
      * @param allListName the full vector names
@@ -110,9 +112,8 @@ public:
      * @param name name of the robot
      * @return true in case of success and false otherwise.
      */
-    bool configure(const yarp::os::Searchable& config,
-                   const std::string& name,
-                   const bool& rightHand) override;
+    bool
+    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
     /**
      * Set the fingers axis reference value
@@ -288,6 +289,24 @@ public:
      */
     bool getEstimatedJointValuesKf(std::vector<double>& feedbackJointValuesEstimationKF,
                                    std::vector<double>& expectedJointValuesEstimationKF);
+
+    /**
+     * Move the robot part
+     * @return true in case of success and false otherwise.
+     */
+    bool move();
+
+    /**
+     * Expose the contolHelper interface (const)
+     * @return control helper interface
+     */
+    const std::unique_ptr<RobotControlInterface>& controlHelper() const;
+
+    /**
+     * Expose the contolHelper interface
+     * @return control helper interface
+     */
+    std::unique_ptr<RobotControlInterface>& controlHelper();
 };
 
 #endif

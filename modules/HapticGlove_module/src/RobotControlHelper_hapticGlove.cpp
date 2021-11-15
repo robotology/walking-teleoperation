@@ -10,7 +10,7 @@
 
 bool RobotControlHelper::move()
 {
-    return m_robotControlInterface->setJointReference(m_axisValueReferences);
+    //    return m_robotControlInterface->setJointReference(m_data.axisValueReferencesStd);
     return true;
 }
 
