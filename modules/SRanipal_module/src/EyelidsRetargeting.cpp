@@ -32,11 +32,19 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
             && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
     m_useEyelidsPositionControl = rf.check("useEyelidsPositionControl")
             && (rf.find("useEyelidsPositionControl").isNull() || rf.find("useEyelidsPositionControl").asBool());
-    m_eyelidsMaxVelocity = rf.check("eyelidsMaxVelocity", yarp::os::Value(100.0)).asFloat64();
     m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(100.0)).asFloat64();
     m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
     m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
     m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
+
+    double defaultMaxVelocity = 100.0;
+    if (m_useEyelidsPositionControl)
+    {
+        defaultMaxVelocity = 75.0;
+    }
+    m_eyelidsMaxVelocity = rf.check("eyelidsMaxVelocity", yarp::os::Value(defaultMaxVelocity)).asFloat64();
+
+
     std::string rawEyelidsPortName = rf.check("rawEyelidsPortName", yarp::os::Value("/face/raw:o")).asString();
     if (m_useRawEyelids)
     {
@@ -78,7 +86,7 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
                     ok &= m_eyelidsMode->setControlMode(0, VOCAB_CM_POSITION);
                     if (m_eyelidsPos)
                     {
-                        ok &= m_eyelidsPos->setRefSpeed(0, 75.0); // max velocity that doesn't give problems
+                        ok &= m_eyelidsPos->setRefSpeed(0, m_eyelidsMaxVelocity); // max velocity that doesn't give problems
                         ok &= m_eyelidsPos->setRefAcceleration(0, std::numeric_limits<double>::max());
                     }
                     else
