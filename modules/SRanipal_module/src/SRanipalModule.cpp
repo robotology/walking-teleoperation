@@ -41,32 +41,6 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             return false;
         }
 
-        bool skipEyeCalibration = rf.check("skipEyeCalibration") && (rf.find("skipEyeCalibration").isNull() || rf.find("skipEyeCalibration").asBool());
-        bool forceEyeCalibration = rf.check("forceEyeCalibration") && (rf.find("forceEyeCalibration").isNull() || rf.find("forceEyeCalibration").asBool());
-
-        if (forceEyeCalibration && skipEyeCalibration)
-        {
-            yError() << "[SRanipalModule::configure] Both skipEyeCalibration and forceEyeCalibration are set!";
-            return false;
-        }
-
-        if (!skipEyeCalibration) //If skipCalibration is not set or set to false
-        {
-            bool needCalibration = false;
-            if (!m_sranipalInterface.isEyeCalibrationNeeded(needCalibration))
-            {
-                return false;
-            }
-
-            if (needCalibration || forceEyeCalibration) {
-                yInfo() << "[SRanipalModule::configure] Runnning Eye calibration";
-                if (!m_sranipalInterface.calibrateEyeTracking())
-                {
-                    return false;
-                }
-            }
-        }
-
         if (m_useEyelids)
         {
             if (!m_eyelidsRetargeting.configure(rf))
@@ -134,6 +108,36 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     }
 
     m_period = rf.check("period", yarp::os::Value(defaultPeriod)).asFloat64();
+
+    if (m_useEyebrows || m_useEyelids || m_useGaze) //Run the eye calibration as last thing
+    {
+        bool skipEyeCalibration = rf.check("skipEyeCalibration") && (rf.find("skipEyeCalibration").isNull() || rf.find("skipEyeCalibration").asBool());
+        bool forceEyeCalibration = rf.check("forceEyeCalibration") && (rf.find("forceEyeCalibration").isNull() || rf.find("forceEyeCalibration").asBool());
+
+        if (forceEyeCalibration && skipEyeCalibration)
+        {
+            yError() << "[SRanipalModule::configure] Both skipEyeCalibration and forceEyeCalibration are set!";
+            return false;
+        }
+
+        if (!skipEyeCalibration) // If skipCalibration is not set or set to false
+        {
+            bool needCalibration = false;
+            if (!m_sranipalInterface.isEyeCalibrationNeeded(needCalibration))
+            {
+                return false;
+            }
+
+            if (needCalibration || forceEyeCalibration)
+            {
+                yInfo() << "[SRanipalModule::configure] Runnning Eye calibration";
+                if (!m_sranipalInterface.calibrateEyeTracking())
+                {
+                    return false;
+                }
+            }
+        }
+    }
 
     yInfo() << "SRanipalModule started correctly.";
 

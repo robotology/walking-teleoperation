@@ -45,6 +45,8 @@ bool GazeRetargeting::homeEyes()
         return false;
     }
 
+    yInfo() << "[GazeRetargeting::homeEyes] Homing eyes..";
+
     int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
     double speeds[] = {m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS};
     double references[] = {0.0, 0.0, 0.0};
@@ -61,6 +63,8 @@ bool GazeRetargeting::homeEyes()
     }
 
     yarp::os::Time::delay(3.0 * expectedTime); //Just give some time for it to go to home
+
+    yInfo() << "[GazeRetargeting::homeEyes] Eyes homed!";
 
     return true;
 }
@@ -121,10 +125,10 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     std::string eyes_vergence_name = rf.check("eyesVergenceName", yarp::os::Value("eyes_verg")).asString();
     std::string eyes_tilt_name = rf.check("eyesTiltName", yarp::os::Value("eyes_tilt")).asString();
 
-    m_maxEyeSpeedInDegS = rf.check("eyeMaxVelocity", yarp::os::Value(50.0)).asFloat64();
-    double userMaxVergInDeg = rf.check("eyeMaxVergence", yarp::os::Value(45.0)).asFloat64();
-    double userMaxVersInDeg = rf.check("eyeMaxVersion", yarp::os::Value(30.0)).asFloat64();
-    double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(30.0)).asFloat64();
+    m_maxEyeSpeedInDegS = rf.check("eyeMaxVelocity", yarp::os::Value(20.0)).asFloat64();
+    double userMaxVergInDeg = rf.check("eyeMaxVergence", yarp::os::Value(10.0)).asFloat64();
+    double userMaxVersInDeg = rf.check("eyeMaxVersion", yarp::os::Value(25.0)).asFloat64();
+    double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(25.0)).asFloat64();
     m_tanhGain = rf.check("eyeKinematicSaturationGain", yarp::os::Value(20.0)).asFloat64();
 
     yarp::os::Property rcb_head_conf{
@@ -165,8 +169,6 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to view the IVelocityControl interface. Use noGaze to avoid connecting to it.";
         return false;
     }
-
-    m_eyesVel->setRefAcceleration(0, std::numeric_limits<double>::max());
 
     if (!m_eyesDriver.view(m_eyesEnc) || !m_eyesEnc)
     {
@@ -231,6 +233,10 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         yError() << "[GazeRetargeting::configure] Failed to find the tilt joint with the name" << eyes_tilt_name << "among the neck joints." ;
         return false;
     }
+
+    m_eyesVel->setRefAcceleration(m_eyeVersIndex, std::numeric_limits<double>::max());
+    m_eyesVel->setRefAcceleration(m_eyeVergIndex, std::numeric_limits<double>::max());
+    m_eyesVel->setRefAcceleration(m_eyeTiltIndex, std::numeric_limits<double>::max());
 
     double robotMinVergInDeg, robotMaxVergInDeg,
             robotMinVersInDeg, robotMaxVersInDeg,
@@ -451,8 +457,8 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-    m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(1.0)).asFloat64();
-    m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.01)).asFloat64();
+    m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(2.0)).asFloat64();
+    m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.02)).asFloat64();
 
     return true;
 }
@@ -680,5 +686,8 @@ bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTre
 
 void GazeRetargeting::VRInterface::EyeControl::close()
 {
+    azimuth = 0.0;
+    elevation = 0.0;
+    sendAngles();
     controlPort.close();
 }
