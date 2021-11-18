@@ -158,6 +158,11 @@ public:
      * Reset the player orientation
      */
     void resetPlayerOrientation() override;
+
+    /**
+     * Reset the player height
+     */
+    virtual void resetPlayerHeight() override;
 };
 
 #endif
