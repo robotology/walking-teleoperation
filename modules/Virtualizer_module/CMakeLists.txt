@@ -46,6 +46,8 @@ target_include_directories(${EXE_TARGET_NAME} PUBLIC
 target_link_libraries(${EXE_TARGET_NAME}
   ${YARP_LIBRARIES}
   CybSDK
-  UtilityLibrary)
+  UtilityLibrary
+  Eigen3::Eigen
+  )
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
