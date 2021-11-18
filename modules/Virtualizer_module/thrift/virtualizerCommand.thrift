@@ -12,4 +12,9 @@ service VirtualizerCommands
      * Reset the player orientation
      */
     oneway void resetPlayerOrientation();
+
+    /**
+     * Reset the player height
+     */
+    oneway void resetPlayerHeight();
 }

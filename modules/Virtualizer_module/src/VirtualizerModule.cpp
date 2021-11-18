@@ -380,6 +380,8 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
     // reset player orientation
     m_cvirtDeviceID->ResetPlayerOrientation();
 
+    m_cvirtDeviceID->ResetPlayerHeight();
+
     // reset some quanties
     m_robotYaw = 0;
     m_oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
@@ -438,7 +440,7 @@ bool VirtualizerModule::updateModule()
 
     //get player height
     float playerHeightInCm;
-    playerHeightInCm = m_cvirtDeviceID->GetPlayerHeight(); //It is relative to the initial height set ResetPlayerOrientation, positive upward
+    playerHeightInCm = m_cvirtDeviceID->GetPlayerHeight(); //It is relative to the initial height set ResetPlayerHeight, positive upward
     double playerHeighInm = playerHeightInCm / 100.0;
 
     // get the player speed
@@ -535,7 +537,7 @@ bool VirtualizerModule::updateModule()
 
     if (m_useTf)
     {
-        Eigen::Matrix3d rotation = Eigen::AngleAxisd(-playerYaw, Eigen::Vector3f::UnitZ()).toRotationMatrix(); //We consider the Z axis pointing upward, hence we invert the sign since the angle from the virtualizer is positive clockwise
+        Eigen::Matrix3d rotation = Eigen::AngleAxisd(-playerYaw, Eigen::Vector3d::UnitZ()).toRotationMatrix(); //We consider the Z axis pointing upward, hence we invert the sign since the angle from the virtualizer is positive clockwise
 
         for (size_t i = 0; i < 3; ++i)
         {
@@ -565,6 +567,12 @@ void VirtualizerModule::resetPlayerOrientation()
     m_movingAverage.clear();
     m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
     return;
+}
+
+void VirtualizerModule::resetPlayerHeight()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_cvirtDeviceID->ResetPlayerHeight();
 }
 
 double VirtualizerModule::threshold(const double &input, double deadzone)
