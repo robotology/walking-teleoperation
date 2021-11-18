@@ -23,6 +23,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IControlMode.h>
+#include <yarp/dev/IFrameTransform.h>
 
 #include <CVirt.h>
 #include <CVirtDevice.h>
@@ -72,6 +73,13 @@ private:
     double m_neckYawDeadzone; /**< Value below which the neck is considered straight (the value is in degrees). */
     bool m_useOnlyHeadForTurning; /**< Flag to use only the head to control the direction while walking. */
 
+    yarp::dev::PolyDriver m_tfDriver; /**< Device to publish the Virtualizer transform. */
+    yarp::dev::IFrameTransform* m_tfPublisher; /**< Interface to publish and retrieve transforms. */
+    std::string m_tfRootFrame; /**< The name of the root frame name. */
+    std::string m_tfFrameName; /**< The name of the virtualizer frame in the transform server. */
+    bool m_useTf; /**< Flag to check if the transform server needs to be used. */
+    yarp::sig::Matrix m_tfMatrix; /**< Buffer to publish the transform. */
+
     /**
      * Establish the connection with the virtualizer.
      * @return true in case of success and false otherwise.
@@ -84,6 +92,13 @@ private:
      * @return True if successfull.
      */
     bool configureRingVelocity(const yarp::os::Bottle& ringVelocityGroup);
+
+    /**
+     * @brief Configure the TransformServer interface
+     * @param tfGroup The group containing the parameters for the TransformServer interface
+     * @return True if successfull.
+     */
+    bool configureTransformServer(const yarp::os::Bottle& tfGroup);
 
     /**
      * @brief Configure the parameters relative to the use of the neck yaw to control the walking direction
