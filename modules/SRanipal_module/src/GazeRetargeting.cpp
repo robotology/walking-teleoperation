@@ -495,14 +495,15 @@ bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::A
     leftImageIntersection = applyDeadzone(leftImageIntersection);
     rightImageIntersection = applyDeadzone(rightImageIntersection);
 
-
+    double leftEyeDistance = iDynTree::toEigen(m_leftEye.imageRelativePosition).norm();
+    double rightEyeDistance = iDynTree::toEigen(m_rightEye.imageRelativePosition).norm();
     //Compute the desired single eye velocity
     double leftElevationVelocity, rightElevationVelocity, leftAzimuthVelocity, rightAzimuthVelocity;
-    leftElevationVelocity = m_velocityGain * leftImageIntersection(1); //The Y axis is pointing upward. If the operator is intersecting the image above the center, moves the eye up
-    rightElevationVelocity = m_velocityGain * rightImageIntersection(1);
+    leftElevationVelocity = m_velocityGain * leftImageIntersection(1) / leftEyeDistance; //The Y axis is pointing upward. If the operator is intersecting the image above the center, moves the eye up
+    rightElevationVelocity = m_velocityGain * rightImageIntersection(1) / rightEyeDistance;
 
-    leftAzimuthVelocity = -m_velocityGain * leftImageIntersection(0); //The X axis is pointing to the right. If the operator is looking on the right of the center, moves the eye clockwise (hence the minus sign).
-    rightAzimuthVelocity = -m_velocityGain * rightImageIntersection(0);
+    leftAzimuthVelocity = -m_velocityGain * leftImageIntersection(0) / leftEyeDistance; //The X axis is pointing to the right. If the operator is looking on the right of the center, moves the eye clockwise (hence the minus sign).
+    rightAzimuthVelocity = -m_velocityGain * rightImageIntersection(0) / rightEyeDistance;
 
     //Compute the dual eye velocity
     tiltSpeedInRadS = 0.5 * (leftElevationVelocity + rightElevationVelocity); //Ideally they should be equal. Set the desired velocity to the average value.
