@@ -11,6 +11,7 @@
 
 // std
 #include <memory>
+#include <vector>
 
 // YARP
 #include <yarp/dev/IAnalogSensor.h>
@@ -32,7 +33,7 @@
 
 namespace HapticGlove
 {
-class RobotControlInterface;
+class RobotInterface;
 struct axisSensorData;
 } // namespace HapticGlove
 
@@ -50,10 +51,11 @@ struct HapticGlove::axisSensorData
 /**
  * RobotControlInterface is an helper class for controlling the robot.
  */
-class HapticGlove::RobotControlInterface
+class HapticGlove::RobotInterface
 {
-    yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
-    yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
+    std::string m_logPrefix; /**< the log prefix*/
+
+    bool m_rightHand; /**< if the right hand is used, the variable is true*/
 
     int m_noActuatedAxis; /**< Number of the actuated DoF */
     size_t m_noAnalogSensor; /**< Number of the joints ( associated with the analog sensors) */
@@ -71,13 +73,16 @@ class HapticGlove::RobotControlInterface
         m_allJointNames; /**< Vector containing the name of the controlled axes. */
 
     std::vector<std::string>
-        m_actuatedJointList; /**< Vector containing the names of the activated joints (activated
+        m_actuatedJointList; /**< Vector containing the names of the actuated joints (activated
                                 joints are related to the axis that we are using). */
 
     size_t m_noActuatedJoints;
     std::vector<axisSensorData>
         m_axisInfoList; /**< Vector containing the data structure for controlled axis and the
                            associated sensor list. */
+
+    yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
+    yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
 
     yarp::dev::IPreciselyTimed* m_timedInterface{nullptr};
     yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */
@@ -87,7 +92,7 @@ class HapticGlove::RobotControlInterface
     yarp::dev::IVelocityControl* m_velocityInterface{nullptr}; /**< Velocity control interface. */
     yarp::dev::IControlMode* m_controlModeInterface{nullptr}; /**< Control mode interface. */
     yarp::dev::IControlLimits* m_limitsInterface{nullptr}; /**< Encorders interface. */
-    yarp::dev::IAnalogSensor* m_AnalogSensorInterface{nullptr}; /**< Sensor interface */
+    yarp::dev::IAnalogSensor* m_analogSensorInterface{nullptr}; /**< Sensor interface */
     yarp::dev::ICurrentControl* m_currentInterface{nullptr}; /**< current control interface */
     yarp::dev::IPWMControl* m_pwmInterface{nullptr}; /**< PWM control interface*/
     yarp::dev::IPidControl* m_pidInterface{nullptr}; /**< pid control interface*/
@@ -100,7 +105,6 @@ class HapticGlove::RobotControlInterface
     yarp::sig::Vector m_analogSensorFeedbackRaw; /**< sensor feedback [raw]*/
     yarp::sig::Vector m_analogSensorFeedbackInDegrees; /**< sensor feedback [deg]*/
     yarp::sig::Vector m_analogSensorFeedbackInRadians; /**< sensor feedback [rad]*/
-    yarp::sig::Vector m_analogSensorFeedbackSelected; /**< sensor info to read*/
     yarp::sig::Vector m_SensorActuatedJointFeedbackInRadians; /**< all the interested sensor info to
                                                                  read (analog+encoders)*/
     yarp::sig::Vector m_currentFeedback; /**< motor current feedbacks*/
@@ -178,7 +182,10 @@ public:
      * problem in the configuration phase
      * @return true / false in case of success / failure
      */
-    bool configure(const yarp::os::Searchable& config, const std::string& name, bool isMandatory);
+    bool configure(const yarp::os::Searchable& config,
+                   const std::string& name,
+                   const bool& rightHand,
+                   const bool& isMandatory);
 
     /**
      * Update the time stamp
@@ -251,14 +258,14 @@ public:
     yarp::os::Stamp& timeStamp();
 
     /**
-     * Get the joint encoders value
-     * @return the joint encoder value
+     * Get the axis encider values
+     * @return the axis encoder value
      */
     const yarp::sig::Vector& axisFeedbacks() const;
 
     /**
-     * Get the joint encoders value
-     * @return the joint encoder value
+     * Get the axis encoders value
+     * @param axisFeedbacks the axis encoder values
      */
     void axisFeedbacks(std::vector<double>& axisFeedbacks) const;
 
@@ -288,19 +295,19 @@ public:
 
     /**
      * Get all the intersted joints sensors value (including analog+encoders)
-     * @return all the intersted sensor values
+     * @param jointsFeedbacks all the intersted sensor values
      */
     void allSensors(std::vector<double>& jointsFeedbacks) const;
 
     /**
-     * Get all the intersted motor current values
+     * Get all the actuated motor current values
      * @return all the motor current values
      */
     const yarp::sig::Vector& motorCurrents() const;
 
     /**
-     * Get all the intersted motor current values
-     * @return all the motor current values
+     * Get all the actuated motor current values
+     * @param  motorCurrents the motor current values
      */
     void motorCurrents(std::vector<double>& motorCurrents) const;
 
@@ -336,7 +343,7 @@ public:
 
     /**
      * Get all the actuated motor low level pid outputs
-     * @return all the motor pid outputs
+     * @param motorPidOutputs the motor pid outputs
      */
     void motorPidOutputs(std::vector<double>& motorPidOutputs) const;
 
@@ -348,32 +355,56 @@ public:
 
     /**
      * Get all the actuated motor PWM References
-     * @return all the motor PWM References
+     * @param motorPwmReference the motor PWM References
      */
     void motorPwmReference(std::vector<double>& motorPwmReference) const;
 
     /**
-     * Get the number of actuated degree of freedom (motors)
-     * @return the number of actuated DoF
+     * Get the number of actuated axis/motors
+     * @return the number of actuated axis/motors
      */
     const int getNumberOfActuatedAxis() const;
 
+    /**
+     * Get the number of all axis/motors related to the used parts
+     * @return the number of all axis/motors
+     */
     const int getNumberOfAllAxis() const;
 
     /**
-     * Get the number of joints
-     * @return the number of joints
+     * Get the number of all the joints related to the robot used parts
+     * @return the number of all the joints
      */
     const int getNumberOfAllJoints() const;
 
+    /**
+     * Get the number of actuated joints of the used parts
+     * @return the number of actuated joints
+     */
     const int getNumberOfActuatedJoints() const;
 
+    /**
+     * Get the name of the actuated joints
+     * @param names the names of the actuated joints
+     */
     void getActuatedJointNames(std::vector<std::string>& names) const;
 
+    /**
+     * Get the name of the all the joints related to the used parts
+     * @param names the names of the all joints
+     */
     void getAllJointNames(std::vector<std::string>& names) const;
 
+    /**
+     * Get the name of the actuated axes
+     * @param names the names of the actuated axes
+     */
     void getActuatedAxisNames(std::vector<std::string>& names) const;
 
+    /**
+     * Get the name of the all the axes related to the used parts
+     * @param names the names of the all axis
+     */
     void getAllAxisNames(std::vector<std::string>& names) const;
 
     /**

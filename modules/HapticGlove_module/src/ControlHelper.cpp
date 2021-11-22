@@ -24,8 +24,11 @@ void CtrlHelper::toStdVector(Eigen::VectorXd& vecEigen, std::vector<double>& vec
 
 void CtrlHelper::toStdVector(yarp::sig::Vector& vecYarp, std::vector<double>& vecStd)
 {
-    Eigen::VectorXd tmpVec = CtrlHelper::toEigenVector(vecYarp);
-    CtrlHelper::toStdVector(tmpVec, vecStd);
+    if (vecStd.size() != vecYarp.size())
+    {
+        vecStd.resize(vecYarp.size());
+    }
+    CtrlHelper::toEigenVector(vecStd) = CtrlHelper::toEigenVector(vecYarp);
 }
 
 void CtrlHelper::toYarpVector(Eigen::VectorXd& vecEigen, yarp::sig::Vector& vecYarp)
@@ -39,6 +42,9 @@ void CtrlHelper::toYarpVector(Eigen::VectorXd& vecEigen, yarp::sig::Vector& vecY
 
 void CtrlHelper::toYarpVector(std::vector<double>& vecStd, yarp::sig::Vector& vecYarp)
 {
-    Eigen::VectorXd tmpVec = CtrlHelper::toEigenVector(vecStd);
-    CtrlHelper::toYarpVector(tmpVec, vecYarp);
+    if (vecYarp.size() != vecStd.size())
+    {
+        vecYarp.resize(vecStd.size());
+    }
+    CtrlHelper::toEigenVector(vecYarp) = CtrlHelper::toEigenVector(vecStd);
 }

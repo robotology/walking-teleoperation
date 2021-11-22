@@ -50,11 +50,7 @@ private:
     size_t m_numAllJoints;
     size_t m_numActuatedJoints;
 
-    // TO CHECK: maybe delete later
-    //    std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity
-    //    integrator */
-
-    std::unique_ptr<RobotControlInterface> m_robotControlInterface; /**< robot control interface */
+    std::unique_ptr<RobotInterface> m_robotInterface; /**< robot control interface */
 
     CtrlHelper::Eigen_Mat m_A; /**< Coupling Matrix from the motors to the joints; Dimension <n,m>
                             n: number of joints, m: number of motors; we have q= m_A x m + m_Bias
@@ -213,12 +209,6 @@ public:
      */
     bool updateFeedback(void);
 
-    //    /**
-    //     * Find the coupling relationship bwtween the motors and joitns of the robots
-    //     * @return true if it could open the logger
-    //     */
-    //    bool LogDataToCalibrateRobotMotorsJointsCouplingRandom(const bool generateRandomVelocity);
-
     /**
      * Find the coupling relationship bwtween the motors and joitns of the robots using sin input
      * function
@@ -300,13 +290,13 @@ public:
      * Expose the contolHelper interface (const)
      * @return control helper interface
      */
-    const std::unique_ptr<RobotControlInterface>& controlHelper() const;
+    const std::unique_ptr<RobotInterface>& controlHelper() const;
 
     /**
      * Expose the contolHelper interface
      * @return control helper interface
      */
-    std::unique_ptr<RobotControlInterface>& controlHelper();
+    std::unique_ptr<RobotInterface>& controlHelper();
 };
 
 #endif

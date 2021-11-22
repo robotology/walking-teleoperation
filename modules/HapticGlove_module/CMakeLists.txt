@@ -42,7 +42,6 @@ set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
   src/RobotController_hapticGlove.cpp
   src/RobotControlInterface_hapticGlove.cpp
-  src/RobotControlHelper_hapticGlove.cpp
   src/HapticGloveModule.cpp
   src/GloveControlHelper.cpp
   src/KalmanFilter.cpp
@@ -60,7 +59,6 @@ set(${EXE_TARGET_NAME}_SRC
 set(${EXE_TARGET_NAME}_HDR
   include/RobotController_hapticGlove.hpp
   include/RobotControlInterface_hapticGlove.hpp
-  include/RobotControlHelper_hapticGlove.hpp
   include/HapticGloveModule.hpp
   include/GloveControlHelper.hpp
   include/KalmanFilter.hpp

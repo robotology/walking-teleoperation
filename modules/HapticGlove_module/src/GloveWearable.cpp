@@ -61,9 +61,7 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
     if (!YarpHelper::yarpListToStringVector(jointListYarp, m_humanJointNameList))
     {
         yError() << m_logPrefix
-                 << "unable to convert "
-                    "human_joint_list list into a "
-                    "vector of strings.";
+                 << "unable to convert human_joint_list list into a vector of strings.";
         return false;
     }
 
@@ -78,17 +76,13 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
     yarp::os::Value* fingerListYarp;
     if (!config.check("human_finger_list", fingerListYarp))
     {
-        yError() << m_logPrefix
-                 << "unable to find "
-                    "human_finger_list into config file.";
+        yError() << m_logPrefix << "unable to find human_finger_list into config file.";
         return false;
     }
     if (!YarpHelper::yarpListToStringVector(fingerListYarp, m_humanFingerNameList))
     {
         yError() << m_logPrefix
-                 << "unable to convert "
-                    "human_finger_list list into a "
-                    "vector of strings.";
+                 << "unable to convert human_finger_list list into a vector of strings.";
         return false;
     }
 

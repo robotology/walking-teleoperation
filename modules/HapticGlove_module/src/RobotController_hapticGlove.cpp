@@ -24,18 +24,18 @@ bool RobotController::configure(const yarp::os::Searchable& config,
     m_logPrefix = "RobotController::";
     m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
 
-    m_robotControlInterface = std::make_unique<RobotControlInterface>();
-    if (!m_robotControlInterface->configure(config, name, false))
+    m_robotInterface = std::make_unique<RobotInterface>();
+    if (!m_robotInterface->configure(config, name, m_rightHand, false))
     {
         yError() << m_logPrefix << "unable to intialized and configure the control.";
         return false;
     }
 
-    m_numAllAxis = m_robotControlInterface->getNumberOfAllAxis();
-    m_numActuatedAxis = m_robotControlInterface->getNumberOfActuatedAxis();
+    m_numAllAxis = m_robotInterface->getNumberOfAllAxis();
+    m_numActuatedAxis = m_robotInterface->getNumberOfActuatedAxis();
 
-    m_numAllJoints = m_robotControlInterface->getNumberOfAllJoints();
-    m_numActuatedJoints = m_robotControlInterface->getNumberOfActuatedJoints();
+    m_numAllJoints = m_robotInterface->getNumberOfAllJoints();
+    m_numActuatedJoints = m_robotInterface->getNumberOfActuatedJoints();
 
     // check if the axes and joints are coupled
     m_axesJointsCoupled = config.check("motorsJointsCoupled", yarp::os::Value(0)).asBool();
@@ -122,42 +122,13 @@ bool RobotController::configure(const yarp::os::Searchable& config,
         m_Bias = Eigen::MatrixXd::Zero(m_numActuatedJoints, 1);
     }
 
-    /*
-     * commented to simplify the process of having custom set of motors to control.
-    yarp::sig::Vector Q_vector(noAllJoints, 0.0), R_vector(noActuatedAxis, 0.0);
-
-    if (!YarpHelper::getYarpVectorFromSearchable(config, "q_matrix_joint_motor", Q_vector))
-    {
-        yError() << "[RobotController::configure] Initialization failed while reading "
-                    "q_matrix_joint_motor vector.";
-        return false;
-    }
-
-    if (!YarpHelper::getYarpVectorFromSearchable(config, "r_matrix_joint_motor", R_vector))
-    {
-        yError() << "[RobotController::configure] Initialization failed while reading "
-                    "r_matrix_joint_motor vector.";
-        return false;
-    }
-
-    m_Q = Eigen::MatrixXd::Identity(noActuatedJoints, noActuatedJoints);
-    m_R = Eigen::MatrixXd::Zero(noActuatedAxis, noActuatedAxis);
-    for (int i = 0; i < noActuatedJoints; i++)
-    {
-        m_Q(i, i) = Q_vector(i);
-    }
-    for (int i = 0; i < noActuatedAxis; i++)
-    {
-        m_R(i, i) = R_vector(i);
-    }
-*/
     // get control  gains from configuration files
     std::vector<std::string> allAxisNames, actuatedAxisNames;
     std::vector<std::string> allJointNames, actuatedJointNames;
-    m_robotControlInterface->getAllAxisNames(allAxisNames);
-    m_robotControlInterface->getAllAxisNames(actuatedAxisNames);
-    m_robotControlInterface->getAllJointNames(allJointNames);
-    m_robotControlInterface->getActuatedJointNames(actuatedJointNames);
+    m_robotInterface->getAllAxisNames(allAxisNames);
+    m_robotInterface->getAllAxisNames(actuatedAxisNames);
+    m_robotInterface->getAllJointNames(allJointNames);
+    m_robotInterface->getActuatedJointNames(actuatedJointNames);
 
     std::vector<double> q, r;
     std::vector<double> qTmp, rTmp;
@@ -205,16 +176,6 @@ bool RobotController::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    //    yarp::sig::Vector buff(m_numActuatedAxis, 0.0);
-    //    getFingerAxisFeedback(buff);
-    //    yarp::sig::Matrix limits(m_numActuatedAxis, 2);
-    //    if (!m_robotControlInterface->getLimits(limits))
-    //    {
-    //        yError() << "[RobotController::configure] Unable to get the joint limits.";
-    //        return false;
-    //    }
-    //    m_fingerIntegrator = std::make_unique<iCub::ctrl::Integrator>(samplingTime, buff, limits);
-
     m_jointsData.resize(Eigen::NoChange, m_numActuatedJoints);
     m_axesData.resize(Eigen::NoChange, m_numActuatedAxis);
 
@@ -258,7 +219,6 @@ bool RobotController::configure(const yarp::os::Searchable& config,
             << m_axesJointsCoupled;
     yInfo() << m_logPrefix << "robot controller exponential filter gain: " << m_kGain;
 
-    //
     yInfo() << m_logPrefix << "configuration is done.";
 
     return true;
@@ -395,85 +355,6 @@ void RobotController::getMotorPidOutputs(std::vector<double>& motorPidOutputs)
     this->controlHelper()->motorPidOutputs(motorPidOutputs);
 }
 
-// bool RobotController::LogDataToCalibrateRobotMotorsJointsCouplingRandom(
-//    const bool generateRandomVelocity)
-//{
-//    if (!m_motorJointsCoupled)
-//        return true;
-//    if (!m_doCalibration)
-//        return true;
-
-//    if (m_fingerIntegrator == nullptr)
-//    {
-//        yError() << "[RobotController::setFingersVelocity] The integrator is not initialize "
-//                    "please call configure() method";
-//        return false;
-//    }
-//    /* Get the feedback and fill the matrices*/
-//    // already getFeedback method has been called in upper level class
-//    yarp::sig::Vector fingerJointsValues, fingerAxisValues;
-//    getFingerAxisFeedback(fingerAxisValues);
-//    getFingerJointsFeedback(fingerJointsValues);
-
-//    const int noJoints = m_robotControlInterface->getNumberOfActuatedJoints();
-//    const int noAxis = m_robotControlInterface->getNumberOfActuatedAxis();
-//    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> fingerAxisValuesEigen;
-//    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-//    fingerJointsValuesEigen; fingerAxisValuesEigen.resize(1, noAxis);
-//    fingerJointsValuesEigen.resize(1, noJoints);
-//    for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedAxis(); i++)
-//    {
-//        fingerAxisValuesEigen(0, i) = fingerAxisValues(i);
-//    }
-//    for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedJoints(); i++)
-//    {
-//        fingerJointsValuesEigen(0, i) = fingerJointsValues(i);
-//    }
-
-//    if (!push_back_row(m_motorsData, fingerAxisValuesEigen))
-//        return false;
-
-//    if (!push_back_row(m_jointsData, fingerJointsValuesEigen))
-//        return false;
-
-//    //    std::cout << "motor values:\n" << m_motorsData << std::endl;
-//    //    std::cout << "joint values:\n" << m_jointsData << std::endl;
-//    yarp::sig::Vector motorReference;
-//    if (generateRandomVelocity)
-//    {
-//        yarp::sig::Vector motorVelocityReferenceIntegral;
-//        yarp::sig::Matrix motorVelocitylimits;
-//        getFingerAxisFeedback(motorReference);
-//        m_robotControlInterface->getVelocityLimits(motorVelocitylimits);
-
-//        for (int i = 0; i < m_robotControlInterface->getNumberOfActuatedAxis(); i++)
-//        {
-//            double randomVel
-//                = -1.0 * motorVelocitylimits(i, 1)
-//                  + (double(rand()) / double(RAND_MAX)) * 2.0 * motorVelocitylimits(i, 1);
-//            yInfo() << "randvel" << randomVel << rand();
-//            motorVelocityReference.push_back(randomVel);
-//        }
-//        yInfo() << "---------------> reference values 1: " << motorVelocitylimits(0, 0)
-//                << motorVelocitylimits(0, 1) << motorVelocityReference(0);
-
-//    } else
-//    {
-//    }
-//    motorReference = m_fingerIntegrator->integrate(motorVelocityReference);
-//    //    for (int i = 0; i < m_controlHelper->getActuatedDoFs(); i++)
-//    //    {
-//    //        motorReference += motorVelocityReferenceIntegral(i);
-//    //    }
-
-//    yInfo() << "---------------> reference values: " << motorReference(0);
-
-//    setFingersAxisReference(motorReference);
-//    move();
-
-//    return true;
-//}
-
 bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int axisNumber)
 {
     if (!m_axesJointsCoupled)
@@ -495,10 +376,6 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
 
     m_data->axisValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->axisValueFeedbacksStd);
     m_data->jointValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->jointValueFeedbacksStd);
-    std::cout << "logged data for LR: m_axisValueFeedbacksEigen:"
-              << m_data->axisValueFeedbacksEigen.transpose() << "\n";
-    std::cout << "logged data for LR: m_jointValueFeedbacksEigen:"
-              << m_data->jointValueFeedbacksEigen.transpose() << "\n";
 
     if (!push_back_row(m_axesData, m_data->axisValueFeedbacksEigen.transpose()))
     {
@@ -514,7 +391,7 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
     }
 
     std::vector<double> minLimit, maxLimit;
-    if (!m_robotControlInterface->getLimits(minLimit, maxLimit))
+    if (!m_robotInterface->getLimits(minLimit, maxLimit))
     {
         yError() << m_logPrefix << "cannot get the axis limits.";
         return false;
@@ -526,9 +403,6 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
         = minLimit[axisNumber] + (maxLimit[axisNumber] - minLimit[axisNumber]) * sin(time);
 
     setAxisReferences(m_data->axisValueReferencesStd);
-    yInfo() << "logged data for LR: m_axisValueReferences:" << m_data->axisValueReferencesStd;
-    //    std::cout << "logged data for LR: m_jointsData:" << m_jointsData << "\n";
-    //    std::cout << "logged data for LR: m_axisValueReferences:" << m_axesData << "\n";
 
     move();
 
@@ -768,15 +642,15 @@ bool RobotController::getCustomSetIndices(const std::vector<std::string>& allLis
 
 bool RobotController::move()
 {
-    return m_robotControlInterface->setJointReference(m_data->axisValueReferencesStd);
+    return m_robotInterface->setJointReference(m_data->axisValueReferencesStd);
 }
 
-const std::unique_ptr<HapticGlove::RobotControlInterface>& RobotController::controlHelper() const
+const std::unique_ptr<HapticGlove::RobotInterface>& RobotController::controlHelper() const
 {
-    return m_robotControlInterface;
+    return m_robotInterface;
 }
 
-std::unique_ptr<HapticGlove::RobotControlInterface>& RobotController::controlHelper()
+std::unique_ptr<HapticGlove::RobotInterface>& RobotController::controlHelper()
 {
-    return m_robotControlInterface;
+    return m_robotInterface;
 }
