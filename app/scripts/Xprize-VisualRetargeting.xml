@@ -32,12 +32,13 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice openxrheadset --stick_as_axis true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.2 --GUI_0::y -0.2 --GUI_0::z -0.5</parameters>
+    <parameters>--device JoypadControlServer --use_separate_ports 1 --period 10 --name /joypadDevice/Oculus --subdevice openxrheadset --stick_as_axis true --gui_elements 1 --GUI_0::width 0.15 --GUI_0::height 0.15 --GUI_0::x 0.15 --GUI_0::y -0.2 --GUI_0::z -0.5</parameters>
     <node>icub-virtualizer</node>
   </module>
   
   <module>
      <name>idyntree-yarp-visualizer</name>
+     <parameters>--OUTPUT_STREAM::useRGBA true</parameters>
      <node>icub-console</node>
   </module>
 
@@ -69,7 +70,7 @@
   <connection>
     <from>/idyntree-yarp-visualizer/image</from>
     <to>/joypadDevice/Oculus/gui_0</to>
-    <protocol>mjpeg</protocol>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>

@@ -22,5 +22,10 @@
     <from>/SRanipalModule/emotions:o</from>
     <to>/icub/face/emotions/in</to>
   </connection>
+  
+  <connection>
+    <from>/SRanipalModule/VR/rpc:o</from>
+    <to>/joypadDevice/Oculus/rpc</to>
+  </connection>
 
 </application>
