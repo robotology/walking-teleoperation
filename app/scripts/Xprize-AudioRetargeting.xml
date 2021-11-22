@@ -19,7 +19,7 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_size 0.4 --start --AUDIO_BASE::samples 16000 --AUDIO_BASE::channels 1</parameters>
     <node>icub-head</node>
     <dependencies>
       <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
