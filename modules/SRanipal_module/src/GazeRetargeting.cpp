@@ -128,8 +128,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     m_maxEyeSpeedInDegS = rf.check("eyeMaxVelocity", yarp::os::Value(20.0)).asFloat64();
     double userMaxVergInDeg = rf.check("eyeMaxVergence", yarp::os::Value(10.0)).asFloat64();
     double userMaxVersInDeg = rf.check("eyeMaxVersion", yarp::os::Value(25.0)).asFloat64();
-    double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(25.0)).asFloat64();
-    m_tanhGain = rf.check("eyeKinematicSaturationGain", yarp::os::Value(20.0)).asFloat64();
+    double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(30.0)).asFloat64();
+    m_tanhGain = rf.check("eyeKinematicSaturationGain", yarp::os::Value(10.0)).asFloat64();
 
     yarp::os::Property rcb_head_conf{
         {"device", yarp::os::Value("remote_controlboard")},

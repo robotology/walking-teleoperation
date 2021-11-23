@@ -32,7 +32,7 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
             && (rf.find("useRawEyelids").isNull() || rf.find("useRawEyelids").asBool());
     m_useEyelidsPositionControl = rf.check("useEyelidsPositionControl")
             && (rf.find("useEyelidsPositionControl").isNull() || rf.find("useEyelidsPositionControl").asBool());
-    m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(100.0)).asFloat64();
+    m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(10.0)).asFloat64();
     m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
     m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
     m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
