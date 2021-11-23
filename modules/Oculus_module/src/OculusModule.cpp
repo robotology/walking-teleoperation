@@ -156,7 +156,15 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 
 bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
 {
+    m_skipJoypad = config.check("skip_joypad", yarp::os::Value(false)).asBool();
     m_useVirtualizer = !(config.check("move_icub_using_joypad", yarp::os::Value(false)).asBool());
+
+    if (m_skipJoypad && !m_useVirtualizer)
+    {
+        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot be true at the same time.";
+        return false;
+    }
+
     if (!m_useVirtualizer)
     {
         if (!YarpHelper::getDoubleFromSearchable(config, "deadzone", m_deadzone))
@@ -201,35 +209,40 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     options.put("remote", "/joypadDevice/Oculus");
     options.put("local", "/" + getName() + "/joypadControlClient");
 
-    if (m_joypadDevice.open(options))
+    if (!m_skipJoypad)
     {
-        // get the interface
-        if (!m_joypadDevice.view(m_joypadControllerInterface) || !m_joypadControllerInterface)
+        if (m_joypadDevice.open(options))
+        {
+            // get the interface
+            if (!m_joypadDevice.view(m_joypadControllerInterface) || !m_joypadControllerInterface)
+            {
+                if (!m_useSenseGlove || !m_useVirtualizer)
+                {
+                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                                "to the PolyDriver object";
+                    return false;
+                }
+                else
+                {
+                    yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                                  "to the PolyDriver object. Continuing anyway since we are using the virtualizer and the gloves."
+                                  "Set skip_joypad to true to avoid this warning.";
+                }
+            }
+        }
+        else
         {
             if (!m_useSenseGlove || !m_useVirtualizer)
             {
-                yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                            "to the PolyDriver object";
+                yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
                 return false;
             }
             else
             {
-                yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                            "to the PolyDriver object. Continuing anyway since we using the virtualizer and the gloves.";
+                yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
+                              "Continuing anyway since we are using the virtualizer and the gloves."
+                              "Set skip_joypad to true to avoid this warning.";
             }
-        }
-    }
-    else
-    {
-        if (!m_useSenseGlove || !m_useVirtualizer)
-        {
-            yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
-            return false;
-        }
-        else
-        {
-            yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
-                          "Continuing anyway since we using the virtualizer and the gloves.";
         }
     }
 
