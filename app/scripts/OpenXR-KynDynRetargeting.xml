@@ -20,7 +20,7 @@
 
   <module>
     <name>OpenXRRetargetingModule</name>
-    <node>icub-head</node>
+    <node>icub-console</node>
     <dependencies>
       <port timeout="5.0">/transformServer/transforms:o</port>
       <port timeout="5.0">/joypadDevice/Oculus/rpc:i</port>
