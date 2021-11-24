@@ -199,8 +199,8 @@ bool RobotControlInterface::configure(const yarp::os::Searchable& config,
         //        m_noAllJoints+=axisJointList.size(); // add the number of
         //        associated joint sensors to the total number of active sensors
 
-        std::cout << "axis name: " << axisInfoObj.axisName
-                  << " , associated joints: " << axisJointList << std::endl;
+        //std::cout << "axis name: " << axisInfoObj.axisName
+        //          << " , associated joints: " << axisJointList << std::endl;
         // *it: joint name related to the axisName
         for (std::vector<std::string>::iterator it = axisJointList.begin();
              it != axisJointList.end();
