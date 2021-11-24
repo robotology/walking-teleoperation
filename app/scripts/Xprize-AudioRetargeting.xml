@@ -13,7 +13,7 @@
   
     <module>
     <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 16000 --start</parameters>
     <node>icub-head</node>
   </module>
 
@@ -21,24 +21,18 @@
     <name>yarpdev</name>
     <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_size 0.4 --start --AUDIO_BASE::samples 16000 --AUDIO_BASE::channels 1</parameters>
     <node>icub-head</node>
-    <dependencies>
-      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
-    </dependencies>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000 --channels 1</parameters>
+    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 16000 --samples 16000 --channels 1 --start</parameters>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4</parameters>
+    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4 --start</parameters>
     <node>icub-virtualizer</node>
-    <dependencies>
-      <port timeout="5.0" request="start" reply="[ok]">/icub/microphone/rpc</port>
-    </dependencies>
   </module>
 
 
