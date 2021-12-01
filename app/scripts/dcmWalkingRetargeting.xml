@@ -40,7 +40,7 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters> --from dcmWalkingRetargeting.ini </parameters>
+    <parameters> --from ovrHeadsetParameters.ini </parameters>
     <node>icub-virtualizer</node>
   </module>
 
