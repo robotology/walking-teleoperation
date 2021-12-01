@@ -441,7 +441,7 @@ bool VirtualizerModule::updateModule()
     //get player height
     float playerHeightInCm;
     playerHeightInCm = m_cvirtDeviceID->GetPlayerHeight(); //It is relative to the initial height set ResetPlayerHeight, positive upward
-    double playerHeighInm = playerHeightInCm / 100.0;
+    double playerHeighInM = playerHeightInCm / 100.0;
 
     // get the player speed
     double speedData = threshold((double)(m_cvirtDeviceID->GetMovementSpeed()), m_speedDeadzone);
@@ -546,7 +546,7 @@ bool VirtualizerModule::updateModule()
                 m_tfMatrix(i,j) = rotation(i,j);
             }
         }
-        m_tfMatrix(2,3) = playerHeighInm; //Set the z position equal to the height
+        m_tfMatrix(2,3) = playerHeighInM; //Set the z position equal to the height
 
         m_tfPublisher->setTransform(m_tfFrameName, m_tfRootFrame, m_tfMatrix);
     }
