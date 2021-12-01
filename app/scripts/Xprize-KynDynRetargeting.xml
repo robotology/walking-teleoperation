@@ -17,10 +17,11 @@
     <node>icub-head</node>
     <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
   </module>
-  
+
 
   <module>
     <name>VirtualizerModule</name>
+    <parameters>--use_transform_server true</parameters>
     <node>icub-virtualizer</node>
   </module>
 
@@ -41,12 +42,12 @@
      <parameters>--from iFeelRetargetingWalking.ini</parameters>
      <node>icub-console</node>
    </module>
-   
+
    <module>
      <name>HapticGloveModule</name>
      <node>icub-head</node>
    </module>
-   
+
   <!-- Connections -->
 
   <connection>
