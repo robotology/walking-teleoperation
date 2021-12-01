@@ -216,32 +216,32 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
             // get the interface
             if (!m_joypadDevice.view(m_joypadControllerInterface) || !m_joypadControllerInterface)
             {
-                if (!m_useSenseGlove || !m_useVirtualizer)
-                {
-                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                                "to the PolyDriver object";
-                    return false;
-                }
-                else
+                if (m_useSenseGlove && m_useVirtualizer)
                 {
                     yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
                                   "to the PolyDriver object. Continuing anyway since we are using the virtualizer and the gloves."
                                   "Set skip_joypad to true to avoid this warning.";
                 }
+                else
+                {
+                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                                "to the PolyDriver object";
+                    return false;
+                }
             }
         }
         else
         {
-            if (!m_useSenseGlove || !m_useVirtualizer)
-            {
-                yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
-                return false;
-            }
-            else
+            if (m_useSenseGlove && m_useVirtualizer)
             {
                 yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
                               "Continuing anyway since we are using the virtualizer and the gloves."
                               "Set skip_joypad to true to avoid this warning.";
+            }
+            else
+            {
+                yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
+                return false;
             }
         }
     }
@@ -1066,7 +1066,7 @@ bool OculusModule::updateModule()
         }
 
         // check if it is time to prepare or start walking
-        float buttonMapping = 0.0;
+        float buttonMapping = -1.0;
 
         if (m_joypadControllerInterface)
         {
@@ -1162,7 +1162,7 @@ bool OculusModule::updateModule()
     } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
-        float buttonMapping = 0.0;
+        float buttonMapping = -1.0;
 
         if (m_joypadControllerInterface)
         {
@@ -1189,7 +1189,7 @@ bool OculusModule::updateModule()
             }
         }
 
-        float buttonMapping = 0.0;
+        float buttonMapping = -1.0;
         if (m_joypadControllerInterface)
         {
             // start walking (X button)
