@@ -13,6 +13,8 @@
 // iDynTree
 #include <iDynTree/Core/Utils.h>
 
+// teleoperation
+#include <ControlHelper.hpp>
 #include <RobotControlInterface_hapticGlove.hpp>
 #include <Utils.hpp>
 
@@ -33,17 +35,193 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     std::string robot;
     robot = config.check("robot", yarp::os::Value("icubSim")).asString();
 
-    // get all controlled icub parts from the resource finder
-    std::vector<std::string> iCubParts;
-    yarp::os::Value* iCubPartsYarp;
-    if (!config.check("remote_control_boards", iCubPartsYarp))
+    if (!YarpHelper::getVectorFromSearchable(config, "axis_list", m_actuatedAxisNames))
     {
-        yError() << m_logPrefix << "unable to find remote_control_boards into config file.";
+        yError() << m_logPrefix << "unable to get  axis_list from the config file.";
         return false;
     }
-    if (!YarpHelper::yarpListToStringVector(iCubPartsYarp, iCubParts))
+    m_noActuatedAxis = m_actuatedAxisNames.size();
+
+    if (!YarpHelper::getVectorFromSearchable(config, "all_axis_list", m_allAxisNames))
     {
-        yError() << m_logPrefix << "unable to convert yarp list into a vector of strings.";
+        yError() << m_logPrefix << "unable to get  all_axis_list from the config file..";
+        return false;
+    }
+
+    // // 5*3 analog sensors + 1 encoder thumb oppose + 1 encoder hand_finger
+    if (!YarpHelper::getVectorFromSearchable(config, "joint_list", m_allJointNames))
+    {
+        yError() << m_logPrefix << "unable to get joint_list from the config file.";
+        return false;
+    }
+
+    m_noAllAxis = m_allAxisNames.size();
+
+    m_noAllJoints = m_allJointNames.size();
+
+    // add the list of axis and associated analog sensors
+    std::vector<std::string> analogList;
+    if (!YarpHelper::getVectorFromSearchable(config, "analog_list", analogList))
+    {
+        yError() << m_logPrefix << "unable to get analog_list from config file.";
+        return false;
+    }
+
+    m_noAnalogSensor = analogList.size();
+
+    std::vector<bool> jointFeedbackIsAnalog(m_noAllJoints, false);
+    for (size_t i = 0; i < m_allJointNames.size(); i++)
+    {
+        if (find(std::begin(analogList), std::end(analogList), m_allJointNames[i])
+            != std::end(analogList))
+        {
+            jointFeedbackIsAnalog[i] = true;
+        }
+    }
+
+    for (size_t i = 0; i < m_actuatedAxisNames.size(); i++)
+    {
+        std::vector<std::string> axisJointList; // related joints to the axisName
+
+        if (!!YarpHelper::getVectorFromSearchable(config, m_actuatedAxisNames[i], axisJointList))
+        {
+            yError() << m_logPrefix << "unable to find " << m_actuatedAxisNames[i]
+                     << "into config file.";
+            return false;
+        }
+
+        // *it: joint name related to the axisName
+        for (std::vector<std::string>::iterator it = axisJointList.begin();
+             it != axisJointList.end();
+             ++it)
+        {
+            JointInfo jointInfo;
+            m_actuatedJointList.push_back(*it);
+
+            auto elementJoint
+                = std::find(std::begin(m_allJointNames), std::end(m_allJointNames), *it);
+            if (elementJoint == std::end(m_allJointNames))
+            {
+                yError() << m_logPrefix << "unable to find " << *it
+                         << " in joint vector list vector of strings.";
+                return false;
+            }
+            size_t jointIndex = elementJoint - m_allJointNames.begin();
+
+            jointInfo.useAnalog = jointFeedbackIsAnalog[jointIndex];
+
+            if (jointInfo.useAnalog)
+            {
+                auto elementAnalog = std::find(std::begin(analogList), std::end(analogList), *it);
+                if (elementAnalog == std::end(analogList))
+                {
+                    yError() << m_logPrefix << "the joint name (" << *it
+                             << " )is not found in the analog list, but it should be an "
+                                "analog sensor.";
+                    return false;
+                }
+                jointInfo.index = elementAnalog - analogList.begin();
+
+            } else
+            {
+                // if a joint does not have analog sensor to get its feedback, we use the associated
+                // encoder value of the axis. in this case, that axis cannot actuate more than one
+                // joint, since we do not have other ways to measure it.
+                if (axisJointList.size() > 1)
+                {
+                    yError() << m_logPrefix
+                             << "there is no defined way to get the joint value feedbacks "
+                                "associated with axis: "
+                             << m_actuatedAxisNames[i];
+                    return false;
+                }
+                auto elementAxis = std::find(std::begin(m_actuatedAxisNames),
+                                             std::end(m_actuatedAxisNames),
+                                             m_actuatedAxisNames[i]);
+                if (elementAxis == std::end(m_actuatedAxisNames))
+                {
+                    yError() << m_logPrefix << "the joint name (" << m_actuatedAxisNames[i]
+                             << " )is not found in the actuated axes list.";
+                    return false;
+                }
+                jointInfo.index = elementAxis - m_actuatedAxisNames.begin();
+            }
+            m_jointInfoMap.insert(std::make_pair(m_actuatedJointList.back(), jointInfo));
+        }
+    }
+
+    m_noActuatedJoints = m_actuatedJointList.size();
+    if (m_jointInfoMap.size() != m_noActuatedJoints)
+    {
+        yError() << m_logPrefix
+                 << "the size of m_jointInfoMap should be equal to the actuated joint list.";
+        return false;
+    }
+
+    m_analogJointsMinBoundary.resize(m_noAnalogSensor, 0.0);
+    m_analogJointsMaxBoundary.resize(m_noAnalogSensor, 0.0);
+    m_analogSensorsRawMinBoundary.resize(m_noAnalogSensor, 0.0);
+    m_analogSensorsRawMaxBoundary.resize(m_noAnalogSensor, 0.0);
+
+    // get the joints limits boundaries
+    if (!YarpHelper::getVectorFromSearchable(
+            config, "analog_joints_min_boundary", m_analogJointsMinBoundary))
+    {
+        yError() << m_logPrefix << "unable to get the minimum boundary of the joints limits.";
+        return false;
+    }
+
+    if (!YarpHelper::getVectorFromSearchable(
+            config, "analog_joints_max_boundary", m_analogJointsMaxBoundary))
+    {
+        yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
+        return false;
+    }
+
+    // get the sensors limits boundaries
+    if (!YarpHelper::getVectorFromSearchable(
+            config, "analog_sensors_raw_min_boundary", m_analogSensorsRawMinBoundary))
+    {
+        yError() << m_logPrefix << "unable to get the minimum boundary of the joints limits.";
+        return false;
+    }
+
+    // get the sensors limits boundaries
+    if (!YarpHelper::getVectorFromSearchable(
+            config, "analog_sensors_raw_max_boundary", m_analogSensorsRawMaxBoundary))
+    {
+        yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
+        return false;
+    }
+    bool tmp = (m_analogJointsMinBoundary.size() == m_noAnalogSensor)
+               && (m_analogJointsMaxBoundary.size() == m_noAnalogSensor)
+               && (m_analogSensorsRawMinBoundary.size() == m_noAnalogSensor)
+               && (m_analogSensorsRawMaxBoundary.size() == m_noAnalogSensor);
+
+    if (!tmp)
+    {
+        yError()
+            << m_logPrefix
+            << "analog joint min/max boundary or analog sensor raw value sizes are not correct.";
+        return false;
+    }
+
+    m_sensorsRaw2DegreeScaling.resize(m_noAnalogSensor, 0.0);
+    for (size_t i = 0; i < m_noAnalogSensor; i++)
+    {
+        m_sensorsRaw2DegreeScaling[i]
+            = double(m_analogJointsMaxBoundary[i] - m_analogJointsMinBoundary[i])
+              / double(m_analogSensorsRawMaxBoundary[i] - m_analogSensorsRawMinBoundary[i]);
+    }
+
+    // Devices
+
+    // get all controlled icub parts from the resource finder
+    std::vector<std::string> iCubParts;
+    if (!YarpHelper::getVectorFromSearchable(config, "remote_control_boards", iCubParts))
+    {
+        yError() << m_logPrefix
+                 << "unable to get remote_control_boards vector of strings from config file.";
         return false;
     }
 
@@ -55,15 +233,17 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         yError() << m_logPrefix << "unable to find remote_sensor_boards into config file.";
         return false;
     }
+
     // open the iAnalogsensor YARP device
     yarp::os::Property optionsAnalogDevice;
+
     optionsAnalogDevice.put("device", "analogsensorclient");
     optionsAnalogDevice.put("local", "/" + robot + "/" + iCubSensorPart + "/analog:i");
     optionsAnalogDevice.put("remote", "/" + robot + "/" + iCubSensorPart + "/analog:o");
 
     if (!m_analogDevice.open(optionsAnalogDevice))
     {
-        yError() << m_logPrefix << "could not open analogsensorclient object.";
+        yError() << m_logPrefix << "could not open analogSensorClient object.";
         return false;
     }
 
@@ -73,209 +253,8 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    // check to delete the next three paramters if are not necessary
-    m_noAnalogSensor = config.check("noAnalogSensor", yarp::os::Value(15)).asInt();
-    yInfo() << "m_noAnalogSensor " << m_noAnalogSensor;
-
-    m_noAllJoints = config.check("noAllJoints", yarp::os::Value(17))
-                        .asInt(); // 5*3 analog sensors+ 1 encoder thumb oppose +
-                                  // 1 encoder hand_finger
-    yInfo() << "noAllJoints " << m_noAllJoints;
-
-    m_noAllAxis = config.check("noAllAxis", yarp::os::Value(8)).asInt();
-    yInfo() << "noAllAxis: " << m_noAllAxis;
-
     // open the remotecontrolboardremepper YARP device
     yarp::os::Property optionsRobotDevice;
-
-    if (!YarpHelper::getVectorFromSearchable(config, "axis_list", m_actuatedAxisNames))
-    {
-        yError() << m_logPrefix << "unable to get  axis_list from the configuration file.";
-        return false;
-    }
-
-    if (!YarpHelper::getVectorFromSearchable(config, "all_axis_list", m_allAxisNames))
-    {
-        yError() << m_logPrefix << "unable to get  all_axis_list from the configuration file..";
-        return false;
-    }
-
-    if (!YarpHelper::getVectorFromSearchable(config, "joint_list", m_allJointNames))
-    {
-        yError() << m_logPrefix << "unable to get  joint_list from the configuration file..";
-        return false;
-    }
-
-    // add the list of axis and associated analog sensors
-    yarp::os::Value* analogListYarp;
-    if (!config.check("analog_list", analogListYarp))
-    {
-        yError() << m_logPrefix << "unable to find analog_list into config file.";
-        return false;
-    }
-
-    std::vector<std::string> analogList;
-    if (!YarpHelper::yarpListToStringVector(analogListYarp, analogList))
-    {
-        yError() << m_logPrefix << "unable to convert yarp analog list into a vector of strings.";
-        return false;
-    }
-
-    yarp::os::Value* jointFeedbackTypeListYarp;
-
-    if (!config.check("joint_fb_type", jointFeedbackTypeListYarp))
-    {
-        yError() << "[RobotControlInterface::configure] Unable to find "
-                    "joint_fb_type into config file.";
-        return false;
-    }
-    std::vector<std::string> jointFeedbackTypeList;
-    if (!YarpHelper::yarpListToStringVector(jointFeedbackTypeListYarp, jointFeedbackTypeList))
-    {
-        yError() << "[RobotControlInterface::configure] Unable to convert yarp "
-                    "joint fb type list into a "
-                    "vector of strings.";
-        return false;
-    }
-    std::vector<bool> jointFeedbackIsAnalog;
-    for (std::vector<std::string>::iterator it = jointFeedbackTypeList.begin();
-         it != jointFeedbackTypeList.end();
-         ++it)
-    {
-        jointFeedbackIsAnalog.push_back(*it == "analog");
-    }
-
-    for (size_t i = 0; i < m_actuatedAxisNames.size(); i++)
-    {
-        axisSensorData axisInfoObj;
-        axisInfoObj.axisName = m_actuatedAxisNames[i];
-        axisInfoObj.useAnalog = false;
-        yarp::os::Value* axisJointListYarp;
-        if (!config.check(axisInfoObj.axisName, axisJointListYarp))
-        {
-            yError() << "[RobotControlInterface::configure] Unable to find " << axisInfoObj.axisName
-                     << "into config file.";
-            return false;
-        }
-
-        std::vector<std::string> axisJointList; // related joints to the axisName
-        if (!YarpHelper::yarpListToStringVector(axisJointListYarp, axisJointList))
-        {
-            yError() << "[RobotControlInterface::configure] Unable to convert yarp "
-                        "axisAnalog list into a "
-                        "vector of strings.";
-            return false;
-        }
-
-        //        m_noAllJoints+=axisJointList.size(); // add the number of
-        //        associated joint sensors to the total number of active sensors
-
-        //std::cout << "axis name: " << axisInfoObj.axisName
-        //          << " , associated joints: " << axisJointList << std::endl;
-        // *it: joint name related to the axisName
-        for (std::vector<std::string>::iterator it = axisJointList.begin();
-             it != axisJointList.end();
-             ++it)
-        {
-            m_actuatedJointList.push_back(*it);
-
-            auto elementJoint
-                = std::find(std::begin(m_allJointNames), std::end(m_allJointNames), *it);
-            if (elementJoint == std::end(m_allJointNames))
-            {
-                yError() << m_logPrefix << "unable to find " << *it
-                         << " in joint vector list vector of strings.";
-                return false;
-            }
-            size_t indexJoint = elementJoint - m_allJointNames.begin();
-            // All the joint moved by an axis is measured with one senory feedback
-            // type, i.e., either analog or encoder
-            if (jointFeedbackIsAnalog[indexJoint])
-            {
-                axisInfoObj.useAnalog = true;
-            }
-
-            if (axisInfoObj.useAnalog)
-            {
-                auto elementAnalog = std::find(std::begin(analogList), std::end(analogList), *it);
-                if (elementAnalog == std::end(analogList))
-                {
-                    yError() << "[RobotControlInterface::configure] the joint name (" << *it
-                             << " )is not found in the analog list, but it should be an "
-                                "analog sensor.";
-                    return false;
-                }
-                size_t indexAnalog = elementAnalog - analogList.begin();
-                axisInfoObj.relatedAnalogSensorsIndex.push_back(indexAnalog);
-            }
-        }
-        m_axisInfoList.push_back(axisInfoObj);
-    }
-    m_noActuatedJoints = m_actuatedJointList.size();
-
-    m_SensorActuatedJointFeedbackInRadians.resize(m_noActuatedJoints);
-
-    //
-    m_joints_min_boundary.resize(m_noAnalogSensor, 0.0);
-    m_joints_max_boundary.resize(m_noAnalogSensor, 0.0);
-    m_sensors_min_boundary.resize(m_noAnalogSensor, 0.0);
-    m_sensors_max_boundary.resize(m_noAnalogSensor, 0.0);
-    m_sensors_raw2Degree_scaling.resize(m_noAnalogSensor, 0.0);
-
-    // get the joints limits boundaries
-    if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "joints_min_boundary", m_joints_min_boundary))
-    {
-        yError() << "RobotControlInterface::configure] unable to get the minimum "
-                    "boundary of the joints limits.";
-        return false;
-    }
-
-    if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "joints_max_boundary", m_joints_max_boundary))
-    {
-        yError() << "RobotControlInterface::configure] unable to get the maximum "
-                    "boundary of the "
-                    "joints limits.";
-        return false;
-    }
-
-    // get the sensors limits boundaries
-    if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "sensors_min_boundary", m_sensors_min_boundary))
-    {
-        yError() << "RobotControlInterface::configure] unable to get the minimum "
-                    "boundary of the "
-                    "joints limits.";
-        return false;
-    }
-
-    // get the sensors limits boundaries
-    if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "sensors_max_boundary", m_sensors_max_boundary))
-    {
-        yError() << "RobotControlInterface::configure] unable to get the maximum "
-                    "boundary of the "
-                    "joints limits.";
-        return false;
-    }
-
-    for (size_t i = 0; i < m_noAnalogSensor; i++)
-    {
-        m_sensors_raw2Degree_scaling(i)
-            = double(m_joints_max_boundary(i) - m_joints_min_boundary(i))
-              / double(m_sensors_max_boundary(i) - m_sensors_min_boundary(i));
-    }
-
-    if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "sensors_max_boundary", m_joints_max_boundary))
-    {
-        yError() << "RobotControlInterface::configure] unable to get the maximum "
-                    "boundary of the "
-                    "joints limits.";
-        return false;
-    }
-
     optionsRobotDevice.put("device", "remotecontrolboardremapper");
 
     YarpHelper::addVectorOfStringToProperty(optionsRobotDevice, "axesNames", m_actuatedAxisNames);
@@ -293,8 +272,6 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
     remoteControlBoardsOpts.put("writeStrict", "on");
 
-    m_noActuatedAxis = m_actuatedAxisNames.size();
-
     bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
     m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
     m_pidControlMode
@@ -303,16 +280,13 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     // open the device
     if (!m_robotDevice.open(optionsRobotDevice) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::configure] Could not open "
-                    "remotecontrolboardremapper "
-                    "object.";
+        yError() << m_logPrefix << "could not open remotecontrolboardremapper object.";
         return false;
     }
 
     if (!m_robotDevice.view(m_encodersInterface) || !m_encodersInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain IEncoders "
-                    "interface";
+        yError() << m_logPrefix << "cannot obtain IEncoders interface";
         return false;
     }
 
@@ -325,22 +299,19 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     if (!m_robotDevice.view(m_positionDirectInterface) || !m_positionDirectInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain "
-                    "IPositionDirect interface";
+        yError() << m_logPrefix << "cannot obtain IPositionDirect interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_velocityInterface) || !m_velocityInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain "
-                    "IVelocityInterface interface";
+        yError() << m_logPrefix << "cannot obtain IVelocityInterface interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_limitsInterface) || !m_limitsInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain "
-                    "IPositionDirect interface";
+        yError() << m_logPrefix << "cannot obtain IPositionDirect interface";
         return false;
     }
 
@@ -353,50 +324,66 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     if (!m_robotDevice.view(m_timedInterface) || !m_timedInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain iTimed interface";
+        yError() << m_logPrefix << "cannot obtain iTimed interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_currentInterface) || !m_currentInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain "
-                    "ICurrentControl interface";
+        yError() << m_logPrefix << "cannot obtain ICurrentControl interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_pwmInterface) || !m_pwmInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain IPWMControl "
-                    "interface";
+        yError() << m_logPrefix << "cannot obtain IPWMControl interface";
         return false;
     }
 
     if (!m_robotDevice.view(m_pidInterface) || !m_pidInterface)
     {
-        yError() << "[RobotControlInterface::configure] Cannot obtain IPidControl "
-                    "interface";
+        yError() << m_logPrefix << "cannot obtain IPidControl interface";
+        return false;
+    }
+
+    // set the reference velocity for the position control mode
+    m_refenceVelocityForPositionControl
+        = config.check("referenceVelocityForPositionControl", yarp::os::Value(10.0)).asDouble();
+
+    yarp::sig::Vector dummy(m_noActuatedAxis, m_refenceVelocityForPositionControl);
+
+    if (!m_positionInterface->setRefSpeeds(dummy.data()) && m_isMandatory)
+    {
+        yError() << m_logPrefix
+                 << "Error while setting the desired velocity to the position interface.";
         return false;
     }
 
     // resize the vectors
-    m_analogSensorFeedbackRaw.resize(m_noAnalogSensor);
-    m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
-    m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
 
-    m_desiredJointValue.resize(m_noActuatedAxis);
+    // feedbacks
     m_encoderPositionFeedbackInDegrees.resize(m_noActuatedAxis);
     m_encoderPositionFeedbackInRadians.resize(m_noActuatedAxis);
     m_encoderVelocityFeedbackInDegrees.resize(m_noActuatedAxis);
     m_encoderVelocityFeedbackInRadians.resize(m_noActuatedAxis);
 
-    m_desiredCurrent.resize(m_noActuatedAxis);
-    m_desiredCurrentInterface.resize(m_noActuatedAxis);
-    m_currentFeedback.resize(m_noActuatedAxis);
+    m_actuatedJointFeedbacksInRadian.resize(m_noActuatedJoints);
 
-    m_pwmDesired.resize(m_noActuatedAxis);
-    m_pwmDesiredInterface.resize(m_noActuatedAxis);
-    m_pwmFeedback.resize(m_noActuatedAxis);
+    m_analogSensorFeedbackRaw.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
+
+    m_motorCurrentFeedbacks.resize(m_noActuatedAxis);
+    m_motorPwmFeedbacks.resize(m_noActuatedAxis);
     m_pidOutput.resize(m_noActuatedAxis);
+
+    // reference
+    m_referenceValues.resize(m_noActuatedAxis);
+    m_axisPositionReferences.resize(m_noActuatedAxis);
+    m_axisPositionDirectReferences.resize(m_noActuatedAxis);
+    m_axisVelocityReferences.resize(m_noActuatedAxis);
+    m_motorCurrentReferences.resize(m_noActuatedAxis);
+    m_motorPwmReferences.resize(m_noActuatedAxis);
 
     // check if the robot is alive
     bool okPosition = false;
@@ -409,17 +396,29 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     }
     if (!okPosition)
     {
-        yError() << "[RobotControlInterface::configure] Unable to read encoders "
-                    "(position).";
+        yError() << m_logPrefix << "unable to read encoders (position).";
+        return false;
+    }
+
+    if (!initializeAxesValues())
+    {
+        yError() << m_logPrefix
+                 << "unable to initialize the axis values to the initial(min) values.";
         return false;
     }
 
     if (!switchToControlMode(m_controlMode))
     {
-        yError() << "[RobotControlInterface::configure] Unable to switch the "
-                    "control mode";
+        yError() << m_logPrefix << "Unable to switch the control mode";
         return false;
     }
+    // print information:
+    yInfo() << m_logPrefix << "m_noAllAxis: " << m_noAllAxis;
+    yInfo() << m_logPrefix << "m_noAllJoints: " << m_noAllJoints;
+
+    yInfo() << m_logPrefix << "m_allAxisNames: " << m_allAxisNames;
+    yInfo() << m_logPrefix << "m_allJointNames: " << m_allJointNames;
+
     return true;
 }
 
@@ -428,8 +427,7 @@ bool RobotInterface::switchToControlMode(const int& controlMode)
     // check if the control interface is ready
     if (!m_controlModeInterface)
     {
-        yError() << "[RobotControlInterface::switchToControlMode] ControlMode I/F "
-                    "not ready.";
+        yError() << m_logPrefix << "ControlMode I/F not ready.";
         return false;
     }
 
@@ -437,10 +435,34 @@ bool RobotInterface::switchToControlMode(const int& controlMode)
     std::vector<int> controlModes(m_noActuatedAxis, controlMode);
     if (!m_controlModeInterface->setControlModes(controlModes.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::switchToControlMode] Error while "
-                    "setting the controlMode.";
+        yError() << m_logPrefix << "Error while setting the controlMode.";
         return false;
     }
+
+    return true;
+}
+
+bool RobotInterface::initializeAxesValues()
+{
+    std::vector<double> minLimits, maxLimits;
+    if (!this->getLimits(minLimits, maxLimits))
+    {
+        yError() << m_logPrefix << "unable to get the robot axis limits.";
+        return false;
+    }
+
+    if (!switchToControlMode(VOCAB_CM_POSITION))
+        yError() << m_logPrefix << "Unable to switch in position control.";
+    return false;
+
+    if (!this->setAxisReferences(minLimits, VOCAB_CM_POSITION))
+    {
+        yInfo() << m_logPrefix << "unable to set axis references.";
+        return false;
+    }
+
+    yarp::os::Time::delay(5); // wait for 5 seconds to reach the min values
+
     return true;
 }
 
@@ -448,29 +470,26 @@ bool RobotInterface::setDirectPositionReferences(const yarp::sig::Vector& desire
 {
     if (m_positionDirectInterface == nullptr)
     {
-        yError() << "[RobotControlInterface::setDirectPositionReferences] "
-                    "PositionDirect I/F not ready.";
+        yError() << m_logPrefix << "PositionDirect I/F not ready.";
         return false;
     }
 
     if (desiredPosition.size() != m_noActuatedAxis)
     {
-        yError() << "[RobotControlInterface::setDirectPositionReferences] "
-                    "Dimension mismatch between "
-                    "desired position vector and the number of controlled joints.";
+        yError() << m_logPrefix
+                 << "dimension mismatch between desired position vector and the number of "
+                    "controlled joints.";
         return false;
     }
 
     // convert radiant to degree
     for (int i = 0; i < m_noActuatedAxis; i++)
-        m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
+        m_referenceValues(i) = iDynTree::rad2deg(desiredPosition(i));
 
     // set desired position
-    if (!m_positionDirectInterface->setPositions(m_desiredJointValue.data()) && m_isMandatory)
+    if (!m_positionDirectInterface->setPositions(m_referenceValues.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setDirectPositionReferences] Error "
-                    "while setting the "
-                    "desired position.";
+        yError() << m_logPrefix << "Error while setting the desired position.";
         return false;
     }
 
@@ -481,29 +500,26 @@ bool RobotInterface::setPositionReferences(const yarp::sig::Vector& desiredPosit
 {
     if (m_positionInterface == nullptr)
     {
-        yError() << "[RobotControlInterface::setPositionReferences] Position I/F "
-                    "not ready.";
+        yError() << m_logPrefix << "Position I/F not ready.";
         return false;
     }
 
     if (desiredPosition.size() != m_noActuatedAxis)
     {
-        yError() << "[RobotControlInterface::setDirectPositionReferences] "
-                    "Dimension mismatch between "
-                    "desired position vector and the number of controlled joints.";
+        yError() << m_logPrefix
+                 << "Dimension mismatch between desired position vector and the number of "
+                    "controlled joints.";
         return false;
     }
 
     // convert radiant to degree
     for (int i = 0; i < m_noActuatedAxis; i++)
-        m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
+        m_referenceValues(i) = iDynTree::rad2deg(desiredPosition(i));
 
     // set desired position
-    if (!m_positionInterface->positionMove(m_desiredJointValue.data()) && m_isMandatory)
+    if (!m_positionInterface->positionMove(m_referenceValues.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setPositionReferences] Error while "
-                    "setting the "
-                    "desired position.";
+        yError() << m_logPrefix << "Error while setting the desired position.";
         return false;
     }
 
@@ -514,39 +530,34 @@ bool RobotInterface::setVelocityReferences(const yarp::sig::Vector& desiredVeloc
 {
     if (m_velocityInterface == nullptr)
     {
-        yError() << "[RobotControlInterface::setVelocityReferences] Velocity I/F "
-                    "not ready.";
+        yError() << m_logPrefix << "Velocity I/F not ready.";
         return false;
     }
 
     if (desiredVelocity.size() != m_noActuatedAxis)
     {
-        yError() << "[RobotControlInterface::setVelocityReferences] Dimension "
-                    "mismatch between "
-                    "desired velocity vector and the number of controlled joints.";
+        yError() << m_logPrefix
+                 << "Dimension mismatch between desired velocity vector and the number of "
+                    "controlled joints.";
         return false;
     }
 
     // convert radiant/s  to degree/s
     for (int i = 0; i < m_noActuatedAxis; i++)
-        m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
+        m_referenceValues(i) = iDynTree::rad2deg(desiredVelocity(i));
 
     // since the velocity interface use a minimum jerk trajectory a very high
     // acceleration is set in order to use it as velocity "direct" interface
     yarp::sig::Vector dummy(m_noActuatedAxis, std::numeric_limits<double>::max());
     if (!m_velocityInterface->setRefAccelerations(dummy.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setVelocityReferences] Error while "
-                    "setting the desired "
-                    "acceleration.";
+        yError() << m_logPrefix << " Error while setting the desired acceleration.";
         return false;
     }
 
-    if (!m_velocityInterface->velocityMove(m_desiredJointValue.data()) && m_isMandatory)
+    if (!m_velocityInterface->velocityMove(m_referenceValues.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setVelocityReferences] Error while "
-                    "setting the desired "
-                    "velocity.";
+        yError() << m_logPrefix << "Error while setting the desired velocity.";
         return false;
     }
     return true;
@@ -556,29 +567,26 @@ bool RobotInterface::setCurrentReferences(const yarp::sig::Vector& desiredCurren
 {
     if (m_currentInterface == nullptr)
     {
-        yError() << "[RobotControlInterface::setCurrentReferences] Current I/F not "
-                    "ready.";
+        yError() << m_logPrefix << "Current I/F not ready.";
         return false;
     }
 
     if (desiredCurrent.size() != m_noActuatedAxis)
     {
-        yError() << "[RobotControlInterface::setCurrentReferences] Dimension "
-                    "mismatch between "
-                    "desired current vector and the number of controlled joints.";
+        yError() << m_logPrefix
+                 << "Dimension mismatch between desired current vector and the "
+                    "number of controlled joints.";
         return false;
     }
 
     // update the desired current values
     for (int i = 0; i < m_noActuatedAxis; i++)
-        m_desiredCurrent(i) = desiredCurrent(i);
+        m_motorCurrentReferences(i) = desiredCurrent(i);
 
     // set desired current
-    if (!m_currentInterface->setRefCurrents(m_desiredCurrent.data()) && m_isMandatory)
+    if (!m_currentInterface->setRefCurrents(m_motorCurrentReferences.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setCurrentReferences] Error while "
-                    "setting the "
-                    "desired current.";
+        yError() << m_logPrefix << "Error while setting the desired current.";
         return false;
     }
     return true;
@@ -588,27 +596,26 @@ bool RobotInterface::setPwmReferences(const yarp::sig::Vector& desiredPwm)
 {
     if (m_pwmInterface == nullptr)
     {
-        yError() << "[RobotControlInterface::setPwmReferences] PWM I/F not ready.";
+        yError() << m_logPrefix << "PWM I/F not ready.";
         return false;
     }
 
     if (desiredPwm.size() != m_noActuatedAxis)
     {
-        yError() << "[RobotControlInterface::setPwmReferences] Dimension mismatch "
-                    "between "
-                    "desired current vector and the number of controlled joints.";
+        yError() << m_logPrefix
+                 << "Dimension mismatch between desired current vector and the number of "
+                    "controlled joints.";
         return false;
     }
 
     // update the desired PWM values
     for (int i = 0; i < m_noActuatedAxis; i++)
-        m_pwmDesired(i) = desiredPwm(i);
+        m_motorPwmReferences(i) = desiredPwm(i);
 
     // set desired PWM
-    if (!m_pwmInterface->setRefDutyCycles(m_pwmDesired.data()) && m_isMandatory)
+    if (!m_pwmInterface->setRefDutyCycles(m_motorPwmReferences.data()) && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::setPwmReferences] Error while setting the "
-                    "desired PWM.";
+        yError() << m_logPrefix << "Error while setting the desired PWM.";
         return false;
     }
     return true;
@@ -625,12 +632,11 @@ void RobotInterface::updateTimeStamp()
 bool RobotInterface::getFeedback()
 {
     double time0 = yarp::os::Time::now();
-    bool verbose = false;
 
     if (!m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data())
         && m_isMandatory)
     {
-        yError() << "[RobotControlInterface::getFeedbacks] Unable to get joint position";
+        yError() << m_logPrefix << "Unable to get axes position.";
         return false;
     }
 
@@ -638,104 +644,64 @@ bool RobotInterface::getFeedback()
         m_encoderPositionFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
 
-    if (verbose)
+    if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data())
+        && m_isMandatory)
     {
-        if (!m_encodersInterface->getEncoderSpeeds(m_encoderVelocityFeedbackInDegrees.data())
-            && m_isMandatory)
-        {
-            yError() << "[RobotControlInterface::getFeedbacks] Unable to get Axis "
-                        "velocity feedback";
-            return false;
-        }
-
-        for (unsigned j = 0; j < m_noActuatedAxis; ++j)
-            m_encoderVelocityFeedbackInRadians(j)
-                = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
+        yError() << m_logPrefix << "Unable to get axes velocity feedback.";
+        return false;
     }
+
+    for (unsigned j = 0; j < m_noActuatedAxis; ++j)
+        m_encoderVelocityFeedbackInRadians(j)
+            = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
 
     if (!(m_analogSensorInterface->read(m_analogSensorFeedbackRaw)
           == yarp::dev::IAnalogSensor::AS_OK))
     {
-        yError() << "[RobotControlInterface::getFeedbacks] Unable to get analog "
-                    "sensor data";
+        yError() << m_logPrefix << "Unable to get analog sensor data.";
         return false;
     }
 
-    if (!getCalibratedFeedback())
+    if (!computeCalibratedAnalogSesnors())
     {
-        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the "
-                    "calibrated analog "
-                    "sensor data";
+        yError() << m_logPrefix << "Unable to get the calibrated analog sensor data.";
         return false;
     }
 
-    if (!setAllJointsFeedback())
+    if (!computeActuatedJointFeedbacks())
     {
-        yError() << "[RobotControlInterface::getFeedbacks] Unable to set all the "
-                    "interested joints feedback"
-                    "sensor data";
+        yError() << m_logPrefix << "Unable to set all the actuated joints feedback sensor data.";
         return false;
     }
 
-    if (verbose)
+    if (!m_currentInterface->getCurrents(m_motorCurrentFeedbacks.data()) && m_isMandatory)
     {
-        if (!m_currentInterface->getCurrents(m_currentFeedback.data()) && m_isMandatory)
-        {
-            yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor "
-                        "current feedbacks";
-            return false;
-        }
+        yError() << m_logPrefix << "Unable to get motor current feedbacks.";
+        return false;
     }
 
-    // removing the getRefCurrents since it takes 0.04 seconds to read
-    //    if (!m_currentInterface->getRefCurrents(m_desiredCurrentInterface.data()) &&
-    //    m_isMandatory)
-    //    {
-    //        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the motor "
-    //                    "desired current from the interface";
-    //        return false;
-    //    }
-
-    if (verbose)
+    if (!m_pwmInterface->getDutyCycles(m_motorPwmFeedbacks.data()) && m_isMandatory)
     {
-        if (!m_pwmInterface->getDutyCycles(m_pwmFeedback.data()) && m_isMandatory)
-        {
-            yError() << "[RobotControlInterface::getFeedbacks] Unable to get motor PWM "
-                        "feedbacks";
-            return false;
-        }
+        yError() << m_logPrefix << "Unable to get motor PWM feedbacks.";
+        return false;
     }
 
-    // removing the getRefDutyCycles since it takes 0.04 seconds to read
-    //    if (!m_pwmInterface->getRefDutyCycles(m_pwmDesiredInterface.data()) &&
-    //    m_isMandatory)
-    //    {
-    //        yError() << "[RobotControlInterface::getFeedbacks] Unable to get the
-    //        motor desired PWM from the interface"; return false;
-    //    }
-
-    if (verbose)
+    if (!m_pidInterface->getPidOutputs(m_pidControlMode, m_pidOutput.data()) && m_isMandatory)
     {
-        if (!m_pidInterface->getPidOutputs(m_pidControlMode, m_pidOutput.data()) && m_isMandatory)
-        {
-            yError() << "[RobotControlInterface::getFeedbacks] Unable to get pid outputs";
-            return false;
-        }
+        yError() << m_logPrefix << "Unable to get pid outputs.";
+        return false;
     }
-
     return true;
 }
 
-bool RobotInterface::getCalibratedFeedback()
+bool RobotInterface::computeCalibratedAnalogSesnors()
 {
-
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
-
         m_analogSensorFeedbackInDegrees(j)
-            = m_joints_min_boundary(j)
-              + m_sensors_raw2Degree_scaling(j)
-                    * (m_analogSensorFeedbackRaw(j) - m_sensors_min_boundary(j)); // TOCHECK
+            = m_analogJointsMinBoundary[j]
+              + m_sensorsRaw2DegreeScaling[j]
+                    * (m_analogSensorFeedbackRaw(j) - m_analogSensorsRawMinBoundary[j]);
 
         m_analogSensorFeedbackInRadians(j) = iDynTree::deg2rad(m_analogSensorFeedbackInDegrees(j));
     }
@@ -743,44 +709,27 @@ bool RobotInterface::getCalibratedFeedback()
     return true;
 }
 
-bool RobotInterface::setAllJointsFeedback() // update this function later
+bool RobotInterface::computeActuatedJointFeedbacks() // update this function later
 {
     size_t idx = 0;
-    for (size_t i = 0; i < m_axisInfoList.size(); ++i)
+    for (const auto& element : m_jointInfoMap)
     {
-        if (m_axisInfoList[i].useAnalog)
+        if (element.second.useAnalog)
         {
-            // "it" is the pointer to ananlog Index
-            for (std::vector<int>::iterator it
-                 = m_axisInfoList[i].relatedAnalogSensorsIndex.begin();
-                 it != m_axisInfoList[i].relatedAnalogSensorsIndex.end();
-                 ++it)
-            {
-                m_SensorActuatedJointFeedbackInRadians(idx) = m_analogSensorFeedbackInRadians(*it);
-                idx++;
-            }
+            m_actuatedJointFeedbacksInRadian(idx)
+                = m_analogSensorFeedbackInRadians(element.second.index);
         } else
         {
-            m_SensorActuatedJointFeedbackInRadians(idx) = m_encoderPositionFeedbackInRadians(i);
-            idx++;
+            m_actuatedJointFeedbacksInRadian(idx)
+                = m_encoderPositionFeedbackInRadians(element.second.index);
         }
+        idx++;
     }
-
-    //    m_allSensorFeedbackInRadians(0)=m_encoderPositionFeedbackInRadians(0);
-    //    for(unsigned j = 0; j < m_noAnalogSensor; ++j)
-    //    {
-    //        m_allSensorFeedbackInRadians(j+1)=m_analogSensorFeedbackInRadians(j);
-    //    }
 
     return true;
 }
 
 const yarp::os::Stamp& RobotInterface::timeStamp() const
-{
-    return m_timeStamp;
-}
-
-yarp::os::Stamp& RobotInterface::timeStamp()
 {
     return m_timeStamp;
 }
@@ -804,13 +753,9 @@ const yarp::sig::Vector& RobotInterface::jointEncodersSpeed() const
     return m_encoderVelocityFeedbackInRadians;
 }
 
-void RobotInterface::jointEncodersSpeed(std::vector<double>& axisVelocityFeedbacks) const
+void RobotInterface::jointEncodersSpeed(std::vector<double>& axisVelocityFeedbacks)
 {
-    axisVelocityFeedbacks.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        axisVelocityFeedbacks[i] = m_encoderVelocityFeedbackInRadians(i);
-    }
+    CtrlHelper::toStdVector(m_encoderVelocityFeedbackInRadians, axisVelocityFeedbacks);
 }
 
 const yarp::sig::Vector& RobotInterface::analogSensors() const
@@ -818,60 +763,44 @@ const yarp::sig::Vector& RobotInterface::analogSensors() const
     return m_analogSensorFeedbackInRadians;
 }
 
-const yarp::sig::Vector& RobotInterface::allSensors() const
+const yarp::sig::Vector& RobotInterface::actuatedJointFeedbacks() const
 {
-    return m_SensorActuatedJointFeedbackInRadians;
+    return m_actuatedJointFeedbacksInRadian;
 }
 
-void RobotInterface::allSensors(std::vector<double>& jointsFeedbacks) const
+void RobotInterface::actuatedJointFeedbacks(std::vector<double>& jointsFeedbacks)
 {
-    jointsFeedbacks.resize(m_noActuatedJoints);
-    for (size_t i = 0; i < m_noActuatedJoints; i++)
-    {
-        jointsFeedbacks[i] = m_SensorActuatedJointFeedbackInRadians[i];
-    }
+    CtrlHelper::toStdVector(m_actuatedJointFeedbacksInRadian, jointsFeedbacks);
 }
 
 const yarp::sig::Vector& RobotInterface::motorCurrents() const
 {
-    return m_currentFeedback;
+    return m_motorCurrentFeedbacks;
 }
 
-void RobotInterface::motorCurrents(std::vector<double>& motorCurrents) const
+void RobotInterface::motorCurrents(std::vector<double>& motorCurrents)
 {
-    motorCurrents.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        motorCurrents[i] = m_currentFeedback(i);
-    }
+    CtrlHelper::toStdVector(m_motorCurrentFeedbacks, motorCurrents);
 }
 
 const yarp::sig::Vector& RobotInterface::motorCurrentReference() const
 {
-    return m_desiredCurrentInterface;
+    return m_motorCurrentReferences;
 }
 
-void RobotInterface::motorCurrentReference(std::vector<double>& motorCurrentReferences) const
+void RobotInterface::motorCurrentReference(std::vector<double>& motorCurrentReferences)
 {
-    motorCurrentReferences.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        motorCurrentReferences[i] = m_desiredCurrentInterface(i);
-    }
+    CtrlHelper::toStdVector(m_motorCurrentReferences, motorCurrentReferences);
 }
 
 const yarp::sig::Vector& RobotInterface::motorPwm() const
 {
-    return m_pwmFeedback;
+    return m_motorPwmFeedbacks;
 }
 
-void RobotInterface::motorPwm(std::vector<double>& motorPwm) const
+void RobotInterface::motorPwm(std::vector<double>& motorPwm)
 {
-    motorPwm.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        motorPwm[i] = m_pwmFeedback(i);
-    }
+    CtrlHelper::toStdVector(m_motorPwmFeedbacks, motorPwm);
 }
 
 const yarp::sig::Vector& RobotInterface::motorPidOutputs() const
@@ -879,42 +808,52 @@ const yarp::sig::Vector& RobotInterface::motorPidOutputs() const
     return m_pidOutput;
 }
 
-void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs) const
+void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs)
 {
-    motorPidOutputs.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        motorPidOutputs[i] = m_pidOutput(i);
-    }
+    CtrlHelper::toStdVector(m_pidOutput, motorPidOutputs);
 }
 
 const yarp::sig::Vector& RobotInterface::motorPwmReference() const
 {
-    return m_pwmDesiredInterface;
+    return m_motorPwmReferences;
 }
 
-void RobotInterface::motorPwmReference(std::vector<double>& motorPwmReference) const
+void RobotInterface::motorPwmReference(std::vector<double>& motorPwmReference)
 {
-    motorPwmReference.resize(m_noActuatedAxis);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        motorPwmReference[i] = m_pwmDesiredInterface(i);
-    }
+    CtrlHelper::toStdVector(m_motorPwmReferences, motorPwmReference);
 }
 
 bool RobotInterface::close()
 {
-    yInfo() << "RobotControlInterface::close()";
+    yInfo() << m_logPrefix << "closing.";
     if (!switchToControlMode(VOCAB_CM_POSITION))
-        yError() << "[RobotControlInterface::close] Unable to switch in position "
-                    "control.";
+        yError() << m_logPrefix << "Unable to switch in position control.";
     return false;
 
     if (!m_robotDevice.close())
     {
-        yError() << "[RobotControlInterface::close] Unable to close the device.";
+        yError() << m_logPrefix << "Unable to close the remotecontrolboardremepper device.";
         return false;
     }
+
+    if (!m_analogDevice.close())
+    {
+        yError() << m_logPrefix << "Unable to close the analogsensorclient device.";
+        return false;
+    }
+    m_timedInterface = nullptr;
+    m_encodersInterface = nullptr;
+    m_positionDirectInterface = nullptr;
+    m_positionInterface = nullptr;
+    m_velocityInterface = nullptr;
+    m_controlModeInterface = nullptr;
+    m_limitsInterface = nullptr;
+    m_analogSensorInterface = nullptr;
+    m_currentInterface = nullptr;
+    m_pwmInterface = nullptr;
+    m_pidInterface = nullptr;
+
+    yInfo() << m_logPrefix << "closed correctly.";
     return true;
 }
 
@@ -961,8 +900,7 @@ bool RobotInterface::getLimits(yarp::sig::Matrix& limits)
 {
     if (!getFeedback())
     {
-        yError() << "[RobotControlInterface::getLimits] Unable to get the feedback "
-                    "from the robot";
+        yError() << m_logPrefix << "Unable to get the feedback from the robot";
         return false;
     }
 
@@ -977,17 +915,16 @@ bool RobotInterface::getLimits(yarp::sig::Matrix& limits)
         {
             if (m_isMandatory)
             {
-                yError() << "[RobotControlInterface::getLimits] Unable get "
-                         << m_actuatedAxisNames[i] << " joint limits.";
+                yError() << m_logPrefix << "Unable get " << m_actuatedAxisNames[i]
+                         << " joint limits.";
                 return false;
             } else
             {
                 limits(i, 0) = m_encoderPositionFeedbackInRadians(i);
                 limits(i, 1) = m_encoderPositionFeedbackInRadians(i);
-                yWarning() << "[RobotControlInterface::getLimits] Unable get "
-                           << m_actuatedAxisNames[i]
-                           << " joint limits. The current joint value is used as lower "
-                              "and upper limits.";
+                yWarning()
+                    << m_logPrefix << "Unable get " << m_actuatedAxisNames[i]
+                    << " joint limits. The current joint value is used as lower and upper limits.";
             }
         } else
         {
@@ -995,6 +932,21 @@ bool RobotInterface::getLimits(yarp::sig::Matrix& limits)
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
         }
     }
+    return true;
+}
+
+bool RobotInterface::getLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits)
+{
+    std::vector<double> minValues, maxValues;
+    if (!this->getLimits(minValues, maxValues))
+    {
+        yError() << m_logPrefix << "unable to get the robot axis limits";
+        return false;
+    }
+
+    CtrlHelper::toYarpVector(minValues, minLimits);
+    CtrlHelper::toYarpVector(maxValues, maxLimits);
+
     return true;
 }
 
@@ -1006,7 +958,7 @@ bool RobotInterface::getLimits(std::vector<double>& minLimits, std::vector<doubl
     yarp::sig::Matrix limits;
     if (!this->getLimits(limits))
     {
-        yInfo() << "unable to get the robot axis limits";
+        yInfo() << m_logPrefix << "unable to get the robot axis limits";
         return false;
     }
 
@@ -1020,11 +972,9 @@ bool RobotInterface::getLimits(std::vector<double>& minLimits, std::vector<doubl
 
 bool RobotInterface::getVelocityLimits(yarp::sig::Matrix& limits)
 {
-    yInfo() << "RobotControlInterface::getVelocityLimits";
     if (!getFeedback())
     {
-        yError() << "[RobotControlInterface::getVelocityLimits] Unable to get the "
-                    "feedback from the robot";
+        yError() << m_logPrefix << "Unable to get the feedback from the robot";
         return false;
     }
     // resize matrix
@@ -1036,8 +986,7 @@ bool RobotInterface::getVelocityLimits(yarp::sig::Matrix& limits)
         // get position limits
         if (!m_limitsInterface->getVelLimits(i, &minLimitInDegree, &maxLimitInDegree))
         {
-            yError() << "[RobotControlInterface::getVelocityLimits] Unable get "
-                     << m_actuatedAxisNames[i] << " joint limits.";
+            yError() << m_logPrefix << "Unable get " << m_actuatedAxisNames[i] << " joint limits.";
             return false;
 
         } else
@@ -1049,28 +998,36 @@ bool RobotInterface::getVelocityLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotInterface::setJointReference(const std::vector<double>& desiredValues)
+bool RobotInterface::setAxisReferences(std::vector<double>& desiredValues)
+{
+    return this->setAxisReferences(desiredValues, m_controlMode);
+}
+
+bool RobotInterface::setAxisReferences(std::vector<double>& desiredValues, const int& controlMode)
 {
     if (desiredValues.size() != m_noActuatedAxis)
     {
-        yError() << "RobotControlInterface:: the number of input data is not equal to the desired "
-                    "number of robot axis";
+        yError() << m_logPrefix
+                 << "the number of input data is not equal to the actuated number of robot axis.";
         return false;
     }
     yarp::sig::Vector desiredValue(m_noActuatedAxis, 0.0);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        desiredValue(i) = desiredValues[i];
-    }
+    CtrlHelper::toYarpVector(desiredValues, desiredValue);
 
-    switch (m_controlMode)
+    switch (controlMode)
     {
     case VOCAB_CM_POSITION_DIRECT:
         if (!setDirectPositionReferences(desiredValue))
         {
-            yError() << "[RobotControlInterface::setJointReference] Unable to set "
-                        "the desired joint "
-                        "position";
+            yError() << m_logPrefix << "Unable to set the axis position-direct  references.";
+            return false;
+        }
+        break;
+
+    case VOCAB_CM_POSITION:
+        if (!setPositionReferences(desiredValue))
+        {
+            yError() << m_logPrefix << "Unable to set the axis position references.";
             return false;
         }
         break;
@@ -1078,15 +1035,29 @@ bool RobotInterface::setJointReference(const std::vector<double>& desiredValues)
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yError() << "[RobotControlInterface::setJointReference] Unable to set "
-                        "the desired joint "
-                        "velocity";
+            yError() << m_logPrefix << "Unable to set the axis velocity references.";
+            return false;
+        }
+        break;
+
+    case VOCAB_CM_CURRENT:
+        if (!setCurrentReferences(desiredValue))
+        {
+            yError() << m_logPrefix << "Unable to set the motor current references.";
+            return false;
+        }
+        break;
+
+    case VOCAB_CM_PWM:
+        if (!setPwmReferences(desiredValue))
+        {
+            yError() << m_logPrefix << "Unable to set the motor PWM references.";
             return false;
         }
         break;
 
     default:
-        yError() << "[RobotControlInterface::setJointReference] Unknown control mode.";
+        yError() << m_logPrefix << "Unknown control mode.";
         return false;
     }
 

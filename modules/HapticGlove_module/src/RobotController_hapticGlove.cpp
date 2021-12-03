@@ -327,7 +327,7 @@ void RobotController::getAxisVelocityFeedbacks(std::vector<double>& fingerAxisVe
 
 void RobotController::getJointValueFeedbacks(std::vector<double>& jointsValueFeedbacks)
 {
-    this->controlHelper()->allSensors(jointsValueFeedbacks);
+    this->controlHelper()->actuatedJointFeedbacks(jointsValueFeedbacks);
 }
 
 void RobotController::getMotorCurrentFeedback(std::vector<double>& motorCurrentFeedback)
@@ -642,7 +642,7 @@ bool RobotController::getCustomSetIndices(const std::vector<std::string>& allLis
 
 bool RobotController::move()
 {
-    return m_robotInterface->setJointReference(m_data->axisValueReferencesStd);
+    return m_robotInterface->setAxisReferences(m_data->axisValueReferencesStd);
 }
 
 const std::unique_ptr<HapticGlove::RobotInterface>& RobotController::controlHelper() const
