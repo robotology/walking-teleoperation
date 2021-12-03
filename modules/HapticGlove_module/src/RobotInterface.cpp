@@ -1,5 +1,5 @@
 /**
- * @file HapticGloveRobotControlHelper.cpp
+ * @file RobotInterface.cpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
@@ -15,7 +15,7 @@
 
 // teleoperation
 #include <ControlHelper.hpp>
-#include <RobotControlInterface_hapticGlove.hpp>
+#include <RobotInterface.hpp>
 #include <Utils.hpp>
 
 using namespace HapticGlove;

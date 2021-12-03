@@ -1,13 +1,13 @@
 /**
- * @file RobotController_hapticGlove.hpp
+ * @file RobotController.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2020
  */
 
-#ifndef ROBOT_CONTROLLER_HAPTIC_GLOVE_HPP
-#define ROBOT_CONTROLLER_HAPTIC_GLOVE_HPP
+#ifndef ROBOT_CONTROLLER_HPP
+#define ROBOT_CONTROLLER_HPP
 
 // std
 #include <iostream>
@@ -16,7 +16,7 @@
 // teleoperation
 #include <ControlHelper.hpp>
 #include <LinearRegression.hpp>
-#include <RobotControlInterface_hapticGlove.hpp>
+#include <RobotInterface.hpp>
 #include <RobotMotorsEstimation.hpp>
 
 // yarp

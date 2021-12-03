@@ -22,7 +22,7 @@
 // teleoperation
 #include <GloveControlHelper.hpp>
 #include <Retargeting.hpp>
-#include <RobotController_hapticGlove.hpp>
+#include <RobotController.hpp>
 
 // eigen
 #include <Eigen/Dense>

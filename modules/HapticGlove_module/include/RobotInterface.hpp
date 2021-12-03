@@ -1,13 +1,13 @@
 /**
- * @file HapticGloveRobotControlInterface.hpp
+ * @file RobotInterface.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2020 iCub Facility - Istituto Italiano di Tecnologia
  *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  * @date 2020
  */
 
-#ifndef ROBOT_CONTROL_INTERFACE_HAPTIC_GLOVE_HPP
-#define ROBOT_CONTROL_INTERFACE_HAPTIC_GLOVE_HPP
+#ifndef ROBOT_INTERFACE_HPP
+#define ROBOT_INTERFACE_HPP
 
 // std
 #include <memory>
