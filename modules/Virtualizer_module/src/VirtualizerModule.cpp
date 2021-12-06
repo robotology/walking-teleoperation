@@ -19,6 +19,9 @@
 #include "Utils.hpp"
 #include "VirtualizerModule.hpp"
 
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+
 bool VirtualizerModule::configureVirtualizer()
 {
     // try to connect to the virtualizer
@@ -72,6 +75,51 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         yError() << "Failed to read velocity_scaling";
         return false;
     }
+
+    return true;
+}
+
+bool VirtualizerModule::configureTransformServer(const yarp::os::Bottle &tfGroup)
+{
+    std::string tfRemote;
+    if (!YarpHelper::getStringFromSearchable(tfGroup, "remote", tfRemote))
+    {
+        yError() << "Failed while reading tf_remote parameter.";
+        return false;
+    }
+
+    if (!YarpHelper::getStringFromSearchable(tfGroup, "root_frame_name", m_tfRootFrame))
+    {
+        yError() << "Failed while reading root_frame_name parameter.";
+        return false;
+    }
+
+    if (!YarpHelper::getStringFromSearchable(tfGroup, "frame_name", m_tfFrameName))
+    {
+        yError() << "Failed while reading frame_name parameter.";
+        return false;
+    }
+
+    //opening tf client
+    yarp::os::Property tfClientCfg;
+    tfClientCfg.put("device", "transformClient");
+    tfClientCfg.put("local",  "/" + getName() + "/tf");
+    tfClientCfg.put("remote", tfRemote);
+
+    if (!m_tfDriver.open(tfClientCfg))
+    {
+        yError() << "Unable to open polydriver with the following options:" << tfClientCfg.toString();
+        return false;
+    }
+
+    if (!m_tfDriver.view(m_tfPublisher) || m_tfPublisher == nullptr)
+    {
+        yError() << "Unable to view IFrameTransform interface.";
+        return false;
+    }
+
+    m_tfMatrix.resize(4,4);
+    m_tfMatrix.eye();
 
     return true;
 }
@@ -309,6 +357,16 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
         }
     }
 
+    m_useTf = rf.check("use_transform_server", yarp::os::Value(false)).asBool();
+    if (m_useTf)
+    {
+        if (!configureTransformServer(rf.findGroup("TF")))
+        {
+            yError() << "Failed to configure transform server.";
+            return false;
+        }
+    }
+
     if (!configureVirtualizer())
     {
         yError() << "[configure] Unable to configure the virtualizer";
@@ -321,6 +379,8 @@ bool VirtualizerModule::configure(yarp::os::ResourceFinder& rf)
 
     // reset player orientation
     m_cvirtDeviceID->ResetPlayerOrientation();
+
+    m_cvirtDeviceID->ResetPlayerHeight();
 
     // reset some quanties
     m_robotYaw = 0;
@@ -352,6 +412,9 @@ bool VirtualizerModule::close()
     m_encodersInterface = nullptr;
     m_controlModeInterface = nullptr;
 
+    m_tfDriver.close();
+    m_tfPublisher = nullptr;
+
     return true;
 }
 
@@ -374,6 +437,11 @@ bool VirtualizerModule::updateModule()
         yError() << "Virtualizer misscalibrated or disconnected";
         return false;
     }
+
+    //get player height
+    float playerHeightInCm;
+    playerHeightInCm = m_cvirtDeviceID->GetPlayerHeight(); //It is relative to the initial height set ResetPlayerHeight, positive upward
+    double playerHeighInM = playerHeightInCm / 100.0;
 
     // get the player speed
     double speedData = threshold((double)(m_cvirtDeviceID->GetMovementSpeed()), m_speedDeadzone);
@@ -413,8 +481,8 @@ bool VirtualizerModule::updateModule()
 
         // error between the robot orientation and the player orientation
         double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw), m_angleDeadzone);
-        y = -m_scale_Y * angularError; // because the virtualizer orientation value is CCW, therefore we put "-" to
-        // make it CW, same as the robot world.
+        y = -m_scale_Y * angularError; // because the virtualizer orientation value is CW, therefore we put "-" to
+        // make it CCW, same as the robot world.
     }
 
     if (m_useHeadForTurning)
@@ -467,6 +535,22 @@ bool VirtualizerModule::updateModule()
     playerOrientationVector.push_back(playerYaw);
     m_playerOrientationPort.write();
 
+    if (m_useTf)
+    {
+        Eigen::Matrix3d rotation = Eigen::AngleAxisd(-playerYaw, Eigen::Vector3d::UnitZ()).toRotationMatrix(); //We consider the Z axis pointing upward, hence we invert the sign since the angle from the virtualizer is positive clockwise
+
+        for (size_t i = 0; i < 3; ++i)
+        {
+            for (size_t j = 0; j < 3; ++j)
+            {
+                m_tfMatrix(i,j) = rotation(i,j);
+            }
+        }
+        m_tfMatrix(2,3) = playerHeighInM; //Set the z position equal to the height
+
+        m_tfPublisher->setTransform(m_tfFrameName, m_tfRootFrame, m_tfMatrix);
+    }
+
     return true;
 }
 
@@ -483,6 +567,12 @@ void VirtualizerModule::resetPlayerOrientation()
     m_movingAverage.clear();
     m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
     return;
+}
+
+void VirtualizerModule::resetPlayerHeight()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    m_cvirtDeviceID->ResetPlayerHeight();
 }
 
 double VirtualizerModule::threshold(const double &input, double deadzone)
