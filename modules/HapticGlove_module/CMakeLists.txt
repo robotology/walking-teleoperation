@@ -29,13 +29,6 @@ if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
-#find_package(SenseGlove REQUIRED)
-#if(SENSEGLOVE_FOUND)
-#  include_directories($SENSEGLOVE_INCLUDE_DIR)
-#   message(WARNING "${EXE_TARGET_NAME} SenseGlove is not found")
-#endif(SENSEGLOVE_FOUND)
-
-
 
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC

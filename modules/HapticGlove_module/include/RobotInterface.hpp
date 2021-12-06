@@ -42,6 +42,8 @@ struct HapticGlove::JointInfo
 {
     bool useAnalog;
     size_t index; /**< The index of the data in analog data list or the axis list */
+    double scale; /**< This parameter is used only when using axis encoders to compute the joint
+                    angle. In this case, the encoder readouts are scaled to the robot joint values*/
 };
 
 /**

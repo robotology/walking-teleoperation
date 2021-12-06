@@ -79,13 +79,14 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         }
     }
 
-    for (size_t i = 0; i < m_actuatedAxisNames.size(); i++)
+    for (size_t axisIndex = 0; axisIndex < m_actuatedAxisNames.size(); axisIndex++)
     {
         std::vector<std::string> axisJointList; // related joints to the axisName
 
-        if (!!YarpHelper::getVectorFromSearchable(config, m_actuatedAxisNames[i], axisJointList))
+        if (!!YarpHelper::getVectorFromSearchable(
+                config, m_actuatedAxisNames[axisIndex], axisJointList))
         {
-            yError() << m_logPrefix << "unable to find " << m_actuatedAxisNames[i]
+            yError() << m_logPrefix << "unable to find " << m_actuatedAxisNames[axisIndex]
                      << "into config file.";
             return false;
         }
@@ -109,6 +110,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
             size_t jointIndex = elementJoint - m_allJointNames.begin();
 
             jointInfo.useAnalog = jointFeedbackIsAnalog[jointIndex];
+            jointInfo.scale = 1.0;
 
             if (jointInfo.useAnalog)
             {
@@ -127,24 +129,29 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
                 // if a joint does not have analog sensor to get its feedback, we use the associated
                 // encoder value of the axis. in this case, that axis cannot actuate more than one
                 // joint, since we do not have other ways to measure it.
-                if (axisJointList.size() > 1)
-                {
-                    yError() << m_logPrefix
-                             << "there is no defined way to get the joint value feedbacks "
-                                "associated with axis: "
-                             << m_actuatedAxisNames[i];
-                    return false;
-                }
-                auto elementAxis = std::find(std::begin(m_actuatedAxisNames),
-                                             std::end(m_actuatedAxisNames),
-                                             m_actuatedAxisNames[i]);
-                if (elementAxis == std::end(m_actuatedAxisNames))
-                {
-                    yError() << m_logPrefix << "the joint name (" << m_actuatedAxisNames[i]
-                             << " )is not found in the actuated axes list.";
-                    return false;
-                }
-                jointInfo.index = elementAxis - m_actuatedAxisNames.begin();
+                // if (axisJointList.size() > 1)
+                // {
+                //   yError() << m_logPrefix
+                //   << "there is no defined way to get the joint value
+                //       feedbacks "
+                //       "associated with axis: "
+                //       << m_actuatedAxisNames[axisIndex];
+                //    return false;
+                //  }
+                // auto elementAxis = std::find(std::begin(m_actuatedAxisNames),
+                //                             std::end(m_actuatedAxisNames),
+                //                             m_actuatedAxisNames[axisIndex]);
+                // if (elementAxis == std::end(m_actuatedAxisNames))
+                //{
+                //    yError() << m_logPrefix << "the joint name (" <<
+                //    m_actuatedAxisNames[axisIndex]
+                //             << " )is not found in the actuated axes list.";
+                //    return false;
+                //}
+                // jointInfo.index = elementAxis - m_actuatedAxisNames.begin();
+                // This part is used
+                jointInfo.index = axisIndex;
+                jointInfo.scale = 1.0 / axisJointList.size();
             }
             m_jointInfoMap.insert(std::make_pair(m_actuatedJointList.back(), jointInfo));
         }
@@ -721,7 +728,7 @@ bool RobotInterface::computeActuatedJointFeedbacks() // update this function lat
         } else
         {
             m_actuatedJointFeedbacksInRadian(idx)
-                = m_encoderPositionFeedbackInRadians(element.second.index);
+                = m_encoderPositionFeedbackInRadians(element.second.index) * element.second.scale;
         }
         idx++;
     }
