@@ -6,8 +6,8 @@
  * @date 2020
  */
 
-#ifndef MOTORESTIMATION_HPP
-#define MOTORESTIMATION_HPP
+#ifndef MOTOR_ESTIMATION_HPP
+#define MOTOR_ESTIMATION_HPP
 #include <ControlHelper.hpp>
 #include <KalmanFilter.hpp>
 #include <memory>
@@ -15,8 +15,11 @@
 namespace HapticGlove
 {
 class Estimator;
-}
+} // namespace HapticGlove
 
+/**
+ * Estimator Class useful to estimating the states of a single joint/axis.
+ */
 class HapticGlove::Estimator
 {
     double m_dt; /// <summary> sampling time
@@ -110,4 +113,4 @@ public:
      */
     void getCovInfo(Eigen::VectorXd& P);
 };
-#endif // MOTORESTIMATION_HPP
+#endif // MOTOR_ESTIMATION_HPP

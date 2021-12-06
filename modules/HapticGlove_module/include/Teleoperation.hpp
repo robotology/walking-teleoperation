@@ -33,6 +33,9 @@ class Teleoperation;
 struct Data;
 } // namespace HapticGlove
 
+/**
+ * Data is a data structure to collect all the variables related to the haptic glove teleoperation.
+ */
 struct HapticGlove::Data
 {
     double time; /// <summary> the current time
@@ -97,6 +100,9 @@ struct HapticGlove::Data
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
 };
 
+/**
+ * Teleoperation is a class for bi-lateral teleoperation of the haptic glove.
+ */
 class HapticGlove::Teleoperation
 {
     std::string m_logPrefix; /**< log prefix */

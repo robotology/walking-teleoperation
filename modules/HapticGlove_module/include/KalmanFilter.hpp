@@ -13,8 +13,8 @@
  * Chapter 12|42 pages: Optimal filtering and prediction
  */
 
-#ifndef KALMANFILTER_HPP
-#define KALMANFILTER_HPP
+#ifndef KALMAN_FILTER_HPP
+#define KALMAN_FILTER_HPP
 
 #include <ControlHelper.hpp>
 
@@ -23,6 +23,9 @@ namespace HapticGlove
 class KalmanFilter;
 } // namespace HapticGlove
 
+/**
+ * KalmanFilter Class is a Kalman filter implementation.
+ */
 class HapticGlove::KalmanFilter
 {
 private:
@@ -150,4 +153,4 @@ public:
      */
     void getCovInfo(Eigen::VectorXd& P);
 };
-#endif // KALMANFILTER_HPP
+#endif // KALMAN_FILTER_HPP

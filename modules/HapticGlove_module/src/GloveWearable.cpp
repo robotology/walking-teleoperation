@@ -419,3 +419,14 @@ bool GloveWearableImpl::setPalmVibrotactileValue(const int& value)
     m_iWearActuatorPort.write(true);
     return true;
 }
+
+bool GloveWearableImpl::close()
+{
+    yInfo() << m_logPrefix << "closing the glove wearable implementation.";
+    m_iWear = nullptr;
+    m_wearableDevice.close();
+
+    m_iWearActuatorPort.close();
+
+    return true;
+}

@@ -24,8 +24,11 @@ using namespace yarp::os;
 namespace HapticGlove
 {
 class GloveWearableImpl;
-}
+} // namespace HapticGlove
 
+/**
+ * GloveWearableImpl is a class for interfacing with the haptic glove using the wearable interface.
+ */
 class HapticGlove::GloveWearableImpl
 {
 private:
@@ -150,6 +153,12 @@ public:
      * @return true/false in case of success/failure
      */
     bool setPalmVibrotactileValue(const int& value);
+
+    /**
+     * Close the Glove wearable implementation
+     * @return true/false in case of success/failure
+     */
+    bool close();
 };
 
-#endif
+#endif // GLOVE_WEARABLE_HPP

@@ -127,30 +127,14 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
             } else
             {
                 // if a joint does not have analog sensor to get its feedback, we use the associated
-                // encoder value of the axis. in this case, that axis cannot actuate more than one
-                // joint, since we do not have other ways to measure it.
-                // if (axisJointList.size() > 1)
-                // {
-                //   yError() << m_logPrefix
-                //   << "there is no defined way to get the joint value
-                //       feedbacks "
-                //       "associated with axis: "
-                //       << m_actuatedAxisNames[axisIndex];
-                //    return false;
-                //  }
-                // auto elementAxis = std::find(std::begin(m_actuatedAxisNames),
-                //                             std::end(m_actuatedAxisNames),
-                //                             m_actuatedAxisNames[axisIndex]);
-                // if (elementAxis == std::end(m_actuatedAxisNames))
-                //{
-                //    yError() << m_logPrefix << "the joint name (" <<
-                //    m_actuatedAxisNames[axisIndex]
-                //             << " )is not found in the actuated axes list.";
-                //    return false;
-                //}
-                // jointInfo.index = elementAxis - m_actuatedAxisNames.begin();
-                // This part is used
+                // encoder value of the axis.
                 jointInfo.index = axisIndex;
+
+                // This parameter is used only when using axis encoders to compute the joint angle.
+                // In this case, the encoder readouts are scaled to the robot joint values. This is
+                // mainly useful when single axis encoder value is used to specify several joint
+                // angle values due to the lack of sensors (e.g., l_hand_finger or r_hand_finger
+                // associated joints).
                 jointInfo.scale = 1.0 / axisJointList.size();
             }
             m_jointInfoMap.insert(std::make_pair(m_actuatedJointList.back(), jointInfo));
@@ -171,14 +155,14 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_analogSensorsRawMaxBoundary.resize(m_noAnalogSensor, 0.0);
 
     // get the joints limits boundaries
-    if (!YarpHelper::getVectorFromSearchable(
+    if (!YarpHelper::getYarpVectorFromSearchable(
             config, "analog_joints_min_boundary", m_analogJointsMinBoundary))
     {
         yError() << m_logPrefix << "unable to get the minimum boundary of the joints limits.";
         return false;
     }
 
-    if (!YarpHelper::getVectorFromSearchable(
+    if (!YarpHelper::getYarpVectorFromSearchable(
             config, "analog_joints_max_boundary", m_analogJointsMaxBoundary))
     {
         yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
@@ -186,7 +170,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     }
 
     // get the sensors limits boundaries
-    if (!YarpHelper::getVectorFromSearchable(
+    if (!YarpHelper::getYarpVectorFromSearchable(
             config, "analog_sensors_raw_min_boundary", m_analogSensorsRawMinBoundary))
     {
         yError() << m_logPrefix << "unable to get the minimum boundary of the joints limits.";
@@ -194,7 +178,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     }
 
     // get the sensors limits boundaries
-    if (!YarpHelper::getVectorFromSearchable(
+    if (!YarpHelper::getYarpVectorFromSearchable(
             config, "analog_sensors_raw_max_boundary", m_analogSensorsRawMaxBoundary))
     {
         yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
@@ -216,9 +200,9 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_sensorsRaw2DegreeScaling.resize(m_noAnalogSensor, 0.0);
     for (size_t i = 0; i < m_noAnalogSensor; i++)
     {
-        m_sensorsRaw2DegreeScaling[i]
-            = double(m_analogJointsMaxBoundary[i] - m_analogJointsMinBoundary[i])
-              / double(m_analogSensorsRawMaxBoundary[i] - m_analogSensorsRawMinBoundary[i]);
+        m_sensorsRaw2DegreeScaling(i)
+            = double(m_analogJointsMaxBoundary(i) - m_analogJointsMinBoundary(i))
+              / double(m_analogSensorsRawMaxBoundary(i) - m_analogSensorsRawMinBoundary(i));
     }
 
     // Devices
@@ -407,7 +391,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!initializeAxesValues())
+    if (!initializeAxisValues())
     {
         yError() << m_logPrefix
                  << "unable to initialize the axis values to the initial(min) values.";
@@ -449,7 +433,7 @@ bool RobotInterface::switchToControlMode(const int& controlMode)
     return true;
 }
 
-bool RobotInterface::initializeAxesValues()
+bool RobotInterface::initializeAxisValues()
 {
     std::vector<double> minLimits, maxLimits;
     if (!this->getLimits(minLimits, maxLimits))
@@ -489,6 +473,8 @@ bool RobotInterface::setDirectPositionReferences(const yarp::sig::Vector& desire
         return false;
     }
 
+    m_axisPositionDirectReferences = desiredPosition;
+
     // convert radiant to degree
     for (int i = 0; i < m_noActuatedAxis; i++)
         m_referenceValues(i) = iDynTree::rad2deg(desiredPosition(i));
@@ -519,6 +505,8 @@ bool RobotInterface::setPositionReferences(const yarp::sig::Vector& desiredPosit
         return false;
     }
 
+    m_axisPositionReferences = desiredPosition;
+
     // convert radiant to degree
     for (int i = 0; i < m_noActuatedAxis; i++)
         m_referenceValues(i) = iDynTree::rad2deg(desiredPosition(i));
@@ -548,6 +536,8 @@ bool RobotInterface::setVelocityReferences(const yarp::sig::Vector& desiredVeloc
                     "controlled joints.";
         return false;
     }
+
+    m_axisVelocityReferences = desiredVelocity;
 
     // convert radiant/s  to degree/s
     for (int i = 0; i < m_noActuatedAxis; i++)
@@ -587,11 +577,11 @@ bool RobotInterface::setCurrentReferences(const yarp::sig::Vector& desiredCurren
     }
 
     // update the desired current values
-    for (int i = 0; i < m_noActuatedAxis; i++)
-        m_motorCurrentReferences(i) = desiredCurrent(i);
+    m_motorCurrentReferences = desiredCurrent;
+    m_referenceValues = desiredCurrent;
 
     // set desired current
-    if (!m_currentInterface->setRefCurrents(m_motorCurrentReferences.data()) && m_isMandatory)
+    if (!m_currentInterface->setRefCurrents(m_referenceValues.data()) && m_isMandatory)
     {
         yError() << m_logPrefix << "Error while setting the desired current.";
         return false;
@@ -616,11 +606,11 @@ bool RobotInterface::setPwmReferences(const yarp::sig::Vector& desiredPwm)
     }
 
     // update the desired PWM values
-    for (int i = 0; i < m_noActuatedAxis; i++)
-        m_motorPwmReferences(i) = desiredPwm(i);
+    m_motorPwmReferences = desiredPwm;
+    m_referenceValues = desiredPwm;
 
     // set desired PWM
-    if (!m_pwmInterface->setRefDutyCycles(m_motorPwmReferences.data()) && m_isMandatory)
+    if (!m_pwmInterface->setRefDutyCycles(m_referenceValues.data()) && m_isMandatory)
     {
         yError() << m_logPrefix << "Error while setting the desired PWM.";
         return false;
@@ -706,9 +696,9 @@ bool RobotInterface::computeCalibratedAnalogSesnors()
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
         m_analogSensorFeedbackInDegrees(j)
-            = m_analogJointsMinBoundary[j]
-              + m_sensorsRaw2DegreeScaling[j]
-                    * (m_analogSensorFeedbackRaw(j) - m_analogSensorsRawMinBoundary[j]);
+            = m_analogJointsMinBoundary(j)
+              + m_sensorsRaw2DegreeScaling(j)
+                    * (m_analogSensorFeedbackRaw(j) - m_analogSensorsRawMinBoundary(j));
 
         m_analogSensorFeedbackInRadians(j) = iDynTree::deg2rad(m_analogSensorFeedbackInDegrees(j));
     }
@@ -746,26 +736,52 @@ const yarp::sig::Vector& RobotInterface::axisFeedbacks() const
     return m_encoderPositionFeedbackInRadians;
 }
 
-void RobotInterface::axisFeedbacks(std::vector<double>& axisFeedbacks) const
+void RobotInterface::axisFeedbacks(std::vector<double>& axisFeedbacks)
 {
-    axisFeedbacks.resize(m_noActuatedAxis, 0.0);
-    for (size_t i = 0; i < m_noActuatedAxis; i++)
-    {
-        axisFeedbacks[i] = m_encoderPositionFeedbackInRadians(i);
-    }
+    CtrlHelper::toStdVector(m_encoderPositionFeedbackInRadians, axisFeedbacks);
 }
 
-const yarp::sig::Vector& RobotInterface::jointEncodersSpeed() const
+const yarp::sig::Vector& RobotInterface::axisPositionReferences() const
+{
+    return m_axisPositionReferences;
+}
+
+void RobotInterface::axisPositionReferences(std::vector<double>& axisPositionReferences)
+{
+    CtrlHelper::toStdVector(m_axisPositionReferences, axisPositionReferences);
+}
+
+const yarp::sig::Vector& RobotInterface::axisPositionDirectReferences() const
+{
+    return m_axisPositionDirectReferences;
+}
+
+void RobotInterface::axisPositionDirectReferences(std::vector<double>& axisPositionDirectReferences)
+{
+    CtrlHelper::toStdVector(m_axisPositionDirectReferences, axisPositionDirectReferences);
+}
+
+const yarp::sig::Vector& RobotInterface::axisVelocityFeedbacks() const
 {
     return m_encoderVelocityFeedbackInRadians;
 }
 
-void RobotInterface::jointEncodersSpeed(std::vector<double>& axisVelocityFeedbacks)
+void RobotInterface::axisVelocityFeedbacks(std::vector<double>& axisVelocityFeedbacks)
 {
     CtrlHelper::toStdVector(m_encoderVelocityFeedbackInRadians, axisVelocityFeedbacks);
 }
 
-const yarp::sig::Vector& RobotInterface::analogSensors() const
+const yarp::sig::Vector& RobotInterface::axisVelocityReferences() const
+{
+    return m_axisVelocityReferences;
+}
+
+void RobotInterface::axisVelocityReferences(std::vector<double>& axisVelocityReferences)
+{
+    CtrlHelper::toStdVector(m_axisVelocityReferences, axisVelocityReferences);
+}
+
+const yarp::sig::Vector& RobotInterface::analogSensorFeedbacks() const
 {
     return m_analogSensorFeedbackInRadians;
 }
@@ -810,16 +826,6 @@ void RobotInterface::motorPwm(std::vector<double>& motorPwm)
     CtrlHelper::toStdVector(m_motorPwmFeedbacks, motorPwm);
 }
 
-const yarp::sig::Vector& RobotInterface::motorPidOutputs() const
-{
-    return m_pidOutput;
-}
-
-void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs)
-{
-    CtrlHelper::toStdVector(m_pidOutput, motorPidOutputs);
-}
-
 const yarp::sig::Vector& RobotInterface::motorPwmReference() const
 {
     return m_motorPwmReferences;
@@ -828,6 +834,16 @@ const yarp::sig::Vector& RobotInterface::motorPwmReference() const
 void RobotInterface::motorPwmReference(std::vector<double>& motorPwmReference)
 {
     CtrlHelper::toStdVector(m_motorPwmReferences, motorPwmReference);
+}
+
+const yarp::sig::Vector& RobotInterface::motorPidOutputs() const
+{
+    return m_pidOutput;
+}
+
+void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs)
+{
+    CtrlHelper::toStdVector(m_pidOutput, motorPidOutputs);
 }
 
 bool RobotInterface::close()

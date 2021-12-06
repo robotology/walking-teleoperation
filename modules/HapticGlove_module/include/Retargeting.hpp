@@ -24,6 +24,10 @@ namespace HapticGlove
 class Retargeting;
 } // namespace HapticGlove
 
+/**
+ * Retargeting Class useful to implement the policy for the retargeting human motions to the robot
+ * motions and providing haptic feedback to the user.
+ */
 class HapticGlove::Retargeting
 {
     // member variables

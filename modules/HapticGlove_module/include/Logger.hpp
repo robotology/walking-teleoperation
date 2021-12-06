@@ -21,6 +21,10 @@
 #include <matlogger2/utils/mat_appender.h>
 #endif
 
+/**
+ * Logger Class useful for logging all the relevant information for the haptic glove teleoperation
+ * module.
+ */
 class HapticGlove::Teleoperation::Logger
 {
     bool m_isRightHand; /// <summary> check if the left or right hand

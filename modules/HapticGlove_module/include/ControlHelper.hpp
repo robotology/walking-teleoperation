@@ -1,5 +1,12 @@
-#ifndef CONTROLHELPER_HPP
-#define CONTROLHELPER_HPP
+/**
+ * @file ControlHelper.hpp
+ * @authors Kourosh Darvish <kourosh.darvish@iit.it>
+ * @copyright 2021 iCub Facility - Istituto Italiano di Tecnologia
+ *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * @date 2021
+ */
+#ifndef CONTROL_HELPER_HPP
+#define CONTROL_HELPER_HPP
 
 // std
 #include <vector>
@@ -76,4 +83,4 @@ struct HapticGlove::CtrlHelper::Data
     yarp::sig::Vector motorPidOutputsYarp; /** motor PID outputs*/
 };
 
-#endif // CONTROLHELPER_HPP
+#endif // CONTROL_HELPER_HPP

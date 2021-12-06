@@ -225,6 +225,13 @@ bool GloveControlHelper::close()
         yError() << m_logPrefix << "unable to close the glove control helper.";
         return false;
     }
+
+    if (!m_pImp->close())
+    {
+        yError() << m_logPrefix << "unable to close the glove wearable implementation.";
+        return false;
+    }
+
     yInfo() << m_logPrefix << "succefully closed.";
 
     return true;

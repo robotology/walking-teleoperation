@@ -1,13 +1,24 @@
-#ifndef LINEARREGRESSION_HPP
-#define LINEARREGRESSION_HPP
+/**
+ * @file LinearRegression.hpp
+ * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
+ * @copyright 2021 iCub Facility - Istituto Italiano di Tecnologia
+ *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * @date 2021
+ */
+
+#ifndef LINEAR_REGRESSION_HPP
+#define LINEAR_REGRESSION_HPP
 
 #include <ControlHelper.hpp>
 #include <iostream>
 namespace HapticGlove
 {
 class LinearRegression;
-}
+} // namespace HapticGlove
 
+/**
+ * LinearRegression Class useful to learn a linear relationship between inputs and outputs.
+ */
 class HapticGlove::LinearRegression
 {
 
@@ -48,4 +59,4 @@ bool push_back_row(DynamicEigenMatrix& m, const DynamicEigenVector& values)
     return true;
 }
 
-#endif // LINEARREGRESSION_HPP
+#endif // LINEAR_REGRESSION_HPP

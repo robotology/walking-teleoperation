@@ -25,10 +25,10 @@
 namespace HapticGlove
 {
 class RobotController;
-}
+} // namespace HapticGlove
 
 /**
- * Class useful to manage the control of the retargeting robot fingers.
+ * RobotController Class useful to manage the control of the retargeting robot fingers.
  */
 class HapticGlove::RobotController
 {
@@ -299,4 +299,4 @@ public:
     std::unique_ptr<RobotInterface>& controlHelper();
 };
 
-#endif
+#endif // ROBOT_CONTROLLER_HPP

@@ -24,7 +24,8 @@
 namespace HapticGlove
 {
 class GloveControlHelper;
-}
+} // namespace HapticGlove
+
 /**
  * GloveControlHelper is an helper class for controlling the glove.
  */
@@ -233,4 +234,4 @@ public:
     bool close();
 };
 
-#endif
+#endif // GLOVE_CONTROL_HELPER_HPP

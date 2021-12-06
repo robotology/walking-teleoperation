@@ -6,8 +6,8 @@
  * @date 2020
  */
 
-#ifndef ROBOTOTORSESTIMATION_HPP
-#define ROBOTMOTORSESTIMATION_HPP
+#ifndef ROBOT_MOTORS_ESTIMATION_HPP
+#define ROBOT_MOTORS_ESTIMATION_HPP
 // std
 #include <memory>
 #include <vector>
@@ -22,8 +22,11 @@
 namespace HapticGlove
 {
 class Estimators;
-}
+} // namespace HapticGlove
 
+/**
+ * Estimators is a class for estimating the states of all the actuated axes/joints.
+ */
 class HapticGlove::Estimators
 {
 
@@ -115,4 +118,4 @@ public:
      */
     bool isInitialized() const;
 };
-#endif // ROBOTMOTORSESTIMATION_HPP
+#endif // ROBOT_MOTORS_ESTIMATION_HPP

@@ -322,7 +322,7 @@ void RobotController::getAxisValueFeedbacks(std::vector<double>& axisValueFeedba
 
 void RobotController::getAxisVelocityFeedbacks(std::vector<double>& fingerAxisVelocityFeedback)
 {
-    this->controlHelper()->jointEncodersSpeed(fingerAxisVelocityFeedback);
+    this->controlHelper()->axisVelocityFeedbacks(fingerAxisVelocityFeedback);
 }
 
 void RobotController::getJointValueFeedbacks(std::vector<double>& jointsValueFeedbacks)

@@ -84,4 +84,4 @@ public:
     bool close() final;
 };
 
-#endif
+#endif // HAPTIC_GLOVE_MODULE_HPP
