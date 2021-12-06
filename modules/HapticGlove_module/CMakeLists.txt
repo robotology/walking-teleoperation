@@ -66,7 +66,6 @@ set(${EXE_TARGET_NAME}_HDR
   )
 
 # add include directories to the build.
-
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 #  ${SenseGlove_INCLUDE_DIR}
@@ -75,22 +74,15 @@ include_directories(
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
 
-message("YARP_LIBRARIES: ${YARP_LIBRARIES}")
-message("iDynTree_LIBRARIES: ${iDynTree_LIBRARIES}")
-#message("SenseGlove_LIBRARIES: ${SenseGlove_LIBRARIES}")
-message("ctrlLib: ${ctrlLib}")
-message("UtilityLibrary: ${UtilityLibrary}")
 
 if(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-#    ${SenseGlove_LIBRARIES}
-#    SenseGlove
+    Eigen3::Eigen
     ctrlLib
     UtilityLibrary
     matlogger2::matlogger2
-#    walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
     )
@@ -98,16 +90,12 @@ else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
-#    ${SenseGlove_LIBRARIES}
-#    SenseGlove
+    Eigen3::Eigen
     ctrlLib
     UtilityLibrary
-#    walking-teleoperation::ML
     IWear::IWear
     WearableActuators::WearableActuators
 )
 endif()
 
-message("BIN: ${bin}")
-message(" {CMAKE_BUILD_TYPE}: ${CMAKE_BUILD_TYPE}")
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)

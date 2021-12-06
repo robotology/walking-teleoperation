@@ -5,7 +5,6 @@
 
 add_subdirectory(Utils)
 add_subdirectory(Oculus_module)
-add_subdirectory(HapticGlove_module)
 
 if(WALKING_TELEOPERATION_COMPILE_XsensModule)
   add_subdirectory(Xsens_module)
@@ -22,4 +21,9 @@ endif()
 if(WALKING_TELEOPERATION_COMPILE_SRanipalModule)
     add_subdirectory(SRanipal_module)
 endif()
+
+if(WALKING_TELEOPERATION_COMPILE_HapticGlove)
+    add_subdirectory(HapticGlove_module)
+endif()
+
 
