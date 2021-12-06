@@ -1,0 +1,76 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
+
+<application>
+
+  <name>Xprize-VisualRetargeting</name>
+  <description>Application to run module related to vision for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
+  </authors>
+
+  <!-- Modules -->
+  <module>
+    <name>yarpdev</name>
+    <parameters> --from camera/ServerGrabberDualDragon.ini --split true</parameters>
+    <node>icub-head</node>
+  </module>
+
+  <module>
+    <name>camCalib</name>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
+    <node>icub-console</node>
+  </module>
+
+  <module>
+    <name>camCalib</name>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
+    <node>icub-console</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--from openXRHeadsetParameters.ini</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+     <name>idyntree-yarp-visualizer</name>
+     <parameters>--OUTPUT_STREAM::useRGBA true</parameters>
+     <node>icub-console</node>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/icub/cam/left</from>
+    <to>/icub/camcalib/left/in</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/cam/right</from>
+    <to>/icub/camcalib/right/in</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/camcalib/left/out</from>
+    <to>/joypadDevice/Oculus/display/left:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/camcalib/right/out</from>
+    <to>/joypadDevice/Oculus/display/right:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/idyntree-yarp-visualizer/image</from>
+    <to>/joypadDevice/Oculus/gui_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>

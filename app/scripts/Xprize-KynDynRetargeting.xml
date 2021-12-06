@@ -1,0 +1,101 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
+
+<application>
+
+  <name>Xprize-KynDynRetargeting</name>
+  <description>Application to run kinematic and dynamic related modules for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
+  </authors>
+
+  <!-- Modules -->
+  <module>
+    <name>WalkingModule</name>
+    <node>icub-head</node>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
+  </module>
+
+
+  <module>
+    <name>VirtualizerModule</name>
+    <parameters>--use_transform_server true</parameters>
+    <dependencies>
+          <port timeout="15.0">/transformServer/transforms:o</port>
+    </dependencies>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>OculusRetargetingModule</name>
+    <node>icub-console</node>
+    <parameters> --OPENXR::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
+    <dependencies>
+      <port timeout="15.0">/transformServer/transforms:o</port>
+      <port timeout="15.0">/joypadDevice/Oculus/rpc:i</port>
+      <port timeout="15.0">/icub/cam/left</port>
+      <port timeout="15.0">/icub/cam/right</port>
+    </dependencies>
+  </module>
+
+   <module>
+     <name>XsensRetargetingModule</name>
+     <parameters>--from iFeelRetargetingWalking.ini</parameters>
+     <node>icub-console</node>
+   </module>
+
+   <module>
+     <name>HapticGloveModule</name>
+     <node>icub-head</node>
+   </module>
+
+  <!-- Connections -->
+
+  <connection>
+    <from>/walking-coordinator/torsoYaw:o</from>
+    <to>/virtualizer/robotOrientation:i</to>
+  </connection>
+
+  <connection>
+    <from>/walking-coordinator/torsoYaw:o</from>
+    <to>/oculusRetargeting/robotOrientation:i</to>
+  </connection>
+
+  <connection>
+    <from>/oculusRetargeting/walkingRpc</from>
+    <to>/walking-coordinator/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/oculusRetargeting/virtualizerRpc</from>
+    <to>/virtualizer/rpc</to>
+  </connection>
+
+  <connection>
+    <from>/virtualizer/goal:o</from>
+    <to>/walking-coordinator/goal:i</to>
+  </connection>
+
+  <connection>
+    <from>/virtualizer/playerOrientation:o</from>
+    <to>/oculusRetargeting/playerOrientation:i</to>
+  </connection>
+
+  <connection>
+    <from>/iCub/RobotStateWrapper/state:o</from>
+    <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
+  </connection>
+
+  <connection>
+    <from>/iFeelRetargeting/jointPosition:o</from>
+    <to>/walking-coordinator/jointPosition:i</to>
+  </connection>
+
+  <connection>
+    <from>/iFeelRetargeting/CoM:o</from>
+    <to>/walking-coordinator/CoM:i</to>
+  </connection>
+
+</application>
