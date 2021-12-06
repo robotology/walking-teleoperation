@@ -22,6 +22,9 @@
   <module>
     <name>VirtualizerModule</name>
     <parameters>--use_transform_server true</parameters>
+    <dependencies>
+          <port timeout="15.0">/transformServer/transforms:o</port>
+    </dependencies>
     <node>icub-virtualizer</node>
   </module>
 
