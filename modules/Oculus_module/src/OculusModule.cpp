@@ -156,29 +156,17 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 
 bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
 {
-    yarp::os::Property options;
-    options.put("device", "JoypadControlClient");
-    options.put("remote", "/joypadDevice/Oculus");
-    options.put("local", "/" + getName() + "/joypadControlClient");
-
-    if (!m_joypadDevice.open(options))
-    {
-        yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
-        return false;
-    }
-
-    // get the interface
-    if (!m_joypadDevice.view(m_joypadControllerInterface) || !m_joypadControllerInterface)
-    {
-        yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                    "to the PolyDriver object";
-        return false;
-    }
-
+    m_skipJoypad = config.check("skip_joypad", yarp::os::Value(false)).asBool();
     m_useVirtualizer = !(config.check("move_icub_using_joypad", yarp::os::Value(false)).asBool());
+
+    if (m_skipJoypad && !m_useVirtualizer)
+    {
+        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot be true at the same time.";
+        return false;
+    }
+
     if (!m_useVirtualizer)
     {
-        m_useVirtualizer = false;
         if (!YarpHelper::getDoubleFromSearchable(config, "deadzone", m_deadzone))
         {
             yError() << "[OculusModule::configureJoypad] Unable to find parameter deadzone";
@@ -215,6 +203,48 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
     m_startWalkingIndex = 4; // X button
     m_stopWalkingIndex = 5; // X button
     m_prepareWalkingIndex = 0; // A button
+
+    yarp::os::Property options;
+    options.put("device", "JoypadControlClient");
+    options.put("remote", "/joypadDevice/Oculus");
+    options.put("local", "/" + getName() + "/joypadControlClient");
+
+    if (!m_skipJoypad)
+    {
+        if (m_joypadDevice.open(options))
+        {
+            // get the interface
+            if (!m_joypadDevice.view(m_joypadControllerInterface) || !m_joypadControllerInterface)
+            {
+                if (m_useSenseGlove && m_useVirtualizer)
+                {
+                    yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                                  "to the PolyDriver object. Continuing anyway since we are using the virtualizer and the gloves."
+                                  "Set skip_joypad to true to avoid this warning.";
+                }
+                else
+                {
+                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                                "to the PolyDriver object";
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            if (m_useSenseGlove && m_useVirtualizer)
+            {
+                yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
+                              "Continuing anyway since we are using the virtualizer and the gloves."
+                              "Set skip_joypad to true to avoid this warning.";
+            }
+            else
+            {
+                yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
+                return false;
+            }
+        }
+    }
 
     return true;
 }
@@ -716,9 +746,12 @@ bool OculusModule::runningModule()
 double OculusModule::evaluateDesiredFingersVelocity(unsigned int squeezeIndex,
                                                     unsigned int releaseIndex)
 {
-    double releaseFingersVelocity, squeezeFingersVelocity;
-    m_joypadControllerInterface->getAxis(squeezeIndex, squeezeFingersVelocity);
-    m_joypadControllerInterface->getAxis(releaseIndex, releaseFingersVelocity);
+    double releaseFingersVelocity = 0.0, squeezeFingersVelocity = 0.0;
+    if (m_joypadControllerInterface)
+    {
+        m_joypadControllerInterface->getAxis(squeezeIndex, squeezeFingersVelocity);
+        m_joypadControllerInterface->getAxis(releaseIndex, releaseFingersVelocity);
+    }
 
     if (squeezeFingersVelocity > releaseFingersVelocity)
         return squeezeFingersVelocity;
@@ -973,9 +1006,12 @@ bool OculusModule::updateModule()
         if (!m_useVirtualizer)
         {
             yarp::os::Bottle cmd, outcome;
-            double x, y;
-            m_joypadControllerInterface->getAxis(m_xJoypadIndex, x);
-            m_joypadControllerInterface->getAxis(m_yJoypadIndex, y);
+            double x = 0.0, y = 0.0;
+            if (m_joypadControllerInterface)
+            {
+                m_joypadControllerInterface->getAxis(m_xJoypadIndex, x);
+                m_joypadControllerInterface->getAxis(m_yJoypadIndex, y);
+            }
 
             x = -m_scaleX * deadzone(x);
             y = m_scaleY * deadzone(y);
@@ -1030,10 +1066,14 @@ bool OculusModule::updateModule()
         }
 
         // check if it is time to prepare or start walking
-        float buttonMapping;
+        float buttonMapping = -1.0;
 
-        // prepare robot (A button)
-        m_joypadControllerInterface->getButton(m_stopWalkingIndex, buttonMapping);
+        if (m_joypadControllerInterface)
+        {
+            // prepare robot (A button)
+            m_joypadControllerInterface->getButton(m_stopWalkingIndex, buttonMapping);
+        }
+
         yarp::os::Bottle cmd, outcome;
 
         if (buttonMapping > 0)
@@ -1122,10 +1162,13 @@ bool OculusModule::updateModule()
     } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
-        float buttonMapping;
+        float buttonMapping = -1.0;
 
-        // prepare robot (A button)
-        m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
+        if (m_joypadControllerInterface)
+        {
+            // prepare robot (A button)
+            m_joypadControllerInterface->getButton(m_prepareWalkingIndex, buttonMapping);
+        }
         if (buttonMapping > 0)
         {
             this->preparingModule();
@@ -1146,9 +1189,12 @@ bool OculusModule::updateModule()
             }
         }
 
-        float buttonMapping;
-        // start walking (X button)
-        m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
+        float buttonMapping = -1.0;
+        if (m_joypadControllerInterface)
+        {
+            // start walking (X button)
+            m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
+        }
         if (buttonMapping > 0)
         {
             this->runningModule();
