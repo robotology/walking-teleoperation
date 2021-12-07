@@ -391,15 +391,20 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
     // feedbacks are updated previously
     this->getAxisValueFeedbacks(m_data->axisValueFeedbacksStd);
     this->getJointValueFeedbacks(m_data->jointValueFeedbacksStd);
+    std::cout << "joints: " << m_data->jointValueFeedbacksStd << std::endl;
 
     m_data->axisValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->axisValueFeedbacksStd);
     m_data->jointValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->jointValueFeedbacksStd);
+    //    std::cout << "axis: " << m_data->axisValueFeedbacksEigen.transpose() << std::endl;
+
     if (!push_back_row(m_axesData, m_data->axisValueFeedbacksEigen.transpose()))
     {
         yError() << m_logPrefix
                  << "cannot add new axes feedback values to the collected axes data .";
         return false;
     }
+    //    std::cout << "joint: " << m_data->jointValueFeedbacksEigen.transpose() << std::endl;
+
     if (!push_back_row(m_jointsData, m_data->jointValueFeedbacksEigen.transpose()))
     {
         yError() << m_logPrefix

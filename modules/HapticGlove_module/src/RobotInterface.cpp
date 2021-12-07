@@ -714,19 +714,24 @@ bool RobotInterface::computeCalibratedAnalogSesnors()
 
 bool RobotInterface::computeActuatedJointFeedbacks() // update this function later
 {
-    size_t idx = 0;
-    for (const auto& element : m_jointInfoMap)
+
+    for (size_t idx = 0; idx < m_noActuatedJoints; idx++)
     {
-        if (element.second.useAnalog)
+        const std::string& jointName = m_actuatedJointList[idx];
+        const auto& element = m_jointInfoMap[jointName];
+        //        yInfo() << m_logPrefix << "index: " << idx << " , joint name: " << jointName
+        //                << " , use analog: " << element.useAnalog
+        //                << ", analog/axis index: " << element.index << ", scale: " <<
+        //                element.scale;
+
+        if (element.useAnalog)
         {
-            m_actuatedJointFeedbacksInRadian(idx)
-                = m_analogSensorFeedbackInRadians(element.second.index);
+            m_actuatedJointFeedbacksInRadian(idx) = m_analogSensorFeedbackInRadians(element.index);
         } else
         {
             m_actuatedJointFeedbacksInRadian(idx)
-                = m_encoderPositionFeedbackInRadians(element.second.index) * element.second.scale;
+                = m_encoderPositionFeedbackInRadians(element.index) * element.scale;
         }
-        idx++;
     }
 
     return true;

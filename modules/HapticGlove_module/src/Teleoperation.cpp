@@ -210,7 +210,7 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisAccelerationReferencesKf,
                                                m_data.robotAxisCovReferencesKf);
     double t2 = yarp::os::Time::now();
-    yInfo() << m_logPrefix << "KF time: " << t2 - t1;
+    //    yInfo() << m_logPrefix << "KF time: " << t2 - t1;
 
     return true;
 }
@@ -241,13 +241,10 @@ bool Teleoperation::run()
 
     // since we have estimators for the references, we put the getFeedback method at this point.
 
-    double t1 = yarp::os::Time::now();
     if (!this->getFeedbacks())
     {
         yWarning() << m_logPrefix << "unable to get the feedback";
     }
-    double t2 = yarp::os::Time::now();
-    yInfo() << "fb time: " << t2 - t1;
 
     if (!m_robotController->computeControlSignals())
     {
@@ -308,9 +305,9 @@ bool Teleoperation::prepare(bool& isPrepared)
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
 
-    yInfo() << "time collecting data: " << time - m_timeConfigurationEnd
-            << " , axis number: " << axisNumber << " , num of actuated axis: "
-            << m_robotController->controlHelper()->getNumberOfActuatedAxis();
+    //    yInfo() << "time collecting data: " << time - m_timeConfigurationEnd
+    //            << " , axis number: " << axisNumber << " , num of actuated axis: "
+    //            << m_robotController->controlHelper()->getNumberOfActuatedAxis();
 
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
