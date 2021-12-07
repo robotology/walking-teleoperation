@@ -28,7 +28,11 @@ int main(int argc, char* argv[])
 
     rf.setDefaultConfigFile("hapticGloveConfig.ini");
 
-    rf.configure(argc, argv);
+    if (!rf.configure(argc, argv))
+    {
+        yError() << "[main] resource finder cannot find hapticGloveConfig.ini file.";
+        return EXIT_FAILURE;
+    }
 
     // create the module
     HapticGloveModule module;

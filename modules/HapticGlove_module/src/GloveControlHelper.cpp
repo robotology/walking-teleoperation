@@ -139,14 +139,15 @@ bool GloveControlHelper::setFingertipForceFeedbackReferences(
 bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
     const std::vector<double>& desiredValue)
 {
+
     if (desiredValue.size() != m_numVibrotactileFeedback)
     {
-        yError() << "[GloveControlHelper::setVibroTactileJointsReference] the size of the input "
-                    "desired vecotr ["
-                 << desiredValue.size() << "] and the number of haptic force feedbacks [ "
-                 << m_numVibrotactileFeedback << " ]are not equal.";
+        yError() << m_logPrefix << "the size of the input desired vecotr [" << desiredValue.size()
+                 << "] and the number of haptic force feedbacks [ " << m_numVibrotactileFeedback
+                 << " ]are not equal.";
         return false;
     }
+
     for (size_t i = 0; i < m_numVibrotactileFeedback; i++)
     {
         m_desiredVibrotactileValues[i]
@@ -178,14 +179,12 @@ bool GloveControlHelper::stopHapticFeedback()
 
     if (!stopVibrotactileFeedback())
     {
-        yError() << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the fingertip "
-                    "vibrotactile feedback";
+        yError() << m_logPrefix << "Cannot turn off the fingertip vibrotactile feedback";
         return false;
     }
     if (!stopForceFeedback())
     {
-        yError() << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the fingertip froce "
-                    "feedback";
+        yError() << m_logPrefix << "Cannot turn off the fingertip froce feedback";
         return false;
     }
     if (!stopPalmVibrotactileFeedback())
@@ -258,8 +257,8 @@ bool GloveControlHelper::getHumanHandJointName(const size_t i, std::string& join
 {
     if (i >= this->getNumOfHandJoints())
     {
-        yError() << "[GloveControlHelper::getHumanHandJointName] The requested i'th joint name is "
-                    "bigger than equal to the number of joints.";
+        yError() << m_logPrefix
+                 << "The requested i'th joint name is bigger than equal to the number of joints.";
         return false;
     }
     jointName = m_humanJointNameList[i];
@@ -270,9 +269,8 @@ bool GloveControlHelper::getHumanHandJointsNames(std::vector<std::string>& joint
 {
     if (m_humanJointNameList.size() != this->getNumOfHandJoints())
     {
-        yError()
-            << "[GloveControlHelper::getHumanHandJointsList] The number of human hand joints and "
-               "joints name list size are different.";
+        yError() << m_logPrefix
+                 << "The number of human hand joints and joints name list size are different.";
         return false;
     }
     jointNameList = m_humanJointNameList;
@@ -283,9 +281,8 @@ bool GloveControlHelper::getHumanHandFingerName(const size_t i, std::string& fin
 {
     if (i >= this->getNumOfFingers())
     {
-        yError()
-            << "[GloveControlHelper::getHumanHandFingerName] The requested i'th finger name is "
-               "bigger than equal to the number of fingers.";
+        yError() << m_logPrefix
+                 << "The requested i'th finger name is bigger than equal to the number of fingers.";
         return false;
     }
     fingerName = m_humanFingerNameList[i];
@@ -296,8 +293,8 @@ bool GloveControlHelper::getHumanHandFingerNames(std::vector<std::string>& finge
 {
     if (m_humanFingerNameList.size() != this->getNumOfFingers())
     {
-        yError() << "[GloveControlHelper::getHumanFingersList] The number of human hand finger and "
-                    "finger name list size are different.";
+        yError() << m_logPrefix
+                 << "The number of human hand finger and finger name list size are different.";
         return false;
     }
     fingerNameList = m_humanFingerNameList;
@@ -317,7 +314,6 @@ bool GloveControlHelper::findHumanMotionRange()
 
     std::vector<double> desiredValue(m_numVibrotactileFeedback, 35);
     this->setFingertipVibrotactileFeedbackReferences(desiredValue);
-
     return true;
 }
 

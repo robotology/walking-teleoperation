@@ -189,7 +189,7 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
 
     if (!value->isList())
     {
-        yError() << "[getYarpVectorFromSearchable] the value is not a double.";
+        yError() << "[getYarpVectorFromSearchable] the value is not a list.";
         return false;
     }
 

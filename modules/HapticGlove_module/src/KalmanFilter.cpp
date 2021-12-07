@@ -29,7 +29,6 @@ KalmanFilter::KalmanFilter(const double dt,
     , m_Q(Q)
 {
     m_logPrefix = "KalmanFilter:: ";
-    std::cout << m_logPrefix << "constructing Kalman filter.\n";
 
     m_Phi = Eigen::MatrixXd::Identity(n, n) + m_F * m_dt;
     m_Gamma = m_G * m_dt;
@@ -38,8 +37,6 @@ KalmanFilter::KalmanFilter(const double dt,
     Gamma_Q_GammaT = m_Gamma * m_Q * m_Gamma.transpose();
 
     m_w_bar = Eigen::MatrixXd::Zero(m_m, 1);
-
-    std::cout << m_logPrefix << "constructed.\n";
 }
 
 KalmanFilter::~KalmanFilter()

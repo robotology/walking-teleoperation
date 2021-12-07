@@ -128,8 +128,8 @@ class HapticGlove::RobotInterface
     yarp::sig::Vector m_motorCurrentReferences; /**< motor current references*/
     yarp::sig::Vector m_motorPwmReferences; /**< motor PWM references*/
 
-    yarp::sig::Vector m_analogJointsMinBoundary; /**< joint minimum possible value [deg]*/
-    yarp::sig::Vector m_analogJointsMaxBoundary; /**< joint maximum possible value [deg]*/
+    yarp::sig::Vector m_analogJointsMinBoundaryDegree; /**< joint minimum possible value [deg]*/
+    yarp::sig::Vector m_analogJointsMaxBoundaryDegree; /**< joint maximum possible value [deg]*/
     yarp::sig::Vector m_analogSensorsRawMinBoundary; /**< senor minimum value [raw]*/
     yarp::sig::Vector m_analogSensorsRawMaxBoundary; /**< senor maximum value [raw]*/
     yarp::sig::Vector
@@ -155,9 +155,11 @@ class HapticGlove::RobotInterface
 
     /**
      * Initialize the axis values to the min limits
+     * @param initializationTime the time necessary to initialize the robot (default value is 5
+     * seconds) [sec]
      * @return true / false in case of success / failure
      */
-    bool initializeAxisValues();
+    bool initializeAxisValues(const double& initializationTime = 5.0);
 
     /**
      * Set the desired axis position direct (position direct mode)
@@ -219,7 +221,7 @@ class HapticGlove::RobotInterface
      * @param limits matrix containing the axis limits in radian
      * @return true / false in case of success / failure
      */
-    bool getLimits(yarp::sig::Matrix& limits);
+    bool getActuatedAxisLimits(yarp::sig::Matrix& limits);
 
 public:
     /**
@@ -267,7 +269,7 @@ public:
      * @param maxLimits vector containing the axis maximum limits in radian
      * @return true / false in case of success / failure
      */
-    bool getLimits(std::vector<double>& minLimits, std::vector<double>& maxLimits);
+    bool getActuatedAxisLimits(std::vector<double>& minLimits, std::vector<double>& maxLimits);
 
     /**
      * Get the axis limits
@@ -275,7 +277,7 @@ public:
      * @param maxLimits yarp vector containing the axis maximum limits in radian
      * @return true / false in case of success / failure
      */
-    bool getLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits);
+    bool getActuatedAxisLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits);
 
     /**
      * Get the axis velocity limits
@@ -283,6 +285,14 @@ public:
      * @return true / false in case of success / failure
      */
     bool getVelocityLimits(yarp::sig::Matrix& limits);
+
+    /**
+     * Get the actuated joint limits
+     * @param minLimits vector containing the joint minimum limits in radian
+     * @param maxLimits vector containing the joint maximum limits in radian
+     * @return true / false in case of success / failure
+     */
+    bool getActuatedJointLimits(std::vector<double>& minLimits, std::vector<double>& maxLimits);
 
     /**
      * Get the time stamp (const version)

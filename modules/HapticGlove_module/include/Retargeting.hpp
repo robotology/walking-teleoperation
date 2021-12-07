@@ -222,9 +222,23 @@ public:
      */
     bool computeJointAngleRetargetingParams(const std::vector<double>& humanHandJointRangeMin,
                                             const std::vector<double>& humanHandJointRangeMax);
-
+    /**
+     * Set the axis limits of the robot actuated axes
+     * @param robotAxisMinLimit the minimum range robot axis angles can reach (radian)
+     * @param robotAxisMaxLimit the maximum range robot axis angles can reach (radian)
+     * @return true/false in case of success/failure
+     */
     bool setRobotAxisLimits(const std::vector<double>& robotAxisMinLimit,
                             const std::vector<double>& robotAxisMaxLimit);
+
+    /**
+     * Set the axis limits of the robot actuated axes
+     * @param robotJointMinLimit the minimum range robot axis angles can reach
+     * @param robotJointMaxLimit the maximum range robot axis angles can reach
+     * @return true/false in case of success/failure
+     */
+    bool setRobotJointLimits(const std::vector<double>& robotJointMinLimit,
+                             const std::vector<double>& robotJointMaxLimit);
 
     /**
      * close the retageting class

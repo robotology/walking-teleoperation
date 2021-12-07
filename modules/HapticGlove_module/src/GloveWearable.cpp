@@ -153,7 +153,7 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!Network::connect(portNameOut, portNameIn))
+    if (!Network::connect(m_iWearActuatorPort.getName(), portNameIn))
     {
         yError() << m_logPrefix << "output port: " << portNameOut << "input port: " << portNameIn
                  << " unable to connect the ports.";
@@ -370,6 +370,7 @@ bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& v
             << "size of the vibrotactile feedback vector is not equal to the size of the default "
                "vibrotactile feedback size.";
     }
+
     for (size_t i = 0; i < values.size(); i++)
     {
         std::string fingerName = m_humanFingerNameList[i];
@@ -381,11 +382,12 @@ bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& v
         wearableActuatorCommand.info.name = m_wearablePrefix
                                             + wearable::actuator::IHaptic::getPrefix() + fingerName
                                             + "::VibroTactileFeedback";
+
         wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
         wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true);
+        m_iWearActuatorPort.write(true); // blocking the module
     }
 
     return true;

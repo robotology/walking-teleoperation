@@ -84,17 +84,31 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    std::vector<double> minLimits, maxLimits;
-    if (!m_robotController->controlHelper()->getLimits(minLimits, maxLimits))
+    std::vector<double> minAxisLimits, maxAxisLimits;
+    if (!m_robotController->controlHelper()->getActuatedAxisLimits(minAxisLimits, maxAxisLimits))
     {
-        yError() << m_logPrefix << "unable to get the limits from the robot controller.";
+        yError() << m_logPrefix << "unable to get the axis limits from the robot controller.";
         return false;
     }
 
-    if (!m_retargeting->setRobotAxisLimits(minLimits, maxLimits))
+    if (!m_retargeting->setRobotAxisLimits(minAxisLimits, maxAxisLimits))
     {
         yError() << m_logPrefix
-                 << "unable to set limits ofrobot actuated axes for retargeting class.";
+                 << "unable to set limits of robot actuated axes for retargeting class.";
+        return false;
+    }
+
+    std::vector<double> minJointLimits, maxJointLimits;
+    if (!m_robotController->controlHelper()->getActuatedJointLimits(minJointLimits, maxJointLimits))
+    {
+        yError() << m_logPrefix << "unable to get the joint limits from the robot controller.";
+        return false;
+    }
+
+    if (!m_retargeting->setRobotJointLimits(minJointLimits, maxJointLimits))
+    {
+        yError() << m_logPrefix
+                 << "unable to set limits of robot actuated joints for retargeting class.";
         return false;
     }
 
@@ -186,7 +200,7 @@ bool Teleoperation::getFeedbacks()
     m_robotController->getJointValueFeedbacks(m_data.robotJointFeedbacks);
 
     // get the estimation values
-    double t1= yarp::os::Time::now();
+    double t1 = yarp::os::Time::now();
     m_robotController->getEstimatedMotorsState(m_data.robotAxisValueFeedbacksKf,
                                                m_data.robotAxisVelocityFeedbacksKf,
                                                m_data.robotAxisAccelerationFeedbacksKf,
@@ -195,8 +209,8 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisVelocityReferencesKf,
                                                m_data.robotAxisAccelerationReferencesKf,
                                                m_data.robotAxisCovReferencesKf);
-    double t2= yarp::os::Time::now();
-    yInfo()<<"KF time: "<<t2-t1;
+    double t2 = yarp::os::Time::now();
+    yInfo() << m_logPrefix << "KF time: " << t2 - t1;
 
     return true;
 }
@@ -227,13 +241,13 @@ bool Teleoperation::run()
 
     // since we have estimators for the references, we put the getFeedback method at this point.
 
-    double t1= yarp::os::Time::now();
+    double t1 = yarp::os::Time::now();
     if (!this->getFeedbacks())
     {
         yWarning() << m_logPrefix << "unable to get the feedback";
     }
-    double t2= yarp::os::Time::now();
-    yInfo()<<"fb time: "<<t2-t1;
+    double t2 = yarp::os::Time::now();
+    yInfo() << "fb time: " << t2 - t1;
 
     if (!m_robotController->computeControlSignals())
     {
@@ -289,12 +303,14 @@ bool Teleoperation::prepare(bool& isPrepared)
     }
 
     double time = yarp::os::Time::now();
-    yInfo() << "time collecting data: " << time - m_timeConfigurationEnd;
     int dTime = int((time - m_timeConfigurationEnd) / m_dT);
     int CouplingConstant = (int)(m_calibrationTimePeriod / m_dT);
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
-                                                    //        axisNumber = dTime / 500;
+
+    yInfo() << "time collecting data: " << time - m_timeConfigurationEnd
+            << " , axis number: " << axisNumber << " , num of actuated axis: "
+            << m_robotController->controlHelper()->getNumberOfActuatedAxis();
 
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
@@ -303,8 +319,8 @@ bool Teleoperation::prepare(bool& isPrepared)
         {
             if (!m_robotController->trainCouplingMatrix())
             {
-                yInfo() << "cannot train the coupling matrix and find the "
-                           "coefficient matrix";
+                yInfo() << m_logPrefix
+                        << "cannot train the coupling matrix and find the coefficient matrix";
                 return false;
             }
         }
@@ -319,8 +335,6 @@ bool Teleoperation::prepare(bool& isPrepared)
     } else
     {
         double time = double(dTime % CouplingConstant) * m_dT * (M_PI / m_calibrationTimePeriod);
-        //                time = double(dTime % 500) / 500.0 * (M_PI * 2.0);
-
         m_robotController->LogDataToCalibrateRobotAxesJointsCoupling(time, axisNumber);
         if (m_getHumanMotionRange)
         {
@@ -375,7 +389,7 @@ bool Teleoperation::close()
 
     if (!m_humanGlove->close())
     {
-        yError() << m_logPrefix << "unable to close the human  and glove control helper.";
+        yError() << m_logPrefix << "unable to close the human and glove control helper.";
         return false;
     }
 

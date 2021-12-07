@@ -100,6 +100,7 @@ double HapticGloveModule::getPeriod()
 
 bool HapticGloveModule::close()
 {
+    yInfo() << m_logPrefix << "trying to close.";
     if (m_useLeftHand)
     {
         if (!m_leftHand->close())
@@ -128,7 +129,6 @@ bool HapticGloveModule::updateModule()
     if (m_state == HapticGloveFSM::Running)
     {
         double t1 = yarp::os::Time::now();
-
         if (m_useLeftHand)
         {
             if (!m_leftHand->run())
@@ -156,7 +156,6 @@ bool HapticGloveModule::updateModule()
 
     } else if (m_state == HapticGloveFSM::Preparing)
     {
-
         bool isPrepared = true;
         if (m_useLeftHand)
         {

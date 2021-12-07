@@ -83,11 +83,11 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     {
         std::vector<std::string> axisJointList; // related joints to the axisName
 
-        if (!!YarpHelper::getVectorFromSearchable(
+        if (!YarpHelper::getVectorFromSearchable(
                 config, m_actuatedAxisNames[axisIndex], axisJointList))
         {
             yError() << m_logPrefix << "unable to find " << m_actuatedAxisNames[axisIndex]
-                     << "into config file.";
+                     << "as a key into config file.";
             return false;
         }
 
@@ -149,21 +149,21 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    m_analogJointsMinBoundary.resize(m_noAnalogSensor, 0.0);
-    m_analogJointsMaxBoundary.resize(m_noAnalogSensor, 0.0);
+    m_analogJointsMinBoundaryDegree.resize(m_noAnalogSensor, 0.0);
+    m_analogJointsMaxBoundaryDegree.resize(m_noAnalogSensor, 0.0);
     m_analogSensorsRawMinBoundary.resize(m_noAnalogSensor, 0.0);
     m_analogSensorsRawMaxBoundary.resize(m_noAnalogSensor, 0.0);
 
     // get the joints limits boundaries
     if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "analog_joints_min_boundary", m_analogJointsMinBoundary))
+            config, "analog_joints_min_boundary", m_analogJointsMinBoundaryDegree))
     {
         yError() << m_logPrefix << "unable to get the minimum boundary of the joints limits.";
         return false;
     }
 
     if (!YarpHelper::getYarpVectorFromSearchable(
-            config, "analog_joints_max_boundary", m_analogJointsMaxBoundary))
+            config, "analog_joints_max_boundary", m_analogJointsMaxBoundaryDegree))
     {
         yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
         return false;
@@ -184,8 +184,8 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         yError() << m_logPrefix << "unable to get the maximum boundary of the joints limits.";
         return false;
     }
-    bool tmp = (m_analogJointsMinBoundary.size() == m_noAnalogSensor)
-               && (m_analogJointsMaxBoundary.size() == m_noAnalogSensor)
+    bool tmp = (m_analogJointsMinBoundaryDegree.size() == m_noAnalogSensor)
+               && (m_analogJointsMaxBoundaryDegree.size() == m_noAnalogSensor)
                && (m_analogSensorsRawMinBoundary.size() == m_noAnalogSensor)
                && (m_analogSensorsRawMaxBoundary.size() == m_noAnalogSensor);
 
@@ -201,7 +201,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     for (size_t i = 0; i < m_noAnalogSensor; i++)
     {
         m_sensorsRaw2DegreeScaling(i)
-            = double(m_analogJointsMaxBoundary(i) - m_analogJointsMinBoundary(i))
+            = double(m_analogJointsMaxBoundaryDegree(i) - m_analogJointsMinBoundaryDegree(i))
               / double(m_analogSensorsRawMaxBoundary(i) - m_analogSensorsRawMinBoundary(i));
     }
 
@@ -391,10 +391,12 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!initializeAxisValues())
+    double intializationTime
+        = config.check("robotInitializationTime", yarp::os::Value(5.0)).asDouble();
+
+    if (!initializeAxisValues(intializationTime))
     {
-        yError() << m_logPrefix
-                 << "unable to initialize the axis values to the initial(min) values.";
+        yError() << m_logPrefix << "unable to initialize the axis values to their minimum values.";
         return false;
     }
 
@@ -406,7 +408,6 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     // print information:
     yInfo() << m_logPrefix << "m_noAllAxis: " << m_noAllAxis;
     yInfo() << m_logPrefix << "m_noAllJoints: " << m_noAllJoints;
-
     yInfo() << m_logPrefix << "m_allAxisNames: " << m_allAxisNames;
     yInfo() << m_logPrefix << "m_allJointNames: " << m_allJointNames;
 
@@ -433,18 +434,23 @@ bool RobotInterface::switchToControlMode(const int& controlMode)
     return true;
 }
 
-bool RobotInterface::initializeAxisValues()
+bool RobotInterface::initializeAxisValues(const double& initializationTime)
 {
     std::vector<double> minLimits, maxLimits;
-    if (!this->getLimits(minLimits, maxLimits))
+
+    yInfo() << m_logPrefix << "the necessary time for initialization is: " << initializationTime
+            << " seconds.";
+    if (!this->getActuatedAxisLimits(minLimits, maxLimits))
     {
         yError() << m_logPrefix << "unable to get the robot axis limits.";
         return false;
     }
 
     if (!switchToControlMode(VOCAB_CM_POSITION))
+    {
         yError() << m_logPrefix << "Unable to switch in position control.";
-    return false;
+        return false;
+    }
 
     if (!this->setAxisReferences(minLimits, VOCAB_CM_POSITION))
     {
@@ -452,7 +458,7 @@ bool RobotInterface::initializeAxisValues()
         return false;
     }
 
-    yarp::os::Time::delay(5); // wait for 5 seconds to reach the min values
+    yarp::os::Time::delay(initializationTime); // wait for 5 seconds to reach the min values
 
     return true;
 }
@@ -696,7 +702,7 @@ bool RobotInterface::computeCalibratedAnalogSesnors()
     for (unsigned j = 0; j < m_noAnalogSensor; ++j)
     {
         m_analogSensorFeedbackInDegrees(j)
-            = m_analogJointsMinBoundary(j)
+            = m_analogJointsMinBoundaryDegree(j)
               + m_sensorsRaw2DegreeScaling(j)
                     * (m_analogSensorFeedbackRaw(j) - m_analogSensorsRawMinBoundary(j));
 
@@ -919,7 +925,7 @@ void RobotInterface::getAllAxisNames(std::vector<std::string>& names) const
     names = m_allAxisNames;
 }
 
-bool RobotInterface::getLimits(yarp::sig::Matrix& limits)
+bool RobotInterface::getActuatedAxisLimits(yarp::sig::Matrix& limits)
 {
     if (!getFeedback())
     {
@@ -958,10 +964,11 @@ bool RobotInterface::getLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotInterface::getLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits)
+bool RobotInterface::getActuatedAxisLimits(yarp::sig::Vector& minLimits,
+                                           yarp::sig::Vector& maxLimits)
 {
     std::vector<double> minValues, maxValues;
-    if (!this->getLimits(minValues, maxValues))
+    if (!this->getActuatedAxisLimits(minValues, maxValues))
     {
         yError() << m_logPrefix << "unable to get the robot axis limits";
         return false;
@@ -973,13 +980,14 @@ bool RobotInterface::getLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& 
     return true;
 }
 
-bool RobotInterface::getLimits(std::vector<double>& minLimits, std::vector<double>& maxLimits)
+bool RobotInterface::getActuatedAxisLimits(std::vector<double>& minLimits,
+                                           std::vector<double>& maxLimits)
 {
     minLimits.resize(m_noActuatedAxis, 0.0);
     maxLimits.resize(m_noActuatedAxis, 0.0);
 
     yarp::sig::Matrix limits;
-    if (!this->getLimits(limits))
+    if (!this->getActuatedAxisLimits(limits))
     {
         yInfo() << m_logPrefix << "unable to get the robot axis limits";
         return false;
@@ -989,6 +997,36 @@ bool RobotInterface::getLimits(std::vector<double>& minLimits, std::vector<doubl
     {
         minLimits[i] = limits(i, 0);
         maxLimits[i] = limits(i, 1);
+    }
+    return true;
+}
+
+bool RobotInterface::getActuatedJointLimits(std::vector<double>& minLimits,
+                                            std::vector<double>& maxLimits)
+{
+    minLimits.resize(m_noActuatedJoints, 0.0);
+    maxLimits.resize(m_noActuatedJoints, 0.0);
+
+    // get the axis limits
+    std::vector<double> axisMinLimits, axisMaxLimits;
+    this->getActuatedAxisLimits(axisMinLimits, axisMaxLimits);
+
+    // compute the joint limits
+    size_t idx = 0;
+    for (const auto& element : m_jointInfoMap)
+    {
+        if (element.second.useAnalog)
+        {
+            minLimits[idx]
+                = iDynTree::deg2rad(m_analogJointsMinBoundaryDegree(element.second.index));
+            maxLimits[idx]
+                = iDynTree::deg2rad(m_analogJointsMaxBoundaryDegree(element.second.index));
+        } else
+        {
+            minLimits[idx] = axisMinLimits[element.second.index] * element.second.scale;
+            maxLimits[idx] = axisMaxLimits[element.second.index] * element.second.scale;
+        }
+        idx++;
     }
     return true;
 }

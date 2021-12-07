@@ -186,11 +186,29 @@ bool RobotController::configure(const yarp::os::Searchable& config,
     m_jointFeedbackEstimators = std::make_unique<Estimators>(m_numActuatedJoints);
     m_jointExpectedEstimators = std::make_unique<Estimators>(m_numActuatedJoints);
 
-    m_axisFeedbackEstimators->configure(config, name);
-    m_axisReferenceEstimators->configure(config, name);
+    if (!m_axisFeedbackEstimators->configure(config, name))
+    {
+        yError() << m_logPrefix << "unable to configure axis feedbacks.";
+        return false;
+    }
 
-    m_jointFeedbackEstimators->configure(config, name);
-    m_jointExpectedEstimators->configure(config, name);
+    if (!m_axisReferenceEstimators->configure(config, name))
+    {
+        yError() << m_logPrefix << "unable to configure axis references.";
+        return false;
+    }
+
+    if (!m_jointFeedbackEstimators->configure(config, name))
+    {
+        yError() << m_logPrefix << "unable to configure joint feedbacks.";
+        return false;
+    }
+
+    if (!m_jointExpectedEstimators->configure(config, name))
+    {
+        yError() << m_logPrefix << "unable to configure joint expected values estimators.";
+        return false;
+    }
 
     // linear regression
     m_linearRegressor = std::make_unique<LinearRegression>();
@@ -376,7 +394,6 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
 
     m_data->axisValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->axisValueFeedbacksStd);
     m_data->jointValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->jointValueFeedbacksStd);
-
     if (!push_back_row(m_axesData, m_data->axisValueFeedbacksEigen.transpose()))
     {
         yError() << m_logPrefix
@@ -391,21 +408,18 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
     }
 
     std::vector<double> minLimit, maxLimit;
-    if (!m_robotInterface->getLimits(minLimit, maxLimit))
+    if (!m_robotInterface->getActuatedAxisLimits(minLimit, maxLimit))
     {
         yError() << m_logPrefix << "cannot get the axis limits.";
         return false;
     }
-
     m_data->axisValueReferencesStd = minLimit;
 
     m_data->axisValueReferencesStd[axisNumber]
         = minLimit[axisNumber] + (maxLimit[axisNumber] - minLimit[axisNumber]) * sin(time);
 
     setAxisReferences(m_data->axisValueReferencesStd);
-
     move();
-
     return true;
 }
 

@@ -167,61 +167,65 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    ////////////////
     // get the robot joints minimum values
-    std::vector<double> robotJointsRangeMin;
-    if (!YarpHelper::getVectorFromSearchable(
-            config, "joints_min_boundary_all", robotJointsRangeMin))
-    {
-        yError() << m_logPrefix
-                 << "initialization failed while reading "
-                    "joints_min_boundary_all vector of the hand.";
-        return false;
-    }
-    if (!YarpHelper::checkSizeOfVector<double>(
-            robotJointsRangeMin, m_numAllJoints, VAR_TO_STR(robotJointsRangeMin), m_logPrefix))
-    {
-        return false;
-    }
-    if (!this->getCustomSetIndices(robotAllJointNames,
-                                   m_robotActuatedJointNames,
-                                   robotJointsRangeMin,
-                                   m_robotJointsRangeMin))
-    {
-        yError() << m_logPrefix << "cannot get the custom set for"
-                 << VAR_TO_STR(robotJointsRangeMin);
-        return false;
-    }
+    //    std::vector<double> robotJointsRangeMin;
+    //    if (!YarpHelper::getVectorFromSearchable(
+    //            config, "joints_min_boundary_all", robotJointsRangeMin))
+    //    {
+    //        yError() << m_logPrefix
+    //                 << "initialization failed while reading "
+    //                    "joints_min_boundary_all vector of the hand.";
+    //        return false;
+    //    }
+    //    if (!YarpHelper::checkSizeOfVector<double>(
+    //            robotJointsRangeMin, m_numAllJoints, VAR_TO_STR(robotJointsRangeMin),
+    //            m_logPrefix))
+    //    {
+    //        return false;
+    //    }
+    //    if (!this->getCustomSetIndices(robotAllJointNames,
+    //                                   m_robotActuatedJointNames,
+    //                                   robotJointsRangeMin,
+    //                                   m_robotJointsRangeMin))
+    //    {
+    //        yError() << m_logPrefix << "cannot get the custom set for"
+    //                 << VAR_TO_STR(robotJointsRangeMin);
+    //        return false;
+    //    }
 
     // get the robot joints maximum values
-    std::vector<double> robotJointsRangeMax;
-    if (!YarpHelper::getVectorFromSearchable(
-            config, "joints_max_boundary_all", robotJointsRangeMax))
-    {
-        yError() << m_logPrefix
-                 << "initialization failed while reading "
-                    "joints_max_boundary vector of the hand.";
-        return false;
-    }
-    if (!YarpHelper::checkSizeOfVector<double>(
-            robotJointsRangeMax, m_numAllJoints, VAR_TO_STR(robotJointsRangeMax), m_logPrefix))
-    {
-        return false;
-    }
-    if (!this->getCustomSetIndices(robotAllJointNames,
-                                   m_robotActuatedJointNames,
-                                   robotJointsRangeMax,
-                                   m_robotJointsRangeMax))
-    {
-        yError() << m_logPrefix << "cannot get the custom set for"
-                 << VAR_TO_STR(robotJointsRangeMax);
-        return false;
-    }
+    //    std::vector<double> robotJointsRangeMax;
+    //    if (!YarpHelper::getVectorFromSearchable(
+    //            config, "joints_max_boundary_all", robotJointsRangeMax))
+    //    {
+    //        yError() << m_logPrefix
+    //                 << "initialization failed while reading "
+    //                    "joints_max_boundary vector of the hand.";
+    //        return false;
+    //    }
+    //    if (!YarpHelper::checkSizeOfVector<double>(
+    //            robotJointsRangeMax, m_numAllJoints, VAR_TO_STR(robotJointsRangeMax),
+    //            m_logPrefix))
+    //    {
+    //        return false;
+    //    }
+    //    if (!this->getCustomSetIndices(robotAllJointNames,
+    //                                   m_robotActuatedJointNames,
+    //                                   robotJointsRangeMax,
+    //                                   m_robotJointsRangeMax))
+    //    {
+    //        yError() << m_logPrefix << "cannot get the custom set for"
+    //                 << VAR_TO_STR(robotJointsRangeMax);
+    //        return false;
+    //    }
 
-    for (size_t i = 0; i < m_numActuatedJoints; i++)
-    {
-        m_robotJointsRangeMin[i] = m_robotJointsRangeMin[i] * M_PI / 180.0;
-        m_robotJointsRangeMax[i] = m_robotJointsRangeMax[i] * M_PI / 180.0;
-    }
+    //    for (size_t i = 0; i < m_numActuatedJoints; i++)
+    //    {
+    //        m_robotJointsRangeMin[i] = m_robotJointsRangeMin[i] * M_PI / 180.0;
+    //        m_robotJointsRangeMax[i] = m_robotJointsRangeMax[i] * M_PI / 180.0;
+    //    }
+    ////////////////
 
     // get human and robot joint list and find the mapping between them
     if (!this->semanticMapFromRobotTHuman(
@@ -311,8 +315,6 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
     m_axisVelocityErrors.resize(m_numActuatedAxis, 0.0);
 
     // print information
-    yInfo() << m_logPrefix << "m_robotJointsRangeMax [rad]: " << m_robotJointsRangeMax;
-    yInfo() << m_logPrefix << "m_robotJointsRangeMin [rad]: " << m_robotJointsRangeMin;
     yInfo() << m_logPrefix << "m_gainValueError: " << m_gainTotalError;
     yInfo() << m_logPrefix << "m_gainVelocityError: " << m_gainVelocityError;
     yInfo() << m_logPrefix << "m_gainVibrotactile: " << m_gainVibrotactile;
@@ -621,7 +623,32 @@ bool Retargeting::setRobotAxisLimits(const std::vector<double>& robotAxisMinLimi
     m_robotAxesMaxLimit = robotAxisMaxLimit;
 
     yInfo() << m_logPrefix << "m_robotAxesRangeMin [rad]: " << m_robotAxesMinLimit;
-    yInfo() << m_logPrefix << "m_robotAxesRangeMax[rad]: " << m_robotAxesMaxLimit;
+    yInfo() << m_logPrefix << "m_robotAxesRangeMax [rad]: " << m_robotAxesMaxLimit;
+
+    return true;
+}
+
+bool Retargeting::setRobotJointLimits(const std::vector<double>& robotJointMinLimit,
+                                      const std::vector<double>& robotJointMaxLimit)
+{
+
+    if (!YarpHelper::checkSizeOfVector<double>(
+            robotJointMinLimit, m_numActuatedJoints, VAR_TO_STR(robotJointMinLimit), m_logPrefix))
+    {
+        return false;
+    }
+
+    if (!YarpHelper::checkSizeOfVector<double>(
+            robotJointMaxLimit, m_numActuatedJoints, VAR_TO_STR(robotJointMaxLimit), m_logPrefix))
+    {
+        return false;
+    }
+
+    m_robotJointsRangeMin = robotJointMinLimit;
+    m_robotJointsRangeMax = robotJointMaxLimit;
+
+    yInfo() << m_logPrefix << "m_robotJointsRangeMin [rad]: " << m_robotJointsRangeMin;
+    yInfo() << m_logPrefix << "m_robotJointsRangeMax [rad]: " << m_robotJointsRangeMax;
 
     return true;
 }

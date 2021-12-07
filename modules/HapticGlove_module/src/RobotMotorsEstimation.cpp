@@ -45,15 +45,13 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
     yarp::sig::Vector Q_vector(no_states_kf, 0.0), R_vector(no_measurement_kf, 0.0);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "r_matrix_kf", R_vector))
     {
-        yError() << "[RobotController::configure] Initialization failed while reading "
-                    "r_matrix_kf.";
+        yError() << m_logPrefix << "Initialization failed while reading r_matrix_kf.";
         return false;
     }
 
     if (!YarpHelper::getYarpVectorFromSearchable(config, "q_matrix_kf", Q_vector))
     {
-        yError() << "[RobotController::configure] Initialization failed while reading "
-                    "q_matrix_kf.";
+        yError() << m_logPrefix << "Initialization failed while reading q_matrix_kf.";
         return false;
     }
 
@@ -70,12 +68,9 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
 
     for (int i = 0; i < m_numOfMotors; i++)
     {
-        std::cout << "MotorEstimation initialization ...  \n";
-
         Estimator motorEstimator(dt, R, Q);
         m_motorEstimatorVector.push_back(motorEstimator);
     }
-    std::cout << "All Motor Estimation are configured. \n";
 
     m_z = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
 
