@@ -87,6 +87,19 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         }
     }
 
+    // update the end of the configuration time step
+    double timeConfigurationEnd = yarp::os::Time::now();
+
+    if (m_useLeftHand)
+    {
+        m_leftHand->setEndOfConfigurationTime(timeConfigurationEnd);
+    }
+
+    if (m_useRightHand)
+    {
+        m_rightHand->setEndOfConfigurationTime(timeConfigurationEnd);
+    }
+
     yInfo() << m_logPrefix << "configuration is done. ";
     m_state = HapticGloveFSM::Preparing;
 

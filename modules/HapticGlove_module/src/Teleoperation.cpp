@@ -172,9 +172,6 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     yInfo() << m_logPrefix << "enable the logger: " << m_enableLogger;
     yInfo() << m_logPrefix << "configuration is done. ";
 
-    // update the end of the configuration time step
-    m_timeConfigurationEnd = yarp::os::Time::now();
-
     return true;
 }
 
@@ -304,6 +301,7 @@ bool Teleoperation::prepare(bool& isPrepared)
     int CouplingConstant = (int)(m_calibrationTimePeriod / m_dT);
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
+    yInfo() << m_logPrefix << "time [sec]: " << dTime << ", axis number: " << axisNumber;
 
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
@@ -395,4 +393,9 @@ bool Teleoperation::close()
     yInfo() << m_logPrefix << "closed successfully.";
 
     return true;
+}
+
+void Teleoperation::setEndOfConfigurationTime(const double& time)
+{
+    m_timeConfigurationEnd = time;
 }

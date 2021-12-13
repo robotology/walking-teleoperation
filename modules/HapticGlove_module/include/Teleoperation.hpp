@@ -180,6 +180,12 @@ public:
      * @return true/false in case of success/failure
      */
     bool prepare(bool& isPrepared);
+
+    /**
+     * Set the moment in which the configuration is done
+     * @param time the time at which the configuration is ended
+     */
+    void setEndOfConfigurationTime(const double& time);
 };
 
 #endif // TELEOPERATION_HPP

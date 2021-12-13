@@ -391,7 +391,6 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
     // feedbacks are updated previously
     this->getAxisValueFeedbacks(m_data->axisValueFeedbacksStd);
     this->getJointValueFeedbacks(m_data->jointValueFeedbacksStd);
-    std::cout << "joints: " << m_data->jointValueFeedbacksStd << std::endl;
 
     m_data->axisValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->axisValueFeedbacksStd);
     m_data->jointValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->jointValueFeedbacksStd);
@@ -424,6 +423,10 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
         = minLimit[axisNumber] + (maxLimit[axisNumber] - minLimit[axisNumber]) * sin(time);
 
     setAxisReferences(m_data->axisValueReferencesStd);
+
+    yInfo() << m_logPrefix << "axes:   " << m_data->axisValueReferencesStd;
+    yInfo() << m_logPrefix << "joints: " << m_data->jointValueFeedbacksStd;
+
     move();
     return true;
 }
