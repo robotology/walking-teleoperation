@@ -322,6 +322,10 @@ bool GloveControlHelper::getHumanFingerJointsMotionRange(std::vector<double>& jo
 {
     jointRangeMax = m_jointRangeMax;
     jointRangeMin = m_jointRangeMin;
+    yInfo() << m_logPrefix << "human joint names:" << m_humanJointNameList;
+    yInfo() << m_logPrefix << "human min joint range:" << m_jointRangeMin;
+    yInfo() << m_logPrefix << "human max joint range:" << m_jointRangeMax;
+
     return true;
 }
 

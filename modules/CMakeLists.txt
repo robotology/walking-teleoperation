@@ -22,7 +22,7 @@ if(WALKING_TELEOPERATION_COMPILE_SRanipalModule)
     add_subdirectory(SRanipal_module)
 endif()
 
-if(WALKING_TELEOPERATION_COMPILE_HapticGlove)
+if(WALKING_TELEOPERATION_COMPILE_HapticGloveModule)
     add_subdirectory(HapticGlove_module)
 endif()
 

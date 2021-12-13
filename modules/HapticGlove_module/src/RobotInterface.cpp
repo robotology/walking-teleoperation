@@ -406,6 +406,16 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
     // print information:
+    yInfo() << m_logPrefix << "actuated axis:" << m_actuatedAxisNames;
+    yInfo() << m_logPrefix << "actuated joints:" << m_actuatedJointList;
+    for (int i = 0; i < m_noActuatedJoints; i++)
+    {
+        const std::string& jointName = m_actuatedJointList[i];
+        const auto& element = m_jointInfoMap[jointName];
+        yInfo() << m_logPrefix << "actuated joint info" << jointName
+                << " ,use analog:" << element.useAnalog << " ,index: " << element.index
+                << " ,scale:" << element.scale;
+    }
     yInfo() << m_logPrefix << "m_noAllAxis: " << m_noAllAxis;
     yInfo() << m_logPrefix << "m_noAllJoints: " << m_noAllJoints;
     yInfo() << m_logPrefix << "m_allAxisNames: " << m_allAxisNames;
@@ -1017,21 +1027,19 @@ bool RobotInterface::getActuatedJointLimits(std::vector<double>& minLimits,
     this->getActuatedAxisLimits(axisMinLimits, axisMaxLimits);
 
     // compute the joint limits
-    size_t idx = 0;
-    for (const auto& element : m_jointInfoMap)
+    for (size_t idx = 0; idx < m_noActuatedJoints; idx++)
     {
-        if (element.second.useAnalog)
+        const std::string& jointName = m_actuatedJointList[idx];
+        const auto& element = m_jointInfoMap[jointName];
+        if (element.useAnalog)
         {
-            minLimits[idx]
-                = iDynTree::deg2rad(m_analogJointsMinBoundaryDegree(element.second.index));
-            maxLimits[idx]
-                = iDynTree::deg2rad(m_analogJointsMaxBoundaryDegree(element.second.index));
+            minLimits[idx] = iDynTree::deg2rad(m_analogJointsMinBoundaryDegree(element.index));
+            maxLimits[idx] = iDynTree::deg2rad(m_analogJointsMaxBoundaryDegree(element.index));
         } else
         {
-            minLimits[idx] = axisMinLimits[element.second.index] * element.second.scale;
-            maxLimits[idx] = axisMaxLimits[element.second.index] * element.second.scale;
+            minLimits[idx] = axisMinLimits[element.index] * element.scale;
+            maxLimits[idx] = axisMaxLimits[element.index] * element.scale;
         }
-        idx++;
     }
     return true;
 }

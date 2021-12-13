@@ -305,10 +305,6 @@ bool Teleoperation::prepare(bool& isPrepared)
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
 
-    //    yInfo() << "time collecting data: " << time - m_timeConfigurationEnd
-    //            << " , axis number: " << axisNumber << " , num of actuated axis: "
-    //            << m_robotController->controlHelper()->getNumberOfActuatedAxis();
-
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
         yInfo() << m_logPrefix << "data collected to learn robot model.";

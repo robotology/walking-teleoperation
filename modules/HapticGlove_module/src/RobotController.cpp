@@ -432,19 +432,19 @@ bool RobotController::trainCouplingMatrix()
 {
     // adding bias term
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> motorsData, jointsData,
-        A_Bias;
+        Bias_A;
 
     motorsData.setOnes(m_axesData.rows(), m_axesData.cols() + 1);
     motorsData.block(0, 1, m_axesData.rows(), m_axesData.cols()) = m_axesData;
-    A_Bias.resize(m_A.rows(), m_A.cols() + 1);
+    Bias_A.resize(m_A.rows(), m_A.cols() + 1);
     jointsData = m_jointsData;
 
-    m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, A_Bias);
+    m_linearRegressor->LearnOneShotMatrix(motorsData, jointsData, Bias_A);
 
-    std::cout << m_logPrefix << "[axes-joints coupling] A_Bias:\n" << A_Bias << std::endl;
+    std::cout << m_logPrefix << "[axes-joints coupling] Bias-A matrix:\n" << Bias_A << std::endl;
 
-    m_A = A_Bias.block(0, 1, m_A.rows(), m_A.cols());
-    m_Bias = A_Bias.block(0, 0, m_Bias.rows(), 1);
+    m_A = Bias_A.block(0, 1, m_A.rows(), m_A.cols());
+    m_Bias = Bias_A.block(0, 0, m_Bias.rows(), 1);
 
     std::cout << m_logPrefix << "[axes-joints coupling] A (coupling) matrix:\n" << m_A << std::endl;
     std::cout << m_logPrefix << "[axes-joints coupling] B (bias) vector:\n" << m_Bias << std::endl;

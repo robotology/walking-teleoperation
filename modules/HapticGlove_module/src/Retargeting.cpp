@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file Retargeting.cpp
  * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2021 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
@@ -167,66 +167,6 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    ////////////////
-    // get the robot joints minimum values
-    //    std::vector<double> robotJointsRangeMin;
-    //    if (!YarpHelper::getVectorFromSearchable(
-    //            config, "joints_min_boundary_all", robotJointsRangeMin))
-    //    {
-    //        yError() << m_logPrefix
-    //                 << "initialization failed while reading "
-    //                    "joints_min_boundary_all vector of the hand.";
-    //        return false;
-    //    }
-    //    if (!YarpHelper::checkSizeOfVector<double>(
-    //            robotJointsRangeMin, m_numAllJoints, VAR_TO_STR(robotJointsRangeMin),
-    //            m_logPrefix))
-    //    {
-    //        return false;
-    //    }
-    //    if (!this->getCustomSetIndices(robotAllJointNames,
-    //                                   m_robotActuatedJointNames,
-    //                                   robotJointsRangeMin,
-    //                                   m_robotJointsRangeMin))
-    //    {
-    //        yError() << m_logPrefix << "cannot get the custom set for"
-    //                 << VAR_TO_STR(robotJointsRangeMin);
-    //        return false;
-    //    }
-
-    // get the robot joints maximum values
-    //    std::vector<double> robotJointsRangeMax;
-    //    if (!YarpHelper::getVectorFromSearchable(
-    //            config, "joints_max_boundary_all", robotJointsRangeMax))
-    //    {
-    //        yError() << m_logPrefix
-    //                 << "initialization failed while reading "
-    //                    "joints_max_boundary vector of the hand.";
-    //        return false;
-    //    }
-    //    if (!YarpHelper::checkSizeOfVector<double>(
-    //            robotJointsRangeMax, m_numAllJoints, VAR_TO_STR(robotJointsRangeMax),
-    //            m_logPrefix))
-    //    {
-    //        return false;
-    //    }
-    //    if (!this->getCustomSetIndices(robotAllJointNames,
-    //                                   m_robotActuatedJointNames,
-    //                                   robotJointsRangeMax,
-    //                                   m_robotJointsRangeMax))
-    //    {
-    //        yError() << m_logPrefix << "cannot get the custom set for"
-    //                 << VAR_TO_STR(robotJointsRangeMax);
-    //        return false;
-    //    }
-
-    //    for (size_t i = 0; i < m_numActuatedJoints; i++)
-    //    {
-    //        m_robotJointsRangeMin[i] = m_robotJointsRangeMin[i] * M_PI / 180.0;
-    //        m_robotJointsRangeMax[i] = m_robotJointsRangeMax[i] * M_PI / 180.0;
-    //    }
-    ////////////////
-
     // get human and robot joint list and find the mapping between them
     if (!this->semanticMapFromRobotTHuman(
             m_humanJointNames, m_robotActuatedJointNames, m_robotToHumanJointIndicesMap))
@@ -322,10 +262,14 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
     yInfo() << m_logPrefix << "m_retargetingBias: " << m_retargetingBias;
     for (const auto& i : m_fingerAxesMap)
         yInfo() << m_logPrefix << "m_fingerAxesMap: " << i.first << " :: " << i.second;
+    size_t idx = 0;
     for (const auto& i : m_robotToHumanJointIndicesMap)
-        yInfo() << m_logPrefix << "m_robotToHumanJointIndicesMap: " << i.first
-                << " :: " << i.second;
-
+    {
+        yInfo() << m_logPrefix
+                << "m_robotToHumanJointIndicesMap: " << m_robotActuatedJointNames[idx] << i.first
+                << "::" << i.second;
+        idx++;
+    }
     yInfo() << m_logPrefix << "configuration is done.";
     return true;
 }
@@ -345,7 +289,7 @@ bool Retargeting::retargetHumanMotionToRobot(const std::vector<double>& humanJoi
 
         // find the desired robot joint angle
         m_robotRefJointAngles[i]
-            = m_retargetingScaling[i] * humanJointAngles[idx] + m_retargetingBias[idx];
+            = m_retargetingScaling[i] * humanJointAngles[idx] + m_retargetingBias[i];
 
         // saturate the references
         m_robotRefJointAngles[i] = std::max(m_robotRefJointAngles[i], m_robotJointsRangeMin[i]);
@@ -599,6 +543,7 @@ bool Retargeting::computeJointAngleRetargetingParams(
                                      / 2.0;
     }
 
+    yInfo() << m_logPrefix << " actuated joints:" << m_robotActuatedJointNames;
     yInfo() << m_logPrefix << "m_retargetingScaling: " << m_retargetingScaling;
     yInfo() << m_logPrefix << "m_retargetingBias: " << m_retargetingBias;
 
