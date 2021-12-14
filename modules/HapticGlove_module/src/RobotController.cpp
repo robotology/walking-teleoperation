@@ -24,8 +24,10 @@ bool RobotController::configure(const yarp::os::Searchable& config,
     m_logPrefix = "RobotController::";
     m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
 
+    bool isMandatory = config.check("isMandatory", yarp::os::Value(0)).asBool();
+
     m_robotInterface = std::make_unique<RobotInterface>();
-    if (!m_robotInterface->configure(config, name, m_rightHand, false))
+    if (!m_robotInterface->configure(config, name, m_rightHand, isMandatory))
     {
         yError() << m_logPrefix << "unable to intialized and configure the control.";
         return false;
