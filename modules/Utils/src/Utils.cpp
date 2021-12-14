@@ -149,13 +149,13 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
     yarp::os::Value* value;
     if (!config.check(key, value))
     {
-        yError() << "[getYarpVectorFromSearchable] Missing field " << key;
+        yError() << "[getVectorFromSearchable] Missing field " << key;
         return false;
     }
 
     if (!value->isList())
     {
-        yError() << "[getYarpVectorFromSearchable] the value is not a double.";
+        yError() << "[getVectorFromSearchable] the value is not a double.";
         return false;
     }
 
@@ -167,8 +167,7 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
     {
         if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
         {
-            yError() << "[getYarpVectorFromSearchable] The input is expected to be a "
-                        "double or a int";
+            yError() << "[getVectorFromSearchable] The input is expected to be a double or a int";
             return false;
         }
         output[i] = inputPtr->get(i).asDouble();
@@ -183,13 +182,13 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
     yarp::os::Value* value;
     if (!config.check(key, value))
     {
-        yError() << "[getYarpVectorFromSearchable] Missing field " << key;
+        yError() << "[getVectorFromSearchable] Missing field " << key;
         return false;
     }
 
     if (!value->isList())
     {
-        yError() << "[getYarpVectorFromSearchable] the value is not a list.";
+        yError() << "[getVectorFromSearchable] the value is not a list.";
         return false;
     }
 
@@ -201,8 +200,7 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
     {
         if (!inputPtr->get(i).isString())
         {
-            yError() << "[getYarpVectorFromSearchable] The input is expected to be a "
-                        "string";
+            yError() << "[getVectorFromSearchable] The input is expected to be a string";
             return false;
         }
         output[i] = inputPtr->get(i).asString();

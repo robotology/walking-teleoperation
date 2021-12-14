@@ -281,17 +281,4 @@ public:
     std::string getStringFromOculusState(const OculusFSM state);
 };
 
-inline std::string getTimeDateMatExtension()
-{
-    // this code snippet is taken from
-    // https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono
-    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    char timedate[30];
-
-    std::strftime(&timedate[0], 30, "%Y-%m-%d_%H-%M-%S", std::localtime(&now));
-    std::string timeDateStr = timedate;
-    timeDateStr.shrink_to_fit();
-    return timeDateStr;
-}
-
 #endif

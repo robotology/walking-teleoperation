@@ -124,7 +124,7 @@ bool getBooleanFromSearchable(const yarp::os::Searchable& config,
  * Extract a vector from a searchable object.
  * @param config is the searchable object;
  * @param key the name to check for;
- * @param vector is the vector.
+ * @param output is the output vector.
  * @return true/false in case of success/failure
  */
 bool getYarpVectorFromSearchable(const yarp::os::Searchable& config,
@@ -135,7 +135,7 @@ bool getYarpVectorFromSearchable(const yarp::os::Searchable& config,
  * Extract a vector from a searchable object.
  * @param config is the searchable object;
  * @param key the name to check for;
- * @param vector is the vector.
+ * @param output is the output vector.
  * @return true/false in case of success/failure
  */
 bool getVectorFromSearchable(const yarp::os::Searchable& config,
@@ -146,7 +146,7 @@ bool getVectorFromSearchable(const yarp::os::Searchable& config,
  * Extract a vector from a searchable object.
  * @param config is the searchable object;
  * @param key the name to check for;
- * @param vector is the vector.
+ * @param output is the output vector.
  * @return true/false in case of success/failure
  */
 bool getVectorFromSearchable(const yarp::os::Searchable& config,
