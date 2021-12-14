@@ -394,6 +394,11 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     double intializationTime
         = config.check("robotInitializationTime", yarp::os::Value(5.0)).asDouble();
 
+    m_steadyStateCounterThreshold
+        = config.check("steadyStateCounterThreshold", yarp::os::Value(5)).asInt64();
+    m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asDouble();
+    m_steadyStateCounter = 0;
+
     if (!initializeAxisValues(intializationTime))
     {
         yError() << m_logPrefix << "unable to initialize the axis values to their minimum values.";
@@ -468,7 +473,23 @@ bool RobotInterface::initializeAxisValues(const double& initializationTime)
         return false;
     }
 
-    yarp::os::Time::delay(initializationTime); // wait for 5 seconds to reach the min values
+    bool steadyStateReached = false;
+    double startingTime = yarp::os::Time::now();
+    std::vector<double> feedbacks;
+    do
+    {
+        this->getFeedback();
+        this->axisFeedbacks(feedbacks);
+        steadyStateReached = this->isSteadyStateReached(minLimits, feedbacks);
+        yarp::os::Time::delay(0.01); // wait for 0.01 seconds to reach the min values
+
+        if ((yarp::os::Time::now() - startingTime) > initializationTime)
+        {
+            yError() << m_logPrefix << "unable to initialize the robot axis values";
+            return false;
+        }
+
+    } while (!steadyStateReached);
 
     return true;
 }
@@ -1141,4 +1162,41 @@ bool RobotInterface::setAxisReferences(std::vector<double>& desiredValues, const
 bool RobotInterface::isVelocityControlUsed()
 {
     return m_controlMode == VOCAB_CM_VELOCITY;
+}
+
+bool RobotInterface::isSteadyStateReached(yarp::sig::Vector& reference, yarp::sig::Vector& feedback)
+{
+    std::vector<double> referenceStd;
+    std::vector<double> feedbackStd;
+    CtrlHelper::toStdVector(reference, referenceStd);
+    CtrlHelper::toStdVector(feedback, feedbackStd);
+
+    return this->isSteadyStateReached(referenceStd, feedbackStd);
+}
+
+bool RobotInterface::isSteadyStateReached(std::vector<double>& reference,
+                                          std::vector<double>& feedback)
+{
+    bool tmp = true;
+    if (reference.size() != feedback.size())
+    {
+        yError() << m_logPrefix << "the reference and feedback vector sizes are not equal.";
+        return false;
+    }
+    for (size_t i = 0; i < reference.size(); i++)
+    {
+        tmp &= std::abs(reference[i] - feedback[i]) <= m_steadyStateThreshold;
+    }
+
+    if (tmp)
+        m_steadyStateCounter++;
+    else
+        m_steadyStateCounter = 0;
+
+    bool steadyStateReached = false;
+
+    if (m_steadyStateCounter >= m_steadyStateCounterThreshold)
+        steadyStateReached = true;
+
+    return steadyStateReached;
 }

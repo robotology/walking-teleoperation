@@ -146,6 +146,12 @@ class HapticGlove::RobotInterface
     double m_refenceVelocityForPositionControl; /**< reference velocity for the position control
                                                    mode. */
 
+    double m_steadyStateThreshold;
+
+    size_t m_steadyStateCounter;
+
+    size_t m_steadyStateCounterThreshold;
+
     /**
      * Switch to control mode
      * @param controlMode is the specific control mode
@@ -222,6 +228,22 @@ class HapticGlove::RobotInterface
      * @return true / false in case of success / failure
      */
     bool getActuatedAxisLimits(yarp::sig::Matrix& limits);
+
+    /**
+     * Check if the axis values reached the desireed axis values and is steady state
+     * @param reference reference values to the robot
+     * @param feedback feedback values received from the robot
+     * @return true / false in case of success / failure
+     */
+    bool isSteadyStateReached(yarp::sig::Vector& reference, yarp::sig::Vector& feedback);
+
+    /**
+     * Check if the axis values reached the desireed axis values and is steady state
+     * @param reference reference values to the robot
+     * @param feedback feedback values received from the robot
+     * @return true / false in case of success / failure
+     */
+    bool isSteadyStateReached(std::vector<double>& reference, std::vector<double>& feedback);
 
 public:
     /**
