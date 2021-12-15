@@ -301,7 +301,7 @@ bool Teleoperation::prepare(bool& isPrepared)
     int CouplingConstant = (int)(m_calibrationTimePeriod / m_dT);
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
-    yInfo() << m_logPrefix << "time [sec]: " << dTime << ", axis number: " << axisNumber;
+    yInfo() << m_logPrefix << "time [steps]: " << dTime << ", axis number: " << axisNumber;
 
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
@@ -341,7 +341,7 @@ bool Teleoperation::prepare(bool& isPrepared)
     // initialize the estimator in case it is not initialized
     if (m_robotController->areEstimatorsInitialized())
     {
-        yError() << m_logPrefix << "at this point estimators are not supposed to be initialized.";
+        yWarning() << m_logPrefix << "at this point estimators are not supposed to be initialized.";
         return false;
     }
     if (isPrepared)

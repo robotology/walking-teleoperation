@@ -398,6 +398,9 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         = config.check("steadyStateCounterThreshold", yarp::os::Value(5)).asInt64();
     m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asDouble();
     m_steadyStateCounter = 0;
+    yInfo() << m_logPrefix << "initialization time [sec]:" << intializationTime
+            << ", steady state counter threshold [steps]:" << m_steadyStateCounterThreshold
+            << ", steady state threshold [rad]:" << m_steadyStateThreshold;
 
     if (!initializeAxisValues(intializationTime))
     {
@@ -481,15 +484,26 @@ bool RobotInterface::initializeAxisValues(const double& initializationTime)
         this->getFeedback();
         this->axisFeedbacks(feedbacks);
         steadyStateReached = this->isSteadyStateReached(minLimits, feedbacks);
-        yarp::os::Time::delay(0.01); // wait for 0.01 seconds to reach the min values
+        yarp::os::Time::delay(0.01); // wait for 0.01 seconds before checking again the feedbacks
 
         if ((yarp::os::Time::now() - startingTime) > initializationTime)
         {
-            yError() << m_logPrefix << "unable to initialize the robot axis values";
-            return false;
+            // return false; // to avoid stoping the module, keep running even if some axis is not
+            // tracking fine.
+            break;
         }
 
     } while (!steadyStateReached);
+
+    if (steadyStateReached)
+    {
+        yInfo() << m_logPrefix << "initialization is done in "
+                << yarp::os::Time::now() - startingTime << "seconds.";
+    } else
+    {
+        yWarning() << m_logPrefix << "unable to initialize the robot axis values in "
+                   << initializationTime << "seconds; but continuing.";
+    }
 
     return true;
 }

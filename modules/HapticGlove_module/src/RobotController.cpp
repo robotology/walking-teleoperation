@@ -426,9 +426,6 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
 
     setAxisReferences(m_data->axisValueReferencesStd);
 
-    yInfo() << m_logPrefix << "axes:   " << m_data->axisValueReferencesStd;
-    yInfo() << m_logPrefix << "joints: " << m_data->jointValueFeedbacksStd;
-
     move();
     return true;
 }
