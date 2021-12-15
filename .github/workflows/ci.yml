@@ -88,22 +88,33 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/iDynTree
         cd iDynTree
-        git checkout devel
         mkdir -p build
         cd build
         cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
                      -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                      -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-
         cmake --build . --config ${{ matrix.build_type }} --target install
 
         # icub-main
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
+        git clone https://github.com/robotology/icub-main.git
         cd icub-main && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+        cmake  -A x64 -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
+        cmake --build . --config ${{ matrix.build_type }} --target install
+        
+        # wearables
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/wearables.git
+        cd wearables 
+        mkdir -p build 
+        cd build
+        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
+                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
+                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                     -DXSENS_MVN_USE_SDK:BOOL=OFF \
+                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
         cmake --build . --config ${{ matrix.build_type }} --target install
         
 
@@ -133,7 +144,6 @@ jobs:
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/iDynTree
         cd iDynTree
-        git checkout devel
         mkdir -p build
         cd build
         cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
@@ -142,11 +152,22 @@ jobs:
 
         # icub-main
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/icub-main.git --depth 1 --branch devel
+        git clone https://github.com/robotology/icub-main.git
         cd icub-main && mkdir -p build && cd build
         cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
         cmake --build . --config ${{ matrix.build_type }} --target install 
+
+        # wearables
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/wearables.git
+        cd wearables 
+        mkdir -p build 
+        cd build
+        cmake        -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
+                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
+        cmake --build . --config ${{ matrix.build_type }} --target install
 
 
     # ===================
@@ -171,7 +192,7 @@ jobs:
         mkdir -p build
         cd build
         cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-              -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
 
     - name: Build
       shell: bash
