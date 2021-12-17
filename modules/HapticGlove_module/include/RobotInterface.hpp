@@ -92,6 +92,7 @@ class HapticGlove::RobotInterface
 
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
     yarp::dev::PolyDriver m_analogDevice; /**< Analog device. */
+    yarp::dev::PolyDriver m_tactileSensorDevice; /**< Analog device for the skin. */
 
     yarp::dev::IPreciselyTimed* m_timedInterface{nullptr}; /**< Time interface. */
     yarp::dev::IEncodersTimed* m_encodersInterface{nullptr}; /**< Encorders interface. */
@@ -105,6 +106,8 @@ class HapticGlove::RobotInterface
     yarp::dev::ICurrentControl* m_currentInterface{nullptr}; /**< current control interface */
     yarp::dev::IPWMControl* m_pwmInterface{nullptr}; /**< PWM control interface*/
     yarp::dev::IPidControl* m_pidInterface{nullptr}; /**< pid control interface*/
+    yarp::dev::IAnalogSensor* m_tactileSensorInterface{
+        nullptr}; /**< skin ananlog sensor interface */
 
     yarp::sig::Vector m_encoderPositionFeedbackInDegrees; /**< axis position [deg]. */
     yarp::sig::Vector m_encoderPositionFeedbackInRadians; /**< axis position [rad]. */
@@ -134,6 +137,9 @@ class HapticGlove::RobotInterface
     yarp::sig::Vector m_analogSensorsRawMaxBoundary; /**< senor maximum value [raw]*/
     yarp::sig::Vector
         m_sensorsRaw2DegreeScaling; /**< sacling from raw to Degree of joints with analog readouts*/
+    yarp::sig::Vector
+        m_fingertipRawTactileFeedbacks; /**< fingertip calibrated tactile feedbacks, `0`
+                                        means no pressure, `1` mean maximum pressure */
 
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
@@ -472,6 +478,18 @@ public:
      * @param motorPidOutputs the motor pid outputs
      */
     void motorPidOutputs(std::vector<double>& motorPidOutputs);
+
+    /**
+     * Get the fingertip calibrated tactile feedbacks
+     * @return fingertip calibrated tactile feedbacks
+     */
+    const yarp::sig::Vector& fingerRawTactileFeedbacks() const;
+
+    /**
+     * Get the fingertip calibrated tactile feedbacks
+     * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
+     */
+    void fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks);
 
     /**
      * Get the number of actuated axis/motors

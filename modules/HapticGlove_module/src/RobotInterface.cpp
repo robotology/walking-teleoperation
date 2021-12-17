@@ -225,6 +225,8 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
+
     // resize the vectors
 
     // feedbacks
@@ -242,6 +244,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_motorCurrentFeedbacks.resize(m_noActuatedAxis);
     m_motorPwmFeedbacks.resize(m_noActuatedAxis);
     m_pidOutput.resize(m_noActuatedAxis);
+    m_fingertipRawTactileFeedbacks.resize(noTactileSensors);
 
     // reference
     m_referenceValues.resize(m_noActuatedAxis);
@@ -768,6 +771,15 @@ bool RobotInterface::getFeedback()
         yError() << m_logPrefix << "Unable to get pid outputs.";
         return false;
     }
+
+    if (!(m_tactileSensorInterface->read(m_fingertipRawTactileFeedbacks)
+          == yarp::dev::IAnalogSensor::AS_OK))
+    {
+        yError() << m_logPrefix << "Unable to get tactile sensor data.";
+        return false;
+    }
+    yInfo() << m_logPrefix << "tactile sensors:" << m_fingertipRawTactileFeedbacks.toString();
+
     return true;
 }
 
@@ -929,6 +941,16 @@ const yarp::sig::Vector& RobotInterface::motorPidOutputs() const
 void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs)
 {
     CtrlHelper::toStdVector(m_pidOutput, motorPidOutputs);
+}
+
+const yarp::sig::Vector& RobotInterface::fingerRawTactileFeedbacks() const
+{
+    return m_fingertipRawTactileFeedbacks;
+}
+
+void RobotInterface::fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks)
+{
+    CtrlHelper::toStdVector(m_fingertipRawTactileFeedbacks, fingertipTactileFeedbacks);
 }
 
 bool RobotInterface::close()
