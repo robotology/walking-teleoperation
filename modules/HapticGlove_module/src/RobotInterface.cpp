@@ -778,7 +778,6 @@ bool RobotInterface::getFeedback()
         yError() << m_logPrefix << "Unable to get tactile sensor data.";
         return false;
     }
-    yInfo() << m_logPrefix << "tactile sensors:" << m_fingertipRawTactileFeedbacks.toString();
 
     return true;
 }
@@ -971,6 +970,13 @@ bool RobotInterface::close()
         yError() << m_logPrefix << "Unable to close the analogsensorclient device.";
         return false;
     }
+
+    if (!m_tactileSensorDevice.close())
+    {
+        yError() << m_logPrefix << "Unable to close the tactile sensor analogsensorclient device.";
+        return false;
+    }
+
     m_timedInterface = nullptr;
     m_encodersInterface = nullptr;
     m_positionDirectInterface = nullptr;
@@ -982,6 +988,7 @@ bool RobotInterface::close()
     m_currentInterface = nullptr;
     m_pwmInterface = nullptr;
     m_pidInterface = nullptr;
+    m_tactileSensorInterface = nullptr;
 
     yInfo() << m_logPrefix << "closed correctly.";
     return true;

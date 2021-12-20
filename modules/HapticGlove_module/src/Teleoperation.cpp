@@ -110,6 +110,13 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    m_robotSkin = std::make_unique<HapticGlove::RobotSkin>();
+    if (!m_robotSkin->configure(config, m_robot, rightHand))
+    {
+        yError() << m_logPrefix << "unable to configure robot skin class.";
+        return false;
+    }
+
     // get the vector sizes
     const size_t numRobotAllAxis = m_robotController->controlHelper()->getNumberOfAllAxis();
     const size_t numRobotActuatedAxis
@@ -204,6 +211,21 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisVelocityReferencesKf,
                                                m_data.robotAxisAccelerationReferencesKf,
                                                m_data.robotAxisCovReferencesKf);
+
+    // get tactile sensors data
+    m_robotController->controlHelper()->fingerRawTactileFeedbacks(
+        m_data.m_fingertipRawTactileFeedbacks);
+
+    m_robotSkin->setRawTactileFeedbacks(m_data.m_fingertipRawTactileFeedbacks);
+
+    std::vector<double> fingerTactileFeedbacks;
+    m_robotSkin->getFingertipMaxTactileFeedback(fingerTactileFeedbacks);
+    yInfo() << m_logPrefix << "fingers max tactile feedbacks :" << fingerTactileFeedbacks;
+
+    std::vector<bool> fingersInContact;
+    m_robotSkin->areFingersInContact(fingersInContact);
+    yInfo() << m_logPrefix << "fingers in contact:" << fingersInContact;
+
     double t2 = yarp::os::Time::now();
     //    yInfo() << m_logPrefix << "KF time: " << t2 - t1;
 

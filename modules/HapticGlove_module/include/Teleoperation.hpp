@@ -23,6 +23,7 @@
 #include <GloveControlHelper.hpp>
 #include <Retargeting.hpp>
 #include <RobotController.hpp>
+#include <RobotSkin.hpp>
 
 // eigen
 #include <Eigen/Dense>
@@ -98,6 +99,13 @@ struct HapticGlove::Data
                                                     /// the human fingertips
     std::vector<double>
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
+
+    std::vector<double>
+        m_fingertipRawTactileFeedbacks; /// <summary> fingertips raw tactile feedbacks:
+                                        /// 192 values (values from 0 to 240)
+
+    std::vector<double> m_fingertipPressureFeedbacks; /// <summary> fingertips max tactile
+                                                      /// feedbacks: 5x12 (values from 0 to 1)
 };
 
 /**
@@ -127,6 +135,8 @@ class HapticGlove::Teleoperation
     std::unique_ptr<GloveControlHelper> m_humanGlove; /**< pointer to the human glove object. */
 
     std::unique_ptr<Retargeting> m_retargeting; /**< pointer to the human retargeting object. */
+
+    std::unique_ptr<RobotSkin> m_robotSkin; /**< pointer to the robot skin object. */
 
     double m_calibrationTimePeriod; /**< calibration time period [sec] */
 
