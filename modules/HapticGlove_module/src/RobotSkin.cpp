@@ -141,3 +141,20 @@ void RobotSkin::areFingersInContact(std::vector<bool>& fingersIncontact)
                               > m_fingersTactileData[i].contactThreshold;
     }
 }
+
+void RobotSkin::contactStrength(std::vector<double>& fingersContactStrength)
+{
+    std::vector<bool> fingersIncontact;
+    this->areFingersInContact(fingersIncontact);
+
+    if (fingersContactStrength.size() != m_noFingers)
+    {
+        fingersContactStrength.resize(m_noFingers, false);
+    }
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        fingersContactStrength[i]
+            = 100.0 * (fingersIncontact[i] ? m_fingersTactileData[i].maxTactileFeedbackValue() : 0);
+    }
+}

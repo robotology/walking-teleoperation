@@ -93,6 +93,8 @@ public:
     bool getFingertipMaxTactileFeedback(std::vector<double>& fingertipPressure);
 
     void areFingersInContact(std::vector<bool>& fingersIncontact);
+
+    void contactStrength(std::vector<double>& fingersContactStrength);
 };
 
 #endif // ROBOT_SKIN_HPP
