@@ -486,6 +486,14 @@ bool RobotInterface::switchToControlMode(const int& controlMode)
 
 bool RobotInterface::initializeAxisValues(const double& initializationTime)
 {
+
+    // get the actuated axis limits as one of the initialization steps
+    if (!this->getActuatedAxisLimits(m_actuatedAxisLimits))
+    {
+        yInfo() << m_logPrefix << "unable to get the robot axis limits";
+        return false;
+    }
+
     std::vector<double> minLimits, maxLimits;
 
     yInfo() << m_logPrefix << "the necessary time for initialization is: " << initializationTime
@@ -1094,17 +1102,10 @@ bool RobotInterface::getActuatedAxisLimits(std::vector<double>& minLimits,
     minLimits.resize(m_noActuatedAxis, 0.0);
     maxLimits.resize(m_noActuatedAxis, 0.0);
 
-    yarp::sig::Matrix limits;
-    if (!this->getActuatedAxisLimits(limits))
-    {
-        yInfo() << m_logPrefix << "unable to get the robot axis limits";
-        return false;
-    }
-
     for (size_t i = 0; i < m_noActuatedAxis; i++)
     {
-        minLimits[i] = limits(i, 0);
-        maxLimits[i] = limits(i, 1);
+        minLimits[i] = m_actuatedAxisLimits(i, 0);
+        maxLimits[i] = m_actuatedAxisLimits(i, 1);
     }
     return true;
 }

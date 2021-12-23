@@ -141,6 +141,8 @@ class HapticGlove::RobotInterface
         m_fingertipRawTactileFeedbacks; /**< fingertip calibrated tactile feedbacks, `0`
                                         means no pressure, `1` mean maximum pressure */
 
+    yarp::sig::Matrix m_actuatedAxisLimits; /**< the min and max limits of the actuated axis */
+
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
     bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */
