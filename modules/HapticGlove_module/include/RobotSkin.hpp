@@ -61,7 +61,8 @@ struct HapticGlove::fingertipTactileData
 
     double contactThreshold()
     {
-        return 10.0
+        double gainStdForContactThreshold = 5.0;
+        return gainStdForContactThreshold
                * stdTactileSensor[std::distance(
                    calibratedTactileData.begin(),
                    std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
@@ -94,6 +95,7 @@ private:
     size_t m_noFingers; //
     size_t m_totalNoTactile;
     std::vector<fingertipTactileData> m_fingersTactileData;
+    std::vector<bool> m_areFingersInContact;
 
     //    RobotInterface& m_robotInterface; /**< robot control interface */
 

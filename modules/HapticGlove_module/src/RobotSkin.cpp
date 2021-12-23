@@ -6,6 +6,9 @@
  * @date 2021
  */
 
+// std
+#include <math.h>
+
 // teleoperation
 #include <RobotSkin.hpp>
 #include <Utils.hpp>
@@ -31,6 +34,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     }
     m_noFingers = humanFingerNameList.size();
     m_totalNoTactile = 0;
+
+    m_areFingersInContact.resize(m_noFingers, false);
 
     for (const auto& finger : humanFingerNameList)
     {
@@ -220,8 +225,8 @@ void RobotSkin::areFingersInContact(std::vector<bool>& fingersIncontact)
 
 void RobotSkin::contactStrength(std::vector<double>& fingersContactStrength)
 {
-    std::vector<bool> fingersIncontact;
-    this->areFingersInContact(fingersIncontact);
+
+    this->areFingersInContact(m_areFingersInContact);
 
     if (fingersContactStrength.size() != m_noFingers)
     {
@@ -231,7 +236,7 @@ void RobotSkin::contactStrength(std::vector<double>& fingersContactStrength)
     for (size_t i = 0; i < m_noFingers; i++)
     {
         fingersContactStrength[i]
-            = (fingersIncontact[i] ? m_fingersTactileData[i].maxTactileFeedbackValue() : 0);
+            = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackValue() : 0);
     }
 }
 
@@ -240,8 +245,11 @@ void RobotSkin::vibrotactileFeedback(std::vector<double>& fingersVibrotactileFee
     this->contactStrength(fingersVibrotactileFeedback);
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        fingersVibrotactileFeedback[i]
+        double x
             = 100.0 * m_fingersTactileData[i].vibrotactileGain * fingersVibrotactileFeedback[i];
+
+        fingersVibrotactileFeedback[i]
+            = 15.0 * std::log(2 * std::pow(x, 0.7) + 1) + 0.5 * std::pow(x, 1.1);
     }
 }
 

@@ -282,7 +282,20 @@ bool Teleoperation::run()
 
     // tactile feedback
     std::vector<double> vibrotactileFeedback;
+    std::vector<bool> areFingersInContact;
+
     m_robotSkin->vibrotactileFeedback(vibrotactileFeedback);
+    m_robotSkin->areFingersInContact(areFingersInContact);
+    bool x = areFingersInContact[4] || areFingersInContact[5];
+    // areFingersInContact[4] = x;
+    // areFingersInContact[5] = x;
+
+    std::transform(m_data.humanForceFeedbacks.begin(),
+                   m_data.humanForceFeedbacks.end(),
+                   areFingersInContact.begin(),
+                   m_data.humanForceFeedbacks.begin(),
+                   std::multiplies<double>());
+
     yInfo() << m_logPrefix << "vibrotactile feedback:" << vibrotactileFeedback;
 
     // set the values
