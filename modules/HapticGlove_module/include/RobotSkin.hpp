@@ -34,12 +34,14 @@ struct HapticGlove::fingertipTactileData
     size_t indexEnd;
     size_t noTactileSensors;
     std::vector<double> rawTactileData; // range: 0-256 ; 240 : no load, 0: max load
-    std::vector<double> calibratedTactileData; // range: 0-1: 0: no load, 1 max load;
+    std::vector<double> tactileData; // range: 0-1: 0: no load, 1 max load;
+    std::vector<double> calibratedTactileData; // range: almost 0-1: 0: no load, 1 max load;
+
     const double maxTactileValue = 256.0;
     const double minTactileValue = 0.0;
     const double noLoadValue = 240.0;
 
-    double contactThreshold = 0.2; // default value
+    double contactThresholdValue = 0.2; // default value
     double vibrotactileGain = 1.0; // default value
 
     std::vector<double> biasTactileSensor; // mean of the tactile sensors when not touched
@@ -56,6 +58,15 @@ struct HapticGlove::fingertipTactileData
     {
         return *std::max_element(calibratedTactileData.begin(), calibratedTactileData.end());
     }
+
+    double contactThreshold()
+    {
+        return 10.0
+               * stdTactileSensor[std::distance(
+                   calibratedTactileData.begin(),
+                   std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
+    }
+
     void printInfo() const
     {
         std::cout << "==================" << std::endl;
@@ -66,7 +77,7 @@ struct HapticGlove::fingertipTactileData
         std::cout << "max tactile threshold: " << maxTactileValue << std::endl;
         std::cout << "min tactile threshold: " << minTactileValue << std::endl;
         std::cout << "no load tactile threshold: " << noLoadValue << std::endl;
-        std::cout << "contact threshold: " << contactThreshold << std::endl;
+        std::cout << "contact threshold: " << contactThresholdValue << std::endl;
         std::cout << "vibrotactile gain: " << vibrotactileGain << std::endl;
         std::cout << "=========" << std::endl;
     }

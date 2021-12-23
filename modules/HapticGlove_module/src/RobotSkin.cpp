@@ -71,13 +71,16 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         fingerdata.indexStart = std::round(tactileInfo[0]);
         fingerdata.indexEnd = std::round(tactileInfo[1]);
         fingerdata.noTactileSensors = fingerdata.indexEnd - fingerdata.indexStart + 1;
+
         fingerdata.rawTactileData.resize(fingerdata.noTactileSensors);
-        fingerdata.calibratedTactileData.resize(fingerdata.noTactileSensors);
-        fingerdata.contactThreshold = tactileInfo[2];
+        fingerdata.tactileData.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.biasTactileSensor.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.stdTactileSensor.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.calibratedTactileData.resize(fingerdata.noTactileSensors, 0.0);
+
+        fingerdata.contactThresholdValue = tactileInfo[2];
         fingerdata.vibrotactileGain = tactileInfo[3];
 
-        fingerdata.biasTactileSensor.resize(fingerdata.noTactileSensors);
-        fingerdata.stdTactileSensor.resize(fingerdata.noTactileSensors);
         fingerdata.collectedTactileData.resize(Eigen::NoChange, fingerdata.noTactileSensors);
 
         m_fingersTactileData.push_back(fingerdata);
@@ -102,7 +105,7 @@ void RobotSkin::setRawTactileFeedbacks(const std::vector<double>& rawTactileFeed
             finger.rawTactileData[i] = rawTactileFeedbacks[i + finger.indexStart];
 
             // crop the data to be sure they are in the range of 0-256
-            finger.calibratedTactileData[i] = std::max(
+            finger.tactileData[i] = std::max(
                 std::min(finger.rawTactileData[i], finger.maxTactileValue), finger.minTactileValue);
 
             // crop the data to be sure they are always less than equal to `no load value`
@@ -111,8 +114,13 @@ void RobotSkin::setRawTactileFeedbacks(const std::vector<double>& rawTactileFeed
 
             // normalize the data such that:
             // range: [0,1] ; 0: no load, 1: max load
-            finger.calibratedTactileData[i]
-                = 1 - double(finger.calibratedTactileData[i]) / finger.noLoadValue;
+            finger.tactileData[i] = 1 - double(finger.tactileData[i]) / finger.maxTactileValue;
+
+            std::transform(finger.tactileData.begin(),
+                           finger.tactileData.end(),
+                           finger.biasTactileSensor.begin(),
+                           finger.calibratedTactileData.begin(),
+                           std::minus<double>());
         }
     }
 }
@@ -123,7 +131,7 @@ bool RobotSkin::collectSkinDataForCalibration()
     for (auto& data : m_fingersTactileData)
     {
 
-        Eigen::VectorXd tactileData = CtrlHelper::toEigenVector(data.calibratedTactileData);
+        Eigen::VectorXd tactileData = CtrlHelper::toEigenVector(data.tactileData);
 
         if (!CtrlHelper::push_back_row(data.collectedTactileData, tactileData.transpose()))
         {
@@ -143,9 +151,6 @@ bool RobotSkin::computeCalibrationParamters()
         for (size_t i = 0; i < data.noTactileSensors; i++)
         {
             Eigen::VectorXd vec = data.collectedTactileData.col(i);
-            yInfo() << m_logPrefix << data.fingerName
-                    << "data size:" << data.collectedTactileData.rows()
-                    << data.collectedTactileData.cols() << vec.size();
             data.biasTactileSensor[i] = vec.mean();
             data.stdTactileSensor[i]
                 = std::sqrt(((vec.array() - vec.mean()).square().sum()) / vec.size());
@@ -161,7 +166,7 @@ bool RobotSkin::computeCalibrationParamters()
 bool RobotSkin::getFingertipTactileFeedbacks(const size_t fingertipIndex,
                                              std::vector<double>& skinData)
 {
-    skinData = m_fingersTactileData[fingertipIndex].calibratedTactileData;
+    skinData = m_fingersTactileData[fingertipIndex].tactileData;
     return true;
 }
 
@@ -175,8 +180,8 @@ bool RobotSkin::getSerializedFingertipsTactileFeedbacks(
     size_t start = 0;
     for (const auto& data : m_fingersTactileData)
     {
-        std::copy(data.calibratedTactileData.begin(),
-                  data.calibratedTactileData.end(),
+        std::copy(data.tactileData.begin(),
+                  data.tactileData.end(),
                   fingertipsTactileFeedback.begin() + start);
         start += data.noTactileSensors;
     }
@@ -209,7 +214,7 @@ void RobotSkin::areFingersInContact(std::vector<bool>& fingersIncontact)
     for (size_t i = 0; i < m_noFingers; i++)
     {
         fingersIncontact[i] = m_fingersTactileData[i].maxTactileFeedbackValue()
-                              > m_fingersTactileData[i].contactThreshold;
+                              > m_fingersTactileData[i].contactThreshold();
     }
 }
 
