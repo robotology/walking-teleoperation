@@ -40,6 +40,16 @@ struct HapticGlove::fingertipTactileData
     const double noLoadValue = 240.0;
 
     double contactThreshold = 0.2; // default value
+    double vibrotactileGain = 1.0; // default value
+
+    std::vector<double> biasTactileSensor; // mean of the tactile sensors when not touched
+    std::vector<double>
+        stdTactileSensor; // standard deviation  std of the tactile sensors when not touched
+
+    CtrlHelper::Eigen_Mat collectedTactileData; /**< The logged data to find the bias and standard
+                         deviation (std); the tactile values; Dimension <o, t> o: number of
+                         observations (logged data), m: number of tactile sensors*/
+
     bool isFingerInContact = false;
 
     double maxTactileFeedbackValue()
@@ -57,6 +67,8 @@ struct HapticGlove::fingertipTactileData
         std::cout << "min tactile threshold: " << minTactileValue << std::endl;
         std::cout << "no load tactile threshold: " << noLoadValue << std::endl;
         std::cout << "contact threshold: " << contactThreshold << std::endl;
+        std::cout << "vibrotactile gain: " << vibrotactileGain << std::endl;
+        std::cout << "=========" << std::endl;
     }
 };
 /**
@@ -68,9 +80,8 @@ private:
     std::string m_logPrefix;
 
     bool m_rightHand;
-    std::vector<std::vector<double>> m_fingertipsData;
     size_t m_noFingers; //
-    size_t m_noTactile;
+    size_t m_totalNoTactile;
     std::vector<fingertipTactileData> m_fingersTactileData;
 
     //    RobotInterface& m_robotInterface; /**< robot control interface */
@@ -90,11 +101,21 @@ public:
 
     bool getFingertipTactileFeedbacks(const size_t fingertipIndex, std::vector<double>& skinData);
 
+    bool collectSkinDataForCalibration();
+
+    bool computeCalibrationParamters();
+
+    bool getSerializedFingertipsTactileFeedbacks(std::vector<double>& fingertipsTactileFeedback);
+
     bool getFingertipMaxTactileFeedback(std::vector<double>& fingertipPressure);
 
     void areFingersInContact(std::vector<bool>& fingersIncontact);
 
     void contactStrength(std::vector<double>& fingersContactStrength);
+
+    void vibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback);
+
+    const size_t getNumOfTactileFeedbacks();
 };
 
 #endif // ROBOT_SKIN_HPP

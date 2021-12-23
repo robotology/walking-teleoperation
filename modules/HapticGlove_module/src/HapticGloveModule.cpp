@@ -137,10 +137,10 @@ bool HapticGloveModule::close()
 
 bool HapticGloveModule::updateModule()
 {
+    double t1 = yarp::os::Time::now();
 
     if (m_state == HapticGloveFSM::Running)
     {
-        double t1 = yarp::os::Time::now();
         if (m_useLeftHand)
         {
             if (!m_leftHand->run())
@@ -157,8 +157,6 @@ bool HapticGloveModule::updateModule()
                 return false;
             }
         }
-        double t2 = yarp::os::Time::now();
-        yInfo() << m_logPrefix << "total computation time: " << t2 - t1;
 
     } else if (m_state == HapticGloveFSM::Configuring)
     {
@@ -168,6 +166,7 @@ bool HapticGloveModule::updateModule()
 
     } else if (m_state == HapticGloveFSM::Preparing)
     {
+
         bool isPrepared = true;
         if (m_useLeftHand)
         {
@@ -194,6 +193,8 @@ bool HapticGloveModule::updateModule()
             m_state = HapticGloveFSM::Running;
         }
     }
+    double t2 = yarp::os::Time::now();
+    yInfo() << m_logPrefix << "total computation time: " << t2 - t1;
 
     return true;
 }

@@ -100,12 +100,20 @@ struct HapticGlove::Data
     std::vector<double>
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
 
+    // skin
     std::vector<double>
-        m_fingertipRawTactileFeedbacks; /// <summary> fingertips raw tactile feedbacks:
-                                        /// 192 values (values from 0 to 240)
+        fingertipsRawTactileFeedbacks; /// <summary> fingertips tactile feedbacks raw values, 192
+                                       /// values read from the robot interface; range: [0, 256].
+                                       /// 240: no laod value, 0 is maximum pressure
 
-    std::vector<double> m_fingertipPressureFeedbacks; /// <summary> fingertips max tactile
-                                                      /// feedbacks: 5x12 (values from 0 to 1)
+    std::vector<double>
+        fingertipsTactileFeedbacks; /// <summary> fingertips tactile feedbacks for all the
+                                    /// fingerstips: totoal :60 values: fingers thumb, index,
+                                    /// middle, ring, little; each finger 12 tactile sensors
+
+    std::vector<double>
+        humanVibrotactileFeedbacksUsingSkin; /// <summary> fingertips max tactile
+                                             /// feedbacks: 5x12 (values from 0 to 1)
 };
 
 /**
