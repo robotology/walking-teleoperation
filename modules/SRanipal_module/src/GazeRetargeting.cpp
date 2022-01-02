@@ -130,12 +130,13 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     double userMaxVersInDeg = rf.check("eyeMaxVersion", yarp::os::Value(25.0)).asFloat64();
     double userMaxTiltInDeg = rf.check("eyeMaxTilt", yarp::os::Value(30.0)).asFloat64();
     m_tanhGain = rf.check("eyeKinematicSaturationGain", yarp::os::Value(10.0)).asFloat64();
+    std::string headControlBoard = rf.check("headControlBoardName", yarp::os::Value("head")).asString();
 
     yarp::os::Property rcb_head_conf{
         {"device", yarp::os::Value("remote_controlboard")},
         {"local", yarp::os::Value("/" + name + "/head/remoteControlBoard")},
-        {"remote", yarp::os::Value("/" + robot + "/head")},
-        {"part", yarp::os::Value("head")}};
+        {"remote", yarp::os::Value("/" + robot + "/" + headControlBoard)},
+        {"part", yarp::os::Value(headControlBoard)}};
 
     if (!m_eyesDriver.open(rcb_head_conf))
     {
