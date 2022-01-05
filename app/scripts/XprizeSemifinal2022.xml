@@ -4,7 +4,7 @@
 
 <application>
 
-  <name>XprizeDemo2021June</name>
+  <name>XprizeSemifinal2022</name>
   <description>Application to run the ANA Avatar XPRIZE demo on June 2021.</description>
   <version>1.0</version>
   <authors>
@@ -33,6 +33,10 @@
 
   <application>
     <name>Xprize-PsychophysiologicalRetargeting</name>
+  </application>
+  
+    <application>
+    <name>Xprize-SkinVisualization</name>
   </application>
 
 </application>
