@@ -66,46 +66,55 @@
   <connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/virtualizer/robotOrientation:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/oculusRetargeting/robotOrientation:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/oculusRetargeting/virtualizerRpc</from>
     <to>/virtualizer/rpc</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/virtualizer/goal:o</from>
     <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/virtualizer/playerOrientation:o</from>
     <to>/oculusRetargeting/playerOrientation:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
     <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iFeelRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iFeelRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>

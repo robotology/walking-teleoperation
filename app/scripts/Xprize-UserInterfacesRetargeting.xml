@@ -4,20 +4,23 @@
 
 <application>
 
-  <name>Xprize-PsychophysiologicalRetargeting</name>
-  <description>Application to run Psychophysiological related modules for retargeting.</description>
+  <name>Xprize-UserInterfacesRetargeting</name>
+  <description>Application to run User interfaces related modules for retargeting.</description>
   <version>1.0</version>
   <authors>
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
    <!-- Modules -->
-   <module>
-     <name>SRanipalModule</name>
-     <parameters>--forceEyeCalibration --gazeVelocityGain 2.0 --gazeDeadzone 0.02</parameters>
-     <node>icub-virtualizer</node>
-   </module>
-
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config HapticGlove.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run SenseGlove Wearable Device</description>
+    <node>localhost</node>
+    <tag>SenseGlove</tag>
+  </module>
+  
   <!-- Connections -->
   <connection>
     <from>/SRanipalModule/emotions:o</from>
