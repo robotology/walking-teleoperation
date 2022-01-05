@@ -41,7 +41,7 @@ struct HapticGlove::fingertipTactileData
     const double minTactileValue = 0.0;
     const double noLoadValue = 240.0;
 
-    double contactThresholdValue = 0.2; // default value
+    double contactThresholdValue = 5.0; // default value
     double vibrotactileGain = 1.0; // default value
 
     std::vector<double> biasTactileSensor; // mean of the tactile sensors when not touched
@@ -61,8 +61,8 @@ struct HapticGlove::fingertipTactileData
 
     double contactThreshold()
     {
-        double gainStdForContactThreshold = 5.0;
-        return gainStdForContactThreshold
+        //        double gainStdForContactThreshold = 5.0;
+        return contactThresholdValue
                * stdTactileSensor[std::distance(
                    calibratedTactileData.begin(),
                    std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
