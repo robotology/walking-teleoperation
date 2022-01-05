@@ -29,16 +29,7 @@
     </dependencies>
   </module>
 
-  <module>
-    <name>VirtualizerModule</name>
-    <parameters>--use_transform_server true</parameters>
-    <dependencies>
-          <port timeout="15.0">/transformServer/transforms:o</port>
-    </dependencies>
-    <node>icub-virtualizer</node>
-  </module>
-
-  <module>
+  <!--module>
     <name>OculusRetargetingModule</name>
     <node>icub-console</node>
     <parameters> --OPENXR::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
@@ -48,7 +39,7 @@
       <port timeout="15.0">/icub/cam/left</port>
       <port timeout="15.0">/icub/cam/right</port>
     </dependencies>
-  </module>
+  </module-->
 
    <module>
      <name>XsensRetargetingModule</name>
@@ -69,23 +60,23 @@
     <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/oculusRetargeting/robotOrientation:i</to>
     <protocol>fast_tcp</protocol>
-  </connection>
+  </connection-->
 
-  <connection>
+  <!--connection>
     <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
     <protocol>fast_tcp</protocol>
-  </connection>
+  </connection-->
 
-  <connection>
+  <!--connection>
     <from>/oculusRetargeting/virtualizerRpc</from>
     <to>/virtualizer/rpc</to>
     <protocol>fast_tcp</protocol>
-  </connection>
+  </connection-->
 
   <connection>
     <from>/virtualizer/goal:o</from>
@@ -93,11 +84,11 @@
     <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/virtualizer/playerOrientation:o</from>
     <to>/oculusRetargeting/playerOrientation:i</to>
     <protocol>fast_tcp</protocol>
-  </connection>
+  </connection-->
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>

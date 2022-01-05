@@ -21,6 +21,96 @@
     <tag>SenseGlove</tag>
   </module>
   
+  
+  <module>
+    <name>VirtualizerModule</name>
+    <parameters>--use_transform_server true</parameters>
+    <dependencies>
+          <port timeout="15.0">/transformServer/transforms:o</port>
+    </dependencies>
+    <node>icub-virtualizer</node>
+  </module>
+
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run iFeelSuit and Multi Haptic driver</description>
+    <node>localhost</node>
+    <tag>iFeelSuitMultiHaptic</tag>
+  </module>
+  
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config iFeelSuit.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run iFeel Suit Wearable Device</description>
+    <node>localhost</node>
+    <tag>iFeelSuit</tag>
+  </module>
+
+  <module>
+    <name>yarp-openvr-trackers</name>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run openvr vive trackers</description>
+    <node>icub-virtualizer</node>
+    <tag>openvr-trackers</tag>
+  </module>
+  
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config transformServer_to_iwear.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run transform server Wearable Device</description>
+    <node>localhost</node>
+    <tag>transformServerWearableDevice</tag>
+    <dependencies>
+      <port timeout="11.0">/transformServer/transforms:o</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="11.0">/Wearable/OpenXRTransform/data:o</port>
+      <port timeout="11.0">/iFeelSuit/WearableData/data:o</port>
+    </dependencies>
+  </module>
+  
+  <module>
+    <name>HumanStateVisualizer</name>
+    <parameters>--from HumanStateVisualizer_iCub3_openvr_ifeel.ini</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="11.0">/iCub/RobotStateWrapper/state:o</port>
+      <port timeout="11.0">/HDE/WearableTargetsWrapper/state:o</port>
+    </dependencies>
+  </module>
+
+  
+    <!--iFeelSuit Skin to multi-haptic application-->
+  <module>
+    <name>iFeelSuitSkinActuatorsTestApplication</name>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run iFeelSuit sking application</description>
+    <node>localhost</node>
+    <tag>iFeelSuit-SkinActuatorsTestApplication</tag>
+    <dependencies>
+      <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
+      <port timeout="11.0">/icub/skin/left_upperarm</port>
+      <port timeout="11.0">/icub/skin/right_upperarm</port>
+    </dependencies>
+  </module>
+  
   <!-- Connections -->
   <connection>
     <from>/SRanipalModule/emotions:o</from>

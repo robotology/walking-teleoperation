@@ -1,0 +1,66 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
+
+<application>
+
+  <name>Xprize-SkinVisualization</name>
+  <description>Application to run Skin Gui related modules before running retargeting modules.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
+  </authors>
+
+   <!-- Modules -->  
+  
+  <module>
+    <name>iCubSkinGui</name>
+    <parameters>--from left_hand.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  <module>
+    <name>iCubSkinGui</name>
+    <parameters>--from right_hand.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  <module>
+    <name>iCubSkinGui</name>
+    <parameters>--from left_upperarm.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  <module>
+    <name>iCubSkinGui</name>
+    <parameters>--from right_upperarm.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  
+  <!-- Connections -->
+  <connection>
+    <from>/icub/skin/left_hand</from>
+    <to>/skinGui/left_hand:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/icub/skin/right_hand</from>
+    <to>/skinGui/right_hand:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/skin/right_hand</from>
+    <to>/skinGui/right_hand:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/icub/skin/right_hand</from>
+    <to>/skinGui/right_hand:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+</application>
