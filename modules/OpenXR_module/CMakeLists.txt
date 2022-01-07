@@ -3,7 +3,7 @@
 # Authors: Giulio Romualdi <giulio.romualdi@iit.it>
 
 # set target name
-set(EXE_TARGET_NAME OculusRetargetingModule)
+set(EXE_TARGET_NAME OpenXRRetargetingModule)
 
 option(ENABLE_RPATH "Enable RPATH for this library" ON)
 option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
@@ -27,29 +27,21 @@ include(FindPackageHandleStandardArgs)
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
-  src/OculusModule.cpp
+  src/OpenXRModule.cpp
   )
 
 # set hpp files
 set(${EXE_TARGET_NAME}_HDR
-  include/OculusModule.hpp
+  include/OpenXRModule.hpp
   )
-
-set(${EXE_TARGET_NAME}_THRIFT_HDR
-  thrifts/TeleoperationCommands.thrift
-)
 
 # add include directories to the build.
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-# Application target calls
-yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_GEN_FILES ${${EXE_TARGET_NAME}_THRIFT_HDR})
-
 # add an executable to the project using the specified source files.
-add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR}
-    ${${EXE_TARGET_NAME}_THRIFT_GEN_FILES})
+add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
 
 if(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} PRIVATE
@@ -69,3 +61,6 @@ else(ENABLE_LOGGER)
 endif()
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
+
+install_ini_files(NAME WalkingTeleoperationOpenXR
+                  PARENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/config)
