@@ -434,8 +434,7 @@ bool VirtualizerModule::updateModule()
 
     if (std::fabs(Angles::shortestAngularDistance(playerYaw, m_oldPlayerYaw)) > 0.15)
     {
-        yError() << "Virtualizer misscalibrated or disconnected";
-        return false;
+        yWarning() << "Virtualizer misscalibrated or disconnected";
     }
 
     //get player height
