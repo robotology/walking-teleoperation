@@ -123,11 +123,11 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
     // values are important)
     std::vector<double> retargetingScaling;
     if (!YarpHelper::getVectorFromSearchable(
-            config, "human_to_robot_joint_anlges_scaling", retargetingScaling))
+            config, "human_to_robot_joint_angles_scaling", retargetingScaling))
     {
         yError() << m_logPrefix
                  << "initialization failed while reading "
-                    "human_to_robot_joint_anlges_scaling vector of the hand.";
+                    "human_to_robot_joint_angles_scaling vector of the hand.";
         return false;
     }
     if (!YarpHelper::checkSizeOfVector<double>(
