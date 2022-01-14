@@ -105,6 +105,9 @@
     <description>Run weight retargeting application</description>
     <node>localhost</node>
     <tag>WeightRetargetingModule</tag>
+    <dependencies>
+      <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
+    </dependencies>
   </module>
   
   <!-- Connections -->
