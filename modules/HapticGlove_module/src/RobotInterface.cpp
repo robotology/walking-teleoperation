@@ -261,7 +261,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     optionsRobotDevice.put("localPortPrefix", "/" + name + "/remoteControlBoard");
     yarp::os::Property& remoteControlBoardsOpts
         = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
-    remoteControlBoardsOpts.put("writeStrict", "on");
+    remoteControlBoardsOpts.put("writeStrict", "false");
 
     bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
     m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
