@@ -142,7 +142,7 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
 
     if (desiredValue.size() != m_numVibrotactileFeedback)
     {
-        yError() << m_logPrefix << "the size of the input desired vecotr [" << desiredValue.size()
+        yError() << m_logPrefix << "the size of the input desired vector [" << desiredValue.size()
                  << "] and the number of haptic force feedbacks [ " << m_numVibrotactileFeedback
                  << " ]are not equal.";
         return false;
