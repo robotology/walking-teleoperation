@@ -126,7 +126,7 @@
   <connection>
     <from>/WeightRetargeting/output:o</from>
     <to>/iFeelSuit/WearableActuatorsCommand/input:i</to>
-    <protocol>udp</protocol>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>
