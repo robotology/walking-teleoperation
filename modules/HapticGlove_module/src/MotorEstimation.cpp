@@ -12,17 +12,27 @@ using namespace HapticGlove;
 
 Estimator::Estimator(const double& dt, const Eigen::MatrixXd& R, const Eigen::MatrixXd& Q)
 {
-    // hard coded model
-    // reference issue: https://github.com/ami-iit/element_retargeting-from-human/issues/145
     m_n = 3; // joint/motor position, velocity, acceleration
     m_m = 3;
     m_p = 1;
 
     m_dt = dt;
 
+    /* Hard-coded continuous model. The model is discretized in the Kalman filter class.
+     * reference issue: https://github.com/ami-iit/element_retargeting-from-human/issues/145
+     * The model is :
+     * x_dot(t)= F * x(t) + G * w(t)
+     * x= [s, s_dot, s_ddot ]^T
+     *
+     *     |  0  1  0  |  --> highly certain, low covariance
+     * F = |  0  0  1  |  --> less certain, mid covariance
+     *     |  0  0  0  |  --> unknown, high covariance
+     *
+     * */
     m_F = Eigen::MatrixXd::Zero(m_n, m_n);
     m_F(0, 1) = 1.0;
     m_F(1, 2) = 1.0;
+
     m_G = Eigen::MatrixXd::Identity(m_n, m_m);
     m_H = Eigen::MatrixXd::Zero(m_p, m_n);
     m_H(0, 0) = 1.0;

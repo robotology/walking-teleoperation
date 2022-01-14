@@ -356,7 +356,7 @@ bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& 
         wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true);
+        m_iWearActuatorPort.write(false);
     }
     return true;
 }
@@ -387,7 +387,7 @@ bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& v
         wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true); // blocking the module
+        m_iWearActuatorPort.write(false);
     }
 
     return true;
@@ -418,7 +418,7 @@ bool GloveWearableImpl::setPalmVibrotactileValue(const int& value)
     wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
     wearableActuatorCommand.duration = 0;
 
-    m_iWearActuatorPort.write(true);
+    m_iWearActuatorPort.write(false);
     return true;
 }
 

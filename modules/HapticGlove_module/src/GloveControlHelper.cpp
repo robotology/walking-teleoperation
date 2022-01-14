@@ -219,11 +219,6 @@ const size_t GloveControlHelper::getNumOfHandJoints() const
 bool GloveControlHelper::close()
 {
     yInfo() << m_logPrefix << "trying to close";
-    if (!this->stopHapticFeedback())
-    {
-        yError() << m_logPrefix << "unable to close the glove control helper.";
-        return false;
-    }
 
     if (!m_pImp->close())
     {

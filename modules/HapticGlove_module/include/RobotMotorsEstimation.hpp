@@ -85,7 +85,7 @@ public:
 
     /**
      * get the estimation results
-     * @param estimatedValue expected value
+     * @param estimatedValue expected angle value
      * @param estimatedVelocity expected velocity
      * @param estimatedAcceleration expected acceleration
      * @param P covariance of the estimated state
@@ -97,7 +97,7 @@ public:
 
     /**
      * get the estimation results
-     * @param estimatedValue expected value
+     * @param estimatedValue expected angle value
      * @param estimatedVelocity expected velocity
      * @param estimatedAcceleration expected acceleration
      * @param P covariance of the estimated state
@@ -108,8 +108,8 @@ public:
                  Eigen::MatrixXd& P);
 
     /**
-     * get the estimation results of the expected motor/joint values
-     * @param estimatedValue expected value
+     * get the estimation results of the expected axis/joint values
+     * @param estimatedValue expected axis/joint value (angle)
      */
     bool getMotorValueInfo(std::vector<double>& estimatedValue);
 

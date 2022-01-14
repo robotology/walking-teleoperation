@@ -75,7 +75,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
     m_z = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
 
     m_x_hat = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
-    m_P.resize(std::pow(no_states_kf, 2));
+    m_P.resize(no_states_kf * no_states_kf);
 
     return true;
 }
@@ -133,9 +133,9 @@ bool Estimators::getInfo(Eigen::VectorXd& estimatedValues,
         estimatedValues.resize(m_numOfMotors, 0.0);
     }
 
-    if (P.rows() != m_numOfMotors && P.cols() == std::pow(m_n, 2))
+    if (P.rows() != m_numOfMotors && P.cols() == m_n * m_n)
     {
-        P.resize(m_numOfMotors, std::pow(m_n, 2));
+        P.resize(m_numOfMotors, m_n * m_n);
     }
 
     size_t i = 0;
@@ -174,9 +174,9 @@ bool Estimators::getInfo(std::vector<double>& estimatedValues,
         estimatedValues.resize(m_numOfMotors, 0.0);
     }
 
-    if (P.rows() != m_numOfMotors && P.cols() == std::pow(m_n, 2))
+    if (P.rows() != m_numOfMotors && P.cols() == m_n * m_n)
     {
-        P.resize(m_numOfMotors, std::pow(m_n, 2));
+        P.resize(m_numOfMotors, m_n * m_n);
     }
 
     size_t i = 0;

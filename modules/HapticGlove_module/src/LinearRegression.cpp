@@ -21,15 +21,10 @@ bool LinearRegression::LearnOneShot(const CtrlHelper::Eigen_Mat& inputData,
                                     CtrlHelper::Eigen_Mat& tetha)
 {
 
-    // TODEL
-    std::cout << "[LinearRegression::LearnOneShot()]" << std::endl;
-
     CtrlHelper::Eigen_Mat xT_x = (inputData.transpose() * inputData);
     std::cout << "xT_x: " << xT_x.rows() << xT_x.cols() << std::endl;
-    std::cout << "xT_x.determinant(): " << xT_x.determinant() << std::endl;
     Eigen::FullPivLU<CtrlHelper::Eigen_Mat> lu(xT_x);
     std::cout << "lu.rank(): " << lu.rank() << std::endl;
-    // TODEL
 
     CtrlHelper::Eigen_Mat coeff
         = ((inputData.transpose() * inputData).inverse()) * inputData.transpose(); // m X o

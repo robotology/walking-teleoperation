@@ -132,7 +132,6 @@ bool HapticGloveModule::close()
         }
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // wait for 100ms.
     return true;
 }
 
