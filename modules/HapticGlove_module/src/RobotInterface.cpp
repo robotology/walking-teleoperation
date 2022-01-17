@@ -205,42 +205,120 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
               / double(m_analogSensorsRawMaxBoundary(i) - m_analogSensorsRawMinBoundary(i));
     }
 
+    bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
+
+    m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
+    m_pidControlMode
+        = useVelocity ? yarp::dev::VOCAB_PIDTYPE_VELOCITY : yarp::dev::VOCAB_PIDTYPE_POSITION;
+
     // Devices
 
+    if (!openAnalogDevices(config, name, robot))
+    {
+        yError() << m_logPrefix << "unable to open and view analog devices and interfaces.";
+        return false;
+    }
+
+    if (!openRobotDevices(config, name, robot))
+    {
+        yError() << m_logPrefix << "unable to open and view robot devices and interfaces.";
+        return false;
+    }
+
+    // resize the vectors
+
+    // feedbacks
+    m_encoderPositionFeedbackInDegrees.resize(m_noActuatedAxis);
+    m_encoderPositionFeedbackInRadians.resize(m_noActuatedAxis);
+    m_encoderVelocityFeedbackInDegrees.resize(m_noActuatedAxis);
+    m_encoderVelocityFeedbackInRadians.resize(m_noActuatedAxis);
+
+    m_actuatedJointFeedbacksInRadian.resize(m_noActuatedJoints);
+
+    m_analogSensorFeedbackRaw.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
+    m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
+
+    m_motorCurrentFeedbacks.resize(m_noActuatedAxis);
+    m_motorPwmFeedbacks.resize(m_noActuatedAxis);
+    m_pidOutput.resize(m_noActuatedAxis);
+
+    // reference
+    m_referenceValues.resize(m_noActuatedAxis);
+    m_axisPositionReferences.resize(m_noActuatedAxis);
+    m_axisPositionDirectReferences.resize(m_noActuatedAxis);
+    m_axisVelocityReferences.resize(m_noActuatedAxis);
+    m_motorCurrentReferences.resize(m_noActuatedAxis);
+    m_motorPwmReferences.resize(m_noActuatedAxis);
+
+    // check if the robot is alive by checking the robot encoder values
+    bool okPosition = false;
+    for (int i = 0; i < 10 && !okPosition; i++)
+    {
+        okPosition = m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data());
+
+        if (!okPosition)
+            yarp::os::Time::delay(0.1);
+    }
+    if (!okPosition)
+    {
+        yError() << m_logPrefix << "unable to read encoders (position).";
+        return false;
+    }
+
+    // initialize the robot joint/axis configurations
+    double intializationTime
+        = config.check("robotInitializationTime", yarp::os::Value(5.0)).asDouble();
+
+    m_steadyStateCounterThreshold
+        = config.check("steadyStateCounterThreshold", yarp::os::Value(5)).asInt64();
+    m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asDouble();
+    m_steadyStateCounter = 0;
+    yInfo() << m_logPrefix << "initialization time [sec]:" << intializationTime
+            << ", steady state counter threshold [steps]:" << m_steadyStateCounterThreshold
+            << ", steady state threshold [rad]:" << m_steadyStateThreshold;
+
+    if (!initializeAxisValues(intializationTime))
+    {
+        yError() << m_logPrefix << "unable to initialize the axis values to their minimum values.";
+        return false;
+    }
+
+    if (!switchToControlMode(m_controlMode))
+    {
+        yError() << m_logPrefix << "Unable to switch the control mode";
+        return false;
+    }
+    // print information:
+    yInfo() << m_logPrefix << "actuated axis:" << m_actuatedAxisNames;
+    yInfo() << m_logPrefix << "actuated joints:" << m_actuatedJointList;
+    for (int i = 0; i < m_noActuatedJoints; i++)
+    {
+        const std::string& jointName = m_actuatedJointList[i];
+        const auto& element = m_jointInfoMap[jointName];
+        yInfo() << m_logPrefix << "actuated joint info" << jointName
+                << " ,use analog:" << element.useAnalog << " ,index: " << element.index
+                << " ,scale:" << element.scale;
+    }
+    yInfo() << m_logPrefix << "m_noAllAxis: " << m_noAllAxis;
+    yInfo() << m_logPrefix << "m_noAllJoints: " << m_noAllJoints;
+    yInfo() << m_logPrefix << "m_allAxisNames: " << m_allAxisNames;
+    yInfo() << m_logPrefix << "m_allJointNames: " << m_allJointNames;
+
+    return true;
+}
+
+bool RobotInterface::openRobotDevices(const yarp::os::Searchable& config,
+                                      const std::string& name,
+                                      const std::string& robot)
+{
+    // get the info from the config file
     // get all controlled icub parts from the resource finder
     std::vector<std::string> iCubParts;
     if (!YarpHelper::getVectorFromSearchable(config, "remote_control_boards", iCubParts))
     {
         yError() << m_logPrefix
                  << "unable to get remote_control_boards vector of strings from config file.";
-        return false;
-    }
-
-    // get all icub senosry parts from the resource finder
-    std::string iCubSensorPart;
-
-    if (!YarpHelper::getStringFromSearchable(config, "remote_sensor_boards", iCubSensorPart))
-    {
-        yError() << m_logPrefix << "unable to find remote_sensor_boards into config file.";
-        return false;
-    }
-
-    // open the iAnalogsensor YARP device
-    yarp::os::Property optionsAnalogDevice;
-
-    optionsAnalogDevice.put("device", "analogsensorclient");
-    optionsAnalogDevice.put("local", "/" + robot + "/" + iCubSensorPart + "/analog:i");
-    optionsAnalogDevice.put("remote", "/" + robot + "/" + iCubSensorPart + "/analog:o");
-
-    if (!m_analogDevice.open(optionsAnalogDevice))
-    {
-        yError() << m_logPrefix << "could not open analogSensorClient object.";
-        return false;
-    }
-
-    if (!m_analogDevice.view(m_analogSensorInterface) || !m_analogSensorInterface)
-    {
-        yError() << m_logPrefix << "cannot obtain IAnalogSensor interface";
         return false;
     }
 
@@ -262,11 +340,6 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     yarp::os::Property& remoteControlBoardsOpts
         = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
     remoteControlBoardsOpts.put("writeStrict", "false");
-
-    bool useVelocity = config.check("useVelocity", yarp::os::Value(false)).asBool();
-    m_controlMode = useVelocity ? VOCAB_CM_VELOCITY : VOCAB_CM_POSITION_DIRECT;
-    m_pidControlMode
-        = useVelocity ? yarp::dev::VOCAB_PIDTYPE_VELOCITY : yarp::dev::VOCAB_PIDTYPE_POSITION;
 
     // open the device
     if (!m_robotDevice.open(optionsRobotDevice) && m_isMandatory)
@@ -338,10 +411,10 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     }
 
     // set the reference velocity for the position control mode
-    m_refenceVelocityForPositionControl
+    double refenceVelocityForPositionControl
         = config.check("referenceVelocityForPositionControl", yarp::os::Value(10.0)).asDouble();
 
-    yarp::sig::Vector dummy(m_noActuatedAxis, m_refenceVelocityForPositionControl);
+    yarp::sig::Vector dummy(m_noActuatedAxis, refenceVelocityForPositionControl);
 
     if (!m_positionInterface->setRefSpeeds(dummy.data()) && m_isMandatory)
     {
@@ -350,85 +423,40 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    // resize the vectors
+    return true;
+}
 
-    // feedbacks
-    m_encoderPositionFeedbackInDegrees.resize(m_noActuatedAxis);
-    m_encoderPositionFeedbackInRadians.resize(m_noActuatedAxis);
-    m_encoderVelocityFeedbackInDegrees.resize(m_noActuatedAxis);
-    m_encoderVelocityFeedbackInRadians.resize(m_noActuatedAxis);
+bool RobotInterface::openAnalogDevices(const yarp::os::Searchable& config,
+                                       const std::string& name,
+                                       const std::string& robot)
+{
+    // get all icub senosry parts from the resource finder
+    std::string iCubSensorPart;
 
-    m_actuatedJointFeedbacksInRadian.resize(m_noActuatedJoints);
-
-    m_analogSensorFeedbackRaw.resize(m_noAnalogSensor);
-    m_analogSensorFeedbackInDegrees.resize(m_noAnalogSensor);
-    m_analogSensorFeedbackInRadians.resize(m_noAnalogSensor);
-
-    m_motorCurrentFeedbacks.resize(m_noActuatedAxis);
-    m_motorPwmFeedbacks.resize(m_noActuatedAxis);
-    m_pidOutput.resize(m_noActuatedAxis);
-
-    // reference
-    m_referenceValues.resize(m_noActuatedAxis);
-    m_axisPositionReferences.resize(m_noActuatedAxis);
-    m_axisPositionDirectReferences.resize(m_noActuatedAxis);
-    m_axisVelocityReferences.resize(m_noActuatedAxis);
-    m_motorCurrentReferences.resize(m_noActuatedAxis);
-    m_motorPwmReferences.resize(m_noActuatedAxis);
-
-    // check if the robot is alive
-    bool okPosition = false;
-    for (int i = 0; i < 10 && !okPosition; i++)
+    if (!YarpHelper::getStringFromSearchable(config, "remote_sensor_boards", iCubSensorPart))
     {
-        okPosition = m_encodersInterface->getEncoders(m_encoderPositionFeedbackInDegrees.data());
-
-        if (!okPosition)
-            yarp::os::Time::delay(0.1);
-    }
-    if (!okPosition)
-    {
-        yError() << m_logPrefix << "unable to read encoders (position).";
+        yError() << m_logPrefix << "unable to find remote_sensor_boards into config file.";
         return false;
     }
 
-    double intializationTime
-        = config.check("robotInitializationTime", yarp::os::Value(5.0)).asDouble();
+    // open the iAnalogsensor YARP device
+    yarp::os::Property optionsAnalogDevice;
 
-    m_steadyStateCounterThreshold
-        = config.check("steadyStateCounterThreshold", yarp::os::Value(5)).asInt64();
-    m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asDouble();
-    m_steadyStateCounter = 0;
-    yInfo() << m_logPrefix << "initialization time [sec]:" << intializationTime
-            << ", steady state counter threshold [steps]:" << m_steadyStateCounterThreshold
-            << ", steady state threshold [rad]:" << m_steadyStateThreshold;
+    optionsAnalogDevice.put("device", "analogsensorclient");
+    optionsAnalogDevice.put("local", "/" + name + "/" + iCubSensorPart + "/analog:i");
+    optionsAnalogDevice.put("remote", "/" + robot + "/" + iCubSensorPart + "/analog:o");
 
-    if (!initializeAxisValues(intializationTime))
+    if (!m_analogDevice.open(optionsAnalogDevice))
     {
-        yError() << m_logPrefix << "unable to initialize the axis values to their minimum values.";
+        yError() << m_logPrefix << "could not open analogSensorClient object.";
         return false;
     }
 
-    if (!switchToControlMode(m_controlMode))
+    if (!m_analogDevice.view(m_analogSensorInterface) || !m_analogSensorInterface)
     {
-        yError() << m_logPrefix << "Unable to switch the control mode";
+        yError() << m_logPrefix << "cannot obtain IAnalogSensor interface";
         return false;
     }
-    // print information:
-    yInfo() << m_logPrefix << "actuated axis:" << m_actuatedAxisNames;
-    yInfo() << m_logPrefix << "actuated joints:" << m_actuatedJointList;
-    for (int i = 0; i < m_noActuatedJoints; i++)
-    {
-        const std::string& jointName = m_actuatedJointList[i];
-        const auto& element = m_jointInfoMap[jointName];
-        yInfo() << m_logPrefix << "actuated joint info" << jointName
-                << " ,use analog:" << element.useAnalog << " ,index: " << element.index
-                << " ,scale:" << element.scale;
-    }
-    yInfo() << m_logPrefix << "m_noAllAxis: " << m_noAllAxis;
-    yInfo() << m_logPrefix << "m_noAllJoints: " << m_noAllJoints;
-    yInfo() << m_logPrefix << "m_allAxisNames: " << m_allAxisNames;
-    yInfo() << m_logPrefix << "m_allJointNames: " << m_allJointNames;
-
     return true;
 }
 

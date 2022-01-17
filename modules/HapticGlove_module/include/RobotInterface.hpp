@@ -143,9 +143,6 @@ class HapticGlove::RobotInterface
 
     yarp::dev::PidControlTypeEnum m_pidControlMode; /**< Used pid control mode. */
 
-    double m_refenceVelocityForPositionControl; /**< reference velocity for the position control
-                                                   mode. */
-
     double m_steadyStateThreshold;
 
     size_t m_steadyStateCounter;
@@ -247,11 +244,11 @@ class HapticGlove::RobotInterface
 
 public:
     /**
-     * Configure the helper
+     * Configure the robot interface
      * @param config confifuration options
      * @param name name of the robot
      * @param rightHand if the right hand of the robot is used
-     * @param isMandatory if true the helper will return an error if there is a
+     * @param isMandatory if true the robot interface will return an error if there is a
      * problem in the configuration phase
      * @return true / false in case of success / failure
      */
@@ -259,6 +256,22 @@ public:
                    const std::string& name,
                    const bool& rightHand,
                    const bool& isMandatory);
+
+    /**
+     * Open robot devices
+     * @return true / false in case of success / failure
+     */
+    bool openRobotDevices(const yarp::os::Searchable& config,
+                          const std::string& name,
+                          const std::string& robot);
+
+    /**
+     * Open analog devices
+     * @return true / false in case of success / failure
+     */
+    bool openAnalogDevices(const yarp::os::Searchable& config,
+                           const std::string& name,
+                           const std::string& robot);
 
     /**
      * Update the time stamp
