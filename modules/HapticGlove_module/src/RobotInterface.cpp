@@ -339,7 +339,7 @@ bool RobotInterface::openRobotDevices(const yarp::os::Searchable& config,
     optionsRobotDevice.put("localPortPrefix", "/" + name + "/remoteControlBoard");
     yarp::os::Property& remoteControlBoardsOpts
         = optionsRobotDevice.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
-    remoteControlBoardsOpts.put("writeStrict", "false");
+    remoteControlBoardsOpts.put("writeStrict", "off");
 
     // open the device
     if (!m_robotDevice.open(optionsRobotDevice) && m_isMandatory)
