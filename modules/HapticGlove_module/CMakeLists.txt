@@ -41,12 +41,13 @@ set(${EXE_TARGET_NAME}_HDR
   include/ControlHelper.hpp
   )
 
-# add include directories to the build.
-include_directories(
-  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # add an executable to the project using the specified source files.
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR})
+
+# add include directories to the build.
+target_include_directories(${EXE_TARGET_NAME} PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(${EXE_TARGET_NAME}_LINKED_LIBS
     ${YARP_LIBRARIES}
