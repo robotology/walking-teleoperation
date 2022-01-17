@@ -76,9 +76,7 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     m_data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
 }
 
-Teleoperation::Logger::~Logger()
-{
-}
+Teleoperation::Logger::~Logger() = default;
 
 bool Teleoperation::Logger::openLogger()
 {
@@ -230,7 +228,7 @@ bool Teleoperation::Logger::updateData()
         m_data.robotAxisCovReferencesKf);
 
     m_teleoperation.m_robotController->getEstimatedJointValuesKf(m_data.robotJointsExpectedKf,
-                                                              m_data.robotJointsFeedbackKf);
+                                                                 m_data.robotJointsFeedbackKf);
     // human
     m_teleoperation.m_humanGlove->getHandJointAngles(m_data.humanJointValues);
 

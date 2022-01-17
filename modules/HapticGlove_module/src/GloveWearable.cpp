@@ -26,9 +26,7 @@ GloveWearableImpl::GloveWearableImpl(const size_t& numFingers,
     m_logPrefix = "GloveWearableImpl::";
 }
 
-GloveWearableImpl::~GloveWearableImpl()
-{
-}
+GloveWearableImpl::~GloveWearableImpl() = default;
 
 bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
                                   const std::string& name,

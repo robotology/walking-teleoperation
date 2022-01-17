@@ -19,9 +19,7 @@ Estimators::Estimators(const int noMotors)
     m_isInitialized = false;
 }
 
-Estimators::~Estimators()
-{
-}
+Estimators::~Estimators() = default;
 
 bool Estimators::configure(const yarp::os::Searchable& config, const std::string& name)
 {

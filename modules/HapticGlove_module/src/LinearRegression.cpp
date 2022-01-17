@@ -6,9 +6,7 @@ LinearRegression::LinearRegression()
 {
 }
 
-LinearRegression::~LinearRegression()
-{
-}
+LinearRegression::~LinearRegression() = default;
 
 bool LinearRegression::Initialize()
 {
@@ -26,10 +24,11 @@ bool LinearRegression::LearnOneShot(const CtrlHelper::Eigen_Mat& inputData,
     Eigen::FullPivLU<CtrlHelper::Eigen_Mat> lu(xT_x);
     std::cout << "lu.rank(): " << lu.rank() << std::endl;
 
-    CtrlHelper::Eigen_Mat coeff
+    CtrlHelper::Eigen_Mat coeff;
+    coeff.noalias()
         = ((inputData.transpose() * inputData).inverse()) * inputData.transpose(); // m X o
 
-    tetha = coeff * ouputData; // m X 1
+    tetha.noalias() = coeff * ouputData; // m X 1
 
     return true;
 }

@@ -21,7 +21,7 @@ HapticGloveModule::HapticGloveModule()
     m_logPrefix = "HapticGloveModule:: ";
 };
 
-HapticGloveModule::~HapticGloveModule(){};
+HapticGloveModule::~HapticGloveModule() = default;
 
 bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
 {

@@ -25,9 +25,7 @@ Teleoperation::Teleoperation()
     m_logPrefix = "Teleoperation::";
 }
 
-Teleoperation::~Teleoperation()
-{
-}
+Teleoperation::~Teleoperation() = default;
 
 bool Teleoperation::configure(const yarp::os::Searchable& config,
                               const std::string& name,
@@ -375,8 +373,10 @@ bool Teleoperation::close()
         return false;
     }
 
+    //  in order to be sure the stop haptic command is sent before closing the module, otherwise the
+    //  glove may continue to provide the haptic feedback according to the last sent command.
     std::this_thread::sleep_for(
-        std::chrono::milliseconds(10)); // wait for 10 ms to send the stop command.
+        std::chrono::milliseconds(50)); // wait for 50 ms to send the stop command.
 
     if (!m_robotController->controlHelper()->close())
     {

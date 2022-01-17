@@ -60,9 +60,7 @@ Estimator::Estimator(const Estimator& O)
     m_kf = std::make_unique<KalmanFilter>(m_dt, m_n, m_p, m_m, m_F, m_G, m_H, m_R, m_Q);
 }
 
-Estimator::~Estimator()
-{
-}
+Estimator::~Estimator() = default;
 
 bool Estimator::initialize(const Eigen::MatrixXd& z0)
 {

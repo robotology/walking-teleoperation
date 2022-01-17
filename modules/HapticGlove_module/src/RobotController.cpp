@@ -297,7 +297,7 @@ bool RobotController::setJointReferences(const std::vector<double>& jointReferen
 
 bool RobotController::computeControlSignals()
 {
-    m_data->axisValueReferencesEigen
+    m_data->axisValueReferencesEigen.noalias()
         = m_controlCoeff * (m_data->jointValueReferencesEigen - m_Bias);
 
     return this->setAxisReferences(m_data->axisValueReferencesEigen);
@@ -318,7 +318,7 @@ void RobotController::getJointExpectedValues(std::vector<double>& jointsValuesEx
     this->getAxisValueFeedbacks(m_data->axisValueFeedbacksStd);
     m_data->axisValueFeedbacksEigen = CtrlHelper::toEigenVector(m_data->axisValueFeedbacksStd);
 
-    m_data->jointValuesExpectedEigen = m_A * m_data->axisValueFeedbacksEigen + m_Bias;
+    m_data->jointValuesExpectedEigen.noalias() = m_A * m_data->axisValueFeedbacksEigen + m_Bias;
     CtrlHelper::toStdVector(m_data->jointValuesExpectedEigen, m_data->jointValuesExpectedStd);
     jointsValuesExpected = m_data->jointValuesExpectedStd;
 }
@@ -451,7 +451,8 @@ bool RobotController::trainCouplingMatrix()
     std::cout << m_logPrefix << "[axes-joints coupling] A (coupling) matrix:\n" << m_A << std::endl;
     std::cout << m_logPrefix << "[axes-joints coupling] B (bias) vector:\n" << m_Bias << std::endl;
 
-    m_controlCoeff = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
+    m_controlCoeff.noalias()
+        = ((m_A.transpose() * m_Q * m_A + m_R).inverse()) * m_A.transpose() * m_Q;
 
     std::cout << " QP control coefficient matrix:\n" << m_controlCoeff << std::endl;
 
