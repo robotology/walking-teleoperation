@@ -6,6 +6,13 @@
 set(EXE_TARGET_NAME HapticGloveModule)
 
 
+OPTION(EIGEN_RUNTIME_NO_MALLOC "If ON, it can assert in case of runtime allocation" OFF)
+
+IF(EIGEN_RUNTIME_NO_MALLOC)
+  MESSAGE(STATUS "Option EIGEN_RUNTIME_NO_MALLOC on.")
+  ADD_DEFINITIONS(-DEIGEN_RUNTIME_NO_MALLOC)
+ENDIF(EIGEN_RUNTIME_NO_MALLOC)
+
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
