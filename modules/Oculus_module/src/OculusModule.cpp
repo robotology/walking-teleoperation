@@ -161,7 +161,8 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
 
     if (m_skipJoypad && !m_useVirtualizer)
     {
-        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot be true at the same time.";
+        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot "
+                    "be true at the same time.";
         return false;
     }
 
@@ -218,27 +219,27 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
             {
                 if (m_useSenseGlove && m_useVirtualizer)
                 {
-                    yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                                  "to the PolyDriver object. Continuing anyway since we are using the virtualizer and the gloves."
+                    yWarning() << "[OculusModule::configureJoypad] Unable to attach "
+                                  "JoypadController interface "
+                                  "to the PolyDriver object. Continuing anyway since we are using "
+                                  "the virtualizer and the gloves."
                                   "Set skip_joypad to true to avoid this warning.";
-                }
-                else
+                } else
                 {
-                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController "
+                                "interface "
                                 "to the PolyDriver object";
                     return false;
                 }
             }
-        }
-        else
+        } else
         {
             if (m_useSenseGlove && m_useVirtualizer)
             {
                 yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
                               "Continuing anyway since we are using the virtualizer and the gloves."
                               "Set skip_joypad to true to avoid this warning.";
-            }
-            else
+            } else
             {
                 yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
                 return false;
@@ -1224,7 +1225,7 @@ double OculusModule::deadzone(const double& input)
 bool OculusModule::openLogger()
 {
 #ifdef ENABLE_LOGGER
-    std::string currentTime = getTimeDateMatExtension();
+    std::string currentTime = YarpHelper::getTimeDateMatExtension();
     std::string fileName = "OculusModule" + currentTime + "log.mat";
 
     m_logger = XBot::MatLogger2::MakeLogger(fileName);

@@ -5,25 +5,6 @@
 # set target name
 set(EXE_TARGET_NAME OculusRetargetingModule)
 
-option(ENABLE_RPATH "Enable RPATH for this library" ON)
-option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
-
-mark_as_advanced(ENABLE_RPATH)
-include(AddInstallRPATHSupport)
-add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
-  LIB_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-  INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}"
-  DEPENDS ENABLE_RPATH
-  USE_LINK_PATH)
-
-# Find required package
-if(ENABLE_LOGGER)
-  add_definitions(-DENABLE_LOGGER)
-  find_package(matlogger2 REQUIRED)
-endif(ENABLE_LOGGER)
-include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
-include(FindPackageHandleStandardArgs)
-
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
   src/main.cpp
@@ -67,6 +48,7 @@ if(ENABLE_LOGGER)
     ${iDynTree_LIBRARIES}
     ctrlLib
     UtilityLibrary
+    Eigen3::Eigen
     matlogger2::matlogger2)
 else(ENABLE_LOGGER)
   target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
@@ -74,6 +56,7 @@ else(ENABLE_LOGGER)
     ${iDynTree_LIBRARIES}
     ctrlLib
     UtilityLibrary
+    Eigen3::Eigen
 )
 endif()
 
