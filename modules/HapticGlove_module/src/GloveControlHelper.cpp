@@ -158,8 +158,9 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
 }
 bool GloveControlHelper::stopPalmVibrotactileFeedback()
 {
-    return m_pImp->setPalmVibrotactileValue(
-        124); // to turn off set `124`, for more details check the documentation.
+    return m_pImp->setPalmVibrotactileValue(to_underlying(
+        HapticGlove::SenseGlove::ThumperCmd::TurnOff)); // to turn off set `124`, for more details
+                                                        // check the documentation.
 }
 
 bool GloveControlHelper::stopVibrotactileFeedback()
