@@ -27,13 +27,13 @@
 
   <module>
     <name>iCubSkinGui</name>
-    <parameters>--from left_upperarm.ini</parameters>
+    <parameters>--from left_arm.ini</parameters>
     <node>localhost</node>
   </module>
 
   <module>
     <name>iCubSkinGui</name>
-    <parameters>--from right_upperarm.ini</parameters>
+    <parameters>--from right_arm.ini</parameters>
     <node>localhost</node>
   </module>
 
@@ -52,14 +52,14 @@
   </connection>
 
   <connection>
-    <from>/icub/skin/right_hand</from>
-    <to>/skinGui/right_hand:i</to>
+    <from>/icub/skin/left_arm</from>
+    <to>/skinGui/left_arm:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
   
   <connection>
-    <from>/icub/skin/right_hand</from>
-    <to>/skinGui/right_hand:i</to>
+    <from>/icub/skin/right_arm</from>
+    <to>/skinGui/right_arm:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
   
