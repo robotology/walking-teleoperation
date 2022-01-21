@@ -354,7 +354,8 @@ bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& 
         wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true);
+        m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
+                                         // set to true to avoid the data loss for all actuators
     }
     return true;
 }
@@ -385,7 +386,8 @@ bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& v
         wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true);
+        m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
+                                         // set to true to avoid the data loss for all actuators
     }
 
     return true;
