@@ -100,7 +100,7 @@
     <!--Weight retargeting-->
   <module>
     <name>WeightRetargetingModule</name>
-    <parameters>--from WeightRetargetingElbows.ini</parameters>
+    <parameters>--from WeightRetargeting_iCub3.ini</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run weight retargeting application</description>
     <node>localhost</node>
