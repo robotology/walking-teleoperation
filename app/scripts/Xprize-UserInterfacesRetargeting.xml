@@ -97,17 +97,16 @@
   </module>
 
   
-    <!--iFeelSuit Skin to multi-haptic application-->
+    <!--Weight retargeting-->
   <module>
-    <name>iFeelSuitSkinActuatorsTestApplication</name>
+    <name>WeightRetargetingModule</name>
+    <parameters>--from WeightRetargeting_iCub3.ini</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
-    <description>Run iFeelSuit sking application</description>
+    <description>Run weight retargeting application</description>
     <node>localhost</node>
-    <tag>iFeelSuit-SkinActuatorsTestApplication</tag>
+    <tag>WeightRetargetingModule</tag>
     <dependencies>
       <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
-      <port timeout="11.0">/icub/skin/left_upperarm</port>
-      <port timeout="11.0">/icub/skin/right_upperarm</port>
     </dependencies>
   </module>
   
@@ -121,6 +120,12 @@
   <connection>
     <from>/SRanipalModule/VR/rpc:o</from>
     <to>/joypadDevice/Oculus/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/WeightRetargeting/output:o</from>
+    <to>/iFeelSuit/WearableActuatorsCommand/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
