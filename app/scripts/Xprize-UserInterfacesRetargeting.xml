@@ -17,7 +17,7 @@
     <parameters>--config HapticGlove.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run SenseGlove Wearable Device</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>SenseGlove</tag>
   </module>
   
@@ -37,19 +37,10 @@
     <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run iFeelSuit and Multi Haptic driver</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>iFeelSuitMultiHaptic</tag>
   </module>
   
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config iFeelSuit.xml</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run iFeel Suit Wearable Device</description>
-    <node>localhost</node>
-    <tag>iFeelSuit</tag>
-  </module>
-
   <module>
     <name>yarp-openvr-trackers</name>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
@@ -63,7 +54,7 @@
     <parameters>--config transformServer_to_iwear.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run transform server Wearable Device</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>transformServerWearableDevice</tag>
     <dependencies>
       <port timeout="11.0">/transformServer/transforms:o</port>
@@ -75,7 +66,7 @@
     <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
       <port timeout="11.0">/Wearable/OpenXRTransform/data:o</port>
@@ -88,7 +79,7 @@
     <parameters>--from HumanStateVisualizer_iCub3_openvr_ifeel.ini</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
       <port timeout="11.0">/iCub/RobotStateWrapper/state:o</port>
@@ -103,7 +94,7 @@
     <parameters>--from WeightRetargeting_iCub3.ini</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run weight retargeting application</description>
-    <node>localhost</node>
+    <node>icub-console-gui</node>
     <tag>WeightRetargetingModule</tag>
     <dependencies>
       <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>

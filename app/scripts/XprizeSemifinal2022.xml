@@ -11,31 +11,39 @@
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
-<application>
-   <name>transformServer</name>
- </application>
+  <application>
+    <name>transformServer</name>
+  </application>
 
-<application>
-   <name>Xprize-UserInterfacesRetargeting</name>
- </application>
+  <application>
+    <name>Xprize-UserInterfacesRetargeting</name>
+  </application>
  
-<application>
+  <application>
     <name>Xprize-AudioRetargeting</name>
+  </application>
+  
+  <application>
+    <name>Xprize-OperatorCommunications</name>
   </application>
 
   <application>
     <name>Xprize-VisualRetargeting</name>
   </application>
+  
+  <application>
+    <name>Face_Expressions</name>
+  </application>
+  
+  <application>
+    <name>Xprize-PsychophysiologicalRetargeting</name>
+  </application>
 
   <application>
     <name>Xprize-KynDynRetargeting</name>
   </application>
-
-  <application>
-    <name>Xprize-PsychophysiologicalRetargeting</name>
-  </application>
   
-    <application>
+  <application>
     <name>Xprize-SkinVisualization</name>
   </application>
 
