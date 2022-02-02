@@ -283,12 +283,27 @@ bool Teleoperation::run()
     // tactile feedback
     std::vector<double> vibrotactileFeedback;
     std::vector<bool> areFingersInContact;
+    std::vector<bool> fingertipSkinsWork;
 
     m_robotSkin->vibrotactileFeedback(vibrotactileFeedback);
     m_robotSkin->areFingersInContact(areFingersInContact);
+    m_robotSkin->doesTactileSensorsWork(fingertipSkinsWork);
+
     bool x = areFingersInContact[4] || areFingersInContact[5];
     // areFingersInContact[4] = x;
     // areFingersInContact[5] = x;
+
+    for (int i = 0; i < m_data.humanVibrotactileFeedbacks.size(); i++)
+    {
+        if (!fingertipSkinsWork[i])
+        {
+            areFingersInContact[i]
+                = true; // so that we give force feedback only based on kinesthetic data
+            vibrotactileFeedback[i]
+                = m_data.humanVibrotactileFeedbacks[i]; // use kinesthetic data to give feedback to
+                                                        // the user
+        }
+    }
 
     std::transform(m_data.humanForceFeedbacks.begin(),
                    m_data.humanForceFeedbacks.end(),

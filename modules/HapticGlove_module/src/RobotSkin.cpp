@@ -36,6 +36,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_totalNoTactile = 0;
 
     m_areFingersInContact.resize(m_noFingers, false);
+    m_tactileSensorsAreWorking.resize(m_noFingers, false);
 
     for (const auto& finger : humanFingerNameList)
     {
@@ -151,20 +152,36 @@ bool RobotSkin::collectSkinDataForCalibration()
 
 bool RobotSkin::computeCalibrationParamters()
 {
+    int counter = 0;
     for (auto& data : m_fingersTactileData)
     {
+        bool tactileSenorsWork = false;
         for (size_t i = 0; i < data.noTactileSensors; i++)
         {
             Eigen::VectorXd vec = data.collectedTactileData.col(i);
             data.biasTactileSensor[i] = vec.mean();
             data.stdTactileSensor[i]
                 = std::sqrt(((vec.array() - vec.mean()).square().sum()) / vec.size());
+            // if a tactile senors does not work its std is zero
+            // normally either all or none of the tactile sensors of a fingertip work
+            // so if at least one tactile sensor works, the skin works
+            tactileSenorsWork |= (data.stdTactileSensor[i] > 0.0001);
         }
         yInfo() << m_logPrefix << data.fingerName << ": mean of tactile sensors"
                 << data.biasTactileSensor;
         yInfo() << m_logPrefix << data.fingerName << ": standard deviation of tactile sensors"
                 << data.stdTactileSensor;
+        if (counter > m_noFingers)
+        {
+            yError() << m_logPrefix
+                     << " the size of m_fingersTactileData is more the number of fingers: "
+                     << counter;
+            return false;
+        }
+        m_tactileSensorsAreWorking[counter] = tactileSenorsWork;
+        counter++;
     }
+    yInfo() << m_logPrefix << "tactile senors work: " << m_tactileSensorsAreWorking;
     return true;
 }
 
@@ -256,4 +273,9 @@ void RobotSkin::vibrotactileFeedback(std::vector<double>& fingersVibrotactileFee
 const size_t RobotSkin::getNumOfTactileFeedbacks()
 {
     return m_totalNoTactile;
+}
+
+void RobotSkin::doesTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking)
+{
+    tactileSensorsAreWorking = m_tactileSensorsAreWorking;
 }

@@ -96,6 +96,7 @@ private:
     size_t m_totalNoTactile;
     std::vector<fingertipTactileData> m_fingersTactileData;
     std::vector<bool> m_areFingersInContact;
+    std::vector<bool> m_tactileSensorsAreWorking;
 
     //    RobotInterface& m_robotInterface; /**< robot control interface */
 
@@ -129,6 +130,8 @@ public:
     void vibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback);
 
     const size_t getNumOfTactileFeedbacks();
+
+    void doesTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking);
 };
 
 #endif // ROBOT_SKIN_HPP
