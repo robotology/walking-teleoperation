@@ -963,26 +963,36 @@ void RobotInterface::fingerRawTactileFeedbacks(std::vector<double>& fingertipTac
 bool RobotInterface::close()
 {
     yInfo() << m_logPrefix << "closing.";
+    bool ok = true;
     if (!switchToControlMode(VOCAB_CM_POSITION))
-        yError() << m_logPrefix << "Unable to switch in position control.";
-    return false;
+    {
+        yWarning() << m_logPrefix << "Unable to switch in position control.";
+        ok &= false;
+    }
+
+    if (!initializeAxisValues(3))
+    {
+        yError() << m_logPrefix << "unable to initialize the axis values to their minimum values.";
+        ok &= false;
+    }
 
     if (!m_robotDevice.close())
     {
-        yError() << m_logPrefix << "Unable to close the remotecontrolboardremepper device.";
-        return false;
+        yWarning() << m_logPrefix << "Unable to close the remotecontrolboardremepper device.";
+        ok &= false;
     }
 
     if (!m_analogDevice.close())
     {
-        yError() << m_logPrefix << "Unable to close the analogsensorclient device.";
-        return false;
+        yWarning() << m_logPrefix << "Unable to close the analogsensorclient device.";
+        ok &= false;
     }
 
     if (!m_tactileSensorDevice.close())
     {
-        yError() << m_logPrefix << "Unable to close the tactile sensor analogsensorclient device.";
-        return false;
+        yWarning() << m_logPrefix
+                   << "Unable to close the tactile sensor analogsensorclient device.";
+        ok &= false;
     }
 
     m_timedInterface = nullptr;
@@ -998,8 +1008,8 @@ bool RobotInterface::close()
     m_pidInterface = nullptr;
     m_tactileSensorInterface = nullptr;
 
-    yInfo() << m_logPrefix << "closed correctly.";
-    return true;
+    yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
+    return ok;
 }
 
 const int RobotInterface::getNumberOfActuatedAxis() const

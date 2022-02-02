@@ -118,8 +118,7 @@ bool HapticGloveModule::close()
     {
         if (!m_leftHand->close())
         {
-            yError() << m_logPrefix << "unable to close left hand teleoperation.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close left hand teleoperation.";
         }
     }
 
@@ -127,8 +126,7 @@ bool HapticGloveModule::close()
     {
         if (!m_rightHand->close())
         {
-            yError() << m_logPrefix << "unable to close right hand teleoperation.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close right hand teleoperation.";
         }
     }
 

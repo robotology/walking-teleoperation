@@ -337,6 +337,8 @@ bool Teleoperation::Logger::closeLogger()
 
 #ifdef ENABLE_LOGGER
     m_logger->flush_available_data();
+    //    m_logger->~MatLogger2();
+    m_logger = nullptr;
 #endif
     yInfo() << m_logPrefix << "logger is closing.";
     yInfo() << m_logPrefix << "log file is saved in: " << m_logFileName;

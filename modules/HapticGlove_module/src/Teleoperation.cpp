@@ -419,20 +419,20 @@ bool Teleoperation::close()
 {
     // close the logger.
     yInfo() << m_logPrefix << "trying to close.";
+    bool ok = true;
 
     if (m_enableLogger)
     {
         if (!m_loggerLeftHand->closeLogger())
         {
-            yError() << m_logPrefix << "unable to close the logger.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close the logger.";
+            ok &= false;
         }
     }
     if (!m_humanGlove->stopHapticFeedback())
     {
-        yError() << m_logPrefix
-                 << "unable to stop the haptic glove from providing feedback to the user.";
-        return false;
+        yWarning() << m_logPrefix << "cannot stop haptic feedback.";
+        ok &= false;
     }
 
     //  in order to be sure the stop haptic command is sent before closing the module, otherwise the
@@ -442,25 +442,25 @@ bool Teleoperation::close()
 
     if (!m_robotController->controlHelper()->close())
     {
-        yError() << m_logPrefix << "unable to close the robot controller.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the robot controller.";
+        ok &= false;
     }
 
     if (!m_humanGlove->close())
     {
-        yError() << m_logPrefix << "unable to close the human and glove control helper.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the human and glove control helper.";
+        ok &= false;
     }
 
     if (!m_retargeting->close())
     {
-        yError() << m_logPrefix << "unable to close the retargeting.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the retargeting.";
+        ok &= false;
     }
 
-    yInfo() << m_logPrefix << "closed successfully.";
+    yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
 
-    return true;
+    return ok;
 }
 
 void Teleoperation::setEndOfConfigurationTime(const double& time)
