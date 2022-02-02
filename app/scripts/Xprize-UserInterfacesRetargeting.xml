@@ -76,7 +76,7 @@
   
   <module>
     <name>HumanStateVisualizer</name>
-    <parameters>--from HumanStateVisualizer_iCub3_openvr_ifeel.ini</parameters>
+    <parameters>--from HumanStateVisualizer_iCub3_openxr_ifeel.ini</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
     <node>icub-console-gui</node>
