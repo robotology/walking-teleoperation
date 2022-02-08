@@ -13,6 +13,8 @@
 
 void FaceExpressionsRetargeting::sendFaceExpression(const std::string &part, const std::string &emotion)
 {
+    // See https://robotology.github.io/robotology-documentation/doc/html/group__icub__faceExpressions.html
+    //for the set of expressions and messages currently supported
     if (emotion != m_currentExpressions[part])
     {
         yarp::os::Bottle cmd, reply;
