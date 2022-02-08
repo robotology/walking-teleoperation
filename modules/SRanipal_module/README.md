@@ -1,6 +1,6 @@
 # SRanipal_module
 
-The `SRanipal_module` commands the robot face expressions and gaze mimicking the operator's expressions. It exploits the (VIVE Eye and Facial Tracking SDK)[https://developer.vive.com/resources/vive-sense/sdk/vive-eye-and-facial-tracking-sdk/], called ``SRanipal``. This is available only on Windows.
+The `SRanipal_module` commands the robot face expressions, eyelids, and gaze mimicking the operator's expressions. It exploits the (VIVE Eye and Facial Tracking SDK)[https://developer.vive.com/resources/vive-sense/sdk/vive-eye-and-facial-tracking-sdk/], called ``SRanipal``. This is available only on Windows.
 
 ## Additional dependencies
 The `SRanipal_module`, besides the repo main dependencies, requires the `SRanipal_SDK` to be downloaded. Download it from the VIVE website at https://developer.vive.com/resources/vive-sense/sdk/vive-eye-and-facial-tracking-sdk/. It requires (free) registration. Once downloaded, simply uncompress it and set the environmental variable ``SRanipal_SDK_DIR`` to the ``01_C`` folder of the uncompressed archive, e.g. ``C:\pathWhereYouDownloadedSranipal\SDK\01_C``. You can also avoid setting this environmental variable, and specify the path from the CMake GUI in the ``SRanipal_SDK_DIR`` variable.
