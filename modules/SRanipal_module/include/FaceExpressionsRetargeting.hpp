@@ -22,7 +22,7 @@ class FaceExpressionsRetargeting
     yarp::os::RpcClient m_emotionsOutputPort; /** The output port to control the face expressions. **/
     double m_lipExpressionThreshold;
     double m_eyeWideSurprisedThreshold;
-    std::unordered_map<std::string, std::string> m_currentExpressions;
+    std::unordered_map<std::string, std::string> m_currentExpressions; /** The key is the part (like "mou" or "leb"), while the value is the current face expression **/
 
     void sendFaceExpression(const std::string& part, const std::string& emotion);
 

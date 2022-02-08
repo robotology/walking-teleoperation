@@ -24,13 +24,13 @@ class EyelidsRetargeting
     bool m_configured{false};
     bool m_useRawEyelids;
     bool m_useEyelidsPositionControl;
-    double m_eyeOpenPrecision;
+    double m_eyeOpennessPrecision;
     double m_eyelidsMaxVelocity;
     double m_eyelidsVelocityGain;
     int m_rawEyelidsCloseValue;
     int m_rawEyelidsOpenValue;
-    int m_eyeOpenLevel{-1};
-    double m_desiredEyeOpennes{1.0};
+    int m_eyeOpennessLevel{-1};
+    double m_desiredEyeOpenness{1.0};
     yarp::os::BufferedPort<yarp::os::Bottle> m_rawEyelidsOutputPort;
     yarp::dev::PolyDriver m_eyelidsDriver;
     yarp::dev::IPositionControl* m_eyelidsPos{nullptr};
@@ -38,6 +38,10 @@ class EyelidsRetargeting
     yarp::dev::IEncoders* m_eyelidsEnc{nullptr};
     yarp::dev::IControlMode* m_eyelidsMode{nullptr};
     double m_minEyeLid, m_maxEyeLid;
+
+    bool rawRobotEyelidsControl(int eye_openness_level);
+    bool rfeRobotEyelidsControl(int eye_openness_level);
+
 
 public:
 

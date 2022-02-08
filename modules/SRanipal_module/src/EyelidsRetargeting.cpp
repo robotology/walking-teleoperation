@@ -13,6 +13,72 @@
 #include <cmath>
 #include <algorithm>
 
+bool EyelidsRetargeting::rawRobotEyelidsControl(int eye_openness_level)
+{
+    double eye_openess_leveled = m_eyeOpennessPrecision * eye_openness_level;
+
+    if (eye_openness_level != m_eyeOpennessLevel)
+    {
+        yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
+        out.clear();
+        double rawEyelidsValue
+                = eye_openess_leveled * (m_rawEyelidsOpenValue - m_rawEyelidsCloseValue)
+                + m_rawEyelidsCloseValue;
+        out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
+        m_rawEyelidsOutputPort.write();
+        m_eyeOpennessLevel = eye_openness_level;
+        yInfo() << "[EyelidsRetargeting::update] Setting eye openess (raw mode):" << eye_openess_leveled << "%.";
+        yDebug() << "[EyelidsRetargeting::update] Sending raw commands to eyelids:" << out.toString();
+    }
+
+    return true;
+}
+
+bool EyelidsRetargeting::rfeRobotEyelidsControl(int eye_openness_level)
+{
+    double eye_openess_leveled = m_eyeOpennessPrecision * eye_openness_level;
+
+    double eyelidsReference = (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid; // because min-> open, max->closed
+    if (m_useEyelidsPositionControl)
+    {
+        if (eye_openness_level != m_eyeOpennessLevel)
+        {
+            if (m_eyelidsPos)
+            {
+                m_eyelidsPos->positionMove(0, eyelidsReference);
+            }
+            m_eyeOpennessLevel = eye_openness_level;
+            yInfo() << "[EyelidsRetargeting::update] Setting eye openess (position mode):" << eye_openess_leveled << "%.";
+        }
+    }
+    else
+    {
+        if (m_eyelidsVel && m_eyelidsEnc)
+        {
+            if (eye_openness_level != m_eyeOpennessLevel)
+            {
+                m_eyeOpennessLevel = eye_openness_level;
+                yInfo() << "[EyelidsRetargeting::update] Setting eye openess (velocity mode):" << eye_openess_leveled << "%.";
+            }
+
+            double currentEyelidPos = 0;
+            if (m_eyelidsEnc->getEncoder(0, &currentEyelidPos))
+            {
+                double eyelidsVelocityReference = m_eyelidsVelocityGain * (eyelidsReference - currentEyelidPos);
+                double eyelidsVelClamped = std::max(-m_eyelidsMaxVelocity, std::min(eyelidsVelocityReference, m_eyelidsMaxVelocity)); //Clamp the velocity reference in [-max, +max];
+                m_eyelidsVel->velocityMove(0, eyelidsVelClamped);
+            }
+            else
+            {
+                yWarning() << "[EyelidsRetargeting::update] Failed to get eyelids encoder value. Skipping control.";
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 EyelidsRetargeting::~EyelidsRetargeting()
 {
     close();
@@ -35,7 +101,7 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
     m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(10.0)).asFloat64();
     m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
     m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
-    m_eyeOpenPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
+    m_eyeOpennessPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
 
     double defaultMaxVelocity = 100.0;
     if (m_useEyelidsPositionControl)
@@ -150,7 +216,7 @@ bool EyelidsRetargeting::usingEylidsVelocityControl()
 
 void EyelidsRetargeting::setDesiredEyeOpennes(double eyeOpennes)
 {
-    m_desiredEyeOpennes = eyeOpennes;
+    m_desiredEyeOpenness = eyeOpennes;
 }
 
 bool EyelidsRetargeting::update()
@@ -161,63 +227,20 @@ bool EyelidsRetargeting::update()
         return false;
     }
 
-    int eye_open_level = static_cast<int>(std::round(m_desiredEyeOpennes / m_eyeOpenPrecision));
-    double eye_openess_leveled = m_eyeOpenPrecision * eye_open_level;
+    int eye_openness_level = static_cast<int>(std::round(m_desiredEyeOpenness / m_eyeOpennessPrecision));
 
     if (m_useRawEyelids)
     {
-        if (eye_open_level != m_eyeOpenLevel)
+        if (!rawRobotEyelidsControl(eye_openness_level))
         {
-            yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
-            out.clear();
-            double rawEyelidsValue
-                    = eye_openess_leveled * (static_cast<double>(m_rawEyelidsOpenValue) - m_rawEyelidsCloseValue)
-                    + m_rawEyelidsCloseValue;
-            out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
-            m_rawEyelidsOutputPort.write();
-            m_eyeOpenLevel = eye_open_level;
-            yInfo() << "[EyelidsRetargeting::update] Setting eye openess (raw):" << eye_openess_leveled;
-            yDebug() << "[EyelidsRetargeting::update] Sending raw commands to eyelids:" << out.toString();
+            return false;
         }
     }
     else
     {
-        double eyelidsReference = (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid; // because min-> open, max->closed
-        if (m_useEyelidsPositionControl)
+        if (!rfeRobotEyelidsControl(eye_openness_level))
         {
-            if (eye_open_level != m_eyeOpenLevel)
-            {
-                if (m_eyelidsPos)
-                {
-                    m_eyelidsPos->positionMove(0, eyelidsReference); // because min-> open, max->closed
-                }
-                m_eyeOpenLevel = eye_open_level;
-                yInfo() << "[EyelidsRetargeting::update] Setting eye openess (position):" << eye_openess_leveled;
-            }
-        }
-        else
-        {
-            if (m_eyelidsVel && m_eyelidsEnc)
-            {
-                if (eye_open_level != m_eyeOpenLevel)
-                {
-                    m_eyeOpenLevel = eye_open_level;
-                    yInfo() << "[EyelidsRetargeting::update] Setting eye openess (velocity):" << eye_openess_leveled;
-                }
-
-                double currentEyelidPos = 0;
-                if (m_eyelidsEnc->getEncoder(0, &currentEyelidPos))
-                {
-                    double eyelidsVelocityReference = m_eyelidsVelocityGain * (eyelidsReference - currentEyelidPos);
-                    double eyelidsVelClamped = std::max(-m_eyelidsMaxVelocity, std::min(eyelidsVelocityReference, m_eyelidsMaxVelocity)); //Clamp the velocity reference in [-max, +max];
-                    m_eyelidsVel->velocityMove(0, eyelidsVelClamped);
-                }
-                else
-                {
-                    yWarning() << "[EyelidsRetargeting::update] Failed to get eyelids encoder value. Skipping control.";
-                    return false;
-                }
-            }
+            return false;
         }
     }
 
