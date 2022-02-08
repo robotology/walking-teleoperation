@@ -96,11 +96,11 @@ bool GazeRetargeting::setDesiredRobotEyeVelocities(double vergenceSpeedInDeg, do
     return m_eyesVel->velocityMove(3, eyeAxis, velRefs);
 }
 
-double GazeRetargeting::saturateRobotEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double kinematicLowerBound, double kinematicUpperBound)
+double GazeRetargeting::saturateRobotEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double jointLowerBound, double jointUpperBound)
 {
     //See https://github.com/ami-iit/element_qp-reactive-control/issues/51
-    double velocityLowerLimit = std::tanh(m_tanhGain * (inputPosition - kinematicLowerBound)) * (-maxVelocity);
-    double velocityUpperLimit = std::tanh(m_tanhGain * (kinematicUpperBound - inputPosition)) * maxVelocity;
+    double velocityLowerLimit = std::tanh(m_tanhGain * (inputPosition - jointLowerBound)) * (-maxVelocity);
+    double velocityUpperLimit = std::tanh(m_tanhGain * (jointUpperBound - inputPosition)) * maxVelocity;
 
     return std::max(velocityLowerLimit, std::min(inputVelocity, velocityUpperLimit));
 }
