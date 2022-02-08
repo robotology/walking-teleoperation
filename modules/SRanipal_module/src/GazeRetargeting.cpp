@@ -586,7 +586,7 @@ bool GazeRetargeting::VRInterface::isActive()
 
     std::string leftEyeOutputPortName = "/" + m_name + "/leftEye/control:o";
 
-    if (!m_leftEye.controlPort.open(leftEyeOutputPortName))
+    if (!m_leftEye.imageControlPort.open(leftEyeOutputPortName))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to open the port" << leftEyeOutputPortName;
         return false;
@@ -609,7 +609,7 @@ bool GazeRetargeting::VRInterface::isActive()
 
     std::string rightEyeOutputPortName = "/" + m_name + "/rightEye/control:o";
 
-    if (!m_rightEye.controlPort.open(rightEyeOutputPortName))
+    if (!m_rightEye.imageControlPort.open(rightEyeOutputPortName))
     {
         yError() << "[GazeRetargeting::VRInterface::isActive] Failed to open the port" << rightEyeOutputPortName;
         return false;
@@ -639,13 +639,13 @@ void GazeRetargeting::VRInterface::close()
 
 void GazeRetargeting::VRInterface::EyeControl::sendAngles()
 {
-    yarp::sig::Vector& output = controlPort.prepare();
+    yarp::sig::Vector& output = imageControlPort.prepare();
 
     output.resize(2);
     output(0) = azimuth;
     output(1) = elevation;
 
-    controlPort.write();
+    imageControlPort.write();
 }
 
 iDynTree::Transform GazeRetargeting::VRInterface::EyeControl::currentImageTransform()
@@ -691,5 +691,5 @@ void GazeRetargeting::VRInterface::EyeControl::close()
     azimuth = 0.0;
     elevation = 0.0;
     sendAngles();
-    controlPort.close();
+    imageControlPort.close();
 }

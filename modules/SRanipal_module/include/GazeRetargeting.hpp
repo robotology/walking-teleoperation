@@ -29,7 +29,7 @@ class GazeRetargeting
     {
         struct EyeControl
         {
-            yarp::os::BufferedPort<yarp::sig::Vector> controlPort;
+            yarp::os::BufferedPort<yarp::sig::Vector> imageControlPort;
             double elevation;
             double azimuth;
             iDynTree::Position eyePosition;
