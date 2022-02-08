@@ -27,8 +27,8 @@ bool EyelidsRetargeting::rawRobotEyelidsControl(int eye_openness_level)
         out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
         m_rawEyelidsOutputPort.write();
         m_eyeOpennessLevel = eye_openness_level;
-        yInfo() << "[EyelidsRetargeting::update] Setting eye openess (raw mode):" << eye_openess_leveled << "%.";
-        yDebug() << "[EyelidsRetargeting::update] Sending raw commands to eyelids:" << out.toString();
+        yInfo() << "[EyelidsRetargeting::rawRobotEyelidsControl] Setting eye openess (raw mode):" << eye_openess_leveled << "%.";
+        yDebug() << "[EyelidsRetargeting::rawRobotEyelidsControl] Sending raw commands to eyelids:" << out.toString();
     }
 
     return true;
@@ -48,7 +48,7 @@ bool EyelidsRetargeting::rfeRobotEyelidsControl(int eye_openness_level)
                 m_eyelidsPos->positionMove(0, eyelidsReference);
             }
             m_eyeOpennessLevel = eye_openness_level;
-            yInfo() << "[EyelidsRetargeting::update] Setting eye openess (position mode):" << eye_openess_leveled << "%.";
+            yInfo() << "[EyelidsRetargeting::rfeRobotEyelidsControl] Setting eye openess (position mode):" << eye_openess_leveled << "%.";
         }
     }
     else

@@ -23,7 +23,7 @@
 #include <algorithm>
 
 
-void GazeRetargeting::setEyeControlMode(int controlMode)
+void GazeRetargeting::setRobotEyeControlMode(int controlMode)
 {
     if (m_eyesMode)
     {
@@ -33,19 +33,19 @@ void GazeRetargeting::setEyeControlMode(int controlMode)
     }
 }
 
-bool GazeRetargeting::homeEyes()
+bool GazeRetargeting::homeRobotEyes()
 {
     if (!m_eyesPos)
     {
         return false;
     }
 
-    if (!updateEyeEncoders())
+    if (!updateRobotEyeEncoders())
     {
         return false;
     }
 
-    yInfo() << "[GazeRetargeting::homeEyes] Homing eyes..";
+    yInfo() << "[GazeRetargeting::homeRobotEyes] Homing robot eyes..";
 
     int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
     double speeds[] = {m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS, m_maxEyeSpeedInDegS};
@@ -64,12 +64,12 @@ bool GazeRetargeting::homeEyes()
 
     yarp::os::Time::delay(3.0 * expectedTime); //Just give some time for it to go to home
 
-    yInfo() << "[GazeRetargeting::homeEyes] Eyes homed!";
+    yInfo() << "[GazeRetargeting::homeRobotEyes] Robot eyes homed!";
 
     return true;
 }
 
-bool GazeRetargeting::updateEyeEncoders()
+bool GazeRetargeting::updateRobotEyeEncoders()
 {
     if (!m_eyesEnc || !m_eyesEnc->getEncoders(m_encodersInDeg.data()))
     {
@@ -83,7 +83,7 @@ bool GazeRetargeting::updateEyeEncoders()
     return true;
 }
 
-bool GazeRetargeting::setDesiredEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg)
+bool GazeRetargeting::setDesiredRobotEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg)
 {
     if (!m_eyesVel)
     {
@@ -96,7 +96,7 @@ bool GazeRetargeting::setDesiredEyeVelocities(double vergenceSpeedInDeg, double 
     return m_eyesVel->velocityMove(3, eyeAxis, velRefs);
 }
 
-double GazeRetargeting::saturateEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double kinematicLowerBound, double kinematicUpperBound)
+double GazeRetargeting::saturateRobotEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double kinematicLowerBound, double kinematicUpperBound)
 {
     //See https://github.com/ami-iit/element_qp-reactive-control/issues/51
     double velocityLowerLimit = std::tanh(m_tanhGain * (inputPosition - kinematicLowerBound)) * (-maxVelocity);
@@ -268,9 +268,9 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-    homeEyes();
+    homeRobotEyes();
 
-    setEyeControlMode(VOCAB_CM_VELOCITY);
+    setRobotEyeControlMode(VOCAB_CM_VELOCITY);
 
     m_configured = true;
 
@@ -300,7 +300,7 @@ bool GazeRetargeting::update()
     }
 
     //Get the current eye encoder values
-    if (!updateEyeEncoders())
+    if (!updateRobotEyeEncoders())
     {
         yError() << "[GazeRetargeting::update] Failed to get eye encoders.";
         return false;
@@ -323,12 +323,12 @@ bool GazeRetargeting::update()
     double tiltSpeedInDeg = iDynTree::rad2deg(tiltSpeedInRad);
 
     //We saturate the desired eye velocities according to the limits too
-    vergenceSpeedInDeg = saturateEyeVelocity(vergenceSpeedInDeg, m_encodersInDeg[m_eyeVergIndex], m_maxEyeSpeedInDegS, 0.0, m_maxVergInDeg);
-    versionSpeedInDeg = saturateEyeVelocity(versionSpeedInDeg, m_encodersInDeg[m_eyeVersIndex], m_maxEyeSpeedInDegS, -m_maxVersInDeg, m_maxVersInDeg);
-    tiltSpeedInDeg = saturateEyeVelocity(tiltSpeedInDeg, m_encodersInDeg[m_eyeTiltIndex], m_maxEyeSpeedInDegS, -m_maxTiltInDeg, m_maxTiltInDeg);
+    vergenceSpeedInDeg = saturateRobotEyeVelocity(vergenceSpeedInDeg, m_encodersInDeg[m_eyeVergIndex], m_maxEyeSpeedInDegS, 0.0, m_maxVergInDeg);
+    versionSpeedInDeg = saturateRobotEyeVelocity(versionSpeedInDeg, m_encodersInDeg[m_eyeVersIndex], m_maxEyeSpeedInDegS, -m_maxVersInDeg, m_maxVersInDeg);
+    tiltSpeedInDeg = saturateRobotEyeVelocity(tiltSpeedInDeg, m_encodersInDeg[m_eyeTiltIndex], m_maxEyeSpeedInDegS, -m_maxTiltInDeg, m_maxTiltInDeg);
 
     //Set the desired velocitites to the robot
-    if (!setDesiredEyeVelocities(vergenceSpeedInDeg, versionSpeedInDeg, tiltSpeedInDeg))
+    if (!setDesiredRobotEyeVelocities(vergenceSpeedInDeg, versionSpeedInDeg, tiltSpeedInDeg))
     {
         yError() << "[GazeRetargeting::update] Failed to set the desired eye velocity.";
         return false;
@@ -343,8 +343,8 @@ bool GazeRetargeting::update()
 void GazeRetargeting::close()
 {
     m_VRInterface.close();
-    setEyeControlMode(VOCAB_CM_POSITION);
-    homeEyes();
+    setRobotEyeControlMode(VOCAB_CM_POSITION);
+    homeRobotEyes();
     m_eyesDriver.close();
     m_eyesVel = nullptr;
     m_eyesPos = nullptr;

@@ -94,16 +94,16 @@ class GazeRetargeting
 
     VRInterface m_VRInterface;
 
-    void setEyeControlMode(int controlMode);
+    void setRobotEyeControlMode(int controlMode);
 
-    bool homeEyes();
+    bool homeRobotEyes();
 
-    bool updateEyeEncoders();
+    bool updateRobotEyeEncoders();
 
-    bool setDesiredEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg);
+    bool setDesiredRobotEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg);
 
-    double saturateEyeVelocity(double inputVelocity, double inputPosition,
-                               double maxVelocity, double kinematicLowerBound, double kinematicUpperBound);
+    double saturateRobotEyeVelocity(double inputVelocity, double inputPosition,
+                                    double maxVelocity, double kinematicLowerBound, double kinematicUpperBound);
 
 public:
 
