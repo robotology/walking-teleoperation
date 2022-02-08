@@ -100,7 +100,7 @@ class GazeRetargeting
 
     bool updateRobotEyeEncoders();
 
-    bool setDesiredRobotEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg);
+    bool setDesiredRobotEyeVelocities(double vergenceSpeedInDegS, double versionSpeedInDegS, double tiltSpeedInDegS);
 
     double saturateRobotEyeVelocity(double inputVelocity, double inputPosition,
                                     double maxVelocity, double jointLowerBound, double jointUpperBound);

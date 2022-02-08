@@ -83,14 +83,14 @@ bool GazeRetargeting::updateRobotEyeEncoders()
     return true;
 }
 
-bool GazeRetargeting::setDesiredRobotEyeVelocities(double vergenceSpeedInDeg, double versionSpeedInDeg, double tiltSpeedInDeg)
+bool GazeRetargeting::setDesiredRobotEyeVelocities(double vergenceSpeedInDegS, double versionSpeedInDegS, double tiltSpeedInDegS)
 {
     if (!m_eyesVel)
     {
         return false;
     }
 
-    double velRefs[] = {tiltSpeedInDeg, versionSpeedInDeg, vergenceSpeedInDeg};
+    double velRefs[] = {tiltSpeedInDegS, versionSpeedInDegS, vergenceSpeedInDegS};
     int eyeAxis[] = {m_eyeTiltIndex, m_eyeVersIndex, m_eyeVergIndex};
 
     return m_eyesVel->velocityMove(3, eyeAxis, velRefs);
@@ -306,29 +306,29 @@ bool GazeRetargeting::update()
         return false;
     }
 
-    double vergenceSpeedInRad = 0.0, versionSpeedInRad = 0.0, tiltSpeedInRad = 0.0;
+    double vergenceSpeedInRadS = 0.0, versionSpeedInRadS = 0.0, tiltSpeedInRadS = 0.0;
 
     //Compute the desired eye speed according to the user gaze
     if (m_gazeSet) //The desired gaze has been set at least once.
     {
-        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeedInRad, versionSpeedInRad, tiltSpeedInRad))
+        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeedInRadS, versionSpeedInRadS, tiltSpeedInRadS))
         {
             yError() << "[GazeRetargeting::update] Failed to compute the desired eye velocity.";
             return false;
         }
     }
 
-    double vergenceSpeedInDeg = iDynTree::rad2deg(vergenceSpeedInRad);
-    double versionSpeedInDeg = iDynTree::rad2deg(versionSpeedInRad);
-    double tiltSpeedInDeg = iDynTree::rad2deg(tiltSpeedInRad);
+    double vergenceSpeedInDegS = iDynTree::rad2deg(vergenceSpeedInRadS);
+    double versionSpeedInDegS = iDynTree::rad2deg(versionSpeedInRadS);
+    double tiltSpeedInDegS = iDynTree::rad2deg(tiltSpeedInRadS);
 
     //We saturate the desired eye velocities according to the limits too
-    vergenceSpeedInDeg = saturateRobotEyeVelocity(vergenceSpeedInDeg, m_encodersInDeg[m_eyeVergIndex], m_maxEyeSpeedInDegS, 0.0, m_maxVergInDeg);
-    versionSpeedInDeg = saturateRobotEyeVelocity(versionSpeedInDeg, m_encodersInDeg[m_eyeVersIndex], m_maxEyeSpeedInDegS, -m_maxVersInDeg, m_maxVersInDeg);
-    tiltSpeedInDeg = saturateRobotEyeVelocity(tiltSpeedInDeg, m_encodersInDeg[m_eyeTiltIndex], m_maxEyeSpeedInDegS, -m_maxTiltInDeg, m_maxTiltInDeg);
+    vergenceSpeedInDegS = saturateRobotEyeVelocity(vergenceSpeedInDegS, m_encodersInDeg[m_eyeVergIndex], m_maxEyeSpeedInDegS, 0.0, m_maxVergInDeg);
+    versionSpeedInDegS = saturateRobotEyeVelocity(versionSpeedInDegS, m_encodersInDeg[m_eyeVersIndex], m_maxEyeSpeedInDegS, -m_maxVersInDeg, m_maxVersInDeg);
+    tiltSpeedInDegS = saturateRobotEyeVelocity(tiltSpeedInDegS, m_encodersInDeg[m_eyeTiltIndex], m_maxEyeSpeedInDegS, -m_maxTiltInDeg, m_maxTiltInDeg);
 
     //Set the desired velocitites to the robot
-    if (!setDesiredRobotEyeVelocities(vergenceSpeedInDeg, versionSpeedInDeg, tiltSpeedInDeg))
+    if (!setDesiredRobotEyeVelocities(vergenceSpeedInDegS, versionSpeedInDegS, tiltSpeedInDegS))
     {
         yError() << "[GazeRetargeting::update] Failed to set the desired eye velocity.";
         return false;
