@@ -170,7 +170,7 @@ bool SRanipalModule::updateModule()
         iDynTree::Axis leftGaze, rightGaze;
         if (m_useGaze && m_sranipalInterface.getGazeAxes(leftGaze, rightGaze))
         {
-            m_gazeRetargeting.setEyeGazeAxes(leftGaze, rightGaze);
+            m_gazeRetargeting.setOperatorEyeGazeAxes(leftGaze, rightGaze);
         }
     }
 

@@ -39,7 +39,7 @@ class GazeRetargeting
 
             iDynTree::Transform currentImageTransform(); //With respect to the headset frame
 
-            bool intersectionInImage(const iDynTree::Axis& gazeInSRanipalFrame, iDynTree::Vector2 &output);
+            bool intersectionInImage(const iDynTree::Axis& operatorGazeInSRanipalFrame, iDynTree::Vector2 &output);
 
             void close();
         };
@@ -68,8 +68,8 @@ class GazeRetargeting
 
         void setVRImagesPose(double vergenceInRad, double versionInRad, double tiltInRad);
 
-        bool computeDesiredEyeVelocities(const iDynTree::Axis& leftEyeGaze, const iDynTree::Axis& rightEyeGaze,
-                                         double& vergenceSpeedInRadS, double& versionSpeedInRadS, double& tiltSpeedInRadS);
+        bool computeDesiredRobotEyeVelocities(const iDynTree::Axis& operatorLeftEyeGaze, const iDynTree::Axis& operatorRightEyeGaze,
+                                              double& vergenceSpeedInRadS, double& versionSpeedInRadS, double& tiltSpeedInRadS);
 
         bool isActive();
 
@@ -89,7 +89,7 @@ class GazeRetargeting
     double m_tanhGain;
     std::vector<double> m_encodersInDeg;
     double m_maxEyeSpeedInDegS;
-    iDynTree::Axis m_leftGaze, m_rightGaze;
+    iDynTree::Axis m_leftGazeOperator, m_rightGazeOperator;
     bool m_gazeSet{false};
 
     VRInterface m_VRInterface;
@@ -121,7 +121,7 @@ public:
 
     bool configure(yarp::os::ResourceFinder& rf);
 
-    void setEyeGazeAxes(const iDynTree::Axis& leftGaze, const iDynTree::Axis& rightGaze);
+    void setOperatorEyeGazeAxes(const iDynTree::Axis& leftGaze, const iDynTree::Axis& rightGaze);
 
     bool update();
 

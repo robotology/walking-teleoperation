@@ -277,12 +277,12 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
     return true;
 }
 
-void GazeRetargeting::setEyeGazeAxes(const iDynTree::Axis &leftGaze, const iDynTree::Axis &rightGaze)
+void GazeRetargeting::setOperatorEyeGazeAxes(const iDynTree::Axis &leftGaze, const iDynTree::Axis &rightGaze)
 {
-    m_leftGaze.setDirection(leftGaze.getDirection());
-    m_leftGaze.setOrigin(leftGaze.getOrigin());
-    m_rightGaze.setDirection(rightGaze.getDirection());
-    m_rightGaze.setOrigin(rightGaze.getOrigin());
+    m_leftGazeOperator.setDirection(leftGaze.getDirection());
+    m_leftGazeOperator.setOrigin(leftGaze.getOrigin());
+    m_rightGazeOperator.setDirection(rightGaze.getDirection());
+    m_rightGazeOperator.setOrigin(rightGaze.getOrigin());
     m_gazeSet = true;
 }
 
@@ -311,7 +311,7 @@ bool GazeRetargeting::update()
     //Compute the desired eye speed according to the user gaze
     if (m_gazeSet) //The desired gaze has been set at least once.
     {
-        if (!m_VRInterface.computeDesiredEyeVelocities(m_leftGaze, m_rightGaze, vergenceSpeedInRadS, versionSpeedInRadS, tiltSpeedInRadS))
+        if (!m_VRInterface.computeDesiredRobotEyeVelocities(m_leftGazeOperator, m_rightGazeOperator, vergenceSpeedInRadS, versionSpeedInRadS, tiltSpeedInRadS))
         {
             yError() << "[GazeRetargeting::update] Failed to compute the desired eye velocity.";
             return false;
@@ -479,16 +479,16 @@ void GazeRetargeting::VRInterface::setVRImagesPose(double vergenceInRad, double 
 
 }
 
-bool GazeRetargeting::VRInterface::computeDesiredEyeVelocities(const iDynTree::Axis &leftEyeGaze, const iDynTree::Axis &rightEyeGaze,
+bool GazeRetargeting::VRInterface::computeDesiredRobotEyeVelocities(const iDynTree::Axis &operatorLeftEyeGaze, const iDynTree::Axis &operatorRightEyeGaze,
                                                                double &vergenceSpeedInRadS, double &versionSpeedInRadS, double &tiltSpeedInRadS)
 {
     //compute the intersection between the gaze ray and the xy plane of the image
     iDynTree::Vector2 leftImageIntersection, rightImageIntersection;
-    bool okL = m_leftEye.intersectionInImage(leftEyeGaze, leftImageIntersection);
-    bool okR = m_rightEye.intersectionInImage(rightEyeGaze, rightImageIntersection);
+    bool okL = m_leftEye.intersectionInImage(operatorLeftEyeGaze, leftImageIntersection);
+    bool okR = m_rightEye.intersectionInImage(operatorRightEyeGaze, rightImageIntersection);
     if (!okL || !okR)
     {
-        yError() << "[GazeRetargeting::VRInterface::computeDesiredEyeVelocities] Failed to compute the intersection between the gaze and the images.";
+        yError() << "[GazeRetargeting::VRInterface::computeDesiredRobotEyeVelocities] Failed to compute the intersection between the gaze and the images.";
         return false;
     }
 
@@ -657,14 +657,14 @@ iDynTree::Transform GazeRetargeting::VRInterface::EyeControl::currentImageTransf
     return iDynTree::Transform(rotation, position);
 }
 
-bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTree::Axis &gazeInSRanipalFrame, iDynTree::Vector2& output)
+bool GazeRetargeting::VRInterface::EyeControl::intersectionInImage(const iDynTree::Axis &operatorGazeInSRanipalFrame, iDynTree::Vector2& output)
 {
     output.zero();
 
     iDynTree::Transform headsetToSranipalTransform(iDynTree::Rotation::RotY(M_PI), //The frame in which gazeInSRanipalFrame has the Y pointing up and the Z forward. The headset frame has the Z backward
                                                    iDynTree::Position::Zero());    //See https://www.researchgate.net/figure/Coordinate-system-of-HTC-VIVE-Pro-Eye-based-on-the-manual-of-SRanipal-SDK-A_fig1_346058398
 
-    iDynTree::Axis gazeInHeadsetFrame = headsetToSranipalTransform * gazeInSRanipalFrame;
+    iDynTree::Axis gazeInHeadsetFrame = headsetToSranipalTransform * operatorGazeInSRanipalFrame;
 
     iDynTree::Axis gazeInImage
         = currentImageTransform().inverse() * gazeInHeadsetFrame;
