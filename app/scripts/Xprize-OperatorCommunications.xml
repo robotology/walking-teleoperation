@@ -13,21 +13,21 @@
   
     <module>
     <name>AudioRecorderWrapper</name>
-    <parameters>--subdevice portaudioRecorder --name /icub-console/operator_microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 16000 --start</parameters>
+    <parameters>--subdevice portaudioRecorder --name /icub-console/operator_microphone --min_samples_over_network 100 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
     <deployer>yarpdev</deployer>
     <node>icub-console-gui</node>
   </module>
 
   <module>
     <name>AudioPlayerWrapper</name>
-    <parameters>--subdevice portaudioPlayer --name /icub-virtualizer/speakers_operator --playback_network_buffer_size 0.4 --start --AUDIO_BASE::samples 16000 --AUDIO_BASE::channels 1</parameters>
+    <parameters>--subdevice portaudioPlayer --name /icub-virtualizer/speakers_operator --playback_network_buffer_size 0.05 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
     <deployer>yarpdev</deployer>
     <node>icub-virtualizer</node>
   </module>
   
   <module>
     <name>AudioPlayerWrapper</name>
-    <parameters>--subdevice portaudioPlayer --name /icub-console-gui/speakers --playback_network_buffer_size 0.4 --start --AUDIO_BASE::samples 16000 --AUDIO_BASE::channels 1</parameters>
+    <parameters>--subdevice portaudioPlayer --name /icub-console-gui/speakers --playback_network_buffer_size 0.05 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
     <deployer>yarpdev</deployer>
     <node>icub-console-gui</node>
   </module>
