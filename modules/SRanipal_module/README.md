@@ -105,16 +105,29 @@ The following optional parameters can be inserted after calling with module, eac
 
 ### Gaze retargeting
 - ``eyesVersionName``, the name of the version joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint. Default ``eyes_vers``
+
 - ``eyesVergenceName``, the name of the vergence joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint.  Default ``eyes_verg``.
+
 - ``eyesTiltName``, the name of the tilt joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint.  Default ``eyes_tilt``.
+
 - ``eyeMaxVelocity``, the maximum velocity used to move the eyes. Default ``20.0``.
+
 - ``eyeMaxVergence``, the maximum vergence angle in degrees. The minimum is always zero. Default ``10.0``.
+
 - ``eyeMaxVersion``, the maximum absolute value of the version angle in degrees. Default ``25.0``.
+
 - ``eyeMaxTilt``, the maximum absolute value of the tilt angle in degrees. Default ``30.0``.
+
 - ``eyeKinematicSaturationGain``, it is a numeric gain used for the heuristic that keeps the gaze angles within the specified values. Small values might slow down the gaze when far from the limits. High values might cause vibrations close to the limits. Default ``10.0``.
+
 - ``gazeVelocityGain``, it is a gain determining the reactiveness of the gaze controller when the operator moves the eyes. Default ``2.0``.
+
 - ``gazeDeadzone``, avoids the gaze controller to react to tiny eye motions or noises in the gaze measurement. It represents the radius of a circle around the gaze target point located in the image plane. Default ``0.02``.
+
+- ``gazeDeadzoneActivationOffset``, it is added to ``gazeDeadzone`` to provide a two level thresholding to deactivate the gaze motion. Once the gaze is deactivated because the gaze error is below the ``gazeDeadzone`` , the threshold to reactivate the gaze is equal to  ``gazeDeadzone + gazeDeadzoneActivationOffset``. Default ``0.1``.
+
 - ``headControlBoardName``, the name of the robot head control board. This control board should contain the version, vergence and tilt joints. Default ``head``.
+
 - ``VRDeviceRPCOutputPortName``, the suffix of the port used to connect to the ``yarp-device-openxrheadset`` RPC port. Default ``/VR/rpc:o``.
 
 ## Common issues

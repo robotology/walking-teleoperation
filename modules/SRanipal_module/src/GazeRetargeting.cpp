@@ -467,7 +467,7 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 
     m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(2.0)).asFloat64();
     m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.02)).asFloat64();
-    double activationOffset = rf.check("gazeDeadzoneActivationOffset", yarp::os::Value(0.08)).asFloat64();
+    double activationOffset = rf.check("gazeDeadzoneActivationOffset", yarp::os::Value(0.1)).asFloat64();
 
     if (activationOffset < 0)
     {
