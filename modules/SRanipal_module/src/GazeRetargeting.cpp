@@ -441,9 +441,14 @@ iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Ve
     Eigen::Map<Eigen::Vector2d> outputMap = iDynTree::toEigen(output);
 
     double inputNorm = map.norm();
-    if (inputNorm > m_errorDeadzone)
+    if ((inputNorm > m_errorDeadzoneActivation) || (!m_deadzoneActive && inputNorm > m_errorDeadzone))
     {
+        m_deadzoneActive = false;
         outputMap = (1.0 - m_errorDeadzone / inputNorm) * map;
+    }
+    else
+    {
+        m_deadzoneActive = true;
     }
 
     return output;
@@ -462,6 +467,16 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 
     m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(2.0)).asFloat64();
     m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.02)).asFloat64();
+    double activationOffset = rf.check("gazeDeadzoneActivationOffset", yarp::os::Value(0.08)).asFloat64();
+
+    if (activationOffset < 0)
+    {
+        yError() << "[GazeRetargeting::configure] gazeDeadzoneActivationOffset is supposed to be non-negative.";
+        return false;
+    }
+
+    m_errorDeadzoneActivation = m_errorDeadzone + activationOffset;
+
 
     return true;
 }

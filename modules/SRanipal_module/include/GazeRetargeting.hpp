@@ -46,9 +46,11 @@ class GazeRetargeting
 
         std::string m_name;
         bool m_isActive = false;
+        bool m_deadzoneActive = false;
         double m_lastActiveCheck{-1.0};
         double m_velocityGain{0.0};
         double m_errorDeadzone{0.01};
+        double m_errorDeadzoneActivation{0.1};
         yarp::os::RpcClient m_VRDeviceRPCOutputPort;
         EyeControl m_leftEye, m_rightEye;
 
