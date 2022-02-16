@@ -9,6 +9,8 @@
 // std
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <ctime>
+
 
 // YARP
 #include <yarp/os/LogStream.h>
