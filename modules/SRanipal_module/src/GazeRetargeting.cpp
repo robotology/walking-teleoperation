@@ -552,18 +552,18 @@ bool GazeRetargeting::VRInterface::isActive()
         return false;
     }
 
-    double ipd = 0.0;
+    double interCameraDistance = 0.0;
 
-    if (!getValueFromRPC("getIPD", ipd))
+    if (!getValueFromRPC("getInterCameraDistance", interCameraDistance))
     {
-        yError() << "[GazeRetargeting::VRInterface::isActive] Failed to retrieve the IPD from the VR device.";
+        yError() << "[GazeRetargeting::VRInterface::isActive] Failed to retrieve the inter camera distance from the VR device.";
         return false;
     }
 
     m_leftEye.eyePosition.zero();
-    m_leftEye.eyePosition(0) = -ipd/2.0;
+    m_leftEye.eyePosition(0) = -interCameraDistance/2.0;
     m_rightEye.eyePosition.zero();
-    m_rightEye.eyePosition(0) = ipd/2.0;
+    m_rightEye.eyePosition(0) = interCameraDistance/2.0;
 
     double eyesZPosition = -1.0;
 
