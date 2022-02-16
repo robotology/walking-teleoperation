@@ -268,6 +268,8 @@ bool GazeRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    setRobotEyeControlMode(VOCAB_CM_POSITION);
+
     homeRobotEyes();
 
     setRobotEyeControlMode(VOCAB_CM_VELOCITY);
