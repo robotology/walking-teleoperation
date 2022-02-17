@@ -386,9 +386,9 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, boo
         return false;
     }
 
-    if (output.isVocab())
+    if (output.isVocab32())
     {
-        value = yarp::os::Vocab::decode(output.asVocab()).find("ok") != std::string::npos;
+        value = yarp::os::Vocab32::decode(output.asVocab32()).find("ok") != std::string::npos;
     }
     else if (output.isBool())
     {
