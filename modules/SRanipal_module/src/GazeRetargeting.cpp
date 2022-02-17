@@ -470,6 +470,12 @@ iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Ve
     return output;
 }
 
+double GazeRetargeting::VRInterface::applyQuantization(double input, double quantization)
+{
+    int level = static_cast<int>(std::round(input / quantization));
+    return level * quantization;
+}
+
 bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 {
     m_name = rf.check("name", yarp::os::Value("SRanipalModule"), "The name of the module.").asString();
@@ -495,6 +501,16 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 
     m_deadzoneMinActivationTimeInS = rf.check("gazeDeadzoneMinActivationTime", yarp::os::Value(0.5)).asFloat64();
 
+    double gazeAccuracyInDeg = rf.check("gazeMovementAccuracyInDeg", yarp::os::Value(0.1)).asFloat64();
+
+    if (gazeAccuracyInDeg <= 0.0)
+    {
+        yError() << "[GazeRetargeting::configure] gazeAccuracyInDeg is supposed to be strictly positive.";
+        return false;
+    }
+
+    m_eyeMovementAccuracyInRad = iDynTree::deg2rad(gazeAccuracyInDeg);
+
     return true;
 }
 
@@ -507,6 +523,11 @@ void GazeRetargeting::VRInterface::setVRImagesPose(double vergenceInRad, double 
     // In the documentation above, the angle is positive clockwise, while the angles we send are positive anticlockwise
     m_leftEye.azimuth = -(versionInRad + vergenceInRad/2.0);
     m_rightEye.azimuth = -(versionInRad - vergenceInRad/2.0);
+
+    m_leftEye.elevation  = applyQuantization(m_leftEye.elevation,  m_eyeMovementAccuracyInRad);
+    m_leftEye.azimuth    = applyQuantization(m_leftEye.azimuth,    m_eyeMovementAccuracyInRad);
+    m_rightEye.elevation = applyQuantization(m_rightEye.elevation, m_eyeMovementAccuracyInRad);
+    m_rightEye.azimuth   = applyQuantization(m_rightEye.azimuth,   m_eyeMovementAccuracyInRad);
 
     m_leftEye.sendAngles();
     m_rightEye.sendAngles();
