@@ -441,14 +441,30 @@ iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Ve
     Eigen::Map<Eigen::Vector2d> outputMap = iDynTree::toEigen(output);
 
     double inputNorm = map.norm();
-    if ((inputNorm > m_errorDeadzoneActivation) || (!m_deadzoneActive && inputNorm > m_errorDeadzone))
+    bool deadzoneNotActiveAndErrorStillHigh = !m_deadzoneActive && inputNorm > m_errorDeadzone;
+    bool deadzoneActiveButErrorVeryHigh = m_deadzoneActive && inputNorm > m_errorDeadzoneActivation;
+    bool timeCheckNotActive = m_deadzoneMinActivationTimeInS <= 0.0;
+    bool timeCheckPerformedOnce = m_deadzoneActivationTime >= 0.0;
+    bool enoughTimePassed =  timeCheckNotActive || (timeCheckPerformedOnce && ((yarp::os::Time::now() - m_deadzoneActivationTime) >= m_deadzoneMinActivationTimeInS));
+
+    if ((deadzoneActiveButErrorVeryHigh && enoughTimePassed) || deadzoneNotActiveAndErrorStillHigh)
     {
         m_deadzoneActive = false;
+        m_deadzoneActivationTime = -1.0;
         outputMap = (1.0 - m_errorDeadzone / inputNorm) * map;
+        return output;
     }
-    else
+
+    m_deadzoneActive = true;
+
+    if (deadzoneActiveButErrorVeryHigh && !timeCheckPerformedOnce) //It is the the first time that the gaze exits the deadzone
     {
-        m_deadzoneActive = true;
+        m_deadzoneActivationTime = yarp::os::Time::now();
+    }
+
+    if (!deadzoneActiveButErrorVeryHigh) //The gaze is still in the deadzone
+    {
+        m_deadzoneActivationTime = -1.0;
     }
 
     return output;
@@ -477,6 +493,7 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 
     m_errorDeadzoneActivation = m_errorDeadzone + activationOffset;
 
+    m_deadzoneMinActivationTimeInS = rf.check("gazeDeadzoneMinActivationTime", yarp::os::Value(0.5)).asFloat64();
 
     return true;
 }

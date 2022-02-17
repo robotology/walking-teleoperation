@@ -47,6 +47,8 @@ class GazeRetargeting
         std::string m_name;
         bool m_isActive = false;
         bool m_deadzoneActive = false;
+        double m_deadzoneActivationTime = -1.0;
+        double m_deadzoneMinActivationTimeInS = 0.5;
         double m_lastActiveCheck{-1.0};
         double m_velocityGain{0.0};
         double m_errorDeadzone{0.01};
