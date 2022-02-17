@@ -126,6 +126,8 @@ The following optional parameters can be inserted after calling with module, eac
 
 - ``gazeDeadzoneActivationOffset``, it is added to ``gazeDeadzone`` to provide a two level thresholding to deactivate the gaze motion. Once the gaze is deactivated because the gaze error is below the ``gazeDeadzone`` , the threshold to reactivate the gaze is equal to  ``gazeDeadzone + gazeDeadzoneActivationOffset``. Default ``0.1``.
 
+- ``gazeDeadzoneMinActivationTime``, it defines a time threshold in order to reactivate the gaze. The gaze needs to be outside the ``gazeDeadzone + gazeDeadzoneActivationOffset``radius for at least a time duration equal to ``gazeDeadzoneMinActivationTime`` in order to reactivate the gaze. This is because while blinking, the measurement of the operator's gaze might have some jump. Hence, we set a default value of ``0.5`` seconds in order to be slightly greater than the average blinking duration.
+
 - ``headControlBoardName``, the name of the robot head control board. This control board should contain the version, vergence and tilt joints. Default ``head``.
 
 - ``VRDeviceRPCOutputPortName``, the suffix of the port used to connect to the ``yarp-device-openxrheadset`` RPC port. Default ``/VR/rpc:o``.
