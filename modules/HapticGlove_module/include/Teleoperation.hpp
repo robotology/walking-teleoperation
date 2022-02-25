@@ -94,26 +94,37 @@ struct HapticGlove::Data
     Eigen::MatrixXd humanFingertipPoses; /// <summary> human fingertip poses (size: number of hand
                                          /// fingertips (i.e., 5) x 7)
     std::vector<double>
-        humanForceFeedbacks; /// <summary> force feedback vector to the human fingertips
-    std::vector<double> humanVibrotactileFeedbacks; /// <summary> vibrotactile feedback vector to
-                                                    /// the human fingertips
+        humanKinestheticForceFeedbacks; /// <summary> force feedback vector to the human fingertips
+
+    std::vector<double>
+        kinestheticVibrotactileFeedbacks; /// <summary> vibrotactile feedback
+                                          /// vector to the human fingertips using kinesthetic data
+
+    std::vector<double> humanVibrotactileFeedback; /// <summary> human vibrotactile feeback computed
+                                                   /// from kinesthetic and skin data that is going
+                                                   /// to be sent to the human
+
     std::vector<double>
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
 
     // skin
     std::vector<double>
-        fingertipsRawTactileFeedbacks; /// <summary> fingertips tactile feedbacks raw values, 192
-                                       /// values read from the robot interface; range: [0, 256].
-                                       /// 240: no laod value, 0 is maximum pressure
+        fingertipsRawSkinData; /// <summary> fingertips tactile feedbacks raw values, 192
+                               /// values read from the robot interface; range: [0, 255].
+                               /// 240: no laod value, 0 is maximum pressure
 
     std::vector<double>
-        fingertipsTactileFeedbacks; /// <summary> fingertips tactile feedbacks for all the
-                                    /// fingerstips: totoal :60 values: fingers thumb, index,
-                                    /// middle, ring, little; each finger 12 tactile sensors
+        fingertipsTactileFeedback; /// <summary> fingertips tactile feedbacks for all the
+                                   /// fingerstips: totoal :60 values: fingers thumb, index,
+                                   /// middle, ring, little; each finger 12 tactile sensors
 
-    std::vector<double>
-        humanVibrotactileFeedbacksUsingSkin; /// <summary> fingertips max tactile
-                                             /// feedbacks: 5x12 (values from 0 to 1)
+    std::vector<double> robotFingerSkinVibrotactileFeedbacks; /// <summary> robot vibrotactile
+                                                              /// feedback to human using skin
+
+    std::vector<bool> doRobotFingerSkinsWork; /// <summary> check if the fingertip skins work
+
+    std::vector<bool>
+        areFingersSkinInContact; /// <summary> check if the fingertip skins are in contact
 };
 
 /**

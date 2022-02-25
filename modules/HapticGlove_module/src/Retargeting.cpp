@@ -316,7 +316,7 @@ bool Retargeting::retargetForceFeedbackFromRobotToHuman(
     return true;
 }
 
-bool Retargeting::retargetVibrotactileFeedbackFromRobotToHuman()
+bool Retargeting::retargetKinestheticVibrotactileFeedbackFromRobotToHuman()
 {
 
     for (size_t i = 0; i < m_numFingers; i++)
@@ -326,10 +326,25 @@ bool Retargeting::retargetVibrotactileFeedbackFromRobotToHuman()
     return true;
 }
 
-bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueRef,
-                                                         const std::vector<double>& axisVelocityRef,
-                                                         const std::vector<double>& axisValueFb,
-                                                         const std::vector<double>& axisVelocityFb)
+bool Retargeting::retargetSkinVibrotactileFeedbackFromRobotToHuman()
+{
+
+    return true;
+}
+
+bool Retargeting::retargetVibrotactileFeedbackFromRobotToHuman()
+{
+
+    return true;
+}
+
+bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
+    const std::vector<double>& axisValueRef,
+    const std::vector<double>& axisVelocityRef,
+    const std::vector<double>& axisValueFb,
+    const std::vector<double>& axisVelocityFb,
+    const std::vector<double>& skinContactStrength,
+    const std::vector<bool>& areFingersSkinInContact)
 {
     // check the input vector sizes
     if (!YarpHelper::checkSizeOfVector<double>(
@@ -349,6 +364,18 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const std::vector<doubl
     }
     if (!YarpHelper::checkSizeOfVector<double>(
             axisVelocityFb, m_numActuatedAxis, VAR_TO_STR(axisVelocityFb), m_logPrefix))
+    {
+        return false;
+    }
+    if (!YarpHelper::checkSizeOfVector<double>(
+            skinContactStrength, m_numFingers, VAR_TO_STR(skinContactStrength), m_logPrefix))
+    {
+        return false;
+    }
+    if (!YarpHelper::checkSizeOfVector<bool>(areFingersSkinInContact,
+                                             m_numFingers,
+                                             VAR_TO_STR(areFingersSkinInContact),
+                                             m_logPrefix))
     {
         return false;
     }
@@ -385,7 +412,7 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(const std::vector<doubl
         yError() << m_logPrefix << "cannot compute force feedback from robot to the human.";
         return false;
     }
-    if (!this->retargetVibrotactileFeedbackFromRobotToHuman())
+    if (!this->retargetKinestheticVibrotactileFeedbackFromRobotToHuman())
     {
         yError() << m_logPrefix << "cannot compute vibrotactile feedback from robot to the human.";
         return false;

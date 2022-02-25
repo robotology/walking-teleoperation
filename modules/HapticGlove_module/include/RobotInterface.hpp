@@ -73,6 +73,11 @@ class HapticGlove::RobotInterface
                              encoders sensors) */
     size_t m_noAllAxis; /**< the number of all robot hand axis */
 
+    size_t m_noFingers; /**< the number of robot fingers */
+
+    std::vector<std::string>
+        m_robotFingerNames; /**< Vector containing the name of the all the robot hand fingers. */
+
     std::vector<std::string> m_actuatedAxisNames; /**< Vector containing the name of the controlled
                                                      axes of the robot hand. */
 
@@ -549,6 +554,18 @@ public:
      * @return the number of actuated joints
      */
     const int getNumberOfActuatedJoints() const;
+
+    /**
+     * Get the number of iCub robot hand fingers
+     * @return the number of icub robot hand fingers
+     */
+    const int getNumberOfRobotFingers() const;
+
+    /**
+     * Get the name of the robot fingers
+     * @param names the names of the robot hand fingers
+     */
+    void getFingerNames(std::vector<std::string>& names) const;
 
     /**
      * Get the name of the actuated joints

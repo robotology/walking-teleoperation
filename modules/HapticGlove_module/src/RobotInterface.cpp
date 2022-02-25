@@ -59,6 +59,14 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     m_noAllJoints = m_allJointNames.size();
 
+    if (!YarpHelper::getVectorFromSearchable(config, "robot_finger_list", m_robotFingerNames))
+    {
+        yError() << m_logPrefix << "unable to get  robot_finger_list from the config file..";
+        return false;
+    }
+
+    m_noFingers = m_robotFingerNames.size();
+
     // add the list of axis and associated analog sensors
     std::vector<std::string> analogList;
     if (!YarpHelper::getVectorFromSearchable(config, "analog_list", analogList))
@@ -1091,10 +1099,21 @@ const int RobotInterface::getNumberOfActuatedJoints() const
     return m_noActuatedJoints;
 }
 
+const int RobotInterface::getNumberOfRobotFingers() const
+{
+    return m_noFingers;
+}
+
+void RobotInterface::getFingerNames(std::vector<std::string>& names) const
+{
+    names = m_robotFingerNames;
+}
+
 void RobotInterface::getActuatedJointNames(std::vector<std::string>& names) const
 {
     names = m_actuatedJointList;
 }
+
 void RobotInterface::getAllJointNames(std::vector<std::string>& names) const
 {
     names = m_allJointNames;

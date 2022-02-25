@@ -126,7 +126,21 @@ class HapticGlove::Retargeting
                                                const std::vector<double>& axisVelocityError);
 
     /**
-     * compute the retargeting vibrotactile feedback to the human hand fingers
+     * compute the retargeting vibrotactile feedback to the human hand fingers using kinesthetic
+     * data
+     * @return true/false in case of success/failure
+     */
+    bool retargetKinestheticVibrotactileFeedbackFromRobotToHuman();
+
+    /**
+     * compute the retargeting vibrotactile feedback to the human hand fingers using skin data
+     * @return true/false in case of success/failure
+     */
+    bool retargetSkinVibrotactileFeedbackFromRobotToHuman();
+
+    /**
+     * compute the retargeting vibrotactile feedback to the human hand fingers using both skin and
+     * kinesthetic data
      * @return true/false in case of success/failure
      */
     bool retargetVibrotactileFeedbackFromRobotToHuman();
@@ -183,7 +197,9 @@ public:
     bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueRef,
                                                 const std::vector<double>& axisVelocityRef,
                                                 const std::vector<double>& axisValueFb,
-                                                const std::vector<double>& axisVelocityFb);
+                                                const std::vector<double>& axisVelocityFb,
+                                                const std::vector<double>& skinContactStrength,
+                                                const std::vector<bool>& areFingersSkinInContact);
     /**
      * get the robot actuated joint references
      * @param robotJointReferences robot actuated joint references
