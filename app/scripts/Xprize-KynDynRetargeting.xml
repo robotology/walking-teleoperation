@@ -102,10 +102,10 @@
     <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/iFeelRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
     <protocol>fast_tcp</protocol>
-  </connection>
+  </connection-->
 
 </application>
