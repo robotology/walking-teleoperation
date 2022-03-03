@@ -25,7 +25,7 @@
     <parameters>--config HapticGlove.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run SenseGlove Wearable Device</description>
-    <node>icub-console-gui</node>
+    <node>icub-virtualizer</node>
     <tag>SenseGlove</tag>
   </module>
   
@@ -109,7 +109,7 @@
 
   <module>
     <name>WeightDisplayModule</name>
-    <parameters>--from WeightDisplay.ini</parameters>
+    <parameters>--from WeightDisplay.ini --period 0.6</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run weight display application</description>
     <node>icub-console-gui</node>
