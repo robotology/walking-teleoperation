@@ -14,7 +14,7 @@
    <!-- Modules -->
    <module>
      <name>SRanipalModule</name>
-     <parameters>--forceEyeCalibration --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 0.5 --eyeMaxVergence 10.0</parameters>
+     <parameters>--forceEyeCalibration --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 0.5 --eyeMaxVergence 0.0</parameters>
      <node>icub-virtualizer</node>
    </module>
 
