@@ -105,6 +105,12 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
     m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
     m_eyelidsPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
 
+    if (m_eyelidsPrecision <= 0.0)
+    {
+        yError() << "[EyelidsRetargeting::configure] eyeOpenPrecision has to be strictly positive.";
+        return false;
+    }
+
     double defaultMaxVelocity = 100.0;
     if (m_useEyelidsPositionControl)
     {

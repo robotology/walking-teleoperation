@@ -88,7 +88,7 @@ The following optional parameters can be inserted after calling with module, eac
 - ``forceEyeCalibration``, if set without value (i.e. ``--forceEyeCalibration``), or with value ``true`` (i.e. ``--forceEyeCalibration true``), it forces the eye calibration procedure on the headset at startup. Default ``false``.
 
 ### Eyelids retargeting
-- ``eyeOpenPrecision``, it determines the minimum variation of the measured eye openness of the operator (in the range [0, 1]), to command a variation in the robot eye lids. Default ``0.1``.
+- ``eyeOpenPrecision``, it determines the minimum variation of the measured eye openness of the operator (in the range [0, 1]), to command a variation in the robot eyelids. ``eyeOpenPrecision`` needs to be greater than 0. The minimum input value to trigger a motion is equal to 0.5 * ``eyeOpenPrecision``. Hence, if you set ``eyeOpenPrecision`` equal to 1.0, the eyelids will fully close as soon as the operator closes the eyes at half. This can be useful to make the robot eyelids close when the operator close the eyes more than a given threshold. Default ``0.1``.
 - ``useEyelidsPositionControl``, if set without value (i.e. ``--useEyelidsPositionControl``), or with value ``true`` (i.e. ``--useEyelidsPositionControl true``), the module will control the eyelids using position control instead of velocity. This has an effect only if ``useRawEyelids`` is not set, or set to ``false``. Default ``false``.
 - ``eyelidsMaxVelocity``, the maximum velocity used when controlling the eyelids. Default ``100`` (``75.0`` if using position control).
 - ``eyelidsVelocityGain``, the gain used when controlling the eyelids velocity. Default ``10.0``.
