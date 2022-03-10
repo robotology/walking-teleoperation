@@ -71,7 +71,7 @@
 
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml</parameters>
+    <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
     <node>icub-console-gui</node>
