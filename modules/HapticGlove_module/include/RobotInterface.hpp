@@ -10,6 +10,7 @@
 #define ROBOT_INTERFACE_HPP
 
 // std
+#include <array>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -142,6 +143,11 @@ class HapticGlove::RobotInterface
                                         means no pressure, `1` mean maximum pressure */
 
     yarp::sig::Matrix m_actuatedAxisLimits; /**< the min and max limits of the actuated axis */
+
+    std::unordered_map<std::string, std::array<double, 2>>
+        m_axisCustomMotionRange; /**< the unordered map from the axis name to the custom range of
+                                    motion of the axis limit; this will overwrite the
+                                    m_actuatedAxisLimits in [rad] */
 
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 

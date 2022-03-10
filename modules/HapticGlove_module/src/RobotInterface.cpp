@@ -227,6 +227,23 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
 
+    // get the custom range of axes motion
+    if (config.check("axes_custom_motion_range")
+        && config.find("axes_custom_motion_range").isList())
+    {
+        yarp::os::Bottle* axesLimitMap = config.find("axes_custom_motion_range").asList();
+        for (size_t i = 0; i < axesLimitMap->size(); i++)
+        {
+            yarp::os::Bottle* axisRange = axesLimitMap->get(i).asList();
+            std::string axisName = axisRange->get(0).asString();
+            double minVal = iDynTree::deg2rad(axisRange->get(1).asDouble()); // [rad]
+            double maxVal = iDynTree::deg2rad(axisRange->get(2).asDouble()); // [rad]
+
+            m_axisCustomMotionRange.insert(
+                std::make_pair(axisName, std::array<double, 2>{minVal, maxVal}));
+        }
+    }
+
     // resize the vectors
 
     // feedbacks
@@ -1087,6 +1104,26 @@ bool RobotInterface::getActuatedAxisLimits(yarp::sig::Matrix& limits)
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
         }
     }
+    for (const auto& axisRangeMap : m_axisCustomMotionRange)
+    {
+        std::string axisName = axisRangeMap.first;
+        auto axisLimits = axisRangeMap.second;
+
+        auto axisElement
+            = std::find(std::begin(m_actuatedAxisNames), std::end(m_actuatedAxisNames), axisName);
+        if (axisElement == std::end(m_actuatedAxisNames))
+        {
+            yError() << m_logPrefix << "unable to find " << axisName
+                     << " in the actuated axis vector list of strings.";
+            return false;
+        }
+
+        size_t axisIndex = axisElement - m_actuatedAxisNames.begin();
+
+        limits(axisIndex, 0) = axisLimits[0];
+        limits(axisIndex, 1) = axisLimits[1];
+    }
+
     return true;
 }
 
@@ -1173,6 +1210,7 @@ bool RobotInterface::getVelocityLimits(yarp::sig::Matrix& limits)
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
         }
     }
+
     return true;
 }
 
