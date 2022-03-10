@@ -100,6 +100,7 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
         return false;
     }
     options.put("wearableDataPorts", wearableDataPort);
+    options.put("carrier", "fast_tcp");
 
     if (!m_wearableDevice.open(options))
     {
@@ -151,7 +152,7 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!Network::connect(m_iWearActuatorPort.getName(), portNameIn))
+    if (!Network::connect(m_iWearActuatorPort.getName(), portNameIn, "fast_tcp"))
     {
         yError() << m_logPrefix << "output port: " << portNameOut << "input port: " << portNameIn
                  << " unable to connect the ports.";
