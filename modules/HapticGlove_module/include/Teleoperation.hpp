@@ -200,6 +200,12 @@ public:
     bool prepare(bool& isPrepared);
 
     /**
+     * Wait the teleoperation before running
+     * @return true/false in case of success/failure
+     */
+    bool wait();
+
+    /**
      * Set the moment in which the configuration is done
      * @param time the time at which the configuration is ended
      */

@@ -86,6 +86,10 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
     }
+    // wainting time after preparation and before running state machine
+    m_waitingStartTime = 0;
+    m_waitingDurationTime
+        = generalOptions.check("waitingDurationTime", yarp::os::Value(5.0)).asDouble();
 
     // update the end of the configuration time step
     double timeConfigurationEnd = yarp::os::Time::now();
@@ -188,7 +192,33 @@ bool HapticGloveModule::updateModule()
 
         if (isPrepared)
         {
+            m_state = HapticGloveFSM::Waiting;
+            m_waitingStartTime = yarp::os::Time::now();
+        }
+    } else if (m_state == HapticGloveFSM::Waiting)
+    {
+        double timeNow = yarp::os::Time::now();
+
+        if (timeNow - m_waitingStartTime > m_waitingDurationTime)
+        {
             m_state = HapticGloveFSM::Running;
+        } else
+        {
+            if (m_useLeftHand)
+            {
+                if (!m_leftHand->wait())
+                {
+                    yWarning() << m_logPrefix << "the left hand is unable to wait.";
+                }
+            }
+
+            if (m_useRightHand)
+            {
+                if (!m_rightHand->wait())
+                {
+                    yWarning() << m_logPrefix << "the right hand is unable to wait.";
+                }
+            }
         }
     }
     double t2 = yarp::os::Time::now();

@@ -30,13 +30,16 @@ private:
     std::string m_logPrefix;
     double m_dT; /**< Module period. */
     std::string m_robot; /**< robot name. */
+    double m_waitingStartTime; /**< the moment which waiting started */
+    double m_waitingDurationTime; /**< the duration of waiting state machine */
 
     /** Haptic Glove Finite state machine */
     enum class HapticGloveFSM
     {
         Configuring,
         Running,
-        Preparing
+        Preparing,
+        Waiting
     };
 
     HapticGloveFSM m_state; /**< State of the HapticGloveFSM */

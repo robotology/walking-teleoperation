@@ -415,6 +415,19 @@ bool Teleoperation::prepare(bool& isPrepared)
     return true;
 }
 
+bool Teleoperation::wait()
+{
+    bool ok = true;
+
+    if (!m_humanGlove->stopHapticFeedback())
+    {
+        yWarning() << m_logPrefix << "cannot stop haptic feedback.";
+        ok &= false;
+    }
+
+    return ok;
+}
+
 bool Teleoperation::close()
 {
     // close the logger.
