@@ -149,6 +149,13 @@ class HapticGlove::RobotInterface
                                     motion of the axis limit; this will overwrite the
                                     m_actuatedAxisLimits in [rad] */
 
+    std::unordered_map<std::string, double>
+        m_axisCustomHomeValues; /**< the unordered map from the axis name to the custom axis homing
+                                  value in [rad] */
+
+    yarp::sig::Vector
+        m_actuatedAxisHomeValues; /**< the vector of actuated axis home pose in [rad] */
+
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
     bool m_isMandatory; /**< If false neglect the errors coming from the robot driver. */
@@ -256,6 +263,12 @@ class HapticGlove::RobotInterface
      */
     bool isSteadyStateReached(std::vector<double>& reference, std::vector<double>& feedback);
 
+    /**
+     * Compute the actuated axis home pose values
+     * @return true / false in case of success / failure
+     */
+    bool computeActuatedAxisHomeValues();
+
 public:
     /**
      * Configure the robot interface
@@ -327,6 +340,20 @@ public:
      * @return true / false in case of success / failure
      */
     bool getActuatedAxisLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits);
+
+    /**
+     * Get the axis home Values
+     * @param axisHomeValues vector containing the axis homing values in radian
+     * @return true / false in case of success / failure
+     */
+    bool getActuatedAxisHomeValues(std::vector<double>& axisHomeValues);
+
+    /**
+     * Get the axis home Values
+     * @param axisHomeValues vector containing the axis homing values in radian
+     * @return true / false in case of success / failure
+     */
+    bool getActuatedAxisHomeValues(yarp::sig::Vector& axisHomeValues);
 
     /**
      * Get the axis velocity limits

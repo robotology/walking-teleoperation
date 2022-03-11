@@ -239,8 +239,40 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
             double minVal = iDynTree::deg2rad(axisRange->get(1).asDouble()); // [rad]
             double maxVal = iDynTree::deg2rad(axisRange->get(2).asDouble()); // [rad]
 
+            auto axisElement
+                = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
+            if (axisElement != std::end(m_allAxisNames))
+            {
+                yError() << m_logPrefix << "cannot find the axis " << axisName
+                         << "written in `axes_custom_motion_range` among the allAxisNames.";
+                return false;
+            }
+
             m_axisCustomMotionRange.insert(
                 std::make_pair(axisName, std::array<double, 2>{minVal, maxVal}));
+        }
+    }
+
+    // get the axes custom home values
+    if (config.check("axes_custom_home_angle") && config.find("axes_custom_home_angle").isList())
+    {
+        yarp::os::Bottle* axesHomeValuesMap = config.find("axes_custom_home_angle").asList();
+        for (size_t i = 0; i < axesHomeValuesMap->size(); i++)
+        {
+            yarp::os::Bottle* axisHomeValue = axesHomeValuesMap->get(i).asList();
+            std::string axisName = axisHomeValue->get(0).asString();
+            double homeVal = iDynTree::deg2rad(axisHomeValue->get(1).asDouble()); // [rad]
+
+            auto axisElement
+                = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
+            if (axisElement != std::end(m_allAxisNames))
+            {
+                yError() << m_logPrefix << "cannot find the axis " << axisName
+                         << "written in `axes_custom_home_angle` among the allAxisNames.";
+                return false;
+            }
+
+            m_axisCustomHomeValues.insert(std::make_pair(axisName, homeVal));
         }
     }
 
@@ -270,6 +302,8 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_axisVelocityReferences.resize(m_noActuatedAxis);
     m_motorCurrentReferences.resize(m_noActuatedAxis);
     m_motorPwmReferences.resize(m_noActuatedAxis);
+
+    m_actuatedAxisHomeValues.resize(m_noActuatedAxis);
 
     // check if the robot is alive by checking the robot encoder values
     bool okPosition = false;
@@ -511,13 +545,20 @@ bool RobotInterface::initializeAxisValues(const double& initializationTime)
         return false;
     }
 
-    std::vector<double> minLimits, maxLimits;
+    // get the actuated axis home values as one of the initialization steps
+    if (!this->computeActuatedAxisHomeValues())
+    {
+        yInfo() << m_logPrefix << "unable to compute the axis home values";
+        return false;
+    }
+
+    std::vector<double> axisHomeValues;
 
     yInfo() << m_logPrefix << "the necessary time for initialization is: " << initializationTime
             << " seconds.";
-    if (!this->getActuatedAxisLimits(minLimits, maxLimits))
+    if (!this->getActuatedAxisHomeValues(axisHomeValues))
     {
-        yError() << m_logPrefix << "unable to get the robot axis limits.";
+        yError() << m_logPrefix << "unable to get the robot axis home values.";
         return false;
     }
 
@@ -527,7 +568,7 @@ bool RobotInterface::initializeAxisValues(const double& initializationTime)
         return false;
     }
 
-    if (!this->setAxisReferences(minLimits, VOCAB_CM_POSITION))
+    if (!this->setAxisReferences(axisHomeValues, VOCAB_CM_POSITION))
     {
         yInfo() << m_logPrefix << "unable to set axis references.";
         return false;
@@ -540,7 +581,7 @@ bool RobotInterface::initializeAxisValues(const double& initializationTime)
     {
         this->getFeedback();
         this->axisFeedbacks(feedbacks);
-        steadyStateReached = this->isSteadyStateReached(minLimits, feedbacks);
+        steadyStateReached = this->isSteadyStateReached(axisHomeValues, feedbacks);
         yarp::os::Time::delay(0.01); // wait for 0.01 seconds before checking again the feedbacks
 
         if ((yarp::os::Time::now() - startingTime) > initializationTime)
@@ -1111,17 +1152,14 @@ bool RobotInterface::getActuatedAxisLimits(yarp::sig::Matrix& limits)
 
         auto axisElement
             = std::find(std::begin(m_actuatedAxisNames), std::end(m_actuatedAxisNames), axisName);
-        if (axisElement == std::end(m_actuatedAxisNames))
+        if (axisElement != std::end(m_actuatedAxisNames))
         {
-            yError() << m_logPrefix << "unable to find " << axisName
-                     << " in the actuated axis vector list of strings.";
-            return false;
+            // in this case the axisName is actuated
+            size_t axisIndex = axisElement - m_actuatedAxisNames.begin();
+
+            limits(axisIndex, 0) = axisLimits[0];
+            limits(axisIndex, 1) = axisLimits[1];
         }
-
-        size_t axisIndex = axisElement - m_actuatedAxisNames.begin();
-
-        limits(axisIndex, 0) = axisLimits[0];
-        limits(axisIndex, 1) = axisLimits[1];
     }
 
     return true;
@@ -1154,6 +1192,48 @@ bool RobotInterface::getActuatedAxisLimits(std::vector<double>& minLimits,
         minLimits[i] = m_actuatedAxisLimits(i, 0);
         maxLimits[i] = m_actuatedAxisLimits(i, 1);
     }
+    return true;
+}
+
+bool RobotInterface::computeActuatedAxisHomeValues()
+{
+    for (size_t i = 0; i < m_noActuatedAxis; i++)
+    {
+        m_actuatedAxisHomeValues(i) = m_actuatedAxisLimits(i, 0);
+    }
+
+    for (const auto& axisHomeMap : m_axisCustomHomeValues)
+    {
+        std::string axisName = axisHomeMap.first;
+        auto axisHomeValue = axisHomeMap.second;
+
+        auto axisElement
+            = std::find(std::begin(m_actuatedAxisNames), std::end(m_actuatedAxisNames), axisName);
+        if (axisElement != std::end(m_actuatedAxisNames))
+        {
+            // in this case the axisName is actuated
+            size_t axisIndex = axisElement - m_actuatedAxisNames.begin();
+
+            m_actuatedAxisHomeValues(axisIndex) = axisHomeValue;
+        }
+    }
+
+    return true;
+}
+bool RobotInterface::getActuatedAxisHomeValues(std::vector<double>& axisHomeValues)
+{
+    yarp::sig::Vector actuatedAxisHomeValues;
+
+    this->getActuatedAxisHomeValues(actuatedAxisHomeValues);
+
+    CtrlHelper::toStdVector(actuatedAxisHomeValues, axisHomeValues);
+
+    return true;
+}
+
+bool RobotInterface::getActuatedAxisHomeValues(yarp::sig::Vector& axisHomeValues)
+{
+    axisHomeValues = m_actuatedAxisHomeValues;
     return true;
 }
 

@@ -423,10 +423,17 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
         return false;
     }
 
-    m_data->axisValueReferencesStd = minLimit;
+    std::vector<double> homeValues;
+    if (!m_robotInterface->getActuatedAxisHomeValues(homeValues))
+    {
+        yError() << m_logPrefix << "cannot get the axis home values.";
+        return false;
+    }
+
+    m_data->axisValueReferencesStd = homeValues;
 
     m_data->axisValueReferencesStd[axisNumber]
-        = minLimit[axisNumber] + (maxLimit[axisNumber] - minLimit[axisNumber]) * sin(time);
+        = homeValues[axisNumber] + (maxLimit[axisNumber] - homeValues[axisNumber]) * sin(time);
 
     setAxisReferences(m_data->axisValueReferencesStd);
 
