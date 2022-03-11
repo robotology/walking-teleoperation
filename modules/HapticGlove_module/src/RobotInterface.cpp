@@ -241,10 +241,11 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
             auto axisElement
                 = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
-            if (axisElement != std::end(m_allAxisNames))
+            if (axisElement == std::end(m_allAxisNames))
             {
                 yError() << m_logPrefix << "cannot find the axis " << axisName
                          << "written in `axes_custom_motion_range` among the allAxisNames.";
+
                 return false;
             }
 
@@ -265,7 +266,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
             auto axisElement
                 = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
-            if (axisElement != std::end(m_allAxisNames))
+            if (axisElement == std::end(m_allAxisNames))
             {
                 yError() << m_logPrefix << "cannot find the axis " << axisName
                          << "written in `axes_custom_home_angle` among the allAxisNames.";
