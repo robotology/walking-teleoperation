@@ -289,14 +289,11 @@ bool Teleoperation::run()
     m_robotSkin->areFingersInContact(areFingersInContact);
     m_robotSkin->doesTactileSensorsWork(fingertipSkinsWork);
 
-    bool x = areFingersInContact[4] || areFingersInContact[5];
-    // areFingersInContact[4] = x;
-    // areFingersInContact[5] = x;
-
     for (int i = 0; i < m_data.humanVibrotactileFeedbacks.size(); i++)
     {
         if (!fingertipSkinsWork[i])
         {
+            // if the skin does not work, we use the kinesthetic data
             areFingersInContact[i]
                 = true; // so that we give force feedback only based on kinesthetic data
             vibrotactileFeedback[i]
