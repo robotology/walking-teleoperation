@@ -29,6 +29,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_logPrefix = "RobotSkin::";
     m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
 
+    m_samplingTime = config.check("samplingTime", yarp::os::Value(0.01)).asDouble();
+
     std::vector<std::string> robotFingerNameList;
 
     if (!YarpHelper::getVectorFromSearchable(config, "robot_finger_list", robotFingerNameList))
@@ -124,16 +126,24 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         fingerdata.indexEnd = std::round(tactileInfo[1]);
         fingerdata.noTactileSensors = fingerdata.indexEnd - fingerdata.indexStart + 1;
 
+        fingerdata.contactThresholdValue = tactileInfo[2];
+        fingerdata.vibrotactileGain = tactileInfo[3];
+
         fingerdata.rawTactileData.resize(fingerdata.noTactileSensors);
         fingerdata.tactileData.resize(fingerdata.noTactileSensors, 0.0);
         fingerdata.biasTactileSensor.resize(fingerdata.noTactileSensors, 0.0);
         fingerdata.stdTactileSensor.resize(fingerdata.noTactileSensors, 0.0);
         fingerdata.calibratedTactileData.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.previousCalibratedTactileData.resize(fingerdata.noTactileSensors, 0.0);
 
-        fingerdata.contactThresholdValue = tactileInfo[2];
-        fingerdata.vibrotactileGain = tactileInfo[3];
+        fingerdata.tactileDataDerivative.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.biasTactileSensorDerivative.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.stdTactileSensorDerivative.resize(fingerdata.noTactileSensors, 0.0);
+        fingerdata.calibratedTactileDataDerivative.resize(fingerdata.noTactileSensors, 0.0);
 
         fingerdata.collectedTactileData.resize(Eigen::NoChange, fingerdata.noTactileSensors);
+        fingerdata.collectedTactileDataDerivative.resize(Eigen::NoChange,
+                                                         fingerdata.noTactileSensors);
 
         m_fingersTactileData.push_back(fingerdata);
         m_totalNoTactile += fingerdata.noTactileSensors;
@@ -166,11 +176,21 @@ void RobotSkin::updateCalibratedTactileData()
             // range: [0,1] ; 0: no load, 1: max load
             finger.tactileData[i] = 1.0 - (finger.tactileData[i] / finger.maxTactileValue);
 
-            std::transform(finger.tactileData.begin(),
-                           finger.tactileData.end(),
-                           finger.biasTactileSensor.begin(),
-                           finger.calibratedTactileData.begin(),
-                           std::minus<double>());
+            //            std::transform(finger.tactileData.begin(),
+            //                           finger.tactileData.end(),
+            //                           finger.biasTactileSensor.begin(),
+            //                           finger.calibratedTactileData.begin(),
+            //                           std::minus<double>());
+            finger.calibratedTactileData[i] = finger.tactileData[i] - finger.biasTactileSensor[i];
+
+            if (!finger.firstTime)
+            {
+                finger.tactileDataDerivative[i]
+                    = (finger.calibratedTactileData[i] - finger.previousCalibratedTactileData[i])
+                      / m_samplingTime;
+            }
+            finger.firstTime = false;
+            finger.previousCalibratedTactileData[i] = finger.calibratedTactileData[i];
         }
     }
 }
@@ -187,6 +207,18 @@ bool RobotSkin::collectSkinDataForCalibration()
         {
             yError() << m_logPrefix
                      << "cannot add new axes feedback values to the collected axes data .";
+            return false;
+        }
+
+        Eigen::VectorXd tactileDataDerivative
+            = CtrlHelper::toEigenVector(data.tactileDataDerivative);
+
+        if (!CtrlHelper::push_back_row(data.collectedTactileDataDerivative,
+                                       tactileDataDerivative.transpose()))
+        {
+            yError()
+                << m_logPrefix
+                << "cannot add new axes feedback values to the collected axes data derivative.";
             return false;
         }
     }

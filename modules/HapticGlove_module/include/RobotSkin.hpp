@@ -34,28 +34,49 @@ struct FingertipTactileData;
  */
 struct HapticGlove::FingertipTactileData
 {
-    std::string fingerName;
-    size_t indexStart;
-    size_t indexEnd;
-    size_t noTactileSensors;
-    std::vector<double>
-        rawTactileData; /// range: 0-256; value 240 shows no load, and 0 shows max load
-    std::vector<double> tactileData; /// range: 0-1; 0 shows no load, and 1 shows max load
-    std::vector<double> calibratedTactileData; /// range: almost 0-1: 0: no load, 1 max load
-
     const double maxTactileValue = 255.0;
     const double minTactileValue = 0.0;
     const double noLoadValue = 240.0;
 
+    std::string fingerName;
+    size_t indexStart;
+    size_t indexEnd;
+    size_t noTactileSensors;
+    bool firstTime = true;
+
     double contactThresholdValue = 5.0; /// default value
     double vibrotactileGain = 1.0; /// default value
 
+    std::vector<double>
+        rawTactileData; /// range: 0-256; value 240 shows no load, and 0 shows max load
+
+    std::vector<double> tactileData; /// range: 0-1; 0 shows no load, and 1 shows max load
+    std::vector<double> tactileDataDerivative; /// shows the derivative of the tactile data
+
+    std::vector<double> calibratedTactileData; /// range: almost 0-1: 0: no load, 1 max load
+    std::vector<double> previousCalibratedTactileData; /// range: almost 0-1: 0: no load, 1 max load
+
+    std::vector<double>
+        calibratedTactileDataDerivative; /// shows the derivative of the calibrated tactile data
+
     std::vector<double> biasTactileSensor; /// mean of the tactile sensors when not touched
+    std::vector<double>
+        biasTactileSensorDerivative; /// mean of the tactile sensors derivative when not touched
+
     std::vector<double>
         stdTactileSensor; /// standard deviation (std) of the tactile sensors when not touched
 
+    std::vector<double> stdTactileSensorDerivative; /// standard deviation (std) of the tactile
+                                                    /// sensors derivative when not touched
+
     CtrlHelper::Eigen_Mat collectedTactileData; /**< The logged data to find the bias and standard
                             deviation (std) of tactile sensors;
+                            - dimension <o, t>:
+                            - o: number of observations (logged data),
+                            - m: number of tactile sensors*/
+
+    CtrlHelper::Eigen_Mat collectedTactileDataDerivative; /**< The logged data to find the bias and
+                            standard deviation (std) of tactile sensors;
                             - dimension <o, t>:
                             - o: number of observations (logged data),
                             - m: number of tactile sensors*/
@@ -102,6 +123,7 @@ private:
     bool m_rightHand;
     size_t m_noFingers;
     size_t m_totalNoTactile;
+    double m_samplingTime;
     std::vector<FingertipTactileData> m_fingersTactileData;
 
     std::vector<bool> m_areTactileSensorsWorking;
