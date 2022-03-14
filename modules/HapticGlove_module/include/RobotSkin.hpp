@@ -148,7 +148,7 @@ public:
 
     const size_t getNumOfTactileFeedbacks();
 
-    void doesTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking);
+    void doTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking);
 };
 
 #endif // ROBOT_SKIN_HPP

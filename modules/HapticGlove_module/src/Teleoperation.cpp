@@ -46,6 +46,9 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_moveRobot = config.check("enableMoveRobot", yarp::os::Value(1)).asBool();
     yInfo() << m_logPrefix << "move the robot: " << m_moveRobot;
 
+    m_useSkin = config.check("useSkin", yarp::os::Value(1)).asBool();
+    yInfo() << m_logPrefix << "use the robot fingertip skin: " << m_useSkin;
+
     // check if perform calibration phase for geting the user motion range
     m_getHumanMotionRange = config.check("getHumanMotionRange", yarp::os::Value(0)).asBool();
 
@@ -110,11 +113,14 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    m_robotSkin = std::make_unique<HapticGlove::RobotSkin>();
-    if (!m_robotSkin->configure(config, m_robot, rightHand))
+    if (m_useSkin)
     {
-        yError() << m_logPrefix << "unable to configure robot skin class.";
-        return false;
+        m_robotSkin = std::make_unique<HapticGlove::RobotSkin>();
+        if (!m_robotSkin->configure(config, m_robot, rightHand))
+        {
+            yError() << m_logPrefix << "unable to configure robot skin class.";
+            return false;
+        }
     }
 
     // get the vector sizes
@@ -262,19 +268,33 @@ bool Teleoperation::run()
         yWarning() << m_logPrefix << "unable to compute the control signals.";
     }
 
-    // get the skin data
-    m_robotSkin->getVibrotactileFeedback(m_data.robotFingerSkinVibrotactileFeedbacks);
-
-    m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
-
     // compute the haptic feedback
-    if (!m_retargeting->retargetHapticFeedbackFromRobotToHuman(m_data.robotAxisValueReferencesKf,
-                                                               m_data.robotAxisVelocityReferencesKf,
-                                                               m_data.robotAxisValueFeedbacksKf,
-                                                               m_data.robotAxisVelocityFeedbacksKf))
+    if (!m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingKinestheticData(
+            m_data.robotAxisValueReferencesKf,
+            m_data.robotAxisVelocityReferencesKf,
+            m_data.robotAxisValueFeedbacksKf,
+            m_data.robotAxisVelocityFeedbacksKf))
     {
         yWarning() << m_logPrefix
                    << "unable to retarget haptic feedback from the robot to the human.";
+    }
+
+    if (m_useSkin)
+    {
+        // since skins may stop working in the middle of an experiment, we check it continuously
+        m_robotSkin->doTactileSensorsWork(m_data.doRobotFingerSkinsWork);
+
+        // check if the fingers are in contact
+        m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
+
+        // get the skin data
+        m_robotSkin->getVibrotactileFeedback(m_data.robotFingerSkinVibrotactileFeedbacks);
+
+        // compute haptic feedback with consideration of the skin
+        m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingSkinData(
+            m_data.doRobotFingerSkinsWork,
+            m_data.areFingersSkinInContact,
+            m_data.robotFingerSkinVibrotactileFeedbacks);
     }
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanKinestheticForceFeedbacks))
@@ -286,31 +306,6 @@ bool Teleoperation::run()
     {
         yWarning() << m_logPrefix << "unable to get the vibrotactile feedback from retargeting.";
     }
-
-    bool x = m_data.areFingersSkinInContact[4] || m_data.areFingersSkinInContact[5];
-    // areFingersInContact[4] = x;
-    // areFingersInContact[5] = x;
-
-    for (int i = 0; i < m_data.kinestheticVibrotactileFeedbacks.size(); i++)
-    {
-        if (!m_data.doRobotFingerSkinsWork[i])
-        {
-            m_data.areFingersSkinInContact[i]
-                = true; // so that we give force feedback only based on kinesthetic data
-            m_data.robotFingerSkinVibrotactileFeedbacks[i]
-                = m_data.kinestheticVibrotactileFeedbacks[i]; // use kinesthetic data to give
-                                                              // feedback to the user
-        }
-    }
-
-    std::transform(m_data.humanKinestheticForceFeedbacks.begin(),
-                   m_data.humanKinestheticForceFeedbacks.end(),
-                   m_data.areFingersSkinInContact.begin(),
-                   m_data.humanKinestheticForceFeedbacks.begin(),
-                   std::multiplies<double>());
-
-    yInfo() << m_logPrefix
-            << "vibrotactile feedback:" << m_data.robotFingerSkinVibrotactileFeedbacks;
 
     // set the values
     if (m_moveRobot)
@@ -373,7 +368,6 @@ bool Teleoperation::prepare(bool& isPrepared)
         }
         // skin
         m_robotSkin->computeCalibrationParamters();
-        m_robotSkin->doesTactileSensorsWork(m_data.doRobotFingerSkinsWork);
 
     } else
     {

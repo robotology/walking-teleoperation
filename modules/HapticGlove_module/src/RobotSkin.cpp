@@ -252,7 +252,7 @@ void RobotSkin::areFingersInContact(std::vector<bool>& areFingersIncontact)
     areFingersIncontact = m_areFingersInContact;
 }
 
-void RobotSkin::doesTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking)
+void RobotSkin::doTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking)
 {
     tactileSensorsAreWorking = m_areTactileSensorsWorking;
 }

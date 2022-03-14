@@ -147,6 +147,9 @@ class HapticGlove::Teleoperation
     bool m_moveRobot; /**< the option to give the user the possibility to move (or not) the robot
                          (default value: true)*/
 
+    bool m_useSkin; /**< the option to give the user the possibility to use the skin data for haptic
+                       feedback. */
+
     double m_timeConfigurationEnd; /**< the moment which the configuration is done */
 
     std::unique_ptr<RobotController> m_robotController; /**< pointer to the robot controller. */

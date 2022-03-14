@@ -338,13 +338,11 @@ bool Retargeting::retargetVibrotactileFeedbackFromRobotToHuman()
     return true;
 }
 
-bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
+bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingKinestheticData(
     const std::vector<double>& axisValueRef,
     const std::vector<double>& axisVelocityRef,
     const std::vector<double>& axisValueFb,
-    const std::vector<double>& axisVelocityFb,
-    const std::vector<double>& skinContactStrength,
-    const std::vector<bool>& areFingersSkinInContact)
+    const std::vector<double>& axisVelocityFb)
 {
     // check the input vector sizes
     if (!YarpHelper::checkSizeOfVector<double>(
@@ -364,18 +362,6 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
     }
     if (!YarpHelper::checkSizeOfVector<double>(
             axisVelocityFb, m_numActuatedAxis, VAR_TO_STR(axisVelocityFb), m_logPrefix))
-    {
-        return false;
-    }
-    if (!YarpHelper::checkSizeOfVector<double>(
-            skinContactStrength, m_numFingers, VAR_TO_STR(skinContactStrength), m_logPrefix))
-    {
-        return false;
-    }
-    if (!YarpHelper::checkSizeOfVector<bool>(areFingersSkinInContact,
-                                             m_numFingers,
-                                             VAR_TO_STR(areFingersSkinInContact),
-                                             m_logPrefix))
     {
         return false;
     }
@@ -416,6 +402,46 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHuman(
     {
         yError() << m_logPrefix << "cannot compute vibrotactile feedback from robot to the human.";
         return false;
+    }
+
+    return true;
+}
+
+bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingSkinData(
+    const std::vector<bool>& areFingersSkinWorking,
+    const std::vector<bool>& areFingersSkinInContact,
+    const std::vector<double>& skinContactStrength)
+{
+
+    if (!YarpHelper::checkSizeOfVector<bool>(
+            areFingersSkinWorking, m_numFingers, VAR_TO_STR(areFingersSkinWorking), m_logPrefix))
+    {
+        return false;
+    }
+
+    if (!YarpHelper::checkSizeOfVector<bool>(areFingersSkinInContact,
+                                             m_numFingers,
+                                             VAR_TO_STR(areFingersSkinInContact),
+                                             m_logPrefix))
+    {
+        return false;
+    }
+
+    if (!YarpHelper::checkSizeOfVector<double>(
+            skinContactStrength, m_numFingers, VAR_TO_STR(skinContactStrength), m_logPrefix))
+    {
+        return false;
+    }
+
+    for (int i = 0; i < m_numFingers; i++)
+    {
+        if (areFingersSkinWorking[i])
+        {
+            m_fingerForceFeedback[i] = areFingersSkinInContact[i] ? m_fingerForceFeedback[i] : 0.0;
+            m_fingerVibrotactileFeedback[i]
+                = areFingersSkinInContact[i] ? skinContactStrength[i] : 0.0;
+        }
+        // if not working use the default kinesthetic data for the haptic feedback
     }
 
     return true;
