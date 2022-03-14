@@ -10,8 +10,12 @@
 #include <math.h>
 
 // teleoperation
+#include <ControlHelper.hpp>
 #include <RobotSkin.hpp>
 #include <Utils.hpp>
+
+// yarp
+#include <yarp/os/Property.h>
 
 using namespace HapticGlove;
 
@@ -45,6 +49,41 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_fingersVibrotactileFeedback.resize(m_noFingers, 0.0);
     m_fingersContactStrength.resize(m_noFingers, 0.0);
 
+    // raw tactile sensors
+    size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
+    m_fingertipRawTactileFeedbacksYarpVector.resize(noTactileSensors);
+    m_fingertipRawTactileFeedbacksStdVector.resize(noTactileSensors);
+
+    // open the iAnalogsensor YARP device for robot skin
+    std::string robot = config.check("robot", yarp::os::Value("icub")).asString();
+    std::string iCubSensorPart;
+
+    if (!YarpHelper::getStringFromSearchable(config, "remote_sensor_boards", iCubSensorPart))
+    {
+        yError() << m_logPrefix << "unable to find remote_sensor_boards into config file.";
+        return false;
+    }
+
+    yarp::os::Property optionsTactileDevice;
+
+    optionsTactileDevice.put("robot", robot.c_str());
+    optionsTactileDevice.put("device", "analogsensorclient");
+    optionsTactileDevice.put("local", "/" + robot + "/skin" + "/" + iCubSensorPart + "/in");
+    optionsTactileDevice.put("remote", "/" + robot + "/skin" + "/" + iCubSensorPart);
+
+    if (!m_tactileSensorDevice.open(optionsTactileDevice))
+    {
+        yError() << m_logPrefix << "could not open analogSensorClient object for the robot skin.";
+        return false;
+    }
+
+    if (!m_tactileSensorDevice.view(m_tactileSensorInterface) || !m_tactileSensorInterface)
+    {
+        yError() << m_logPrefix << "cannot obtain IAnalogSensor interface for the robot skin";
+        return false;
+    }
+
+    // make the vector tactile info for the fingers
     for (const auto& finger : robotFingerNameList)
     {
         FingertipTactileData fingerdata;
@@ -110,13 +149,14 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     return true;
 }
 
-void RobotSkin::setRawTactileFeedbacks(const std::vector<double>& rawTactileFeedbacks)
+void RobotSkin::updateCalibratedTactileData()
 {
     for (auto& finger : m_fingersTactileData)
     {
         for (size_t i = 0; i < finger.noTactileSensors; i++)
         {
-            finger.rawTactileData[i] = rawTactileFeedbacks[i + finger.indexStart];
+            finger.rawTactileData[i]
+                = m_fingertipRawTactileFeedbacksStdVector[i + finger.indexStart];
 
             // crop the data to be sure they are in the range of 0-255
             finger.tactileData[i] = std::max(
@@ -196,9 +236,26 @@ bool RobotSkin::getFingertipTactileFeedbacks(const size_t fingertipIndex,
     return true;
 }
 
-void RobotSkin::updateTactileFeedbacks(const std::vector<double>& rawTactileFeedbacks)
+bool RobotSkin::getTactileFeedbackFromRobot()
 {
-    this->setRawTactileFeedbacks(rawTactileFeedbacks);
+    if (!(m_tactileSensorInterface->read(m_fingertipRawTactileFeedbacksYarpVector)
+          == yarp::dev::IAnalogSensor::AS_OK))
+    {
+        yError() << m_logPrefix << "Unable to get tactile sensor data.";
+        return false;
+    }
+
+    CtrlHelper::toStdVector(m_fingertipRawTactileFeedbacksYarpVector,
+                            m_fingertipRawTactileFeedbacksStdVector);
+
+    return true;
+}
+
+void RobotSkin::updateTactileFeedbacks()
+{
+    this->getTactileFeedbackFromRobot();
+
+    this->updateCalibratedTactileData();
 
     this->computeAreFingersInContact();
 
@@ -294,4 +351,30 @@ bool RobotSkin::getFingertipMaxTactileFeedback(std::vector<double>& fingertipPre
 const size_t RobotSkin::getNumOfTactileFeedbacks()
 {
     return m_totalNoTactile;
+}
+
+bool RobotSkin::close()
+{
+    bool ok = true;
+    if (!m_tactileSensorDevice.close())
+    {
+        yWarning() << m_logPrefix
+                   << "Unable to close the tactile sensor analogsensorclient device.";
+        ok &= false;
+    }
+    m_tactileSensorInterface = nullptr;
+
+    yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
+
+    return ok;
+}
+
+const yarp::sig::Vector& RobotSkin::fingerRawTactileFeedbacks() const
+{
+    return m_fingertipRawTactileFeedbacksYarpVector;
+}
+
+void RobotSkin::fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks)
+{
+    fingertipTactileFeedbacks = m_fingertipRawTactileFeedbacksStdVector;
 }

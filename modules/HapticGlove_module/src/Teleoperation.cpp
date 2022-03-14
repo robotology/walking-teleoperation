@@ -225,10 +225,10 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisCovReferencesKf);
 
     // get tactile sensors data
-    m_robotController->controlHelper()->fingerRawTactileFeedbacks(m_data.fingertipsRawSkinData);
-
-    m_robotSkin->updateTactileFeedbacks(m_data.fingertipsRawSkinData);
-
+    if (m_useSkin)
+    {
+        m_robotSkin->updateTactileFeedbacks();
+    }
     return true;
 }
 
@@ -383,7 +383,10 @@ bool Teleoperation::prepare(bool& isPrepared)
         }
 
         // skin
-        m_robotSkin->collectSkinDataForCalibration();
+        if (m_useSkin)
+        {
+            m_robotSkin->collectSkinDataForCalibration();
+        }
     }
 
     if (m_robotController->isRobotPrepared())
@@ -447,6 +450,14 @@ bool Teleoperation::close()
     //  glove may continue to provide the haptic feedback according to the last sent command.
     std::this_thread::sleep_for(
         std::chrono::milliseconds(50)); // wait for 50 ms to send the stop command.
+    if (m_useSkin)
+    {
+        if (!m_robotSkin->close())
+        {
+            yWarning() << m_logPrefix << "unable to close the skin class.";
+            ok &= false;
+        }
+    }
 
     if (!m_robotController->controlHelper()->close())
     {

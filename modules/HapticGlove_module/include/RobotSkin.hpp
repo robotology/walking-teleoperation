@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file RobotSkin.hpp
  * @authors Kourosh Darvish <kourosh.darvish@iit.it>
  * @copyright 2021 iCub Facility - Istituto Italiano di Tecnologia
@@ -19,6 +19,8 @@
 #include <RobotInterface.hpp>
 
 // yarp
+#include <yarp/dev/IAnalogSensor.h>
+#include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Searchable.h>
 
 namespace HapticGlove
@@ -109,13 +111,27 @@ private:
     std::vector<double> m_fingersContactStrength;
     double m_tactileWorkingThreshold;
 
-    void setRawTactileFeedbacks(const std::vector<double>& rawTactileFeedbacks);
+    yarp::sig::Vector
+        m_fingertipRawTactileFeedbacksYarpVector; /**< fingertip raw tactile feedbacks, `0`
+                                        means high pressure, `255` means low pressure */
+    std::vector<double>
+        m_fingertipRawTactileFeedbacksStdVector; /**< fingertip raw tactile feedbacks, `0`
+                                        means high pressure, `255` means low pressure */
+
+    yarp::dev::PolyDriver m_tactileSensorDevice; /**< Analog device for the skin. */
+
+    yarp::dev::IAnalogSensor* m_tactileSensorInterface{
+        nullptr}; /**< skin ananlog sensor interface */
+
+    void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
 
     void computeMaxContactStrength();
 
     void computeAreFingersInContact();
+
+    bool getTactileFeedbackFromRobot();
 
 public:
     RobotSkin();
@@ -128,7 +144,7 @@ public:
     bool
     configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
-    void updateTactileFeedbacks(const std::vector<double>& rawTactileFeedbacks);
+    void updateTactileFeedbacks();
 
     bool computeCalibrationParamters();
 
@@ -149,6 +165,20 @@ public:
     const size_t getNumOfTactileFeedbacks();
 
     void doTactileSensorsWork(std::vector<bool>& tactileSensorsAreWorking);
+
+    /**
+     * Get the fingertip calibrated tactile feedbacks
+     * @return fingertip calibrated tactile feedbacks
+     */
+    const yarp::sig::Vector& fingerRawTactileFeedbacks() const;
+
+    /**
+     * Get the fingertip calibrated tactile feedbacks
+     * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
+     */
+    void fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks);
+
+    bool close();
 };
 
 #endif // ROBOT_SKIN_HPP

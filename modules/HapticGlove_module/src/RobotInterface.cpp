@@ -233,8 +233,6 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
-
     // get the custom range of axes motion
     if (config.check("axes_custom_motion_range")
         && config.find("axes_custom_motion_range").isList())
@@ -302,7 +300,6 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_motorCurrentFeedbacks.resize(m_noActuatedAxis);
     m_motorPwmFeedbacks.resize(m_noActuatedAxis);
     m_pidOutput.resize(m_noActuatedAxis);
-    m_fingertipRawTactileFeedbacks.resize(noTactileSensors);
 
     // reference
     m_referenceValues.resize(m_noActuatedAxis);
@@ -847,13 +844,6 @@ bool RobotInterface::getFeedback()
         return false;
     }
 
-    if (!(m_tactileSensorInterface->read(m_fingertipRawTactileFeedbacks)
-          == yarp::dev::IAnalogSensor::AS_OK))
-    {
-        yError() << m_logPrefix << "Unable to get tactile sensor data.";
-        return false;
-    }
-
     return true;
 }
 
@@ -1017,16 +1007,6 @@ void RobotInterface::motorPidOutputs(std::vector<double>& motorPidOutputs)
     CtrlHelper::toStdVector(m_pidOutput, motorPidOutputs);
 }
 
-const yarp::sig::Vector& RobotInterface::fingerRawTactileFeedbacks() const
-{
-    return m_fingertipRawTactileFeedbacks;
-}
-
-void RobotInterface::fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks)
-{
-    CtrlHelper::toStdVector(m_fingertipRawTactileFeedbacks, fingertipTactileFeedbacks);
-}
-
 bool RobotInterface::close()
 {
     yInfo() << m_logPrefix << "closing.";
@@ -1055,13 +1035,6 @@ bool RobotInterface::close()
         ok &= false;
     }
 
-    if (!m_tactileSensorDevice.close())
-    {
-        yWarning() << m_logPrefix
-                   << "Unable to close the tactile sensor analogsensorclient device.";
-        ok &= false;
-    }
-
     m_timedInterface = nullptr;
     m_encodersInterface = nullptr;
     m_positionDirectInterface = nullptr;
@@ -1073,7 +1046,6 @@ bool RobotInterface::close()
     m_currentInterface = nullptr;
     m_pwmInterface = nullptr;
     m_pidInterface = nullptr;
-    m_tactileSensorInterface = nullptr;
 
     yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
     return ok;
