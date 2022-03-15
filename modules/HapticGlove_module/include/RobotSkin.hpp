@@ -87,6 +87,12 @@ struct HapticGlove::FingertipTactileData
     {
         return *std::max_element(calibratedTactileData.begin(), calibratedTactileData.end());
     }
+    double maxTactileDerivativeFeedbackValue()
+    {
+        return tactileDataDerivative[std::distance(
+            calibratedTactileData.begin(),
+            std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
+    }
 
     double contactThreshold()
     {
@@ -130,6 +136,8 @@ private:
     std::vector<bool> m_areFingersInContact;
 
     std::vector<double> m_fingersVibrotactileFeedback;
+    std::vector<double> m_fingersVibrotactileDerivativeFeedback;
+
     std::vector<double> m_fingersContactStrength;
     double m_tactileWorkingThreshold;
 
@@ -153,7 +161,7 @@ private:
 
     void computeAreFingersInContact();
 
-    bool getTactileFeedbackFromRobot();
+    bool getRawTactileFeedbackFromRobot();
 
 public:
     RobotSkin();
@@ -183,6 +191,9 @@ public:
     void getContactStrength(std::vector<double>& fingersContactStrength);
 
     void getVibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback);
+
+    void
+    getVibrotactileDerivativeFeedback(std::vector<double>& fingersVibrotactileDerivativeFeedback);
 
     const size_t getNumOfTactileFeedbacks();
 

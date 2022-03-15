@@ -49,6 +49,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
     m_fingersVibrotactileFeedback.resize(m_noFingers, 0.0);
+    m_fingersVibrotactileDerivativeFeedback.resize(m_noFingers, 0.0);
     m_fingersContactStrength.resize(m_noFingers, 0.0);
 
     // raw tactile sensors
@@ -176,17 +177,13 @@ void RobotSkin::updateCalibratedTactileData()
             // range: [0,1] ; 0: no load, 1: max load
             finger.tactileData[i] = 1.0 - (finger.tactileData[i] / finger.maxTactileValue);
 
-            //            std::transform(finger.tactileData.begin(),
-            //                           finger.tactileData.end(),
-            //                           finger.biasTactileSensor.begin(),
-            //                           finger.calibratedTactileData.begin(),
-            //                           std::minus<double>());
             finger.calibratedTactileData[i] = finger.tactileData[i] - finger.biasTactileSensor[i];
 
             if (!finger.firstTime)
             {
                 finger.tactileDataDerivative[i]
-                    = (finger.calibratedTactileData[i] - finger.previousCalibratedTactileData[i])
+                    = std::abs(finger.calibratedTactileData[i]
+                               - finger.previousCalibratedTactileData[i])
                       / m_samplingTime;
             }
             finger.firstTime = false;
@@ -234,10 +231,19 @@ bool RobotSkin::computeCalibrationParamters()
         bool tactileSenorsWork = false;
         for (size_t i = 0; i < data.noTactileSensors; i++)
         {
+            // mean and std of the tactile data
             Eigen::VectorXd vec = data.collectedTactileData.col(i);
             data.biasTactileSensor[i] = vec.mean();
             data.stdTactileSensor[i]
                 = std::sqrt(((vec.array() - vec.mean()).square().sum()) / vec.size());
+
+            // mean and std of the tactile data derivative
+            Eigen::VectorXd vecDerivative = data.collectedTactileData.col(i);
+            data.biasTactileSensorDerivative[i] = vecDerivative.mean();
+            data.stdTactileSensorDerivative[i]
+                = std::sqrt(((vecDerivative.array() - vecDerivative.mean()).square().sum())
+                            / vecDerivative.size());
+
             // if a tactile senors does not work its std is zero
             // normally either all or none of the tactile sensors of a fingertip work
             // so if at least one tactile sensor works, the skin works
@@ -268,7 +274,7 @@ bool RobotSkin::getFingertipTactileFeedbacks(const size_t fingertipIndex,
     return true;
 }
 
-bool RobotSkin::getTactileFeedbackFromRobot()
+bool RobotSkin::getRawTactileFeedbackFromRobot()
 {
     if (!(m_tactileSensorInterface->read(m_fingertipRawTactileFeedbacksYarpVector)
           == yarp::dev::IAnalogSensor::AS_OK))
@@ -285,7 +291,7 @@ bool RobotSkin::getTactileFeedbackFromRobot()
 
 void RobotSkin::updateTactileFeedbacks()
 {
-    this->getTactileFeedbackFromRobot();
+    this->getRawTactileFeedbackFromRobot();
 
     this->updateCalibratedTactileData();
 
@@ -323,6 +329,9 @@ void RobotSkin::computeVibrotactileFeedback()
 
         m_fingersVibrotactileFeedback[i]
             = 15.0 * std::log(2 * std::pow(x, 0.7) + 1) + 0.5 * std::pow(x, 1.1);
+
+        m_fingersVibrotactileDerivativeFeedback[i]
+            = m_fingersTactileData[i].maxTactileDerivativeFeedbackValue();
     }
 }
 
@@ -334,6 +343,12 @@ void RobotSkin::getContactStrength(std::vector<double>& fingersContactStrength)
 void RobotSkin::getVibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback)
 {
     fingersVibrotactileFeedback = m_fingersVibrotactileFeedback;
+}
+
+void RobotSkin::getVibrotactileDerivativeFeedback(
+    std::vector<double>& fingersVibrotactileDerivativeFeedback)
+{
+    fingersVibrotactileDerivativeFeedback = m_fingersVibrotactileDerivativeFeedback;
 }
 
 void RobotSkin::areFingersInContact(std::vector<bool>& areFingersIncontact)

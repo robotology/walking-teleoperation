@@ -410,7 +410,7 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingKinestheticData(
 bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingSkinData(
     const std::vector<bool>& areFingersSkinWorking,
     const std::vector<bool>& areFingersSkinInContact,
-    const std::vector<double>& skinContactStrength)
+    const std::vector<double>& tactileVibrotactileFeedback)
 {
 
     if (!YarpHelper::checkSizeOfVector<bool>(
@@ -427,8 +427,10 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingSkinData(
         return false;
     }
 
-    if (!YarpHelper::checkSizeOfVector<double>(
-            skinContactStrength, m_numFingers, VAR_TO_STR(skinContactStrength), m_logPrefix))
+    if (!YarpHelper::checkSizeOfVector<double>(tactileVibrotactileFeedback,
+                                               m_numFingers,
+                                               VAR_TO_STR(tactileVibrotactileFeedback),
+                                               m_logPrefix))
     {
         return false;
     }
@@ -439,7 +441,7 @@ bool Retargeting::retargetHapticFeedbackFromRobotToHumanUsingSkinData(
         {
             m_fingerForceFeedback[i] = areFingersSkinInContact[i] ? m_fingerForceFeedback[i] : 0.0;
             m_fingerVibrotactileFeedback[i]
-                = areFingersSkinInContact[i] ? skinContactStrength[i] : 0.0;
+                = areFingersSkinInContact[i] ? tactileVibrotactileFeedback[i] : 0.0;
         }
         // if not working use the default kinesthetic data for the haptic feedback
     }

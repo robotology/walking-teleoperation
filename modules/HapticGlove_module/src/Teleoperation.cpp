@@ -290,6 +290,10 @@ bool Teleoperation::run()
         // get the skin data
         m_robotSkin->getVibrotactileFeedback(m_data.robotFingerSkinVibrotactileFeedbacks);
 
+        std::vector<double> fingertipVibrotactileDerivativeFeedbacks;
+        m_robotSkin->getVibrotactileDerivativeFeedback(fingertipVibrotactileDerivativeFeedbacks);
+        yInfo() << "tactile derivative: " << fingertipVibrotactileDerivativeFeedbacks;
+
         // compute haptic feedback with consideration of the skin
         m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingSkinData(
             m_data.doRobotFingerSkinsWork,
