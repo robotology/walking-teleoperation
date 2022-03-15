@@ -76,6 +76,40 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         return false;
     }
 
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "angle_threshold_still_rad", m_angleThresholdOperatorStill))
+    {
+        yError() << "Failed to read angle_threshold_still_rad";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "angle_threshold_moving_rad", m_angleThresholdOperatorMoving))
+    {
+        yError() << "Failed to read angle_threshold_moving_rad";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "time_threshold_moving_s", m_operatorStillTimeThreshold))
+    {
+        yError() << "Failed to read time_threshold_moving_s";
+        return false;
+    }
+
+    m_operatorCurrentStillAngle = 0.0;
+    m_operatorStillTime = -1.0;
+    m_operatorMoving = false;
+
+    if (m_angleThresholdOperatorMoving < m_angleThresholdOperatorStill)
+    {
+        yError() << "The angle threshold to consider the operator moving needs to be greater than the one to consider him still.";
+        return false;
+    }
+
+    if (m_operatorStillTimeThreshold < 0.0)
+    {
+        yError() << "The time threshold to consider the operator still needs to be greater than 0.";
+        return false;
+    }
+
     return true;
 }
 
@@ -466,6 +500,44 @@ bool VirtualizerModule::updateModule()
     {
         double newVelocity = Angles::shortestAngularDistance(m_oldPlayerYaw, playerYaw)/getPeriod();
         double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+
+        //If the operator is moving and then remains close to a certain angle for a while, then we consider the operator still
+        //if the operator is still, it needs to move of a certain angle before considering it moving.
+
+
+        if (m_operatorMoving)
+        {
+            if (Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw) < m_angleThresholdOperatorStill)
+            {
+                if (m_operatorStillTime < 0)
+                {
+                    m_operatorStillTime = yarp::os::Time::now();
+                }
+                else if (yarp::os::Time::now() - m_operatorStillTime > m_operatorStillTimeThreshold) {
+                    m_operatorMoving = false;
+                }
+            }
+            else
+            {
+                m_operatorCurrentStillAngle = playerYaw;
+                m_operatorStillTime = -1.0;
+            }
+        }
+        else
+        {
+            if (Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw) > m_angleThresholdOperatorMoving)
+            {
+                m_operatorMoving = true;
+                m_operatorCurrentStillAngle = playerYaw;
+                m_operatorStillTime = -1.0;
+            }
+        }
+
+        if (!m_operatorMoving)
+        {
+            filteredVelocity = 0.0;
+        }
+
         y = -m_velocityScaling * filteredVelocity; //The ring has the z axis pointing downward
     }
     else

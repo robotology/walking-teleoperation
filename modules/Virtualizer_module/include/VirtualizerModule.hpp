@@ -62,6 +62,13 @@ private:
     double m_velocityDeadzone; /**< Absolute value below which the ring is considered still. */
     double m_velocityScaling; /**< Scaling value from the encoder value to a reference point. */
     std::deque<double> m_movingAverage; /**< Buffer to save velocity data. */
+    double m_angleThresholdOperatorStill; /**< Angle threshold to consider the operator still. */
+    double m_angleThresholdOperatorMoving; /**< Angle threshold to consider the operator moving. */
+    double m_operatorCurrentStillAngle; /**< The angle in which the operator when considered still the first time. */
+    double m_operatorStillTime; /**< First instant in which the operator was considered still. */
+    double m_operatorStillTimeThreshold; /**< Time threshold to conder the operator still. */
+    bool m_operatorMoving; /**< The operator is currently moving. */
+
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */
     yarp::dev::PolyDriver m_headDevice; /**< Device to retrieve neck values. */
