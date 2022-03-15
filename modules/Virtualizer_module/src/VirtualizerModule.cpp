@@ -96,7 +96,7 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
 
     m_operatorCurrentStillAngle = 0.0;
     m_operatorStillTime = -1.0;
-    m_operatorMoving = false;
+    m_operatorMoving = true;
 
     if (m_angleThresholdOperatorMoving < m_angleThresholdOperatorStill)
     {
@@ -507,13 +507,15 @@ bool VirtualizerModule::updateModule()
 
         if (m_operatorMoving)
         {
-            if (Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw) < m_angleThresholdOperatorStill)
+            if (std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw)) < m_angleThresholdOperatorStill)
             {
+                yInfo() << "The operator seems fixed";
                 if (m_operatorStillTime < 0)
                 {
                     m_operatorStillTime = yarp::os::Time::now();
                 }
                 else if (yarp::os::Time::now() - m_operatorStillTime > m_operatorStillTimeThreshold) {
+                    yInfo() << "The operator is fixed";
                     m_operatorMoving = false;
                 }
             }
@@ -525,8 +527,9 @@ bool VirtualizerModule::updateModule()
         }
         else
         {
-            if (Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw) > m_angleThresholdOperatorMoving)
+            if (std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw)) > m_angleThresholdOperatorMoving)
             {
+                yInfo() << "The operator is moving";
                 m_operatorMoving = true;
                 m_operatorCurrentStillAngle = playerYaw;
                 m_operatorStillTime = -1.0;
