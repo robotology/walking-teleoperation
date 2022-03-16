@@ -20,6 +20,29 @@
 
 
    <!-- Modules -->
+   <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run iFeelSuit and Multi Haptic driver</description>
+    <node>icub-console-gui</node>
+    <tag>iFeelSuitMultiHaptic</tag>
+  </module>
+  
+  <module>
+    <name>WeightDisplayModule</name>
+    <parameters>--from WeightDisplay.ini --period 0.6</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run weight display application</description>
+    <node>icub-console-gui</node>
+    <dependencies>
+      <port timeout="11.0">${right_hand_wrench_port}</port>
+      <port timeout="11.0">${left_hand_wrench_port}</port>
+      <port timeout="11.0">${openxr_weight_label_port}</port>
+    </dependencies>
+    <tag>WeightDisplayModule</tag>
+  </module>
+  
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config HapticGlove.xml</parameters>
@@ -29,7 +52,6 @@
     <tag>SenseGlove</tag>
   </module>
   
-  
   <module>
     <name>VirtualizerModule</name>
     <parameters>--use_transform_server true</parameters>
@@ -37,16 +59,6 @@
           <port timeout="15.0">/transformServer/transforms:o</port>
     </dependencies>
     <node>icub-virtualizer</node>
-  </module>
-
-
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
-    <description>Run iFeelSuit and Multi Haptic driver</description>
-    <node>icub-console-gui</node>
-    <tag>iFeelSuitMultiHaptic</tag>
   </module>
   
   <module>
@@ -67,6 +79,9 @@
     <dependencies>
       <port timeout="11.0">/transformServer/transforms:o</port>
     </dependencies>
+    <ensure>
+      <wait when="start">5.0</wait>
+    </ensure>
   </module>
 
   <module>
@@ -77,8 +92,8 @@
     <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="11.0">/Wearable/OpenXRTransform/data:o</port>
-      <port timeout="11.0">/iFeelSuit/WearableData/data:o</port>
+      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port>
+      <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
     </dependencies>
   </module>
   
@@ -90,8 +105,8 @@
     <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="11.0">/iCub/RobotStateWrapper/state:o</port>
-      <port timeout="11.0">/HDE/WearableTargetsWrapper/state:o</port>
+      <port timeout="15.0">/iCub/RobotStateWrapper/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsWrapper/state:o</port>
     </dependencies>
   </module>
 
@@ -105,20 +120,6 @@
     <dependencies>
       <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
     </dependencies>
-  </module>
-
-  <module>
-    <name>WeightDisplayModule</name>
-    <parameters>--from WeightDisplay.ini --period 0.6</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
-    <description>Run weight display application</description>
-    <node>icub-console-gui</node>
-    <dependencies>
-      <port timeout="11.0">${right_hand_wrench_port}</port>
-      <port timeout="11.0">${left_hand_wrench_port}</port>
-      <port timeout="11.0">${openxr_weight_label_port}</port>
-    </dependencies>
-    <tag>WeightDisplayModule</tag>
   </module>
   
   <!-- Connections -->
