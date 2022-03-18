@@ -649,6 +649,24 @@ void VirtualizerModule::resetPlayerHeight()
     m_cvirtDeviceID->ResetPlayerHeight();
 }
 
+void VirtualizerModule::forceStillAngle()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+    // get data from virtualizer
+    double playerYaw;
+    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+
+    playerYaw *= 360.0f;
+    playerYaw = playerYaw * M_PI / 180;
+    playerYaw = Angles::normalizeAngle(playerYaw);
+
+    m_operatorMoving = false;
+    m_operatorCurrentStillAngle = playerYaw;
+    m_operatorStillTime = -1.0;
+
+    yInfo() << "Forced the operator still angle to" << playerYaw;
+}
+
 double VirtualizerModule::threshold(const double &input, double deadzone)
 {
     if (input >= 0)

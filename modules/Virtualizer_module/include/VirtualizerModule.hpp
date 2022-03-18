@@ -170,6 +170,11 @@ public:
      * Reset the player height
      */
     virtual void resetPlayerHeight() override;
+
+     /**
+     * Reset the player still angle
+     */
+    virtual void forceStillAngle() override;
 };
 
 #endif
