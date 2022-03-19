@@ -98,6 +98,8 @@ private:
     std::vector<bool> m_areFingersInContact;
     std::vector<bool> m_tactileSensorsAreWorking;
 
+    double m_tactileWorkingThreshold;
+
     //    RobotInterface& m_robotInterface; /**< robot control interface */
 
 public:

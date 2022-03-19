@@ -32,6 +32,10 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         yError() << m_logPrefix << "unable to get human_finger_list from the config file.";
         return false;
     }
+
+    m_tactileWorkingThreshold
+        = config.check("tactileWorkingThreshold ", yarp::os::Value(0.0001)).asDouble();
+
     m_noFingers = humanFingerNameList.size();
     m_totalNoTactile = 0;
 
@@ -165,7 +169,7 @@ bool RobotSkin::computeCalibrationParamters()
             // if a tactile senors does not work its std is zero
             // normally either all or none of the tactile sensors of a fingertip work
             // so if at least one tactile sensor works, the skin works
-            tactileSenorsWork |= (data.stdTactileSensor[i] > 0.0001);
+            tactileSenorsWork |= (data.stdTactileSensor[i] > m_tactileWorkingThreshold);
         }
         yInfo() << m_logPrefix << data.fingerName << ": mean of tactile sensors"
                 << data.biasTactileSensor;
