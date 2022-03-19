@@ -123,6 +123,7 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
     }
 
     m_jammedStartTime = -1.0;
+    m_isJammed = false;
     m_jammedValue = 0.0;
 
     return true;
@@ -472,12 +473,7 @@ bool VirtualizerModule::updateModule()
     std::lock_guard<std::mutex> guard(m_mutex);
 
     // get data from virtualizer
-    double playerYaw;
-    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-
-    playerYaw *= 360.0f;
-    playerYaw = playerYaw * M_PI / 180;
-    playerYaw = Angles::normalizeAngle(playerYaw);
+    double playerYaw = getPlayerYaw();
 
     yInfo() << "Current player yaw: " << playerYaw;
 
@@ -565,6 +561,7 @@ bool VirtualizerModule::updateModule()
                 {
                     m_jammedValue = -1.0;
                 }
+                m_isJammed = true;
 
                 m_operatorMoving = true;
                 m_operatorCurrentStillAngle = playerYaw;
@@ -572,7 +569,12 @@ bool VirtualizerModule::updateModule()
             }
         }
 
-        if (m_jammedStartTime > 0 && yarp::os::Time::now() - m_jammedStartTime < m_jammedMovingTime)
+        if (m_isJammed && yarp::os::Time::now() - m_jammedStartTime >= m_jammedMovingTime)
+        {
+            m_isJammed = false;
+        }
+
+        if (m_isJammed)
         {
             filteredVelocity = m_jammedValue;
         }
@@ -586,12 +588,7 @@ bool VirtualizerModule::updateModule()
     else
     {
         // get the robot orientation
-        yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
-        if (tmp != NULL)
-        {
-            auto vector = *tmp;
-            m_robotYaw = -Angles::normalizeAngle(vector[0]);
-        }
+        updateRobotYaw();
 
         // error between the robot orientation and the player orientation
         double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw), m_angleDeadzone);
@@ -673,10 +670,7 @@ void VirtualizerModule::resetPlayerOrientation()
     std::lock_guard<std::mutex> guard(m_mutex);
     m_cvirtDeviceID->ResetPlayerOrientation();
 
-    m_oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-    m_oldPlayerYaw *= 360.0f;
-    m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
-    m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
+    m_oldPlayerYaw = getPlayerYaw();
 
     m_movingAverage.clear();
     m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
@@ -692,22 +686,15 @@ void VirtualizerModule::resetPlayerHeight()
 void VirtualizerModule::forceStillAngle()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-    // get data from virtualizer
-    double playerYaw;
-    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-
-    playerYaw *= 360.0f;
-    playerYaw = playerYaw * M_PI / 180;
-    playerYaw = Angles::normalizeAngle(playerYaw);
 
     m_operatorMoving = false;
-    m_operatorCurrentStillAngle = playerYaw;
+    m_operatorCurrentStillAngle = getPlayerYaw();
     m_operatorStillTime = -1.0;
 
-    m_jammedStartTime = -1.0;
+    m_isJammed = false;
 
 
-    yInfo() << "Forced the operator still angle to" << playerYaw;
+    yInfo() << "Forced the operator still angle to" << m_operatorCurrentStillAngle;
 }
 
 double VirtualizerModule::threshold(const double &input, double deadzone)
@@ -783,4 +770,30 @@ bool VirtualizerModule::isNeckWorking()
     }
 
     return true;
+}
+
+bool VirtualizerModule::updateRobotYaw()
+{
+    // get the robot orientation
+    yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
+    if (tmp == nullptr)
+    {
+        return false;
+    }
+
+    auto vector = *tmp;
+    m_robotYaw = -Angles::normalizeAngle(vector[0]);
+    return true;
+}
+
+double VirtualizerModule::getPlayerYaw()
+{
+    double playerYaw;
+    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+
+    playerYaw *= 360.0f; //The angle from the virtualizer is a number from 0 to 1
+    playerYaw = playerYaw * M_PI / 180;
+    playerYaw = Angles::normalizeAngle(playerYaw);
+
+    return playerYaw;
 }

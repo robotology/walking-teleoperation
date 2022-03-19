@@ -72,6 +72,7 @@ private:
     double m_jammedMovingTime; /**< The duration with which the output is kept constant after the operator starts moving */
     double m_jammedStartTime; /**< Start time in which the lateral output is jammed. */
     double m_jammedValue; /**< The jammed output for the lateral direction. **/
+    bool m_isJammed; /**< True if the lateral output is jammed. **/
 
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */
@@ -146,6 +147,18 @@ private:
      * @return True if the neck is working fine, false otherwise.
      */
     bool isNeckWorking();
+
+    /**
+     * @brief Reads the current robot yaw
+     * @return True if the update succeded. False otherwise.
+     */
+    bool updateRobotYaw();
+
+    /**
+     * @brief Get the current player yaw measured from the virtualizer
+     * @return The player yaw
+     */
+    double getPlayerYaw();
 
 public:
     /**
