@@ -71,6 +71,9 @@ private:
     bool m_useVelocitySignOnly; /**< Use only the speed sign for rotating. */
     double m_jammedMovingTime; /**< The duration with which the output is kept constant after the operator starts moving */
     double m_jammedStartTime; /**< Start time in which the lateral output is jammed. */
+    double m_jammedMovingRobotAngle; /**< The angle variation that the robot has to do when the operator starts moving. */
+    double m_jammedRobotStartAngle; /**< The robot angle when the operator starts moving. */
+    bool m_jammedRobotStartAngleValid; /**< Check if the robot angle was valid when the operator started moving. */
     double m_jammedValue; /**< The jammed output for the lateral direction. **/
     bool m_isJammed; /**< True if the lateral output is jammed. **/
 

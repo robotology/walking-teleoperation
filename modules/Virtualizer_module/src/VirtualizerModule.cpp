@@ -122,7 +122,21 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         return false;
     }
 
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "jammed_moving_robot_angle_rad", m_jammedMovingRobotAngle))
+    {
+        yError() << "Failed to read jammed_moving_robot_angle_rad";
+        return false;
+    }
+
+    if (m_jammedMovingTime > 0 && m_jammedMovingRobotAngle > 0)
+    {
+        yWarning() << "Both jammed_moving_time_s and jammed_moving_robot_angle_rad are greater than 0."
+                   << "Only the robot condition will be used, unless the robot angle reading is not valid";
+    }
+
     m_jammedStartTime = -1.0;
+    m_jammedRobotStartAngle = 0.0;
+    m_jammedRobotStartAngleValid = false;
     m_isJammed = false;
     m_jammedValue = 0.0;
 
@@ -553,6 +567,17 @@ bool VirtualizerModule::updateModule()
 
                 m_jammedStartTime = yarp::os::Time::now();
 
+                if (m_jammedMovingRobotAngle > 0.0)
+                {
+                    m_jammedRobotStartAngleValid = updateRobotYaw();
+                    m_jammedRobotStartAngle = m_robotYaw;
+
+                    if (!m_jammedRobotStartAngleValid)
+                    {
+                        yWarning() << "The robot angle is not valid.";
+                    }
+                }
+
                 if (angleVariation > 0)
                 {
                     m_jammedValue = 1.0;
@@ -569,9 +594,19 @@ bool VirtualizerModule::updateModule()
             }
         }
 
-        if (m_isJammed && yarp::os::Time::now() - m_jammedStartTime >= m_jammedMovingTime)
+        if (m_isJammed)
         {
-            m_isJammed = false;
+            if (m_jammedRobotStartAngleValid && updateRobotYaw())
+            {
+                if (std::abs(Angles::shortestAngularDistance(m_jammedRobotStartAngle, m_robotYaw)) >= m_jammedMovingRobotAngle)
+                {
+                    m_isJammed = false;
+                }
+            }
+            else if (yarp::os::Time::now() - m_jammedStartTime >= m_jammedMovingTime)
+            {
+                m_isJammed = false;
+            }
         }
 
         if (m_isJammed)
