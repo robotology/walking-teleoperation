@@ -68,6 +68,7 @@ private:
     double m_operatorStillTime; /**< First instant in which the operator was considered still. */
     double m_operatorStillTimeThreshold; /**< Time threshold to conder the operator still. */
     bool m_operatorMoving; /**< The operator is currently moving. */
+    bool m_useVelocitySignOnly; /**< Use only the speed sign for rotating. */
 
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */
@@ -121,6 +122,14 @@ private:
      * @return 0 if the abs(input) < abs(deadzone) otherwise return the input.
      */
     double threshold(const double& input, double deadzone);
+
+    /**
+     * Standard sign function.
+     * @param input input
+     * @param deadzone The deadzone value
+     * @return 0 if the abs(input) < abs(deadzone) otherwise return the sign of the input.
+     */
+    double sign(const double& input, double deadzone);
 
     /**
      * @brief Filter the ring velocity

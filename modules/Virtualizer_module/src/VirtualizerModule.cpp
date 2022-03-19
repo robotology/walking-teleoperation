@@ -110,6 +110,12 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         return false;
     }
 
+    if (!YarpHelper::getBooleanFromSearchable(ringVelocityGroup, "use_sign_only", m_useVelocitySignOnly))
+    {
+        yError() << "Failed to read use_sign_only";
+        return false;
+    }
+
     return true;
 }
 
@@ -499,7 +505,16 @@ bool VirtualizerModule::updateModule()
     if (m_useRingVelocity)
     {
         double newVelocity = Angles::shortestAngularDistance(m_oldPlayerYaw, playerYaw)/getPeriod();
-        double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        double filteredVelocity = 0.0;
+
+        if (m_useVelocitySignOnly)
+        {
+            filteredVelocity = sign(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        }
+        else
+        {
+            filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        }
 
         //If the operator is moving and then remains close to a certain angle for a while, then we consider the operator still
         //if the operator is still, it needs to move of a certain angle before considering it moving.
@@ -682,6 +697,21 @@ double VirtualizerModule::threshold(const double &input, double deadzone)
         else
             return 0.0;
     }
+}
+
+double VirtualizerModule::sign(const double &input, double deadzone)
+{
+    if (std::abs(input) < deadzone)
+    {
+        return 0.0;
+    }
+
+    if (input > 0)
+    {
+        return +1.0;
+    }
+
+    return -1.0;
 }
 
 double VirtualizerModule::filteredRingVelocity(double newVelocity)
