@@ -69,6 +69,9 @@ private:
     double m_operatorStillTimeThreshold; /**< Time threshold to conder the operator still. */
     bool m_operatorMoving; /**< The operator is currently moving. */
     bool m_useVelocitySignOnly; /**< Use only the speed sign for rotating. */
+    double m_jammedMovingTime; /**< The duration with which the output is kept constant after the operator starts moving */
+    double m_jammedStartTime; /**< Start time in which the lateral output is jammed. */
+    double m_jammedValue; /**< The jammed output for the lateral direction. **/
 
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */

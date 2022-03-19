@@ -116,6 +116,15 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         return false;
     }
 
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "jammed_moving_time_s", m_jammedMovingTime))
+    {
+        yError() << "Failed to read jammed_moving_time_s";
+        return false;
+    }
+
+    m_jammedStartTime = -1.0;
+    m_jammedValue = 0.0;
+
     return true;
 }
 
@@ -519,7 +528,6 @@ bool VirtualizerModule::updateModule()
         //If the operator is moving and then remains close to a certain angle for a while, then we consider the operator still
         //if the operator is still, it needs to move of a certain angle before considering it moving.
 
-
         if (m_operatorMoving)
         {
             if (std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw)) < m_angleThresholdOperatorStill)
@@ -542,16 +550,33 @@ bool VirtualizerModule::updateModule()
         }
         else
         {
-            if (std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw)) > m_angleThresholdOperatorMoving)
+            double angleVariation = Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw);
+            if (std::abs(angleVariation) > m_angleThresholdOperatorMoving)
             {
                 yInfo() << "The operator is moving";
+
+                m_jammedStartTime = yarp::os::Time::now();
+
+                if (angleVariation > 0)
+                {
+                    m_jammedValue = 1.0;
+                }
+                else
+                {
+                    m_jammedValue = -1.0;
+                }
+
                 m_operatorMoving = true;
                 m_operatorCurrentStillAngle = playerYaw;
                 m_operatorStillTime = -1.0;
             }
         }
 
-        if (!m_operatorMoving)
+        if (m_jammedStartTime > 0 && yarp::os::Time::now() - m_jammedStartTime < m_jammedMovingTime)
+        {
+            filteredVelocity = m_jammedValue;
+        }
+        else if (!m_operatorMoving)
         {
             filteredVelocity = 0.0;
         }
@@ -678,6 +703,9 @@ void VirtualizerModule::forceStillAngle()
     m_operatorMoving = false;
     m_operatorCurrentStillAngle = playerYaw;
     m_operatorStillTime = -1.0;
+
+    m_jammedStartTime = -1.0;
+
 
     yInfo() << "Forced the operator still angle to" << playerYaw;
 }
