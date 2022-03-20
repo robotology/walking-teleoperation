@@ -502,7 +502,8 @@ bool VirtualizerModule::updateModule()
     double playerHeighInM = playerHeightInCm / 100.0;
 
     // get the player speed
-    double speedData = threshold((double)(m_cvirtDeviceID->GetMovementSpeed()), m_speedDeadzone);
+    double virtualizerSpeedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
+    double speedData = threshold(virtualizerSpeedData, m_speedDeadzone);
 
     double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
     double speedDirection = 1.0; // set the speed direction to forward by default.
@@ -540,7 +541,12 @@ bool VirtualizerModule::updateModule()
 
         if (m_operatorMoving)
         {
-            if (std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw)) < m_angleThresholdOperatorStill)
+            bool operatorIsNotRotating
+                = std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw))
+                  < m_angleThresholdOperatorStill;
+            bool operatorIsNotWalking = std::abs(virtualizerSpeedData) < m_speedDeadzone;
+
+            if (operatorIsNotRotating && operatorIsNotWalking)
             {
                 yInfo() << "The operator seems fixed";
                 if (m_operatorStillTime < 0)
