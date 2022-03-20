@@ -76,6 +76,7 @@ private:
     bool m_jammedRobotStartAngleValid; /**< Check if the robot angle was valid when the operator started moving. */
     double m_jammedValue; /**< The jammed output for the lateral direction. **/
     bool m_isJammed; /**< True if the lateral output is jammed. **/
+    bool m_jammedRobotOnce; /**< True if it jammed already once. **/
 
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */

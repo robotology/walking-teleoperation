@@ -139,6 +139,7 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
     m_jammedRobotStartAngleValid = false;
     m_isJammed = false;
     m_jammedValue = 0.0;
+    m_jammedRobotOnce = false;
 
     return true;
 }
@@ -573,8 +574,9 @@ bool VirtualizerModule::updateModule()
 
                 m_jammedStartTime = yarp::os::Time::now();
 
-                if (m_jammedMovingRobotAngle > 0.0)
+                if (m_jammedMovingRobotAngle > 0.0 && !m_jammedRobotOnce)
                 {
+                    m_jammedRobotOnce = true;
                     m_jammedRobotStartAngleValid = updateRobotYaw();
                     m_jammedRobotStartAngle = m_robotYaw;
 
@@ -733,6 +735,7 @@ void VirtualizerModule::forceStillAngle()
     m_operatorStillTime = -1.0;
 
     m_isJammed = false;
+    m_jammedRobotOnce = false;
 
 
     yInfo() << "Forced the operator still angle to" << m_operatorCurrentStillAngle;
