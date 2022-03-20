@@ -99,6 +99,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     yInfo() << "===== Skin Information =======";
     yInfo() << m_logPrefix << "number of fingers: " << m_noFingers;
     yInfo() << m_logPrefix << "number of tactile sensors: " << m_totalNoTactile;
+    yInfo() << m_logPrefix << "tactile working threshold: " << m_tactileWorkingThreshold;
 
     for (const auto& finger : m_fingersTactileData)
         finger.printInfo();
