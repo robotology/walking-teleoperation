@@ -693,7 +693,7 @@ bool OculusModule::runningModule()
         }
         yarp::sig::Matrix openXrHeadInitialTransform = identitySE3();
         if (!m_frameTransformInterface->getTransform(
-                m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
+                    m_headFrameName, m_rootFrameName, openXrHeadInitialTransform))
         {
             yError() << "[OculusModule::runningModule] Unable to evaluate the " << m_headFrameName
                      << " to " << m_rootFrameName << "transformation";
@@ -705,20 +705,51 @@ bool OculusModule::runningModule()
         // get only the yaw axis
         iDynTree::Rotation tempRot;
         iDynTree::toEigen(tempRot) = getRotation(openXrHeadInitialTransform);
-        double yaw = 0;
-        double dummy = 0;
-        tempRot.getRPY(dummy, yaw, dummy);
+
+        double r, p, y;
+
+        // This code was taken from https://www.geometrictools.com/Documentation/EulerAngles.pdf
+        // Section 2.2
+        auto inverseKinematicsXZY = [](const iDynTree::Rotation &chest_R_head,
+                double &neckPitch,
+                double &neckRoll,
+                double &neckYaw)
+        {
+            if (chest_R_head(0,1) < +1.0)
+            {
+                if (chest_R_head(0, 1) > -1.0)
+                {
+                    neckRoll  = std::asin(-chest_R_head(0, 1)); //The roll is thetaZ
+                    neckPitch = std::atan2(chest_R_head(2, 1), chest_R_head(1, 1)); //The pitch is thetaX
+                    neckYaw   = std::atan2(chest_R_head(0, 2), chest_R_head(0, 0)); //The yaw is thetay
+                }
+                else
+                {
+                    neckRoll  = M_PI/2.0;
+                    neckPitch = -std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+                    neckYaw   = 0.0;
+                }
+            }
+            else
+            {
+                neckRoll  = -M_PI/2.0;
+                neckPitch = std::atan2(-chest_R_head(2, 0), chest_R_head(2, 2));
+                neckYaw   = 0.0;
+            }
+        };
+
+        inverseKinematicsXZY(tempRot, p,r,y);
 
         iDynTree::Transform tempTransform;
         tempTransform.setRotation(
-            iDynTree::Rotation::RotY(yaw)); // We remove only the initial rotation of
+                    iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of
         // the person head around gravity.
         tempTransform.setPosition(iDynTree::make_span(
-            getPosition(openXrHeadInitialTransform))); // We remove the initial position between the
+                                      getPosition(openXrHeadInitialTransform))); // We remove the initial position between the
         // head and the reference frame.
 
         iDynTree::toEigen(m_openXrInitialAlignement)
-            = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
+                = iDynTree::toEigen(tempTransform.inverse().asHomogeneousTransform());
     }
 
     if (m_useVirtualizer)
