@@ -12,26 +12,30 @@
   </authors>
   
     <module>
-    <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 16000 --start</parameters>
+    <name>AudioRecorderWrapper</name>
+    <parameters>--subdevice portaudioRecorder --name /icub/microphone --min_samples_over_network 100 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
+    <deployer>yarpdev</deployer>
     <node>icub-head</node>
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_size 0.4 --start --AUDIO_BASE::samples 16000 --AUDIO_BASE::channels 1</parameters>
+    <name>AudioPlayerWrapper</name>
+    <parameters>--subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_size 0.05 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
+    <deployer>yarpdev</deployer>
     <node>icub-head</node>
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 16000 --samples 16000 --channels 1 --start</parameters>
+    <name>AudioRecorderWrapper</name>
+    <parameters>--subdevice portaudioRecorder --name /icub-virtualizer/microphone --min_samples_over_network 100 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
+    <deployer>yarpdev</deployer>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4 --start</parameters>
+    <name>AudioPlayerWrapper</name>
+    <parameters>--subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_size 0.05 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
+    <deployer>yarpdev</deployer>
     <node>icub-virtualizer</node>
   </module>
 

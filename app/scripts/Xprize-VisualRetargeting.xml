@@ -39,7 +39,7 @@
   <module>
      <name>idyntree-yarp-visualizer</name>
      <parameters>--OUTPUT_STREAM::useRGBA true</parameters>
-     <node>icub-console</node>
+     <node>icub-console-gui</node>
   </module>
 
   <!-- Connections -->

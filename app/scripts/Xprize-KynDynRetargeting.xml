@@ -12,23 +12,24 @@
   </authors>
 
   <!-- Modules -->
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config launch-yarp-robot-logger.xml</parameters>
+    <node>icub-console</node>
+    <workdir>/home/icub/Desktop/walking_logger</workdir>
+  </module>
+
   <module>
     <name>WalkingModule</name>
     <node>icub-head</node>
     <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
-  </module>
-
-
-  <module>
-    <name>VirtualizerModule</name>
-    <parameters>--use_transform_server true</parameters>
     <dependencies>
-          <port timeout="15.0">/transformServer/transforms:o</port>
+          <port timeout="15.0">/yarp-robot-logger/exogenous_signals/walking:i</port>
     </dependencies>
-    <node>icub-virtualizer</node>
   </module>
 
-  <module>
+  <!--module>
     <name>OculusRetargetingModule</name>
     <node>icub-console</node>
     <parameters> --OPENXR::move_icub_using_joypad 0 --GENERAL::useSenseGlove 1 </parameters>
@@ -38,7 +39,7 @@
       <port timeout="15.0">/icub/cam/left</port>
       <port timeout="15.0">/icub/cam/right</port>
     </dependencies>
-  </module>
+  </module-->
 
    <module>
      <name>XsensRetargetingModule</name>
@@ -56,46 +57,55 @@
   <connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/virtualizer/robotOrientation:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/walking-coordinator/torsoYaw:o</from>
     <to>/oculusRetargeting/robotOrientation:i</to>
-  </connection>
+    <protocol>fast_tcp</protocol>
+  </connection-->
 
-  <connection>
+  <!--connection>
     <from>/oculusRetargeting/walkingRpc</from>
     <to>/walking-coordinator/rpc</to>
-  </connection>
+    <protocol>fast_tcp</protocol>
+  </connection-->
 
-  <connection>
+  <!--connection>
     <from>/oculusRetargeting/virtualizerRpc</from>
     <to>/virtualizer/rpc</to>
-  </connection>
+    <protocol>fast_tcp</protocol>
+  </connection-->
 
   <connection>
     <from>/virtualizer/goal:o</from>
     <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/virtualizer/playerOrientation:o</from>
     <to>/oculusRetargeting/playerOrientation:i</to>
-  </connection>
+    <protocol>fast_tcp</protocol>
+  </connection-->
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
     <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iFeelRetargeting/jointPosition:o</from>
     <to>/walking-coordinator/jointPosition:i</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
+  <!--connection>
     <from>/iFeelRetargeting/CoM:o</from>
     <to>/walking-coordinator/CoM:i</to>
-  </connection>
+    <protocol>fast_tcp</protocol>
+  </connection-->
 
 </application>
