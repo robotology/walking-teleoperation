@@ -386,9 +386,9 @@ bool GazeRetargeting::VRInterface::getValueFromRPC(const std::string &query, boo
         return false;
     }
 
-    if (output.isVocab())
+    if (output.isVocab32())
     {
-        value = yarp::os::Vocab::decode(output.asVocab()).find("ok") != std::string::npos;
+        value = yarp::os::Vocab32::decode(output.asVocab32()).find("ok") != std::string::npos;
     }
     else if (output.isBool())
     {
@@ -441,12 +441,39 @@ iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Ve
     Eigen::Map<Eigen::Vector2d> outputMap = iDynTree::toEigen(output);
 
     double inputNorm = map.norm();
-    if (inputNorm > m_errorDeadzone)
+    bool deadzoneNotActiveAndErrorStillHigh = !m_deadzoneActive && inputNorm > m_errorDeadzone; //True if the deadzone is not active, and the error is too high to activate it
+    bool deadzoneActiveButErrorVeryHigh = m_deadzoneActive && inputNorm > m_errorDeadzoneActivation; //True if the deadzone is active, but the error is bigger than the threshold to deactivate it
+    bool timeCheckNotActive = m_deadzoneMinActivationTimeInS <= 0.0; //if the parameter m_deadzoneMinActivationTimeInS is lower or equal than zero it means that we should not consider the time check when deactivating the deadzone
+    bool timeCheckPerformedOnce = m_deadzoneActivationTime >= 0.0; //m_deadzoneActivationTime contains the first time instant in which deadzoneActiveButErrorVeryHigh becomes true. If it is greater or equal than zero, it means that it has been set already.
+    bool enoughTimePassed =  timeCheckNotActive || (timeCheckPerformedOnce && ((yarp::os::Time::now() - m_deadzoneActivationTime) >= m_deadzoneMinActivationTimeInS)); //enoughTimePassed is true either if we don't use any time threshold, or when the time condition has triggered.
+
+    if ((deadzoneActiveButErrorVeryHigh && enoughTimePassed) || deadzoneNotActiveAndErrorStillHigh)
     {
+        m_deadzoneActive = false;
+        m_deadzoneActivationTime = -1.0;
         outputMap = (1.0 - m_errorDeadzone / inputNorm) * map;
+        return output;
+    }
+
+    m_deadzoneActive = true;
+
+    if (deadzoneActiveButErrorVeryHigh && !timeCheckPerformedOnce) //It is the the first time that the gaze exits the deadzone
+    {
+        m_deadzoneActivationTime = yarp::os::Time::now();
+    }
+
+    if (!deadzoneActiveButErrorVeryHigh) //The gaze is still in the deadzone
+    {
+        m_deadzoneActivationTime = -1.0;
     }
 
     return output;
+}
+
+double GazeRetargeting::VRInterface::applyQuantization(double input, double quantization)
+{
+    int level = static_cast<int>(std::round(input / quantization));
+    return level * quantization;
 }
 
 bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
@@ -462,6 +489,27 @@ bool GazeRetargeting::VRInterface::configure(yarp::os::ResourceFinder &rf)
 
     m_velocityGain = rf.check("gazeVelocityGain", yarp::os::Value(2.0)).asFloat64();
     m_errorDeadzone = rf.check("gazeDeadzone", yarp::os::Value(0.02)).asFloat64();
+    double activationOffset = rf.check("gazeDeadzoneActivationOffset", yarp::os::Value(0.1)).asFloat64();
+
+    if (activationOffset < 0)
+    {
+        yError() << "[GazeRetargeting::configure] gazeDeadzoneActivationOffset is supposed to be non-negative.";
+        return false;
+    }
+
+    m_errorDeadzoneActivation = m_errorDeadzone + activationOffset;
+
+    m_deadzoneMinActivationTimeInS = rf.check("gazeDeadzoneMinActivationTime", yarp::os::Value(0.5)).asFloat64();
+
+    double gazeAccuracyInDeg = rf.check("gazeMovementAccuracyInDeg", yarp::os::Value(0.1)).asFloat64();
+
+    if (gazeAccuracyInDeg <= 0.0)
+    {
+        yError() << "[GazeRetargeting::configure] gazeAccuracyInDeg is supposed to be strictly positive.";
+        return false;
+    }
+
+    m_eyeMovementAccuracyInRad = iDynTree::deg2rad(gazeAccuracyInDeg);
 
     return true;
 }
@@ -475,6 +523,11 @@ void GazeRetargeting::VRInterface::setVRImagesPose(double vergenceInRad, double 
     // In the documentation above, the angle is positive clockwise, while the angles we send are positive anticlockwise
     m_leftEye.azimuth = -(versionInRad + vergenceInRad/2.0);
     m_rightEye.azimuth = -(versionInRad - vergenceInRad/2.0);
+
+    m_leftEye.elevation  = applyQuantization(m_leftEye.elevation,  m_eyeMovementAccuracyInRad);
+    m_leftEye.azimuth    = applyQuantization(m_leftEye.azimuth,    m_eyeMovementAccuracyInRad);
+    m_rightEye.elevation = applyQuantization(m_rightEye.elevation, m_eyeMovementAccuracyInRad);
+    m_rightEye.azimuth   = applyQuantization(m_rightEye.azimuth,   m_eyeMovementAccuracyInRad);
 
     m_leftEye.sendAngles();
     m_rightEye.sendAngles();

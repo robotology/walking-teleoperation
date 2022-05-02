@@ -13,52 +13,54 @@
 #include <cmath>
 #include <algorithm>
 
-bool EyelidsRetargeting::rawRobotEyelidsControl(int eye_openness_level)
+bool EyelidsRetargeting::rawRobotEyelidsControl(int eye_closeness_level)
 {
-    double eye_openess_leveled = m_eyeOpennessPrecision * eye_openness_level;
+    double eye_closeness_leveled = std::max(0.0, std::min(1.0, m_eyelidsPrecision * eye_closeness_level));
 
-    if (eye_openness_level != m_eyeOpennessLevel)
+    if (eye_closeness_level != m_eyeClosenessLevel)
     {
         yarp::os::Bottle& out = m_rawEyelidsOutputPort.prepare();
         out.clear();
+        double eyeOpennesLeveled = 1.0 - eye_closeness_leveled;
         double rawEyelidsValue
-                = eye_openess_leveled * (m_rawEyelidsOpenValue - m_rawEyelidsCloseValue)
+                = eyeOpennesLeveled * (m_rawEyelidsOpenValue - m_rawEyelidsCloseValue)
                 + m_rawEyelidsCloseValue;
         out.addString("S" + std::to_string(static_cast<int>(std::round(rawEyelidsValue))));
         m_rawEyelidsOutputPort.write();
-        m_eyeOpennessLevel = eye_openness_level;
-        yInfo() << "[EyelidsRetargeting::rawRobotEyelidsControl] Setting eye openess (raw mode):" << eye_openess_leveled * 100 << "%.";
+        m_eyeClosenessLevel = eye_closeness_level;
+        yInfo() << "[EyelidsRetargeting::rawRobotEyelidsControl] Setting eye openess (raw mode):" << eyeOpennesLeveled * 100 << "%.";
         yDebug() << "[EyelidsRetargeting::rawRobotEyelidsControl] Sending raw commands to eyelids:" << out.toString();
     }
 
     return true;
 }
 
-bool EyelidsRetargeting::rfeRobotEyelidsControl(int eye_openness_level)
+bool EyelidsRetargeting::rfeRobotEyelidsControl(int eye_closeness_level)
 {
-    double eye_openess_leveled = m_eyeOpennessPrecision * eye_openness_level;
+    double eye_closeness_leveled = std::max(0.0, std::min(1.0, m_eyelidsPrecision * eye_closeness_level));
 
-    double eyelidsReference = (1.0 - eye_openess_leveled) * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid; // because min-> open, max->closed
+
+    double eyelidsReference = eye_closeness_leveled * (m_maxEyeLid - m_minEyeLid) + m_minEyeLid; // because min-> open, max->closed
     if (m_useEyelidsPositionControl)
     {
-        if (eye_openness_level != m_eyeOpennessLevel)
+        if (eye_closeness_level != m_eyeClosenessLevel)
         {
             if (m_eyelidsPos)
             {
                 m_eyelidsPos->positionMove(0, eyelidsReference);
             }
-            m_eyeOpennessLevel = eye_openness_level;
-            yInfo() << "[EyelidsRetargeting::rfeRobotEyelidsControl] Setting eye openess (position mode):" << eye_openess_leveled * 100 << "%.";
+            m_eyeClosenessLevel = eye_closeness_level;
+            yInfo() << "[EyelidsRetargeting::rfeRobotEyelidsControl] Setting eye closeness (position mode):" << eye_closeness_leveled * 100 << "%.";
         }
     }
     else
     {
         if (m_eyelidsVel && m_eyelidsEnc)
         {
-            if (eye_openness_level != m_eyeOpennessLevel)
+            if (eye_closeness_level != m_eyeClosenessLevel)
             {
-                m_eyeOpennessLevel = eye_openness_level;
-                yInfo() << "[EyelidsRetargeting::update] Setting eye openess (velocity mode):" << eye_openess_leveled * 100 << "%.";
+                m_eyeClosenessLevel = eye_closeness_level;
+                yInfo() << "[EyelidsRetargeting::update] Setting eye closeness (velocity mode):" << eye_closeness_leveled * 100 << "%.";
             }
 
             double currentEyelidPos = 0;
@@ -101,7 +103,13 @@ bool EyelidsRetargeting::configure(yarp::os::ResourceFinder &rf)
     m_eyelidsVelocityGain = rf.check("eyelidsVelocityGain", yarp::os::Value(10.0)).asFloat64();
     m_rawEyelidsCloseValue = rf.check("rawEyelidsCloseValue", yarp::os::Value(35)).asInt32(); //The default value has been found on the greeny
     m_rawEyelidsOpenValue  = rf.check("rawEyelidsOpenValue",  yarp::os::Value(60)).asInt32(); // The default value has been found on the greeny
-    m_eyeOpennessPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
+    m_eyelidsPrecision = rf.check("eyeOpenPrecision", yarp::os::Value(0.1)).asFloat64();
+
+    if (m_eyelidsPrecision <= 0.0)
+    {
+        yError() << "[EyelidsRetargeting::configure] eyeOpenPrecision has to be strictly positive.";
+        return false;
+    }
 
     double defaultMaxVelocity = 100.0;
     if (m_useEyelidsPositionControl)
@@ -227,18 +235,20 @@ bool EyelidsRetargeting::update()
         return false;
     }
 
-    int eye_openness_level = static_cast<int>(std::round(m_desiredEyeOpenness / m_eyeOpennessPrecision));
+    double desired_eye_closeness = 1.0 - m_desiredEyeOpenness;
+
+    int eye_closeness_level = static_cast<int>(std::round(desired_eye_closeness / m_eyelidsPrecision)); //Using the closeness, in this way when m_eyelidsPrecision is > 1, the robot will close the eyes when the operator has the eyes almost closed
 
     if (m_useRawEyelids)
     {
-        if (!rawRobotEyelidsControl(eye_openness_level))
+        if (!rawRobotEyelidsControl(eye_closeness_level))
         {
             return false;
         }
     }
     else
     {
-        if (!rfeRobotEyelidsControl(eye_openness_level))
+        if (!rfeRobotEyelidsControl(eye_closeness_level))
         {
             return false;
         }
