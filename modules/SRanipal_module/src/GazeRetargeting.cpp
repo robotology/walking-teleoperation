@@ -441,10 +441,10 @@ iDynTree::Vector2 GazeRetargeting::VRInterface::applyDeadzone(const iDynTree::Ve
     Eigen::Map<Eigen::Vector2d> outputMap = iDynTree::toEigen(output);
 
     double inputNorm = map.norm();
-    bool deadzoneNotActiveAndErrorStillHigh = !m_deadzoneActive && inputNorm > m_errorDeadzone; //true if the deadzone is not active, and the error is too high to activate it
-    bool deadzoneActiveButErrorVeryHigh = m_deadzoneActive && inputNorm > m_errorDeadzoneActivation; //True is the deadzone is active, but the error is bigger than the threshold to deactivate it
-    bool timeCheckNotActive = m_deadzoneMinActivationTimeInS <= 0.0; //if the parameter m_deadzoneMinActivationTimeInS is lower or equal than zero, it means that we should not consider the time check when deactivating the deadzone
-    bool timeCheckPerformedOnce = m_deadzoneActivationTime >= 0.0; //m_deadzoneActivationTime contains the first time instant in which deadzoneActiveButErrorVeryHigh became true. If it is greater or equal than zero, it means that it has been set already.
+    bool deadzoneNotActiveAndErrorStillHigh = !m_deadzoneActive && inputNorm > m_errorDeadzone; //True if the deadzone is not active, and the error is too high to activate it
+    bool deadzoneActiveButErrorVeryHigh = m_deadzoneActive && inputNorm > m_errorDeadzoneActivation; //True if the deadzone is active, but the error is bigger than the threshold to deactivate it
+    bool timeCheckNotActive = m_deadzoneMinActivationTimeInS <= 0.0; //if the parameter m_deadzoneMinActivationTimeInS is lower or equal than zero it means that we should not consider the time check when deactivating the deadzone
+    bool timeCheckPerformedOnce = m_deadzoneActivationTime >= 0.0; //m_deadzoneActivationTime contains the first time instant in which deadzoneActiveButErrorVeryHigh becomes true. If it is greater or equal than zero, it means that it has been set already.
     bool enoughTimePassed =  timeCheckNotActive || (timeCheckPerformedOnce && ((yarp::os::Time::now() - m_deadzoneActivationTime) >= m_deadzoneMinActivationTimeInS)); //enoughTimePassed is true either if we don't use any time threshold, or when the time condition has triggered.
 
     if ((deadzoneActiveButErrorVeryHigh && enoughTimePassed) || deadzoneNotActiveAndErrorStillHigh)
