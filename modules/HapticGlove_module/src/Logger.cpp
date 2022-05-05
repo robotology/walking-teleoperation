@@ -72,11 +72,11 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     // human
     m_data.humanJointValues.resize(m_numHumanHandJoints, 0.0);
     m_data.humanFingertipPoses = Eigen::MatrixXd::Zero(m_numHumanHandFingers, 7);
-    m_data.humanKinestheticForceFeedbacks.resize(m_numHumanForceFeedback, 0.0);
-    m_data.kinestheticVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
+    m_data.humanForceFeedbacks.resize(m_numHumanForceFeedback, 0.0);
+    m_data.humanVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
     m_data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
     m_data.fingertipsTactileFeedback.resize(m_numberRobotTactileFeedbacks, 0.0);
-    m_data.robotFingerSkinVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
+    m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
 }
 
 Teleoperation::Logger::~Logger() = default;
@@ -242,10 +242,10 @@ bool Teleoperation::Logger::updateData()
 
     m_teleoperation.m_humanGlove->getFingertipPoses(m_data.humanFingertipPoses);
 
-    m_teleoperation.m_retargeting->getForceFeedbackToHuman(m_data.humanKinestheticForceFeedbacks);
+    m_teleoperation.m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks);
 
     m_teleoperation.m_retargeting->getVibrotactileFeedbackToHuman(
-        m_data.kinestheticVibrotactileFeedbacks);
+        m_data.humanVibrotactileFeedbacks);
 
     m_teleoperation.m_humanGlove->getHandPalmRotation(m_data.humanPalmRotation);
 
@@ -253,8 +253,8 @@ bool Teleoperation::Logger::updateData()
     m_teleoperation.m_robotSkin->getSerializedFingertipsTactileFeedbacks(
         m_data.fingertipsTactileFeedback);
 
-    m_teleoperation.m_robotSkin->getVibrotactileFeedback(
-        m_data.robotFingerSkinVibrotactileFeedbacks);
+    m_teleoperation.m_robotSkin->getVibrotactileAbsoluteFeedback(
+        m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
     return true;
 }
@@ -319,14 +319,14 @@ bool Teleoperation::Logger::logData()
     // Human data
     m_logger->add(m_humanPrefix + "JointValues", m_data.humanJointValues);
     m_logger->add(m_humanPrefix + "FingertipPoses", m_data.humanFingertipPoses);
-    m_logger->add(m_humanPrefix + "ForceFeedbacks", m_data.humanKinestheticForceFeedbacks);
-    m_logger->add(m_humanPrefix + "VibrotactileFeedbacks", m_data.kinestheticVibrotactileFeedbacks);
+    m_logger->add(m_humanPrefix + "ForceFeedbacks", m_data.humanForceFeedbacks);
+    m_logger->add(m_humanPrefix + "VibrotactileFeedbacks", m_data.humanVibrotactileFeedbacks);
     m_logger->add(m_humanPrefix + "PalmRotation", m_data.humanPalmRotation);
 
     // skin
     m_logger->add(m_robotPrefix + "FingertipsTactileFeedbacks", m_data.fingertipsTactileFeedback);
     m_logger->add(m_humanPrefix + "VibrotactileFeedbacksUsingSkin",
-                  m_data.robotFingerSkinVibrotactileFeedbacks);
+                  m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
 #endif
 

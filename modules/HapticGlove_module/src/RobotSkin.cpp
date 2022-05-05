@@ -48,8 +48,9 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_areFingersInContact.resize(m_noFingers, false);
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
-    m_fingersVibrotactileFeedback.resize(m_noFingers, 0.0);
+    m_fingersVibrotactileAbsoluteFeedback.resize(m_noFingers, 0.0);
     m_fingersVibrotactileDerivativeFeedback.resize(m_noFingers, 0.0);
+    m_fingersVibrotactileTotalFeedback.resize(m_noFingers, 0.0);
     m_fingersContactStrength.resize(m_noFingers, 0.0);
 
     // raw tactile sensors
@@ -327,11 +328,14 @@ void RobotSkin::computeVibrotactileFeedback()
     {
         double x = 100.0 * m_fingersTactileData[i].vibrotactileGain * m_fingersContactStrength[i];
 
-        m_fingersVibrotactileFeedback[i]
+        m_fingersVibrotactileAbsoluteFeedback[i]
             = 15.0 * std::log(2 * std::pow(x, 0.7) + 1) + 0.5 * std::pow(x, 1.1);
 
         m_fingersVibrotactileDerivativeFeedback[i]
             = m_fingersTactileData[i].maxTactileDerivativeFeedbackValue();
+
+        m_fingersVibrotactileTotalFeedback[i]
+            = m_fingersVibrotactileAbsoluteFeedback[i]; // to implement
     }
 }
 
@@ -340,15 +344,21 @@ void RobotSkin::getContactStrength(std::vector<double>& fingersContactStrength)
     fingersContactStrength = m_fingersContactStrength;
 }
 
-void RobotSkin::getVibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback)
+void RobotSkin::getVibrotactileAbsoluteFeedback(
+    std::vector<double>& fingersVibrotactileAbsoluteFeedback)
 {
-    fingersVibrotactileFeedback = m_fingersVibrotactileFeedback;
+    fingersVibrotactileAbsoluteFeedback = m_fingersVibrotactileAbsoluteFeedback;
 }
 
 void RobotSkin::getVibrotactileDerivativeFeedback(
     std::vector<double>& fingersVibrotactileDerivativeFeedback)
 {
     fingersVibrotactileDerivativeFeedback = m_fingersVibrotactileDerivativeFeedback;
+}
+
+void RobotSkin::getVibrotactileTotalFeedback(std::vector<double>& fingersVibrotactileTotalFeedback)
+{
+    fingersVibrotactileTotalFeedback = m_fingersVibrotactileTotalFeedback;
 }
 
 void RobotSkin::areFingersInContact(std::vector<bool>& areFingersIncontact)

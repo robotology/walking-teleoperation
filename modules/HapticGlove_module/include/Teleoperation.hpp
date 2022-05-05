@@ -94,15 +94,11 @@ struct HapticGlove::Data
     Eigen::MatrixXd humanFingertipPoses; /// <summary> human fingertip poses (size: number of hand
                                          /// fingertips (i.e., 5) x 7)
     std::vector<double>
-        humanKinestheticForceFeedbacks; /// <summary> force feedback vector to the human fingertips
+        humanForceFeedbacks; /// <summary> force feedback vector to the human fingertips
 
-    std::vector<double>
-        kinestheticVibrotactileFeedbacks; /// <summary> vibrotactile feedback
-                                          /// vector to the human fingertips using kinesthetic data
-
-    std::vector<double> humanVibrotactileFeedback; /// <summary> human vibrotactile feeback computed
-                                                   /// from kinesthetic and skin data that is going
-                                                   /// to be sent to the human
+    std::vector<double> humanVibrotactileFeedbacks; /// <summary> vibrotactile feedback
+                                                    /// vector to the human fingertips using
+                                                    /// kinesthetic or skin data
 
     std::vector<double>
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
@@ -118,8 +114,21 @@ struct HapticGlove::Data
                                    /// fingerstips: totoal :60 values: fingers thumb, index,
                                    /// middle, ring, little; each finger 12 tactile sensors
 
-    std::vector<double> robotFingerSkinVibrotactileFeedbacks; /// <summary> robot vibrotactile
-                                                              /// feedback to human using skin
+    std::vector<double>
+        robotFingerSkinAbsoluteValueVibrotactileFeedbacks; /// <summary> robot vibrotactile feedback
+                                                           /// to human using skin associated with
+                                                           /// the absolute tactile values
+
+    std::vector<double>
+        robotFingerSkinDerivativeValueVibrotactileFeedbacks; /// <summary> robot vibrotactile
+                                                             /// feedback to human using skin
+                                                             /// associated with the rate of
+                                                             /// change of tactile values
+
+    std::vector<double>
+        robotFingerSkinTotalValueVibrotactileFeedbacks; /// <summary> robot vibrotactile feedback to
+                                                        /// human using skin associated with the
+                                                        /// absolute and differentual tactile values
 
     std::vector<bool> doRobotFingerSkinsWork; /// <summary> check if the fingertip skins work
 

@@ -159,13 +159,15 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     // human
     m_data.humanJointValues.resize(numHumanHandJoints, 0.0);
-    m_data.kinestheticVibrotactileFeedbacks.resize(numHumanVibrotactileFeedback, 0.0);
-    m_data.humanKinestheticForceFeedbacks.resize(numHumanForceFeedback, 0.0);
+    m_data.humanVibrotactileFeedbacks.resize(numHumanVibrotactileFeedback, 0.0);
+    m_data.humanForceFeedbacks.resize(numHumanForceFeedback, 0.0);
 
     // skin
     m_data.doRobotFingerSkinsWork.resize(numRobotFingers, 0.0);
-    m_data.robotFingerSkinVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
     m_data.areFingersSkinInContact.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinTotalValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
 
     // set up the glove
     if (!m_humanGlove->setupGlove())
@@ -288,25 +290,33 @@ bool Teleoperation::run()
         m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
 
         // get the skin data
-        m_robotSkin->getVibrotactileFeedback(m_data.robotFingerSkinVibrotactileFeedbacks);
+        // to delete
+        m_robotSkin->getVibrotactileAbsoluteFeedback(
+            m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
-        std::vector<double> fingertipVibrotactileDerivativeFeedbacks;
-        m_robotSkin->getVibrotactileDerivativeFeedback(fingertipVibrotactileDerivativeFeedbacks);
-        yInfo() << "tactile derivative: " << fingertipVibrotactileDerivativeFeedbacks;
+        // to delete
+        m_robotSkin->getVibrotactileDerivativeFeedback(
+            m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+        yInfo() << "tactile derivative: "
+                << m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks;
+
+        m_robotSkin->getVibrotactileDerivativeFeedback(
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+        yInfo() << "tactile total: " << m_data.robotFingerSkinTotalValueVibrotactileFeedbacks;
 
         // compute haptic feedback with consideration of the skin
         m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingSkinData(
             m_data.doRobotFingerSkinsWork,
             m_data.areFingersSkinInContact,
-            m_data.robotFingerSkinVibrotactileFeedbacks);
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
     }
 
-    if (!m_retargeting->getForceFeedbackToHuman(m_data.humanKinestheticForceFeedbacks))
+    if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the force feedback from retargeting.";
     }
 
-    if (!m_retargeting->getVibrotactileFeedbackToHuman(m_data.kinestheticVibrotactileFeedbacks))
+    if (!m_retargeting->getVibrotactileFeedbackToHuman(m_data.humanVibrotactileFeedbacks))
     {
         yWarning() << m_logPrefix << "unable to get the vibrotactile feedback from retargeting.";
     }
@@ -315,10 +325,8 @@ bool Teleoperation::run()
     if (m_moveRobot)
     {
         m_robotController->move();
-        m_humanGlove->setFingertipForceFeedbackReferences(m_data.humanKinestheticForceFeedbacks);
-        //        m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_data.humanVibrotactileFeedbacks);
-        m_humanGlove->setFingertipVibrotactileFeedbackReferences(
-            m_data.robotFingerSkinVibrotactileFeedbacks);
+        m_humanGlove->setFingertipForceFeedbackReferences(m_data.humanForceFeedbacks);
+        m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_data.humanVibrotactileFeedbacks);
     }
 
     if (m_enableLogger)

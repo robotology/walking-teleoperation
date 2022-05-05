@@ -135,8 +135,9 @@ private:
     std::vector<bool> m_areTactileSensorsWorking;
     std::vector<bool> m_areFingersInContact;
 
-    std::vector<double> m_fingersVibrotactileFeedback;
+    std::vector<double> m_fingersVibrotactileAbsoluteFeedback;
     std::vector<double> m_fingersVibrotactileDerivativeFeedback;
+    std::vector<double> m_fingersVibrotactileTotalFeedback;
 
     std::vector<double> m_fingersContactStrength;
     double m_tactileWorkingThreshold;
@@ -190,10 +191,12 @@ public:
 
     void getContactStrength(std::vector<double>& fingersContactStrength);
 
-    void getVibrotactileFeedback(std::vector<double>& fingersVibrotactileFeedback);
+    void getVibrotactileAbsoluteFeedback(std::vector<double>& fingersVibrotactileAbsoluteFeedback);
 
     void
     getVibrotactileDerivativeFeedback(std::vector<double>& fingersVibrotactileDerivativeFeedback);
+
+    void getVibrotactileTotalFeedback(std::vector<double>& fingersVibrotactileTotalFeedback);
 
     const size_t getNumOfTactileFeedbacks();
 
