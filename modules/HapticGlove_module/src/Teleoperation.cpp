@@ -294,15 +294,19 @@ bool Teleoperation::run()
         m_robotSkin->getVibrotactileAbsoluteFeedback(
             m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
+        //        yInfo() << "tactile absolute: " <<
+        //        m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks;
+
         // to delete
         m_robotSkin->getVibrotactileDerivativeFeedback(
             m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
         yInfo() << "tactile derivative: "
                 << m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks;
 
-        m_robotSkin->getVibrotactileDerivativeFeedback(
+        m_robotSkin->getVibrotactileTotalFeedback(
             m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
-        yInfo() << "tactile total: " << m_data.robotFingerSkinTotalValueVibrotactileFeedbacks;
+        //        yInfo() << "tactile total: " <<
+        //        m_data.robotFingerSkinTotalValueVibrotactileFeedbacks;
 
         // compute haptic feedback with consideration of the skin
         m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingSkinData(
