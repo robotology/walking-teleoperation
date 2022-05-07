@@ -46,6 +46,7 @@ struct HapticGlove::FingertipTactileData
 
     double contactThresholdValue = 5.0; /// default value
     double vibrotactileGain = 1.0; /// default value
+    double vibrotactileDerivativeGain = 1.0; /// default value
 
     std::vector<double>
         rawTactileData; /// range: 0-256; value 240 shows no load, and 0 shows max load
@@ -83,23 +84,28 @@ struct HapticGlove::FingertipTactileData
 
     bool isFingerInContact = false;
 
-    double maxTactileFeedbackValue()
+    double maxTactileFeedbackAbsoluteValue()
     {
         return *std::max_element(calibratedTactileData.begin(), calibratedTactileData.end());
     }
-    double maxTactileDerivativeFeedbackValue()
+    size_t maxTactileFeedbackAbsoluteElement()
     {
-        return tactileDataDerivative[std::distance(
+        return std::distance(
             calibratedTactileData.begin(),
-            std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
+            std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()));
+    }
+
+    double maxTactileFeedbackDerivativeValue()
+    {
+        // we check for the derivative of the tactile sensor with the highest calibrated absolute
+        // value, since we believe the value of th that tactile sensor is more important. the
+        // hypothesis should be checked.
+        return tactileDataDerivative[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     double contactThreshold()
     {
-        return contactThresholdValue
-               * stdTactileSensor[std::distance(
-                   calibratedTactileData.begin(),
-                   std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()))];
+        return contactThresholdValue * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     void printInfo() const
@@ -140,7 +146,12 @@ private:
     std::vector<double> m_fingersVibrotactileTotalFeedback;
 
     std::vector<double> m_fingersContactStrength;
+    std::vector<double> m_fingersContactStrengthDerivate;
+
     double m_tactileWorkingThreshold;
+    double m_tactileUpdateThreshold; // this is a threshold to check if the sensor data is updated,
+                                     // this is added because tactile senor update rates are lower
+                                     // than the module update rate.
 
     yarp::sig::Vector
         m_fingertipRawTactileFeedbacksYarpVector; /**< fingertip raw tactile feedbacks, `0`
@@ -153,6 +164,17 @@ private:
 
     yarp::dev::IAnalogSensor* m_tactileSensorInterface{
         nullptr}; /**< skin ananlog sensor interface */
+
+    std::vector<double>
+        m_fbParams; /**< # absolute vibrotactile feedback nonlinear function parameters; reference
+                     to
+                     https://github.com/ami-iit/element_retargeting-from-human/issues/182#issuecomment-1000472012
+                   */
+
+    double m_absoluteSkinValuePercentage; /* percentage dedicated to absolute skin data  (among
+                                           * absolute and derivative)for providing the vibrotactile
+                                           * feedback, the value is between [0, 1]
+                                           */
 
     void updateCalibratedTactileData();
 

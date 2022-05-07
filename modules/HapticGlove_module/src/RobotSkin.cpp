@@ -42,6 +42,9 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_tactileWorkingThreshold
         = config.check("tactileWorkingThreshold ", yarp::os::Value(0.0001)).asDouble();
 
+    m_tactileUpdateThreshold
+        = config.check("tactileUpdateThreshold ", yarp::os::Value(0.0001)).asDouble();
+
     m_noFingers = robotFingerNameList.size();
     m_totalNoTactile = 0;
 
@@ -52,6 +55,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_fingersVibrotactileDerivativeFeedback.resize(m_noFingers, 0.0);
     m_fingersVibrotactileTotalFeedback.resize(m_noFingers, 0.0);
     m_fingersContactStrength.resize(m_noFingers, 0.0);
+    m_fingersContactStrengthDerivate.resize(m_noFingers, 0.0);
 
     // raw tactile sensors
     size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
@@ -87,6 +91,36 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    // get the paramters for the nonlinear mapping of the vibrotactile feedback
+    if (!YarpHelper::getVectorFromSearchable(
+            config, "absoluteVibrotactileFeedbackNonlinearFunctionParameters", m_fbParams))
+    {
+        yError() << m_logPrefix
+                 << "unable to get absoluteVibrotactileFeedbackNonlinearFunctionParameters"
+                 << "from the config file.";
+        return false;
+    }
+    if (m_fbParams.size() != 6)
+    {
+        yError() << m_logPrefix
+                 << "the size of variable `m_fbParams` is not correct, it should be 6, but instead "
+                    "it is:"
+                 << m_fbParams.size();
+        return false;
+    }
+
+    // get the percentage for the vibrotactile feedback among the absolute and derivative value
+    m_absoluteSkinValuePercentage
+        = config.check("absoluteSkinValuePercentage", yarp::os::Value(1.0)).asDouble();
+
+    if (m_absoluteSkinValuePercentage < 0 || m_absoluteSkinValuePercentage > 1.0)
+    {
+        yError() << m_logPrefix
+                 << "absoluteSkinValuePercentage should be between [0, 1], but it is:"
+                 << m_absoluteSkinValuePercentage;
+        return false;
+    }
+
     // make the vector tactile info for the fingers
     for (const auto& finger : robotFingerNameList)
     {
@@ -101,11 +135,11 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
                      << "from the config file.";
             return false;
         }
-        if (tactileInfo.size() != 4)
+        if (tactileInfo.size() != 5)
         {
             yError() << m_logPrefix << "tactile senor indices for "
                      << fingerdata.fingerName + "_tactile_indices"
-                     << "size should be 4, but it is not.";
+                     << "size should be 5, but it is not.";
             return false;
         }
         bool check = (std::round(tactileInfo[0]) >= 0) && (std::round(tactileInfo[1]) > 0)
@@ -130,6 +164,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
 
         fingerdata.contactThresholdValue = tactileInfo[2];
         fingerdata.vibrotactileGain = tactileInfo[3];
+        fingerdata.vibrotactileDerivativeGain = tactileInfo[4];
 
         fingerdata.rawTactileData.resize(fingerdata.noTactileSensors);
         fingerdata.tactileData.resize(fingerdata.noTactileSensors, 0.0);
@@ -154,6 +189,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     yInfo() << m_logPrefix << "number of fingers: " << m_noFingers;
     yInfo() << m_logPrefix << "number of tactile sensors: " << m_totalNoTactile;
     yInfo() << m_logPrefix << "tactile working threshold: " << m_tactileWorkingThreshold;
+    yInfo() << m_logPrefix << "tactile update threshold: " << m_tactileUpdateThreshold;
 
     for (const auto& finger : m_fingersTactileData)
         finger.printInfo();
@@ -182,10 +218,17 @@ void RobotSkin::updateCalibratedTactileData()
 
             if (!finger.firstTime)
             {
-                finger.tactileDataDerivative[i]
-                    = std::abs(finger.calibratedTactileData[i]
-                               - finger.previousCalibratedTactileData[i])
-                      / m_samplingTime;
+                double tactileDerivative = std::abs(finger.calibratedTactileData[i]
+                                                    - finger.previousCalibratedTactileData[i])
+                                           / m_samplingTime;
+
+                // check if the tactile data is updated, otherwise the rate of change of tactile
+                // data will stay zero, and will act as a noise.
+                // if not updated, remain as the last data.
+                if (tactileDerivative > m_tactileUpdateThreshold)
+                {
+                    finger.tactileDataDerivative[i] = tactileDerivative;
+                }
             }
             finger.firstTime = false;
             finger.previousCalibratedTactileData[i] = finger.calibratedTactileData[i];
@@ -239,7 +282,7 @@ bool RobotSkin::computeCalibrationParamters()
                 = std::sqrt(((vec.array() - vec.mean()).square().sum()) / vec.size());
 
             // mean and std of the tactile data derivative
-            Eigen::VectorXd vecDerivative = data.collectedTactileData.col(i);
+            Eigen::VectorXd vecDerivative = data.collectedTactileDataDerivative.col(i);
             data.biasTactileSensorDerivative[i] = vecDerivative.mean();
             data.stdTactileSensorDerivative[i]
                 = std::sqrt(((vecDerivative.array() - vecDerivative.mean()).square().sum())
@@ -307,7 +350,7 @@ void RobotSkin::computeAreFingersInContact()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        m_areFingersInContact[i] = m_fingersTactileData[i].maxTactileFeedbackValue()
+        m_areFingersInContact[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
                                    > m_fingersTactileData[i].contactThreshold();
     }
 }
@@ -318,7 +361,13 @@ void RobotSkin::computeMaxContactStrength()
     for (size_t i = 0; i < m_noFingers; i++)
     {
         m_fingersContactStrength[i]
-            = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackValue() : 0);
+            = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
+                                        : 0);
+
+        m_fingersContactStrengthDerivate[i]
+            = (m_areFingersInContact[i]
+                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
+                   : 0);
     }
 }
 
@@ -326,16 +375,28 @@ void RobotSkin::computeVibrotactileFeedback()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        double x = 100.0 * m_fingersTactileData[i].vibrotactileGain * m_fingersContactStrength[i];
+        double x = m_fingersTactileData[i].vibrotactileGain * m_fingersContactStrength[i];
 
         m_fingersVibrotactileAbsoluteFeedback[i]
-            = 15.0 * std::log(2 * std::pow(x, 0.7) + 1) + 0.5 * std::pow(x, 1.1);
+            = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(x, m_fbParams[2]) + m_fbParams[3])
+              + m_fbParams[4] * std::pow(x, m_fbParams[5]);
 
         m_fingersVibrotactileDerivativeFeedback[i]
-            = m_fingersTactileData[i].maxTactileDerivativeFeedbackValue();
+            = m_fingersTactileData[i].vibrotactileDerivativeGain
+              * m_fingersContactStrengthDerivate[i];
 
+        // saturate the values between 0 to 100
+
+        m_fingersVibrotactileAbsoluteFeedback[i]
+            = std::max(std::min(m_fingersVibrotactileAbsoluteFeedback[i], 100.0), 0.0);
+
+        m_fingersVibrotactileDerivativeFeedback[i]
+            = std::max(std::min(m_fingersVibrotactileDerivativeFeedback[i], 100.0), 0.0);
+
+        // compute the total vibrotactile feedback
         m_fingersVibrotactileTotalFeedback[i]
-            = m_fingersVibrotactileAbsoluteFeedback[i]; // to implement
+            = m_absoluteSkinValuePercentage * m_fingersVibrotactileAbsoluteFeedback[i]
+              + (1.0 - m_absoluteSkinValuePercentage) * m_fingersVibrotactileDerivativeFeedback[i];
     }
 }
 
@@ -399,7 +460,7 @@ bool RobotSkin::getFingertipMaxTactileFeedback(std::vector<double>& fingertipPre
 
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        fingertipPressure[i] = m_fingersTactileData[i].maxTactileFeedbackValue();
+        fingertipPressure[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue();
     }
 
     return true;
