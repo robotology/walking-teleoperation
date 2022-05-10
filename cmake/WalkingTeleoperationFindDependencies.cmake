@@ -116,7 +116,7 @@ endmacro()
 ################################################################################
 # Find all packages
 
-find_package(YARP 3.6 REQUIRED)
+find_package(YARP REQUIRED)
 find_package(YCM REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)

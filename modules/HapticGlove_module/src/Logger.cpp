@@ -142,7 +142,7 @@ bool Teleoperation::Logger::openLogger()
                          m_numberRobotTactileFeedbacks);
         m_logger->create(m_robotPrefix + "FingercontactStrength", m_numHumanVibrotactileFeedback);
         m_logger->create(m_robotPrefix + "FingercontactStrengthDerivative",
-                         m_numberRobotTactileFeedbacks);
+                         m_numHumanVibrotactileFeedback);
         m_logger->create(m_robotPrefix + "SkinAbsoluteValueVibrotactileFeedback",
                          m_numHumanVibrotactileFeedback);
         m_logger->create(m_robotPrefix + "SkinDerivativeValueVibrotactileFeedback",

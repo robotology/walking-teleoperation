@@ -57,6 +57,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_fingersVibrotactileTotalFeedback.resize(m_noFingers, 0.0);
     m_fingersContactStrength.resize(m_noFingers, 0.0);
     m_fingersContactStrengthDerivate.resize(m_noFingers, 0.0);
+    m_fingersContactStrengthDerivateSmoothed.resize(m_noFingers, 0.0);
 
     // raw tactile sensors
     size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
@@ -114,6 +115,9 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_absoluteSkinValuePercentage
         = config.check("absoluteSkinValuePercentage", yarp::os::Value(1.0)).asDouble();
 
+    m_smoothingGainDerivative
+        = config.check("skinDerivativeSmoothingGain", yarp::os::Value(0.9)).asDouble();
+
     if (m_absoluteSkinValuePercentage < 0 || m_absoluteSkinValuePercentage > 1.0)
     {
         yError() << m_logPrefix
@@ -136,7 +140,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
                      << "from the config file.";
             return false;
         }
-        if (tactileInfo.size() != 5)
+        if (tactileInfo.size() != 6)
         {
             yError() << m_logPrefix << "tactile senor indices for "
                      << fingerdata.fingerName + "_tactile_indices"
@@ -166,6 +170,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         fingerdata.contactThresholdValue = tactileInfo[2];
         fingerdata.vibrotactileGain = tactileInfo[3];
         fingerdata.vibrotactileDerivativeGain = tactileInfo[4];
+        fingerdata.contactDerivativeThresholdValue = tactileInfo[5];
 
         fingerdata.rawTactileData.resize(fingerdata.noTactileSensors);
         fingerdata.tactileData.resize(fingerdata.noTactileSensors, 0.0);
@@ -177,7 +182,6 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         fingerdata.tactileDataDerivative.resize(fingerdata.noTactileSensors, 0.0);
         fingerdata.biasTactileSensorDerivative.resize(fingerdata.noTactileSensors, 0.0);
         fingerdata.stdTactileSensorDerivative.resize(fingerdata.noTactileSensors, 0.0);
-        fingerdata.calibratedTactileDataDerivative.resize(fingerdata.noTactileSensors, 0.0);
 
         fingerdata.collectedTactileData.resize(Eigen::NoChange, fingerdata.noTactileSensors);
         fingerdata.collectedTactileDataDerivative.resize(Eigen::NoChange,
@@ -202,6 +206,15 @@ void RobotSkin::updateCalibratedTactileData()
 {
     for (auto& finger : m_fingersTactileData)
     {
+        Eigen::VectorXd newSkinData = CtrlHelper::toEigenVector(finger.calibratedTactileData);
+        Eigen::VectorXd oldSkinData
+            = CtrlHelper::toEigenVector(finger.previousCalibratedTactileData);
+
+        bool checkUpdated = std::abs((newSkinData - oldSkinData).mean()) > m_tactileUpdateThreshold;
+
+        // check if the tactile data is updated, otherwise the rate of change of tactile
+        // data will stay zero, and will act as a noise.
+        // if not updated, remain as the last data.
         for (size_t i = 0; i < finger.noTactileSensors; i++)
         {
             finger.rawTactileData[i]
@@ -219,19 +232,21 @@ void RobotSkin::updateCalibratedTactileData()
 
             if (!finger.firstTime)
             {
-                double tactileDerivative = std::abs(finger.calibratedTactileData[i]
-                                                    - finger.previousCalibratedTactileData[i])
-                                           / m_samplingTime;
 
-                // check if the tactile data is updated, otherwise the rate of change of tactile
-                // data will stay zero, and will act as a noise.
-                // if not updated, remain as the last data.
+                double tactileDerivative
+                    = (finger.calibratedTactileData[i] - finger.previousCalibratedTactileData[i])
+                      / m_samplingTime;
+
                 if (tactileDerivative > m_tactileUpdateThreshold)
                 {
+                    tactileDerivative = tactileDerivative - finger.biasTactileSensorDerivative[i];
+
                     finger.tactileDataDerivative[i] = tactileDerivative;
-                    yInfo() << "tactile derivative: " << finger.fingerName << "index (" << i << ") "
-                            << finger.calibratedTactileData[i]
-                            << finger.previousCalibratedTactileData[i] << tactileDerivative;
+                    //                    yInfo() << "tactile derivative: " << finger.fingerName
+                    //                    << "index (" << i << ") "
+                    //                            << finger.calibratedTactileData[i]
+                    //                            << finger.previousCalibratedTactileData[i] <<
+                    //                            tactileDerivative;
                 }
             }
             finger.firstTime = false;
@@ -334,8 +349,7 @@ bool RobotSkin::getRawTactileFeedbackFromRobot()
     if (!(m_tactileSensorInterface->read(m_fingertipRawTactileFeedbacksYarpVector)
           == yarp::dev::IAnalogSensor::AS_OK))
     {
-        yError() << m_logPrefix << "Unable to get tactile sensor data.";
-        return false;
+        yWarning() << m_logPrefix << "Unable to get tactile sensor data.";
     }
 
     CtrlHelper::toStdVector(m_fingertipRawTactileFeedbacksYarpVector,
@@ -379,19 +393,26 @@ void RobotSkin::computeMaxContactStrength()
                                         : 0);
 
         // check the strength chenages of the tactile feedback
-        m_fingersContactStrengthDerivate[i]
-            = (m_areFingersInContact[i]
-                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
-                   : 0);
+        //        m_fingersContactStrengthDerivate[i]
+        //            = (m_areFingersInContact[i]
+        //                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
+        //                   : 0);
 
-        yInfo() << " [before] fingersContactStrengthDerivate: " << i
-                << m_fingersContactStrengthDerivate[i];
+        m_fingersContactStrengthDerivate[i]
+            = (true ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue() : 0);
+
+        //        yInfo() << " [before] fingersContactStrengthDerivate: " << i
+        //                << m_fingersContactStrengthDerivate[i];
 
         m_fingersContactStrengthDerivate[i]
             = (m_areFingersContactChanges[i] ? m_fingersContactStrengthDerivate[i] : 0);
 
-        yInfo() << " [after] fingersContactStrengthDerivate: " << i
-                << m_fingersContactStrengthDerivate[i];
+        //        yInfo() << " [after] fingersContactStrengthDerivate: " << i
+        //                << m_fingersContactStrengthDerivate[i];
+
+        m_fingersContactStrengthDerivateSmoothed[i] = std::abs(
+            m_smoothingGainDerivative * m_fingersContactStrengthDerivate[i]
+            + (1 - m_smoothingGainDerivative) * m_fingersContactStrengthDerivateSmoothed[i]);
     }
 }
 
@@ -405,9 +426,13 @@ void RobotSkin::computeVibrotactileFeedback()
             = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(x, m_fbParams[2]) + m_fbParams[3])
               + m_fbParams[4] * std::pow(x, m_fbParams[5]);
 
+        //        m_fingersVibrotactileDerivativeFeedback[i]
+        //            = m_fingersTactileData[i].vibrotactileDerivativeGain
+        //              * m_fingersContactStrengthDerivate[i];
+
         m_fingersVibrotactileDerivativeFeedback[i]
             = m_fingersTactileData[i].vibrotactileDerivativeGain
-              * m_fingersContactStrengthDerivate[i];
+              * m_fingersContactStrengthDerivateSmoothed[i];
 
         // saturate the values between 0 to 100
 
@@ -501,8 +526,8 @@ bool RobotSkin::getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
     size_t start = 0;
     for (const auto& data : m_fingersTactileData)
     {
-        std::copy(data.calibratedTactileDataDerivative.begin(),
-                  data.calibratedTactileDataDerivative.end(),
+        std::copy(data.tactileDataDerivative.begin(),
+                  data.tactileDataDerivative.end(),
                   fingertipsTactileDerivativeFeedback.begin() + start);
         start += data.noTactileSensors;
     }

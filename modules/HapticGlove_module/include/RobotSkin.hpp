@@ -45,6 +45,8 @@ struct HapticGlove::FingertipTactileData
     bool firstTime = true;
 
     double contactThresholdValue = 5.0; /// default value
+    double contactDerivativeThresholdValue = 3.0; /// default value
+
     double vibrotactileGain = 1.0; /// default value
     double vibrotactileDerivativeGain = 1.0; /// default value
 
@@ -56,9 +58,6 @@ struct HapticGlove::FingertipTactileData
 
     std::vector<double> calibratedTactileData; /// range: almost 0-1: 0: no load, 1 max load
     std::vector<double> previousCalibratedTactileData; /// range: almost 0-1: 0: no load, 1 max load
-
-    std::vector<double>
-        calibratedTactileDataDerivative; /// shows the derivative of the calibrated tactile data
 
     std::vector<double> biasTactileSensor; /// mean of the tactile sensors when not touched
     std::vector<double>
@@ -95,12 +94,21 @@ struct HapticGlove::FingertipTactileData
             std::max_element(calibratedTactileData.begin(), calibratedTactileData.end()));
     }
 
+    size_t maxTactileFeedbackDerivativeElement()
+    {
+        return std::distance(
+            tactileDataDerivative.begin(),
+            std::max_element(tactileDataDerivative.begin(), tactileDataDerivative.end()));
+    }
+
     double maxTactileFeedbackDerivativeValue()
     {
         // we check for the derivative of the tactile sensor with the highest calibrated absolute
         // value, since we believe the value of th that tactile sensor is more important. the
         // hypothesis should be checked.
-        return tactileDataDerivative[this->maxTactileFeedbackAbsoluteElement()];
+        //        return tactileDataDerivative[this->maxTactileFeedbackAbsoluteElement()];
+
+        return *std::max_element(tactileDataDerivative.begin(), tactileDataDerivative.end());
     }
 
     double contactThreshold()
@@ -110,7 +118,8 @@ struct HapticGlove::FingertipTactileData
 
     double contactDerivativeThreshold()
     {
-        return 3.0 * stdTactileSensorDerivative[this->maxTactileFeedbackAbsoluteElement()];
+        return contactDerivativeThresholdValue
+               * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
     }
 
     void printInfo() const
@@ -124,6 +133,8 @@ struct HapticGlove::FingertipTactileData
         std::cout << "min tactile threshold: " << minTactileValue << std::endl;
         std::cout << "no load tactile threshold: " << noLoadValue << std::endl;
         std::cout << "contact threshold: " << contactThresholdValue << std::endl;
+        std::cout << "contact derivative threshold: " << contactDerivativeThresholdValue
+                  << std::endl;
         std::cout << "vibrotactile gain: " << vibrotactileGain << std::endl;
         std::cout << "==================" << std::endl;
     }
@@ -153,6 +164,8 @@ private:
 
     std::vector<double> m_fingersContactStrength;
     std::vector<double> m_fingersContactStrengthDerivate;
+    std::vector<double> m_fingersContactStrengthDerivateSmoothed;
+    double m_smoothingGainDerivative; // exponential filter smoothing gain
 
     double m_tactileWorkingThreshold;
     double m_tactileUpdateThreshold; // this is a threshold to check if the sensor data is updated,
