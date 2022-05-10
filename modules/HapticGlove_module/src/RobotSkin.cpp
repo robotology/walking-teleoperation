@@ -49,6 +49,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_totalNoTactile = 0;
 
     m_areFingersInContact.resize(m_noFingers, false);
+    m_areFingersContactChanges.resize(m_noFingers, false);
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
     m_fingersVibrotactileAbsoluteFeedback.resize(m_noFingers, 0.0);
@@ -228,6 +229,9 @@ void RobotSkin::updateCalibratedTactileData()
                 if (tactileDerivative > m_tactileUpdateThreshold)
                 {
                     finger.tactileDataDerivative[i] = tactileDerivative;
+                    yInfo() << "tactile derivative: " << finger.fingerName << "index (" << i << ") "
+                            << finger.calibratedTactileData[i]
+                            << finger.previousCalibratedTactileData[i] << tactileDerivative;
                 }
             }
             finger.firstTime = false;
@@ -297,6 +301,13 @@ bool RobotSkin::computeCalibrationParamters()
                 << data.biasTactileSensor;
         yInfo() << m_logPrefix << data.fingerName << ": standard deviation of tactile sensors"
                 << data.stdTactileSensor;
+
+        yInfo() << m_logPrefix << data.fingerName << ": mean of tactile sensors derivative"
+                << data.biasTactileSensorDerivative;
+        yInfo() << m_logPrefix << data.fingerName
+                << ": standard deviation of tactile sensors derivative"
+                << data.stdTactileSensorDerivative;
+
         if (counter > m_noFingers)
         {
             yError() << m_logPrefix
@@ -352,6 +363,9 @@ void RobotSkin::computeAreFingersInContact()
     {
         m_areFingersInContact[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
                                    > m_fingersTactileData[i].contactThreshold();
+
+        m_areFingersContactChanges[i] = m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
+                                        > m_fingersTactileData[i].contactDerivativeThreshold();
     }
 }
 
@@ -364,10 +378,20 @@ void RobotSkin::computeMaxContactStrength()
             = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
                                         : 0);
 
+        // check the strength chenages of the tactile feedback
         m_fingersContactStrengthDerivate[i]
             = (m_areFingersInContact[i]
                    ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
                    : 0);
+
+        yInfo() << " [before] fingersContactStrengthDerivate: " << i
+                << m_fingersContactStrengthDerivate[i];
+
+        m_fingersContactStrengthDerivate[i]
+            = (m_areFingersContactChanges[i] ? m_fingersContactStrengthDerivate[i] : 0);
+
+        yInfo() << " [after] fingersContactStrengthDerivate: " << i
+                << m_fingersContactStrengthDerivate[i];
     }
 }
 
@@ -398,11 +422,6 @@ void RobotSkin::computeVibrotactileFeedback()
             = m_absoluteSkinValuePercentage * m_fingersVibrotactileAbsoluteFeedback[i]
               + (1.0 - m_absoluteSkinValuePercentage) * m_fingersVibrotactileDerivativeFeedback[i];
     }
-}
-
-void RobotSkin::getContactStrength(std::vector<double>& fingersContactStrength)
-{
-    fingersContactStrength = m_fingersContactStrength;
 }
 
 void RobotSkin::getVibrotactileAbsoluteFeedback(
@@ -451,18 +470,56 @@ bool RobotSkin::getSerializedFingertipsTactileFeedbacks(
     return true;
 }
 
-bool RobotSkin::getFingertipMaxTactileFeedback(std::vector<double>& fingertipPressure)
+bool RobotSkin::getSerializedFingertipsCalibratedTactileFeedbacks(
+    std::vector<double>& fingertipsTactileFeedback)
 {
-    if (fingertipPressure.size() != m_noFingers)
+
+    if (fingertipsTactileFeedback.size() != m_totalNoTactile)
     {
-        fingertipPressure.resize(m_noFingers);
+        fingertipsTactileFeedback.resize(m_totalNoTactile, 0.0);
+    }
+    size_t start = 0;
+    for (const auto& data : m_fingersTactileData)
+    {
+        std::copy(data.calibratedTactileData.begin(),
+                  data.calibratedTactileData.end(),
+                  fingertipsTactileFeedback.begin() + start);
+        start += data.noTactileSensors;
     }
 
-    for (size_t i = 0; i < m_noFingers; i++)
+    return true;
+}
+
+bool RobotSkin::getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
+    std::vector<double>& fingertipsTactileDerivativeFeedback)
+{
+
+    if (fingertipsTactileDerivativeFeedback.size() != m_totalNoTactile)
     {
-        fingertipPressure[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue();
+        fingertipsTactileDerivativeFeedback.resize(m_totalNoTactile, 0.0);
+    }
+    size_t start = 0;
+    for (const auto& data : m_fingersTactileData)
+    {
+        std::copy(data.calibratedTactileDataDerivative.begin(),
+                  data.calibratedTactileDataDerivative.end(),
+                  fingertipsTactileDerivativeFeedback.begin() + start);
+        start += data.noTactileSensors;
     }
 
+    return true;
+}
+
+bool RobotSkin::getFingertipsContactStrength(std::vector<double>& fingertipsContactStrength)
+{
+    fingertipsContactStrength = m_fingersContactStrength;
+    return true;
+}
+
+bool RobotSkin::getFingertipsContactStrengthDerivative(
+    std::vector<double>& fingertipsContactStrengthDerivative)
+{
+    fingertipsContactStrengthDerivative = m_fingersContactStrengthDerivate;
     return true;
 }
 

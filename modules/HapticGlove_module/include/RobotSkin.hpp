@@ -108,6 +108,11 @@ struct HapticGlove::FingertipTactileData
         return contactThresholdValue * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
+    double contactDerivativeThreshold()
+    {
+        return 3.0 * stdTactileSensorDerivative[this->maxTactileFeedbackAbsoluteElement()];
+    }
+
     void printInfo() const
     {
         std::cout << "==================" << std::endl;
@@ -140,6 +145,7 @@ private:
 
     std::vector<bool> m_areTactileSensorsWorking;
     std::vector<bool> m_areFingersInContact;
+    std::vector<bool> m_areFingersContactChanges;
 
     std::vector<double> m_fingersVibrotactileAbsoluteFeedback;
     std::vector<double> m_fingersVibrotactileDerivativeFeedback;
@@ -201,17 +207,24 @@ public:
 
     bool computeCalibrationParamters();
 
-    bool getFingertipTactileFeedbacks(const size_t fingertipIndex, std::vector<double>& skinData);
-
     bool collectSkinDataForCalibration();
+
+    bool getFingertipTactileFeedbacks(const size_t fingertipIndex, std::vector<double>& skinData);
 
     bool getSerializedFingertipsTactileFeedbacks(std::vector<double>& fingertipsTactileFeedback);
 
-    bool getFingertipMaxTactileFeedback(std::vector<double>& fingertipPressure);
+    bool getSerializedFingertipsCalibratedTactileFeedbacks(
+        std::vector<double>& fingertipsTactileFeedback);
+
+    bool getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
+        std::vector<double>& fingertipsTactileDerivativeFeedback);
+
+    bool getFingertipsContactStrength(std::vector<double>& fingertipsContactStrength);
+
+    bool getFingertipsContactStrengthDerivative(
+        std::vector<double>& fingertipsContactStrengthDerivative);
 
     void areFingersInContact(std::vector<bool>& areFingersIncontact);
-
-    void getContactStrength(std::vector<double>& fingersContactStrength);
 
     void getVibrotactileAbsoluteFeedback(std::vector<double>& fingersVibrotactileAbsoluteFeedback);
 

@@ -104,15 +104,32 @@ struct HapticGlove::Data
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
 
     // skin
-    std::vector<double>
-        fingertipsRawSkinData; /// <summary> fingertips tactile feedbacks raw values, 192
-                               /// values read from the robot interface; range: [0, 255].
-                               /// 240: no laod value, 0 is maximum pressure
+    std::vector<double> fingertipsSkinData; /// <summary> fingertips tactile feedbacks values,
+                                            /// 60 values read from the robot interface; range: [0,
+                                            /// 1]. 0: no laod value, 1 is maximum pressure
 
     std::vector<double>
-        fingertipsTactileFeedback; /// <summary> fingertips tactile feedbacks for all the
-                                   /// fingerstips: totoal :60 values: fingers thumb, index,
-                                   /// middle, ring, little; each finger 12 tactile sensors
+        fingertipsCalibratedTactileFeedback; /// <summary> fingertips tactile feedbacks for
+                                             /// all the fingerstips: totoal :60 values:
+                                             /// fingers thumb, index, middle, ring, little;
+                                             /// each finger 12 tactile sensors, range quasi [0, 1]
+                                             ///     std::vector<double>
+
+    std::vector<double>
+        fingertipsCalibratedDerivativeTactileFeedback; /// <summary> fingertips tactile feedbacks
+                                                       /// for all the fingerstips: totoal :60
+                                                       /// values: fingers thumb, index, middle,
+                                                       /// ring, little; each finger 12 tactile
+                                                       /// sensors, range quasi [0, 1]
+
+    std::vector<double> fingercontactStrengthFeedback; /// <summary> fingertips constact strength:
+                                                       /// the maximum calibrated tactile sensor
+                                                       /// value if the finger is in contact.
+
+    std::vector<double>
+        fingercontactStrengthDerivativeFeedback; /// <summary> fingertips constact strength
+                                                 /// derivative: the maximum calibrated tactile
+                                                 /// sensor value if the finger is in contact.
 
     std::vector<double>
         robotFingerSkinAbsoluteValueVibrotactileFeedbacks; /// <summary> robot vibrotactile feedback

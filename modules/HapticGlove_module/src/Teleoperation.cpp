@@ -300,8 +300,8 @@ bool Teleoperation::run()
         // to delete
         m_robotSkin->getVibrotactileDerivativeFeedback(
             m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
-        yInfo() << "tactile derivative: "
-                << m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks;
+        //        yInfo() << "tactile derivative: "
+        //                << m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks;
 
         m_robotSkin->getVibrotactileTotalFeedback(
             m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);

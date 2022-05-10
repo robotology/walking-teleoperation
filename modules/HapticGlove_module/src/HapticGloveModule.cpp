@@ -64,7 +64,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         leftFingersOptions.append(generalOptions);
 
         m_leftHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_leftHand->configure(leftFingersOptions, getName(), false))
+        if (!m_leftHand->configure(leftFingersOptions, m_robot, false))
         {
             yError() << m_logPrefix
                      << "unable to initialize the left hand bilateral teleoperation.";
@@ -79,7 +79,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         rightFingersOptions.append(generalOptions);
 
         m_rightHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_rightHand->configure(rightFingersOptions, getName(), true))
+        if (!m_rightHand->configure(rightFingersOptions, m_robot, true))
         {
             yError() << m_logPrefix
                      << "unable to initialize the right hand bilateral teleoperation.";

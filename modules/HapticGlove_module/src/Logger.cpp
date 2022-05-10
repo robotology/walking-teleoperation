@@ -75,8 +75,20 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     m_data.humanForceFeedbacks.resize(m_numHumanForceFeedback, 0.0);
     m_data.humanVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
     m_data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
-    m_data.fingertipsTactileFeedback.resize(m_numberRobotTactileFeedbacks, 0.0);
-    m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
+
+    // skin data
+    m_data.fingertipsSkinData.resize(m_numberRobotTactileFeedbacks, 0.0);
+    m_data.fingertipsCalibratedTactileFeedback.resize(m_numberRobotTactileFeedbacks, 0.0);
+    m_data.fingertipsCalibratedDerivativeTactileFeedback.resize(m_numberRobotTactileFeedbacks, 0.0);
+    m_data.fingercontactStrengthFeedback.resize(m_numHumanVibrotactileFeedback, 0.0);
+    m_data.fingercontactStrengthDerivativeFeedback.resize(m_numHumanVibrotactileFeedback, 0.0);
+    m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback,
+                                                                    0.0);
+    m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks.resize(
+        m_numHumanVibrotactileFeedback, 0.0);
+    m_data.robotFingerSkinTotalValueVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback,
+                                                                 0.0);
+    m_data.areFingersSkinInContact.resize(m_numHumanVibrotactileFeedback, 0.0);
 }
 
 Teleoperation::Logger::~Logger() = default;
@@ -121,6 +133,23 @@ bool Teleoperation::Logger::openLogger()
         // pwm
         m_logger->create(m_robotPrefix + "MotorPwmReferences", m_numRobotActuatedAxes);
         m_logger->create(m_robotPrefix + "MotorPwmFeedbacks", m_numRobotActuatedAxes);
+
+        // skin data
+
+        m_logger->create(m_robotPrefix + "SkinData", m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "CalibratedSkinData", m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "CalibratedSkinDataDerivative",
+                         m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "FingercontactStrength", m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "FingercontactStrengthDerivative",
+                         m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "SkinAbsoluteValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinDerivativeValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinTotalValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinIsInContact", m_numHumanVibrotactileFeedback);
     }
 
     // pid
@@ -152,11 +181,6 @@ bool Teleoperation::Logger::openLogger()
     m_logger->create(m_humanPrefix + "ForceFeedbacks", m_numHumanForceFeedback);
     m_logger->create(m_humanPrefix + "VibrotactileFeedbacks", m_numHumanVibrotactileFeedback);
     m_logger->create(m_humanPrefix + "PalmRotation", 4);
-
-    // skin
-    m_logger->create(m_robotPrefix + "FingertipsTactileFeedbacks", m_numberRobotTactileFeedbacks);
-    m_logger->create(m_humanPrefix + "VibrotactileFeedbacksUsingSkin",
-                     m_numHumanVibrotactileFeedback);
 
     // add the robot and human fingers, axes, joints.
     std::vector<std::string> robotActuatedAxisNames;
@@ -212,15 +236,44 @@ bool Teleoperation::Logger::updateData()
 
     if (m_teleoperation.m_robot == "icub")
     {
+        // current
         m_teleoperation.m_robotController->getMotorCurrentReference(
             m_data.robotMotorCurrentReferences);
 
         m_teleoperation.m_robotController->getMotorCurrentFeedback(
             m_data.robotMotorCurrentFeedbacks);
 
+        // pwm
         m_teleoperation.m_robotController->getMotorPwmReference(m_data.robotMotorPwmReferences);
 
         m_teleoperation.m_robotController->getMotorPwmFeedback(m_data.robotMotorPwmFeedbacks);
+
+        // skin
+        m_teleoperation.m_robotSkin->getSerializedFingertipsTactileFeedbacks(
+            m_data.fingertipsSkinData);
+
+        m_teleoperation.m_robotSkin->getSerializedFingertipsCalibratedTactileFeedbacks(
+            m_data.fingertipsCalibratedTactileFeedback);
+
+        m_teleoperation.m_robotSkin->getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
+            m_data.fingertipsCalibratedDerivativeTactileFeedback);
+
+        m_teleoperation.m_robotSkin->getFingertipsContactStrength(
+            m_data.fingercontactStrengthFeedback);
+
+        m_teleoperation.m_robotSkin->getFingertipsContactStrengthDerivative(
+            m_data.fingercontactStrengthDerivativeFeedback);
+
+        m_teleoperation.m_robotSkin->getVibrotactileAbsoluteFeedback(
+            m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->getVibrotactileDerivativeFeedback(
+            m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->getVibrotactileTotalFeedback(
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
     }
 
     m_teleoperation.m_robotController->getMotorPidOutputs(m_data.robotMotorPidOutputs);
@@ -248,13 +301,6 @@ bool Teleoperation::Logger::updateData()
         m_data.humanVibrotactileFeedbacks);
 
     m_teleoperation.m_humanGlove->getHandPalmRotation(m_data.humanPalmRotation);
-
-    // skin
-    m_teleoperation.m_robotSkin->getSerializedFingertipsTactileFeedbacks(
-        m_data.fingertipsTactileFeedback);
-
-    m_teleoperation.m_robotSkin->getVibrotactileAbsoluteFeedback(
-        m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
     return true;
 }
@@ -293,6 +339,27 @@ bool Teleoperation::Logger::logData()
         // pwm
         m_logger->add(m_robotPrefix + "MotorPwmReferences", m_data.robotMotorPwmReferences);
         m_logger->add(m_robotPrefix + "MotorPwmFeedbacks", m_data.robotMotorPwmFeedbacks);
+
+        // skin
+        m_logger->add(m_robotPrefix + "SkinData", m_data.fingertipsSkinData);
+        m_logger->add(m_robotPrefix + "CalibratedSkinData",
+                      m_data.fingertipsCalibratedTactileFeedback);
+        m_logger->add(m_robotPrefix + "CalibratedSkinDataDerivative",
+                      m_data.fingertipsCalibratedDerivativeTactileFeedback);
+        m_logger->add(m_robotPrefix + "FingercontactStrength",
+                      m_data.fingercontactStrengthFeedback);
+        m_logger->add(m_robotPrefix + "FingercontactStrengthDerivative",
+                      m_data.fingercontactStrengthDerivativeFeedback);
+        m_logger->add(m_robotPrefix + "SkinAbsoluteValueVibrotactileFeedback",
+                      m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
+        m_logger->add(m_robotPrefix + "SkinDerivativeValueVibrotactileFeedback",
+                      m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+        m_logger->add(m_robotPrefix + "SkinTotalValueVibrotactileFeedback",
+                      m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        std::vector<int> areFingersSkinInContact(m_data.areFingersSkinInContact.begin(),
+                                                 m_data.areFingersSkinInContact.end());
+        m_logger->add(m_robotPrefix + "SkinIsInContact", areFingersSkinInContact);
     }
 
     // pid
@@ -322,11 +389,6 @@ bool Teleoperation::Logger::logData()
     m_logger->add(m_humanPrefix + "ForceFeedbacks", m_data.humanForceFeedbacks);
     m_logger->add(m_humanPrefix + "VibrotactileFeedbacks", m_data.humanVibrotactileFeedbacks);
     m_logger->add(m_humanPrefix + "PalmRotation", m_data.humanPalmRotation);
-
-    // skin
-    m_logger->add(m_robotPrefix + "FingertipsTactileFeedbacks", m_data.fingertipsTactileFeedback);
-    m_logger->add(m_humanPrefix + "VibrotactileFeedbacksUsingSkin",
-                  m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
 
 #endif
 
