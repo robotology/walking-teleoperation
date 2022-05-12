@@ -393,13 +393,13 @@ void RobotSkin::computeMaxContactStrength()
                                         : 0);
 
         // check the strength chenages of the tactile feedback
-        //        m_fingersContactStrengthDerivate[i]
-        //            = (m_areFingersInContact[i]
-        //                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
-        //                   : 0);
-
         m_fingersContactStrengthDerivate[i]
-            = (true ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue() : 0);
+            = (m_areFingersInContact[i]
+                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
+                   : 0);
+
+        //        m_fingersContactStrengthDerivate[i]
+        //            = (true ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue() : 0);
 
         //        yInfo() << " [before] fingersContactStrengthDerivate: " << i
         //                << m_fingersContactStrengthDerivate[i];
@@ -410,9 +410,9 @@ void RobotSkin::computeMaxContactStrength()
         //        yInfo() << " [after] fingersContactStrengthDerivate: " << i
         //                << m_fingersContactStrengthDerivate[i];
 
-        m_fingersContactStrengthDerivateSmoothed[i] = std::abs(
-            m_smoothingGainDerivative * m_fingersContactStrengthDerivate[i]
-            + (1 - m_smoothingGainDerivative) * m_fingersContactStrengthDerivateSmoothed[i]);
+        m_fingersContactStrengthDerivateSmoothed[i]
+            = m_smoothingGainDerivative * m_fingersContactStrengthDerivate[i]
+              + (1 - m_smoothingGainDerivative) * m_fingersContactStrengthDerivateSmoothed[i];
     }
 }
 
@@ -432,7 +432,7 @@ void RobotSkin::computeVibrotactileFeedback()
 
         m_fingersVibrotactileDerivativeFeedback[i]
             = m_fingersTactileData[i].vibrotactileDerivativeGain
-              * m_fingersContactStrengthDerivateSmoothed[i];
+              * std::abs(m_fingersContactStrengthDerivateSmoothed[i]);
 
         // saturate the values between 0 to 100
 
