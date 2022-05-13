@@ -48,6 +48,51 @@
         <tag>yarpdatadumper</tag>
     </module>
 
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dumper/icub/skin/rightHand --type bottle --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+    </module>
+
+
+
+<!-- human and robot states and wearables-->
+	    
+  <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /icub_dump/robotState --type bottle --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+	      <tag>yarpdatadumper</tag>
+  </module>	    
+
+
+
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /human_dump/wearable --type bottle --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+  </module>
+  
+  
+  <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /human_dump/wearable/xsens --type bottle --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+  </module>
+  
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /human_dump/iWearRemapper --type bottle --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+  </module>
+
+
+
 <!-- camera data -->
     <module>
         <name>yarpdatadumper</name>
@@ -114,7 +159,34 @@
         <to>/dumper/icub/camcalib/right</to>
         <protocol>mjpeg</protocol>
     </connection>
+    
+    
+    
+      <connection>
+        <from>/IWearRemapper/data:o</from>
+        <to>/human_dump/iWearRemapper</to>
+        <protocol>udp</protocol>
+  </connection>
 
+
+  <connection>
+        <from>/XSensSuit/WearableData/data:o</from>
+        <to>/human_dump/wearable/xsens</to>
+        <protocol>udp</protocol>
+  </connection>
+
+   <connection>
+        <from>/WearableData/data:o</from>
+        <to>/human_dump/wearable</to>
+        <protocol>udp</protocol>
+  </connection>
   
+  	<connection>
+        <from>/iCub/RobotStateWrapper/state:o</from>
+        <to>/icub_dump/robotState</to>
+        <protocol>udp</protocol>
+  </connection>
+ 
+ 
 	
 </application>
