@@ -1019,8 +1019,8 @@ bool OculusModule::updateModule()
             std::swap(x, y);
 
             cmd.addString("setGoal");
-            cmd.addDouble(x);
-            cmd.addDouble(y);
+            cmd.addFloat64(x);
+            cmd.addFloat64(y);
             if (m_moveRobot)
             {
                 m_rpcWalkingClient.write(cmd, outcome);
