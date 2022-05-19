@@ -245,7 +245,7 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    m_axisContactThreshold = config.check("axisContactThreshold", yarp::os::Value(0.1)).asDouble();
+    m_axisContactThreshold = config.check("axisContactThreshold", yarp::os::Value(0.1)).asFloat64();
 
     // initialize the vectors
     m_robotRefJointAngles.resize(m_numActuatedJoints, 0.0);

@@ -36,9 +36,9 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
         return false;
     }
 
-    no_states_kf = config.check("no_states_kf", yarp::os::Value(3)).asInt();
+    no_states_kf = config.check("no_states_kf", yarp::os::Value(3)).asInt32();
 
-    no_measurement_kf = config.check("no_measurement_kf", yarp::os::Value(1)).asInt();
+    no_measurement_kf = config.check("no_measurement_kf", yarp::os::Value(1)).asInt32();
 
     yarp::sig::Vector Q_vector(no_states_kf, 0.0), R_vector(no_measurement_kf, 0.0);
     if (!YarpHelper::getYarpVectorFromSearchable(config, "r_matrix_kf", R_vector))

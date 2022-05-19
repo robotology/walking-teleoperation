@@ -58,7 +58,7 @@ bool RobotController::configure(const yarp::os::Searchable& config,
     // check if we need to do calibration
     m_doCalibration = config.check("doCalibration", yarp::os::Value(0)).asBool();
 
-    m_kGain = config.check("exponentialFilterGain", yarp::os::Value(0.9)).asDouble();
+    m_kGain = config.check("exponentialFilterGain", yarp::os::Value(0.9)).asFloat64();
 
     if (m_axesJointsCoupled)
     {

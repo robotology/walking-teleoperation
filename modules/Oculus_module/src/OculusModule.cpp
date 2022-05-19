@@ -325,7 +325,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     yarp::os::Bottle& generalOptions = rf.findGroup("GENERAL");
     // get the period
-    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // check if move the robot
     m_moveRobot = generalOptions.check("enableMoveRobot", yarp::os::Value(1)).asBool();
@@ -333,7 +333,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     // check if move the robot
     m_playerOrientationThreshold
-        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asDouble();
+        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asFloat64();
     yInfo() << "[OculusModule::configure] player orientation threshold: "
             << m_playerOrientationThreshold;
 
@@ -792,7 +792,7 @@ bool OculusModule::getTransforms()
             {
                 for (int i = 0; i < desiredHeadOrientation->size(); i++)
                     desiredHeadOrientationVector(i)
-                        = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
+                        = iDynTree::deg2rad(desiredHeadOrientation->get(i).asFloat64());
 
                 // Notice that the data coming from the port are written in the following order:
                 // [ pitch, -roll, yaw].
@@ -814,7 +814,7 @@ bool OculusModule::getTransforms()
                 for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
                 {
                     getPosition(m_oculusRoot_T_headOculus)(i)
-                        = desiredHeadPosition->get(i).asDouble();
+                        = desiredHeadPosition->get(i).asFloat64();
                 }
 
                 // the data coming from oculus vr is with the following order:

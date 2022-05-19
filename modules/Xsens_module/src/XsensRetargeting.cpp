@@ -41,7 +41,7 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     yInfo() << "[XsensRetargeting::configure] m_useSmoothing: " << m_useSmoothing;
 
     // get the period
-    m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // set the module name
     std::string name;

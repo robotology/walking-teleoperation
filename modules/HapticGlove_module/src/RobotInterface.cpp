@@ -268,11 +268,11 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     // initialize the robot joint/axis configurations
     double intializationTime
-        = config.check("robotInitializationTime", yarp::os::Value(5.0)).asDouble();
+        = config.check("robotInitializationTime", yarp::os::Value(5.0)).asFloat64();
 
     m_steadyStateCounterThreshold
         = config.check("steadyStateCounterThreshold", yarp::os::Value(5)).asInt64();
-    m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asDouble();
+    m_steadyStateThreshold = config.check("steadyStateThreshold", yarp::os::Value(0.05)).asFloat64();
     m_steadyStateCounter = 0;
     yInfo() << m_logPrefix << "initialization time [sec]:" << intializationTime
             << ", steady state counter threshold [steps]:" << m_steadyStateCounterThreshold
@@ -413,7 +413,7 @@ bool RobotInterface::openRobotDevices(const yarp::os::Searchable& config,
 
     // set the reference velocity for the position control mode
     double refenceVelocityForPositionControl
-        = config.check("referenceVelocityForPositionControl", yarp::os::Value(10.0)).asDouble();
+        = config.check("referenceVelocityForPositionControl", yarp::os::Value(10.0)).asFloat64();
 
     yarp::sig::Vector dummy(m_noActuatedAxis, refenceVelocityForPositionControl);
 
