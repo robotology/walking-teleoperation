@@ -36,11 +36,11 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_robot = name;
 
     // get the period
-    m_dT = config.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = config.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // check the calibration time period
     m_calibrationTimePeriod
-        = config.check("calibrationTimePeriod", yarp::os::Value(10.0)).asDouble();
+        = config.check("calibrationTimePeriod", yarp::os::Value(10.0)).asFloat64();
     yInfo() << m_logPrefix << "calibration time period: " << m_calibrationTimePeriod;
 
     m_moveRobot = config.check("enableMoveRobot", yarp::os::Value(1)).asBool();

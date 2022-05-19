@@ -46,7 +46,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
 
     yarp::os::Bottle& generalOptions = rf.findGroup("GENERAL");
     // get the period
-    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // robot name:
     m_robot = generalOptions.check("robot", yarp::os::Value("icubSim")).asString();

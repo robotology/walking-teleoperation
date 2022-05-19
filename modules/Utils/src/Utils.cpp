@@ -94,13 +94,13 @@ bool YarpHelper::getDoubleFromSearchable(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!value->isDouble())
+    if (!value->isFloat64())
     {
         yError() << "[getNumberFromSearchable] the value is not a double.";
         return false;
     }
 
-    number = value->asDouble();
+    number = value->asFloat64();
     return true;
 }
 
@@ -133,13 +133,13 @@ bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,
 
     for (int i = 0; i < inputPtr->size(); i++)
     {
-        if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
+        if (!inputPtr->get(i).isFloat64() && !inputPtr->get(i).isInt32())
         {
             yError() << "[getYarpVectorFromSearchable] The input is expected to be a "
                         "double or a int";
             return false;
         }
-        output(i) = inputPtr->get(i).asDouble();
+        output(i) = inputPtr->get(i).asFloat64();
     }
     return true;
 }
@@ -167,12 +167,12 @@ bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
 
     for (int i = 0; i < inputPtr->size(); i++)
     {
-        if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
+        if (!inputPtr->get(i).isFloat64() && !inputPtr->get(i).isInt32())
         {
             yError() << "[getVectorFromSearchable] The input is expected to be a double or a int";
             return false;
         }
-        output[i] = inputPtr->get(i).asDouble();
+        output[i] = inputPtr->get(i).asFloat64();
     }
     return true;
 }
@@ -246,13 +246,13 @@ bool YarpHelper::getIntFromSearchable(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!value->isInt())
+    if (!value->isInt32())
     {
         yError() << "[getIntFromSearchable] the value is not an int.";
         return false;
     }
 
-    number = value->asInt();
+    number = value->asInt32();
     return true;
 }
 
