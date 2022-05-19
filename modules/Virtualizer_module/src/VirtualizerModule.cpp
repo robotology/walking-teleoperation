@@ -76,6 +76,71 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
         return false;
     }
 
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "angle_threshold_still_rad", m_angleThresholdOperatorStill))
+    {
+        yError() << "Failed to read angle_threshold_still_rad";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "angle_threshold_moving_rad", m_angleThresholdOperatorMoving))
+    {
+        yError() << "Failed to read angle_threshold_moving_rad";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "time_threshold_moving_s", m_operatorStillTimeThreshold))
+    {
+        yError() << "Failed to read time_threshold_moving_s";
+        return false;
+    }
+
+    m_operatorCurrentStillAngle = 0.0;
+    m_operatorStillTime = -1.0;
+    m_operatorMoving = true;
+
+    if (m_angleThresholdOperatorMoving < m_angleThresholdOperatorStill)
+    {
+        yError() << "The angle threshold to consider the operator moving needs to be greater than the one to consider him still.";
+        return false;
+    }
+
+    if (m_operatorStillTimeThreshold < 0.0)
+    {
+        yError() << "The time threshold to consider the operator still needs to be greater than 0.";
+        return false;
+    }
+
+    if (!YarpHelper::getBooleanFromSearchable(ringVelocityGroup, "use_sign_only", m_useVelocitySignOnly))
+    {
+        yError() << "Failed to read use_sign_only";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "jammed_moving_time_s", m_jammedMovingTime))
+    {
+        yError() << "Failed to read jammed_moving_time_s";
+        return false;
+    }
+
+    if (!YarpHelper::getDoubleFromSearchable(ringVelocityGroup, "jammed_moving_robot_angle_rad", m_jammedMovingRobotAngle))
+    {
+        yError() << "Failed to read jammed_moving_robot_angle_rad";
+        return false;
+    }
+
+    if (m_jammedMovingTime > 0 && m_jammedMovingRobotAngle > 0)
+    {
+        yWarning() << "Both jammed_moving_time_s and jammed_moving_robot_angle_rad are greater than 0."
+                   << "Only the robot condition will be used, unless the robot angle reading is not valid";
+    }
+
+    m_jammedStartTime = -1.0;
+    m_jammedRobotStartAngle = 0.0;
+    m_jammedRobotStartAngleValid = false;
+    m_isJammed = false;
+    m_jammedValue = 0.0;
+    m_jammedRobotOnce = false;
+
     return true;
 }
 
@@ -423,12 +488,7 @@ bool VirtualizerModule::updateModule()
     std::lock_guard<std::mutex> guard(m_mutex);
 
     // get data from virtualizer
-    double playerYaw;
-    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-
-    playerYaw *= 360.0f;
-    playerYaw = playerYaw * M_PI / 180;
-    playerYaw = Angles::normalizeAngle(playerYaw);
+    double playerYaw = getPlayerYaw();
 
     yInfo() << "Current player yaw: " << playerYaw;
 
@@ -443,7 +503,8 @@ bool VirtualizerModule::updateModule()
     double playerHeighInM = playerHeightInCm / 100.0;
 
     // get the player speed
-    double speedData = threshold((double)(m_cvirtDeviceID->GetMovementSpeed()), m_speedDeadzone);
+    double virtualizerSpeedData = (double)(m_cvirtDeviceID->GetMovementSpeed());
+    double speedData = threshold(virtualizerSpeedData, m_speedDeadzone);
 
     double tmpSpeedDirection = (double)(m_cvirtDeviceID->GetMovementDirection());
     double speedDirection = 1.0; // set the speed direction to forward by default.
@@ -465,18 +526,112 @@ bool VirtualizerModule::updateModule()
     if (m_useRingVelocity)
     {
         double newVelocity = Angles::shortestAngularDistance(m_oldPlayerYaw, playerYaw)/getPeriod();
-        double filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        double filteredVelocity = 0.0;
+
+        if (m_useVelocitySignOnly)
+        {
+            filteredVelocity = sign(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        }
+        else
+        {
+            filteredVelocity = threshold(filteredRingVelocity(newVelocity), m_velocityDeadzone);
+        }
+
+        //If the operator is moving and then remains close to a certain angle for a while, then we consider the operator still
+        //if the operator is still, it needs to move of a certain angle before considering it moving.
+
+        if (m_operatorMoving)
+        {
+            bool operatorIsNotRotating
+                = std::abs(Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw))
+                  < m_angleThresholdOperatorStill;
+            bool operatorIsNotWalking = std::abs(virtualizerSpeedData) < m_speedDeadzone;
+
+            if (operatorIsNotRotating && operatorIsNotWalking)
+            {
+                yInfo() << "The operator seems fixed";
+                if (m_operatorStillTime < 0)
+                {
+                    m_operatorStillTime = yarp::os::Time::now();
+                }
+                else if (yarp::os::Time::now() - m_operatorStillTime > m_operatorStillTimeThreshold) {
+                    yInfo() << "The operator is fixed";
+                    m_operatorMoving = false;
+                }
+            }
+            else
+            {
+                m_operatorCurrentStillAngle = playerYaw;
+                m_operatorStillTime = -1.0;
+            }
+        }
+        else
+        {
+            double angleVariation = Angles::shortestAngularDistance(m_operatorCurrentStillAngle, playerYaw);
+            if (std::abs(angleVariation) > m_angleThresholdOperatorMoving)
+            {
+                yInfo() << "The operator is moving";
+
+                m_jammedStartTime = yarp::os::Time::now();
+
+                if (m_jammedMovingRobotAngle > 0.0 && !m_jammedRobotOnce)
+                {
+                    m_jammedRobotOnce = true;
+                    m_jammedRobotStartAngleValid = updateRobotYaw();
+                    m_jammedRobotStartAngle = m_robotYaw;
+
+                    if (!m_jammedRobotStartAngleValid)
+                    {
+                        yWarning() << "The robot angle is not valid.";
+                    }
+                }
+
+                if (angleVariation > 0)
+                {
+                    m_jammedValue = 1.0;
+                }
+                else
+                {
+                    m_jammedValue = -1.0;
+                }
+                m_isJammed = true;
+
+                m_operatorMoving = true;
+                m_operatorCurrentStillAngle = playerYaw;
+                m_operatorStillTime = -1.0;
+            }
+        }
+
+        if (m_isJammed)
+        {
+            if (m_jammedRobotStartAngleValid && updateRobotYaw())
+            {
+                if (std::abs(Angles::shortestAngularDistance(m_jammedRobotStartAngle, m_robotYaw)) >= m_jammedMovingRobotAngle)
+                {
+                    m_isJammed = false;
+                }
+            }
+            else if (yarp::os::Time::now() - m_jammedStartTime >= m_jammedMovingTime)
+            {
+                m_isJammed = false;
+            }
+        }
+
+        if (m_isJammed)
+        {
+            filteredVelocity = m_jammedValue;
+        }
+        else if (!m_operatorMoving)
+        {
+            filteredVelocity = 0.0;
+        }
+
         y = -m_velocityScaling * filteredVelocity; //The ring has the z axis pointing downward
     }
     else
     {
         // get the robot orientation
-        yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
-        if (tmp != NULL)
-        {
-            auto vector = *tmp;
-            m_robotYaw = -Angles::normalizeAngle(vector[0]);
-        }
+        updateRobotYaw();
 
         // error between the robot orientation and the player orientation
         double angularError = threshold(Angles::shortestAngularDistance(m_robotYaw, playerYaw), m_angleDeadzone);
@@ -558,10 +713,7 @@ void VirtualizerModule::resetPlayerOrientation()
     std::lock_guard<std::mutex> guard(m_mutex);
     m_cvirtDeviceID->ResetPlayerOrientation();
 
-    m_oldPlayerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
-    m_oldPlayerYaw *= 360.0f;
-    m_oldPlayerYaw = m_oldPlayerYaw * M_PI / 180;
-    m_oldPlayerYaw = Angles::normalizeAngle(m_oldPlayerYaw);
+    m_oldPlayerYaw = getPlayerYaw();
 
     m_movingAverage.clear();
     m_movingAverage.resize(m_movingAverageWindowSize, 0.0);
@@ -572,6 +724,21 @@ void VirtualizerModule::resetPlayerHeight()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     m_cvirtDeviceID->ResetPlayerHeight();
+}
+
+void VirtualizerModule::forceStillAngle()
+{
+    std::lock_guard<std::mutex> guard(m_mutex);
+
+    m_operatorMoving = false;
+    m_operatorCurrentStillAngle = getPlayerYaw();
+    m_operatorStillTime = -1.0;
+
+    m_isJammed = false;
+    m_jammedRobotOnce = false;
+
+
+    yInfo() << "Forced the operator still angle to" << m_operatorCurrentStillAngle;
 }
 
 double VirtualizerModule::threshold(const double &input, double deadzone)
@@ -589,6 +756,21 @@ double VirtualizerModule::threshold(const double &input, double deadzone)
         else
             return 0.0;
     }
+}
+
+double VirtualizerModule::sign(const double &input, double deadzone)
+{
+    if (std::abs(input) < deadzone)
+    {
+        return 0.0;
+    }
+
+    if (input > 0)
+    {
+        return +1.0;
+    }
+
+    return -1.0;
 }
 
 double VirtualizerModule::filteredRingVelocity(double newVelocity)
@@ -632,4 +814,30 @@ bool VirtualizerModule::isNeckWorking()
     }
 
     return true;
+}
+
+bool VirtualizerModule::updateRobotYaw()
+{
+    // get the robot orientation
+    yarp::sig::Vector* tmp = m_robotOrientationPort.read(false);
+    if (tmp == nullptr)
+    {
+        return false;
+    }
+
+    auto vector = *tmp;
+    m_robotYaw = -Angles::normalizeAngle(vector[0]);
+    return true;
+}
+
+double VirtualizerModule::getPlayerYaw()
+{
+    double playerYaw;
+    playerYaw = (double)(m_cvirtDeviceID->GetPlayerOrientation());
+
+    playerYaw *= 360.0f; //The angle from the virtualizer is a number from 0 to 1
+    playerYaw = playerYaw * M_PI / 180;
+    playerYaw = Angles::normalizeAngle(playerYaw);
+
+    return playerYaw;
 }

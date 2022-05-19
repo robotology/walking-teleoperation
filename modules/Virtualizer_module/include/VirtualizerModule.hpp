@@ -62,6 +62,22 @@ private:
     double m_velocityDeadzone; /**< Absolute value below which the ring is considered still. */
     double m_velocityScaling; /**< Scaling value from the encoder value to a reference point. */
     std::deque<double> m_movingAverage; /**< Buffer to save velocity data. */
+    double m_angleThresholdOperatorStill; /**< Angle threshold to consider the operator still. */
+    double m_angleThresholdOperatorMoving; /**< Angle threshold to consider the operator moving. */
+    double m_operatorCurrentStillAngle; /**< The angle in which the operator when considered still the first time. */
+    double m_operatorStillTime; /**< First instant in which the operator was considered still. */
+    double m_operatorStillTimeThreshold; /**< Time threshold to conder the operator still. */
+    bool m_operatorMoving; /**< The operator is currently moving. */
+    bool m_useVelocitySignOnly; /**< Use only the speed sign for rotating. */
+    double m_jammedMovingTime; /**< The duration with which the output is kept constant after the operator starts moving */
+    double m_jammedStartTime; /**< Start time in which the lateral output is jammed. */
+    double m_jammedMovingRobotAngle; /**< The angle variation that the robot has to do when the operator starts moving. */
+    double m_jammedRobotStartAngle; /**< The robot angle when the operator starts moving. */
+    bool m_jammedRobotStartAngleValid; /**< Check if the robot angle was valid when the operator started moving. */
+    double m_jammedValue; /**< The jammed output for the lateral direction. **/
+    bool m_isJammed; /**< True if the lateral output is jammed. **/
+    bool m_jammedRobotOnce; /**< True if it jammed already once. **/
+
 
     bool m_useHeadForTurning; /**< Flag to use the head for controlling the robot turning while walking. */
     yarp::dev::PolyDriver m_headDevice; /**< Device to retrieve neck values. */
@@ -116,6 +132,14 @@ private:
     double threshold(const double& input, double deadzone);
 
     /**
+     * Standard sign function.
+     * @param input input
+     * @param deadzone The deadzone value
+     * @return 0 if the abs(input) < abs(deadzone) otherwise return the sign of the input.
+     */
+    double sign(const double& input, double deadzone);
+
+    /**
      * @brief Filter the ring velocity
      * @param newVelocity The new velocity to be considered
      * @return The filtered velocity
@@ -127,6 +151,18 @@ private:
      * @return True if the neck is working fine, false otherwise.
      */
     bool isNeckWorking();
+
+    /**
+     * @brief Reads the current robot yaw
+     * @return True if the update succeded. False otherwise.
+     */
+    bool updateRobotYaw();
+
+    /**
+     * @brief Get the current player yaw measured from the virtualizer
+     * @return The player yaw
+     */
+    double getPlayerYaw();
 
 public:
     /**
@@ -163,6 +199,11 @@ public:
      * Reset the player height
      */
     virtual void resetPlayerHeight() override;
+
+     /**
+     * Reset the player still angle
+     */
+    virtual void forceStillAngle() override;
 };
 
 #endif
