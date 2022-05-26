@@ -15,7 +15,7 @@
   
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config transformServer_to_iwear_noifeel.xml</parameters>
+    <parameters>--config transformServer_to_iwear.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run transform server Wearable Device</description>
     <node>icub-console</node>
