@@ -38,6 +38,10 @@
   <application>
     <name>Xprize-PsychophysiologicalRetargeting</name>
   </application>
+  
+  <application>
+    <name>Xprize-HapticGlove</name>
+  </application>
 
   <application>
     <name>Xprize-KynDynRetargeting</name>
