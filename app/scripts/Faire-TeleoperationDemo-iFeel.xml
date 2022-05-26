@@ -1,0 +1,50 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>Faire-TeleoperationDemo-iFeel</name>
+  <description>Application to run teleoperation demo including gloves, trackers, vive, iFeel.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="riccardo.grieco@iit.it">Riccardo Grieco</author>
+  </authors>
+    
+  <application>
+      <name>transformServer</name>
+  </application>
+    
+  <application>
+    <name>Xprize-VisualRetargeting</name>
+  </application>
+  
+  <application>
+    <name>Xprize-AudioRetargeting</name>
+  </application>
+  
+  <application>
+    <name>Face_Expressions</name>
+  </application>
+  
+  <application>
+    <name>Xprize-PsychophysiologicalRetargeting</name>
+  </application>
+  
+  <application>
+    <name>Xprize-HapticGlove</name>
+  </application>
+  
+  <application>
+    <name>Faire-UserRetargeting-iFeel</name>
+  </application>
+  
+  <application>
+    <name>Xprize-KynDynRetargeting</name>
+  </application>
+  
+  <application>
+    <name>3dRudder</name>
+  </application>
+    
+</application>
