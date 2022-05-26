@@ -58,6 +58,23 @@
 
 
 
+
+<!-- camera data -->
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dumper/icub/camcalib/left --type image_jpg --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+    </module>
+	    
+    <module>
+        <name>yarpdatadumper</name>
+        <parameters>--name /dumper/icub/camcalib/right --type image_jpg --txTime --rxTime</parameters>
+        <node>${generic_node}</node>
+        <tag>yarpdatadumper</tag>
+    </module>
+
+
 <!-- human and robot states and wearables-->
 	    
   <module>
@@ -76,14 +93,7 @@
         <tag>yarpdatadumper</tag>
   </module>
   
-  
-  <module>
-        <name>yarpdatadumper</name>
-        <parameters>--name /human_dump/wearable/xsens --type bottle --txTime --rxTime</parameters>
-        <node>${generic_node}</node>
-        <tag>yarpdatadumper</tag>
-  </module>
-  
+    
     <module>
         <name>yarpdatadumper</name>
         <parameters>--name /human_dump/iWearRemapper --type bottle --txTime --rxTime</parameters>
@@ -91,22 +101,20 @@
         <tag>yarpdatadumper</tag>
   </module>
 
-
-
-<!-- camera data -->
-    <module>
+  <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dumper/icub/camcalib/left --type image_jpg --txTime --rxTime</parameters>
+        <parameters>--name /human_dump/wearable/xsens --type bottle --txTime --rxTime</parameters>
         <node>${generic_node}</node>
         <tag>yarpdatadumper</tag>
-    </module>
-	    
-    <module>
+  </module>
+
+  <module>
         <name>yarpdatadumper</name>
-        <parameters>--name /dumper/icub/camcalib/right --type image_jpg --txTime --rxTime</parameters>
+        <parameters>--name /human_dump/iFeelSuit/WearableData/data --type bottle --txTime --rxTime</parameters>
         <node>${generic_node}</node>
         <tag>yarpdatadumper</tag>
-    </module>
+  </module>
+
 
 
 <!-- port connections -->
@@ -188,5 +196,13 @@
   </connection>
  
  
+  	<connection>
+        <from> /iFeelSuit/WearableData/data:o</from>
+        <to>/human_dump/iFeelSuit/WearableData/data</to>
+        <protocol>udp</protocol>
+  </connection>
+ 
+ 
+
 	
 </application>

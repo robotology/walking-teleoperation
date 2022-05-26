@@ -31,6 +31,8 @@ class HapticGlove::Teleoperation::Logger
     std::string m_handName; /// <summary> the hand name (.eg., left or right)
     std::string m_logPrefix; /// <summary> logging prefix
 
+    bool m_useSkin; /// <summary> check if using skin
+
     const Teleoperation&
         m_teleoperation; /// <summary> the constant reference to the parent teleoperation object
 

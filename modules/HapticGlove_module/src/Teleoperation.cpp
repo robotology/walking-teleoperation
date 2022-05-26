@@ -178,6 +178,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     // logger
     m_enableLogger = config.check("enableLogger", yarp::os::Value(0)).asBool();
+
     if (m_enableLogger)
     {
         m_loggerLeftHand = std::make_unique<Logger>(*this, rightHand);
@@ -383,7 +384,10 @@ bool Teleoperation::prepare(bool& isPrepared)
                                                               humanHandJointRangeMax);
         }
         // skin
-        m_robotSkin->computeCalibrationParamters();
+        if (m_useSkin)
+        {
+            m_robotSkin->computeCalibrationParamters();
+        }
 
     } else
     {
