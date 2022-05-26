@@ -15,6 +15,15 @@
   
   <module>
     <name>yarprobotinterface</name>
+    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run iFeelSuit and Multi Haptic driver</description>
+    <node>icub-console</node>
+    <tag>iFeelSuitMultiHapticNoHands</tag>
+  </module>
+  
+  <module>
+    <name>yarprobotinterface</name>
     <parameters>--config transformServer_to_iwear.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run transform server Wearable Device</description>
@@ -30,7 +39,7 @@
   
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config RobotStateProvider_iCub3_openxr.xml --xy_scale 0.7 --z_scale 0.6</parameters>
+    <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
     <node>icub-console</node>
