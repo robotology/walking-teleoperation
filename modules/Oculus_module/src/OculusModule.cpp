@@ -161,7 +161,8 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
 
     if (m_skipJoypad && !m_useVirtualizer)
     {
-        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot be true at the same time.";
+        yError() << "[OculusModule::configureJoypad] skip_joypad and move_icub_using_joypad cannot "
+                    "be true at the same time.";
         return false;
     }
 
@@ -218,27 +219,27 @@ bool OculusModule::configureJoypad(const yarp::os::Searchable& config)
             {
                 if (m_useSenseGlove && m_useVirtualizer)
                 {
-                    yWarning() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
-                                  "to the PolyDriver object. Continuing anyway since we are using the virtualizer and the gloves."
+                    yWarning() << "[OculusModule::configureJoypad] Unable to attach "
+                                  "JoypadController interface "
+                                  "to the PolyDriver object. Continuing anyway since we are using "
+                                  "the virtualizer and the gloves."
                                   "Set skip_joypad to true to avoid this warning.";
-                }
-                else
+                } else
                 {
-                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController interface "
+                    yError() << "[OculusModule::configureJoypad] Unable to attach JoypadController "
+                                "interface "
                                 "to the PolyDriver object";
                     return false;
                 }
             }
-        }
-        else
+        } else
         {
             if (m_useSenseGlove && m_useVirtualizer)
             {
                 yWarning() << "[OculusModule::configureJoypad] Unable to open the polydriver. "
                               "Continuing anyway since we are using the virtualizer and the gloves."
                               "Set skip_joypad to true to avoid this warning.";
-            }
-            else
+            } else
             {
                 yError() << "[OculusModule::configureJoypad] Unable to open the polydriver.";
                 return false;
@@ -324,7 +325,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     yarp::os::Bottle& generalOptions = rf.findGroup("GENERAL");
     // get the period
-    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // check if move the robot
     m_moveRobot = generalOptions.check("enableMoveRobot", yarp::os::Value(1)).asBool();
@@ -332,7 +333,7 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     // check if move the robot
     m_playerOrientationThreshold
-        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asDouble();
+        = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asFloat64();
     yInfo() << "[OculusModule::configure] player orientation threshold: "
             << m_playerOrientationThreshold;
 
@@ -791,7 +792,7 @@ bool OculusModule::getTransforms()
             {
                 for (int i = 0; i < desiredHeadOrientation->size(); i++)
                     desiredHeadOrientationVector(i)
-                        = iDynTree::deg2rad(desiredHeadOrientation->get(i).asDouble());
+                        = iDynTree::deg2rad(desiredHeadOrientation->get(i).asFloat64());
 
                 // Notice that the data coming from the port are written in the following order:
                 // [ pitch, -roll, yaw].
@@ -813,7 +814,7 @@ bool OculusModule::getTransforms()
                 for (unsigned i = 0; i < desiredHeadPosition->size(); i++)
                 {
                     getPosition(m_oculusRoot_T_headOculus)(i)
-                        = desiredHeadPosition->get(i).asDouble();
+                        = desiredHeadPosition->get(i).asFloat64();
                 }
 
                 // the data coming from oculus vr is with the following order:
@@ -1018,8 +1019,8 @@ bool OculusModule::updateModule()
             std::swap(x, y);
 
             cmd.addString("setGoal");
-            cmd.addDouble(x);
-            cmd.addDouble(y);
+            cmd.addFloat64(x);
+            cmd.addFloat64(y);
             if (m_moveRobot)
             {
                 m_rpcWalkingClient.write(cmd, outcome);
@@ -1224,7 +1225,7 @@ double OculusModule::deadzone(const double& input)
 bool OculusModule::openLogger()
 {
 #ifdef ENABLE_LOGGER
-    std::string currentTime = getTimeDateMatExtension();
+    std::string currentTime = YarpHelper::getTimeDateMatExtension();
     std::string fileName = "OculusModule" + currentTime + "log.mat";
 
     m_logger = XBot::MatLogger2::MakeLogger(fileName);

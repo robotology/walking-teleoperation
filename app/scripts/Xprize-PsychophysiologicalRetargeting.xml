@@ -14,6 +14,7 @@
    <!-- Modules -->
    <module>
      <name>SRanipalModule</name>
+     <parameters>--forceEyeCalibration --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
      <node>icub-virtualizer</node>
    </module>
 
@@ -21,11 +22,13 @@
   <connection>
     <from>/SRanipalModule/emotions:o</from>
     <to>/icub/face/emotions/in</to>
+    <protocol>fast_tcp</protocol>
   </connection>
   
   <connection>
     <from>/SRanipalModule/VR/rpc:o</from>
     <to>/joypadDevice/Oculus/rpc</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>

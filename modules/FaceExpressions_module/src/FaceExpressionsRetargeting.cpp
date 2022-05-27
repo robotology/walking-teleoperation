@@ -36,9 +36,9 @@ bool FaceExpressionsRetargetingModule::configure(yarp::os::ResourceFinder &rf)
 
     std::string emotionsPortOut = rf.check("emotions_output_port_name", yarp::os::Value("/emotions:o"), "The name of the output port for the emotions.").asString();
 
-    m_period = rf.check("period", yarp::os::Value(0.01), "The module period.").asDouble();
+    m_period = rf.check("period", yarp::os::Value(0.01), "The module period.").asFloat64();
 
-    m_switchValue = rf.check("expression_counter_max_value", yarp::os::Value(2), "It controls the frequency with which the robot opens and close the mouth.").asInt();
+    m_switchValue = rf.check("expression_counter_max_value", yarp::os::Value(2), "It controls the frequency with which the robot opens and close the mouth.").asInt32();
 
     m_emotionsOutputPort.open("/" + name + emotionsPortOut);
 

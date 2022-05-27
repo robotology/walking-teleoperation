@@ -6,11 +6,18 @@ cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 14)
 
 project(walking-teleoperation
-  VERSION 1.2.0)
+  VERSION 1.3.0)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 include(WalkingTeleoperationFindDependencies)
+
+include(FindPackageHandleStandardArgs)
+if(WIN32)
+  # MSVC standard library doesn't include things like M_PI_2 without this
+  add_definitions(-D_USE_MATH_DEFINES)
+endif()
+
+
 
 add_subdirectory(modules)
 add_subdirectory(app)

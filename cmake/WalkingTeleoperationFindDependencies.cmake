@@ -116,11 +116,30 @@ endmacro()
 ################################################################################
 # Find all packages
 
-find_package(YARP REQUIRED)
+find_package(YARP 3.6 REQUIRED)
 find_package(YCM REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(iDynTree REQUIRED)
+
+# Enable RPATH
+option(ENABLE_RPATH "Enable RPATH for this library" ON)
+
+mark_as_advanced(ENABLE_RPATH)
+include(AddInstallRPATHSupport)
+add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+  LIB_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+  INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}"
+  DEPENDS ENABLE_RPATH
+  USE_LINK_PATH)
+
+# Enable logger
+option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
+if(ENABLE_LOGGER)
+  add_definitions(-DENABLE_LOGGER)
+  find_package(matlogger2 REQUIRED)
+endif(ENABLE_LOGGER)
+
 
 find_package(PkgConfig QUIET)
 if (PkgConfig_FOUND)
@@ -137,7 +156,15 @@ checkandset_dependency(CybSDK)
 find_package(SRanipalSDK QUIET)
 checkandset_dependency(SRanipalSDK)
 
+find_package(IWear QUIET)
+checkandset_dependency(IWear)
+
+find_package(WearableActuators QUIET)
+checkandset_dependency(WearableActuators)
+
+
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)
+WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_HapticGloveModule "Compile Haptic Glove Module?" ON "WALKING_TELEOPERATION_USE_IWear;WALKING_TELEOPERATION_USE_WearableActuators" OFF)

@@ -9,6 +9,8 @@
 // std
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <ctime>
+
 
 // YARP
 #include <yarp/os/LogStream.h>
@@ -92,13 +94,13 @@ bool YarpHelper::getDoubleFromSearchable(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!value->isDouble())
+    if (!value->isFloat64())
     {
         yError() << "[getNumberFromSearchable] the value is not a double.";
         return false;
     }
 
-    number = value->asDouble();
+    number = value->asFloat64();
     return true;
 }
 
@@ -131,13 +133,79 @@ bool YarpHelper::getYarpVectorFromSearchable(const yarp::os::Searchable& config,
 
     for (int i = 0; i < inputPtr->size(); i++)
     {
-        if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
+        if (!inputPtr->get(i).isFloat64() && !inputPtr->get(i).isInt32())
         {
             yError() << "[getYarpVectorFromSearchable] The input is expected to be a "
                         "double or a int";
             return false;
         }
-        output(i) = inputPtr->get(i).asDouble();
+        output(i) = inputPtr->get(i).asFloat64();
+    }
+    return true;
+}
+
+bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
+                                         const std::string& key,
+                                         std::vector<double>& output)
+{
+    yarp::os::Value* value;
+    if (!config.check(key, value))
+    {
+        yError() << "[getVectorFromSearchable] Missing field " << key;
+        return false;
+    }
+
+    if (!value->isList())
+    {
+        yError() << "[getVectorFromSearchable] the value is not a list.";
+        return false;
+    }
+
+    yarp::os::Bottle* inputPtr = value->asList();
+
+    output.resize(inputPtr->size(), 0.0);
+
+    for (int i = 0; i < inputPtr->size(); i++)
+    {
+        if (!inputPtr->get(i).isFloat64() && !inputPtr->get(i).isInt32())
+        {
+            yError() << "[getVectorFromSearchable] The input is expected to be a double or a int";
+            return false;
+        }
+        output[i] = inputPtr->get(i).asFloat64();
+    }
+    return true;
+}
+
+bool YarpHelper::getVectorFromSearchable(const yarp::os::Searchable& config,
+                                         const std::string& key,
+                                         std::vector<std::string>& output)
+{
+    yarp::os::Value* value;
+    if (!config.check(key, value))
+    {
+        yError() << "[getVectorFromSearchable] Missing field " << key;
+        return false;
+    }
+
+    if (!value->isList())
+    {
+        yError() << "[getVectorFromSearchable] the value is not a list.";
+        return false;
+    }
+
+    yarp::os::Bottle* inputPtr = value->asList();
+
+    output.resize(inputPtr->size());
+
+    for (int i = 0; i < inputPtr->size(); i++)
+    {
+        if (!inputPtr->get(i).isString())
+        {
+            yError() << "[getVectorFromSearchable] The input is expected to be a string";
+            return false;
+        }
+        output[i] = inputPtr->get(i).asString();
     }
     return true;
 }
@@ -167,7 +235,9 @@ double Angles::shortestAngularDistance(const double& fromRad, const double& toRa
     return normalizeAngle(toRad - fromRad);
 }
 
-bool YarpHelper::getIntFromSearchable(const yarp::os::Searchable &config, const std::string &key, int &number)
+bool YarpHelper::getIntFromSearchable(const yarp::os::Searchable& config,
+                                      const std::string& key,
+                                      int& number)
 {
     yarp::os::Value* value;
     if (!config.check(key, value))
@@ -176,17 +246,19 @@ bool YarpHelper::getIntFromSearchable(const yarp::os::Searchable &config, const 
         return false;
     }
 
-    if (!value->isInt())
+    if (!value->isInt32())
     {
         yError() << "[getIntFromSearchable] the value is not an int.";
         return false;
     }
 
-    number = value->asInt();
+    number = value->asInt32();
     return true;
 }
 
-bool YarpHelper::getUnsignedIntFromSearchable(const yarp::os::Searchable &config, const std::string &key, unsigned int &number)
+bool YarpHelper::getUnsignedIntFromSearchable(const yarp::os::Searchable& config,
+                                              const std::string& key,
+                                              unsigned int& number)
 {
     int value;
     if (!YarpHelper::getIntFromSearchable(config, key, value))
@@ -203,10 +275,11 @@ bool YarpHelper::getUnsignedIntFromSearchable(const yarp::os::Searchable &config
     number = static_cast<unsigned int>(value);
 
     return true;
-
 }
 
-bool YarpHelper::getBooleanFromSearchable(const yarp::os::Searchable &config, const std::string &key, bool &boolean)
+bool YarpHelper::getBooleanFromSearchable(const yarp::os::Searchable& config,
+                                          const std::string& key,
+                                          bool& boolean)
 {
     yarp::os::Value* value;
     if (!config.check(key, value))
@@ -223,4 +296,17 @@ bool YarpHelper::getBooleanFromSearchable(const yarp::os::Searchable &config, co
 
     boolean = value->asBool();
     return true;
+}
+
+std::string YarpHelper::getTimeDateMatExtension()
+{
+    // this code snippet is taken from
+    // https://stackoverflow.com/questions/17223096/outputting-date-and-time-in-c-using-stdchrono
+    std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    char timedate[30];
+
+    std::strftime(&timedate[0], 30, "%Y-%m-%d_%H-%M-%S", std::localtime(&now));
+    std::string timeDateStr = timedate;
+    timeDateStr.shrink_to_fit();
+    return timeDateStr;
 }

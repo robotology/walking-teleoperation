@@ -41,7 +41,7 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     yInfo() << "[XsensRetargeting::configure] m_useSmoothing: " << m_useSmoothing;
 
     // get the period
-    m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asDouble();
+    m_dT = rf.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
 
     // set the module name
     std::string name;
@@ -148,7 +148,7 @@ bool XsensRetargeting::getJointValues()
 {
     hde::msgs::HumanState* desiredHumanStates = m_wholeBodyHumanJointsPort.read(false);
 
-    if (desiredHumanStates == NULL)
+    if (desiredHumanStates == nullptr)
     {
         return true;
     }
@@ -168,16 +168,16 @@ bool XsensRetargeting::getJointValues()
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
             // check for the spikes in joint values
+             
             if (std::abs(newHumanjointsValues[m_humanToRobotMap[j]] - m_jointValues(j))
-                < m_jointDiffThreshold)
-            {
-                m_jointValues(j) = newHumanjointsValues[m_humanToRobotMap[j]];
-            } else
+                > m_jointDiffThreshold)
             {
                 yWarning() << "spike in data: joint : " << j << " , " << m_robotJointsListNames[j]
                            << " ; old data: " << m_jointValues(j)
                            << " ; new data:" << newHumanjointsValues[m_humanToRobotMap[j]];
             }
+            m_jointValues(j) = newHumanjointsValues[m_humanToRobotMap[j]];
+            
         }
     } else
     {

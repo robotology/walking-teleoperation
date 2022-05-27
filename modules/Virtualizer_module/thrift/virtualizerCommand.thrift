@@ -17,4 +17,9 @@ service VirtualizerCommands
      * Reset the player height
      */
     oneway void resetPlayerHeight();
+
+     /**
+     * Reset the player still angle
+     */
+    oneway void forceStillAngle();
 }
