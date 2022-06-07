@@ -89,7 +89,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     // wainting time after preparation and before running state machine
     m_waitingStartTime = 0;
     m_waitingDurationTime
-        = generalOptions.check("waitingDurationTime", yarp::os::Value(5.0)).asDouble();
+        = generalOptions.check("waitingDurationTime", yarp::os::Value(5.0)).asFloat64();
 
     // update the end of the configuration time step
     double timeConfigurationEnd = yarp::os::Time::now();

@@ -29,7 +29,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_logPrefix = "RobotSkin::";
     m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
 
-    m_samplingTime = config.check("samplingTime", yarp::os::Value(0.01)).asDouble();
+    m_samplingTime = config.check("samplingTime", yarp::os::Value(0.01)).asFloat64();
 
     std::vector<std::string> robotFingerNameList;
 
@@ -40,10 +40,10 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     }
 
     m_tactileWorkingThreshold
-        = config.check("tactileWorkingThreshold ", yarp::os::Value(0.0001)).asDouble();
+        = config.check("tactileWorkingThreshold ", yarp::os::Value(0.0001)).asFloat64();
 
     m_tactileUpdateThreshold
-        = config.check("tactileUpdateThreshold ", yarp::os::Value(0.0001)).asDouble();
+        = config.check("tactileUpdateThreshold ", yarp::os::Value(0.0001)).asFloat64();
 
     m_noFingers = robotFingerNameList.size();
     m_totalNoTactile = 0;
@@ -113,10 +113,10 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
 
     // get the percentage for the vibrotactile feedback among the absolute and derivative value
     m_absoluteSkinValuePercentage
-        = config.check("absoluteSkinValuePercentage", yarp::os::Value(1.0)).asDouble();
+        = config.check("absoluteSkinValuePercentage", yarp::os::Value(1.0)).asFloat64();
 
     m_smoothingGainDerivative
-        = config.check("skinDerivativeSmoothingGain", yarp::os::Value(0.9)).asDouble();
+        = config.check("skinDerivativeSmoothingGain", yarp::os::Value(0.9)).asFloat64();
 
     if (m_absoluteSkinValuePercentage < 0 || m_absoluteSkinValuePercentage > 1.0)
     {

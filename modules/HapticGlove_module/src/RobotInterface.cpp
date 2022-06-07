@@ -242,8 +242,8 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         {
             yarp::os::Bottle* axisRange = axesLimitMap->get(i).asList();
             std::string axisName = axisRange->get(0).asString();
-            double minVal = iDynTree::deg2rad(axisRange->get(1).asDouble()); // [rad]
-            double maxVal = iDynTree::deg2rad(axisRange->get(2).asDouble()); // [rad]
+            double minVal = iDynTree::deg2rad(axisRange->get(1).asFloat64()); // [rad]
+            double maxVal = iDynTree::deg2rad(axisRange->get(2).asFloat64()); // [rad]
 
             auto axisElement
                 = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
@@ -268,7 +268,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
         {
             yarp::os::Bottle* axisHomeValue = axesHomeValuesMap->get(i).asList();
             std::string axisName = axisHomeValue->get(0).asString();
-            double homeVal = iDynTree::deg2rad(axisHomeValue->get(1).asDouble()); // [rad]
+            double homeVal = iDynTree::deg2rad(axisHomeValue->get(1).asFloat64()); // [rad]
 
             auto axisElement
                 = std::find(std::begin(m_allAxisNames), std::end(m_allAxisNames), axisName);
