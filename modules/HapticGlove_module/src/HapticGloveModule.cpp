@@ -64,7 +64,7 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         leftFingersOptions.append(generalOptions);
 
         m_leftHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_leftHand->configure(leftFingersOptions, getName(), false))
+        if (!m_leftHand->configure(leftFingersOptions, m_robot, false))
         {
             yError() << m_logPrefix
                      << "unable to initialize the left hand bilateral teleoperation.";
@@ -79,13 +79,17 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         rightFingersOptions.append(generalOptions);
 
         m_rightHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_rightHand->configure(rightFingersOptions, getName(), true))
+        if (!m_rightHand->configure(rightFingersOptions, m_robot, true))
         {
             yError() << m_logPrefix
                      << "unable to initialize the right hand bilateral teleoperation.";
             return false;
         }
     }
+    // wainting time after preparation and before running state machine
+    m_waitingStartTime = 0;
+    m_waitingDurationTime
+        = generalOptions.check("waitingDurationTime", yarp::os::Value(5.0)).asFloat64();
 
     // update the end of the configuration time step
     double timeConfigurationEnd = yarp::os::Time::now();
@@ -118,8 +122,7 @@ bool HapticGloveModule::close()
     {
         if (!m_leftHand->close())
         {
-            yError() << m_logPrefix << "unable to close left hand teleoperation.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close left hand teleoperation.";
         }
     }
 
@@ -127,8 +130,7 @@ bool HapticGloveModule::close()
     {
         if (!m_rightHand->close())
         {
-            yError() << m_logPrefix << "unable to close right hand teleoperation.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close right hand teleoperation.";
         }
     }
 
@@ -137,10 +139,10 @@ bool HapticGloveModule::close()
 
 bool HapticGloveModule::updateModule()
 {
+    double t1 = yarp::os::Time::now();
 
     if (m_state == HapticGloveFSM::Running)
     {
-        double t1 = yarp::os::Time::now();
         if (m_useLeftHand)
         {
             if (!m_leftHand->run())
@@ -157,8 +159,6 @@ bool HapticGloveModule::updateModule()
                 return false;
             }
         }
-        double t2 = yarp::os::Time::now();
-        yInfo() << m_logPrefix << "total computation time: " << t2 - t1;
 
     } else if (m_state == HapticGloveFSM::Configuring)
     {
@@ -168,6 +168,7 @@ bool HapticGloveModule::updateModule()
 
     } else if (m_state == HapticGloveFSM::Preparing)
     {
+
         bool isPrepared = true;
         if (m_useLeftHand)
         {
@@ -191,9 +192,37 @@ bool HapticGloveModule::updateModule()
 
         if (isPrepared)
         {
+            m_state = HapticGloveFSM::Waiting;
+            m_waitingStartTime = yarp::os::Time::now();
+        }
+    } else if (m_state == HapticGloveFSM::Waiting)
+    {
+        double timeNow = yarp::os::Time::now();
+
+        if (timeNow - m_waitingStartTime > m_waitingDurationTime)
+        {
             m_state = HapticGloveFSM::Running;
+        } else
+        {
+            if (m_useLeftHand)
+            {
+                if (!m_leftHand->wait())
+                {
+                    yWarning() << m_logPrefix << "the left hand is unable to wait.";
+                }
+            }
+
+            if (m_useRightHand)
+            {
+                if (!m_rightHand->wait())
+                {
+                    yWarning() << m_logPrefix << "the right hand is unable to wait.";
+                }
+            }
         }
     }
+    double t2 = yarp::os::Time::now();
+    yInfo() << m_logPrefix << "total computation time: " << t2 - t1;
 
     return true;
 }

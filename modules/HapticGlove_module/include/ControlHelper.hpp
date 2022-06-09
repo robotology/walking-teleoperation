@@ -9,7 +9,9 @@
 #define CONTROL_HELPER_HPP
 
 // std
+#include <iostream>
 #include <vector>
+
 // Eigen
 #include <Eigen/Dense>
 // yarp
@@ -42,6 +44,30 @@ void toStdVector(yarp::sig::Vector& vecYarp, std::vector<double>& vecStd);
 void toYarpVector(std::vector<double>& vecStd, yarp::sig::Vector& vecYarp);
 
 void toYarpVector(Eigen::VectorXd& vecEigen, yarp::sig::Vector& vecYarp);
+
+// template <typename DynamicEigenMatrix, typename DynamicEigenVector>
+// bool push_back_row(DynamicEigenMatrix& m, const DynamicEigenVector& values);
+
+template <typename DynamicEigenMatrix, typename DynamicEigenVector>
+bool push_back_row(DynamicEigenMatrix& m, const DynamicEigenVector& values)
+{
+    if (m.size() != 0)
+    {
+        if (m.cols() != values.cols())
+        {
+
+            std::cerr << "[push_back_row]: the number of columns in matrix and vactor are not "
+                         "equal; m.cols(): "
+                      << m.cols() << ", values.cols():" << values.cols() << std::endl;
+            return false;
+        }
+    }
+    Eigen::Index row = m.rows();
+    m.conservativeResize(row + 1, values.cols());
+    for (int i = 0; i < values.cols(); i++)
+        m(row, i) = values(0, i);
+    return true;
+};
 
 struct Data;
 

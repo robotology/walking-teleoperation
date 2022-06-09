@@ -17,6 +17,7 @@ using namespace HapticGlove;
 Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHand)
     : m_teleoperation(module)
 {
+
     m_isRightHand = isRightHand;
     m_handName = m_isRightHand ? "Right" : "Left";
 
@@ -24,6 +25,8 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     m_humanPrefix = "human" + m_handName + "Hand";
 
     m_logPrefix = "Logger::" + m_handName + ":: ";
+
+    m_useSkin = m_teleoperation.m_useSkin;
 
     m_numRobotActuatedAxes
         = m_teleoperation.m_robotController->controlHelper()->getNumberOfActuatedAxis();
@@ -34,6 +37,10 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     m_numHumanHandJoints = m_teleoperation.m_humanGlove->getNumOfHandJoints();
     m_numHumanVibrotactileFeedback = m_teleoperation.m_humanGlove->getNumOfVibrotactileFeedbacks();
     m_numHumanForceFeedback = m_teleoperation.m_humanGlove->getNumOfForceFeedback();
+    if (m_useSkin)
+    {
+        m_numberRobotTactileFeedbacks = m_teleoperation.m_robotSkin->getNumOfTactileFeedbacks();
+    }
 
     // initialize the data structure
     m_data.time = yarp::os::Time::now();
@@ -74,12 +81,31 @@ Teleoperation::Logger::Logger(const Teleoperation& module, const bool isRightHan
     m_data.humanForceFeedbacks.resize(m_numHumanForceFeedback, 0.0);
     m_data.humanVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback, 0.0);
     m_data.humanPalmRotation.resize(4, 0.0); // 4: number of quaternions
+
+    // skin data
+    if (m_useSkin)
+    {
+        m_data.fingertipsSkinData.resize(m_numberRobotTactileFeedbacks, 0.0);
+        m_data.fingertipsCalibratedTactileFeedback.resize(m_numberRobotTactileFeedbacks, 0.0);
+        m_data.fingertipsCalibratedDerivativeTactileFeedback.resize(m_numberRobotTactileFeedbacks,
+                                                                    0.0);
+        m_data.fingercontactStrengthFeedback.resize(m_numHumanVibrotactileFeedback, 0.0);
+        m_data.fingercontactStrengthDerivativeFeedback.resize(m_numHumanVibrotactileFeedback, 0.0);
+        m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(
+            m_numHumanVibrotactileFeedback, 0.0);
+        m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks.resize(
+            m_numHumanVibrotactileFeedback, 0.0);
+        m_data.robotFingerSkinTotalValueVibrotactileFeedbacks.resize(m_numHumanVibrotactileFeedback,
+                                                                     0.0);
+        m_data.areFingersSkinInContact.resize(m_numHumanVibrotactileFeedback, 0.0);
+    }
 }
 
 Teleoperation::Logger::~Logger() = default;
 
 bool Teleoperation::Logger::openLogger()
 {
+
 #ifdef ENABLE_LOGGER
     std::string currentTime = YarpHelper::getTimeDateMatExtension();
     m_logFileName = "HapticGloveModule_" + m_handName + "Hand_" + currentTime + "_log.mat";
@@ -168,6 +194,25 @@ bool Teleoperation::Logger::openLogger()
     m_logger->create(m_humanPrefix + "JointNames", m_numHumanHandJoints);
     m_logger->create(m_humanPrefix + "FingerNames", m_numHumanHandFingers);
 
+    // skin data
+    if (m_useSkin)
+    {
+        m_logger->create(m_robotPrefix + "SkinData", m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "CalibratedSkinData", m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "CalibratedSkinDataDerivative",
+                         m_numberRobotTactileFeedbacks);
+        m_logger->create(m_robotPrefix + "FingercontactStrength", m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "FingercontactStrengthDerivative",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinAbsoluteValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinDerivativeValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinTotalValueVibrotactileFeedback",
+                         m_numHumanVibrotactileFeedback);
+        m_logger->create(m_robotPrefix + "SkinIsInContact", m_numHumanVibrotactileFeedback);
+    }
+
     //    m_logger->add(m_robotPrefix + "ActuatedAxisNames", robotActuatedAxisNames);
     //    m_logger->add(m_robotPrefix + "ActuatedJointNames", robotActuatedJointNames);
     //    m_logger->add(m_humanPrefix + "JointNames", humanJointNames);
@@ -204,12 +249,14 @@ bool Teleoperation::Logger::updateData()
 
     if (m_teleoperation.m_robot == "icub")
     {
+        // current
         m_teleoperation.m_robotController->getMotorCurrentReference(
             m_data.robotMotorCurrentReferences);
 
         m_teleoperation.m_robotController->getMotorCurrentFeedback(
             m_data.robotMotorCurrentFeedbacks);
 
+        // pwm
         m_teleoperation.m_robotController->getMotorPwmReference(m_data.robotMotorPwmReferences);
 
         m_teleoperation.m_robotController->getMotorPwmFeedback(m_data.robotMotorPwmFeedbacks);
@@ -240,6 +287,36 @@ bool Teleoperation::Logger::updateData()
         m_data.humanVibrotactileFeedbacks);
 
     m_teleoperation.m_humanGlove->getHandPalmRotation(m_data.humanPalmRotation);
+
+    // skin
+    if (m_useSkin)
+    {
+        m_teleoperation.m_robotSkin->getSerializedFingertipsTactileFeedbacks(
+            m_data.fingertipsSkinData);
+
+        m_teleoperation.m_robotSkin->getSerializedFingertipsCalibratedTactileFeedbacks(
+            m_data.fingertipsCalibratedTactileFeedback);
+
+        m_teleoperation.m_robotSkin->getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
+            m_data.fingertipsCalibratedDerivativeTactileFeedback);
+
+        m_teleoperation.m_robotSkin->getFingertipsContactStrength(
+            m_data.fingercontactStrengthFeedback);
+
+        m_teleoperation.m_robotSkin->getFingertipsContactStrengthDerivative(
+            m_data.fingercontactStrengthDerivativeFeedback);
+
+        m_teleoperation.m_robotSkin->getVibrotactileAbsoluteFeedback(
+            m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->getVibrotactileDerivativeFeedback(
+            m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->getVibrotactileTotalFeedback(
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        m_teleoperation.m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
+    }
 
     return true;
 }
@@ -308,6 +385,30 @@ bool Teleoperation::Logger::logData()
     m_logger->add(m_humanPrefix + "VibrotactileFeedbacks", m_data.humanVibrotactileFeedbacks);
     m_logger->add(m_humanPrefix + "PalmRotation", m_data.humanPalmRotation);
 
+    // skin
+    if (m_useSkin)
+    {
+        m_logger->add(m_robotPrefix + "SkinData", m_data.fingertipsSkinData);
+        m_logger->add(m_robotPrefix + "CalibratedSkinData",
+                      m_data.fingertipsCalibratedTactileFeedback);
+        m_logger->add(m_robotPrefix + "CalibratedSkinDataDerivative",
+                      m_data.fingertipsCalibratedDerivativeTactileFeedback);
+        m_logger->add(m_robotPrefix + "FingercontactStrength",
+                      m_data.fingercontactStrengthFeedback);
+        m_logger->add(m_robotPrefix + "FingercontactStrengthDerivative",
+                      m_data.fingercontactStrengthDerivativeFeedback);
+        m_logger->add(m_robotPrefix + "SkinAbsoluteValueVibrotactileFeedback",
+                      m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
+        m_logger->add(m_robotPrefix + "SkinDerivativeValueVibrotactileFeedback",
+                      m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+        m_logger->add(m_robotPrefix + "SkinTotalValueVibrotactileFeedback",
+                      m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        std::vector<int> areFingersSkinInContact(m_data.areFingersSkinInContact.begin(),
+                                                 m_data.areFingersSkinInContact.end());
+        m_logger->add(m_robotPrefix + "SkinIsInContact", areFingersSkinInContact);
+    }
+
 #endif
 
     return true;
@@ -318,6 +419,8 @@ bool Teleoperation::Logger::closeLogger()
 
 #ifdef ENABLE_LOGGER
     m_logger->flush_available_data();
+    //    m_logger->~MatLogger2();
+    m_logger = nullptr;
 #endif
     yInfo() << m_logPrefix << "logger is closing.";
     yInfo() << m_logPrefix << "log file is saved in: " << m_logFileName;

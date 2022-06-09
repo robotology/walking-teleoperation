@@ -29,6 +29,7 @@ set(${EXE_TARGET_NAME}_SRC
   src/Logger.cpp
   src/Teleoperation.cpp
   src/ControlHelper.cpp
+  src/RobotSkin.cpp
   )
 
 # set hpp files
@@ -46,6 +47,7 @@ set(${EXE_TARGET_NAME}_HDR
   include/Logger.hpp
   include/Teleoperation.hpp
   include/ControlHelper.hpp
+  include/RobotSkin.hpp
   )
 
 

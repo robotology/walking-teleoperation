@@ -23,6 +23,7 @@
 #include <GloveControlHelper.hpp>
 #include <Retargeting.hpp>
 #include <RobotController.hpp>
+#include <RobotSkin.hpp>
 
 // eigen
 #include <Eigen/Dense>
@@ -94,10 +95,62 @@ struct HapticGlove::Data
                                          /// fingertips (i.e., 5) x 7)
     std::vector<double>
         humanForceFeedbacks; /// <summary> force feedback vector to the human fingertips
-    std::vector<double> humanVibrotactileFeedbacks; /// <summary> vibrotactile feedback vector to
-                                                    /// the human fingertips
+
+    std::vector<double> humanVibrotactileFeedbacks; /// <summary> vibrotactile feedback
+                                                    /// vector to the human fingertips using
+                                                    /// kinesthetic or skin data
+
     std::vector<double>
         humanPalmRotation; /// <summary> human palm rotation quaternion vector size: 4x1,
+
+    // skin
+    std::vector<double> fingertipsSkinData; /// <summary> fingertips tactile feedbacks values,
+                                            /// 60 values read from the robot interface; range: [0,
+                                            /// 1]. 0: no laod value, 1 is maximum pressure
+
+    std::vector<double>
+        fingertipsCalibratedTactileFeedback; /// <summary> fingertips tactile feedbacks for
+                                             /// all the fingerstips: totoal :60 values:
+                                             /// fingers thumb, index, middle, ring, little;
+                                             /// each finger 12 tactile sensors, range quasi [0, 1]
+                                             ///     std::vector<double>
+
+    std::vector<double>
+        fingertipsCalibratedDerivativeTactileFeedback; /// <summary> fingertips tactile feedbacks
+                                                       /// for all the fingerstips: totoal :60
+                                                       /// values: fingers thumb, index, middle,
+                                                       /// ring, little; each finger 12 tactile
+                                                       /// sensors, range quasi [0, 1]
+
+    std::vector<double> fingercontactStrengthFeedback; /// <summary> fingertips constact strength:
+                                                       /// the maximum calibrated tactile sensor
+                                                       /// value if the finger is in contact.
+
+    std::vector<double>
+        fingercontactStrengthDerivativeFeedback; /// <summary> fingertips constact strength
+                                                 /// derivative: the maximum calibrated tactile
+                                                 /// sensor value if the finger is in contact.
+
+    std::vector<double>
+        robotFingerSkinAbsoluteValueVibrotactileFeedbacks; /// <summary> robot vibrotactile feedback
+                                                           /// to human using skin associated with
+                                                           /// the absolute tactile values
+
+    std::vector<double>
+        robotFingerSkinDerivativeValueVibrotactileFeedbacks; /// <summary> robot vibrotactile
+                                                             /// feedback to human using skin
+                                                             /// associated with the rate of
+                                                             /// change of tactile values
+
+    std::vector<double>
+        robotFingerSkinTotalValueVibrotactileFeedbacks; /// <summary> robot vibrotactile feedback to
+                                                        /// human using skin associated with the
+                                                        /// absolute and differentual tactile values
+
+    std::vector<bool> doRobotFingerSkinsWork; /// <summary> check if the fingertip skins work
+
+    std::vector<bool>
+        areFingersSkinInContact; /// <summary> check if the fingertip skins are in contact
 };
 
 /**
@@ -120,6 +173,9 @@ class HapticGlove::Teleoperation
     bool m_moveRobot; /**< the option to give the user the possibility to move (or not) the robot
                          (default value: true)*/
 
+    bool m_useSkin; /**< the option to give the user the possibility to use the skin data for haptic
+                       feedback. */
+
     double m_timeConfigurationEnd; /**< the moment which the configuration is done */
 
     std::unique_ptr<RobotController> m_robotController; /**< pointer to the robot controller. */
@@ -127,6 +183,8 @@ class HapticGlove::Teleoperation
     std::unique_ptr<GloveControlHelper> m_humanGlove; /**< pointer to the human glove object. */
 
     std::unique_ptr<Retargeting> m_retargeting; /**< pointer to the human retargeting object. */
+
+    std::unique_ptr<RobotSkin> m_robotSkin; /**< pointer to the robot skin object. */
 
     double m_calibrationTimePeriod; /**< calibration time period [sec] */
 
@@ -180,6 +238,12 @@ public:
      * @return true/false in case of success/failure
      */
     bool prepare(bool& isPrepared);
+
+    /**
+     * Wait the teleoperation before running
+     * @return true/false in case of success/failure
+     */
+    bool wait();
 
     /**
      * Set the moment in which the configuration is done

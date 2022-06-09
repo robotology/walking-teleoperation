@@ -154,6 +154,17 @@ bool getVectorFromSearchable(const yarp::os::Searchable& config,
                              std::vector<std::string>& output);
 
 /**
+ * Extract a vector from a searchable object.
+ * @param config is the searchable object;
+ * @param key the name to check for;
+ * @param output is the output vector.
+ * @return true/false in case of success/failure
+ */
+bool getVectorFromSearchable(const yarp::os::Searchable& config,
+                             const std::string& key,
+                             std::vector<int>& output);
+
+/**
  * Merge two vectors. vector = [vector, t]
  * @param vector the original vector. The new elements will be add at the end of
  * this vector;

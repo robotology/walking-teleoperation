@@ -126,7 +126,21 @@ class HapticGlove::Retargeting
                                                const std::vector<double>& axisVelocityError);
 
     /**
-     * compute the retargeting vibrotactile feedback to the human hand fingers
+     * compute the retargeting vibrotactile feedback to the human hand fingers using kinesthetic
+     * data
+     * @return true/false in case of success/failure
+     */
+    bool retargetKinestheticVibrotactileFeedbackFromRobotToHuman();
+
+    /**
+     * compute the retargeting vibrotactile feedback to the human hand fingers using skin data
+     * @return true/false in case of success/failure
+     */
+    bool retargetSkinVibrotactileFeedbackFromRobotToHuman();
+
+    /**
+     * compute the retargeting vibrotactile feedback to the human hand fingers using both skin and
+     * kinesthetic data
      * @return true/false in case of success/failure
      */
     bool retargetVibrotactileFeedbackFromRobotToHuman();
@@ -180,10 +194,24 @@ public:
      * @param axisVelocityFb feedback robot axes velocities
      * @return true/false in case of success/failure
      */
-    bool retargetHapticFeedbackFromRobotToHuman(const std::vector<double>& axisValueRef,
-                                                const std::vector<double>& axisVelocityRef,
-                                                const std::vector<double>& axisValueFb,
-                                                const std::vector<double>& axisVelocityFb);
+    bool retargetHapticFeedbackFromRobotToHumanUsingKinestheticData(
+        const std::vector<double>& axisValueRef,
+        const std::vector<double>& axisVelocityRef,
+        const std::vector<double>& axisValueFb,
+        const std::vector<double>& axisVelocityFb);
+
+    /**
+     * compute the retargeting haptic (force and vibrotactile)feedback to the human hand fingers
+     * @param areFingersSkinWorking true for each finger if its skin is working
+     * @param areFingersSkinInContact true for each finger if it is in contact
+     * @param skinContactStrength skin contact strength
+     * @return true/false in case of success/failure
+     */
+    bool retargetHapticFeedbackFromRobotToHumanUsingSkinData(
+        const std::vector<bool>& areFingersSkinWorking,
+        const std::vector<bool>& areFingersSkinInContact,
+        const std::vector<double>& skinContactStrength);
+
     /**
      * get the robot actuated joint references
      * @param robotJointReferences robot actuated joint references

@@ -10,6 +10,7 @@
 #define ROBOT_INTERFACE_HPP
 
 // std
+#include <array>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -71,6 +72,11 @@ class HapticGlove::RobotInterface
     size_t m_noAllJoints; /**< Number of all the robot hand joints ( associated with the analog &
                              encoders sensors) */
     size_t m_noAllAxis; /**< the number of all robot hand axis */
+
+    size_t m_noFingers; /**< the number of robot fingers */
+
+    std::vector<std::string>
+        m_robotFingerNames; /**< Vector containing the name of the all the robot hand fingers. */
 
     std::vector<std::string> m_actuatedAxisNames; /**< Vector containing the name of the controlled
                                                      axes of the robot hand. */
@@ -134,6 +140,20 @@ class HapticGlove::RobotInterface
     yarp::sig::Vector m_analogSensorsRawMaxBoundary; /**< senor maximum value [raw]*/
     yarp::sig::Vector
         m_sensorsRaw2DegreeScaling; /**< sacling from raw to Degree of joints with analog readouts*/
+
+    yarp::sig::Matrix m_actuatedAxisLimits; /**< the min and max limits of the actuated axis */
+
+    std::unordered_map<std::string, std::array<double, 2>>
+        m_axisCustomMotionRange; /**< the unordered map from the axis name to the custom range of
+                                    motion of the axis limit; this will overwrite the
+                                    m_actuatedAxisLimits in [rad] */
+
+    std::unordered_map<std::string, double>
+        m_axisCustomHomeValues; /**< the unordered map from the axis name to the custom axis homing
+                                  value in [rad] */
+
+    yarp::sig::Vector
+        m_actuatedAxisHomeValues; /**< the vector of actuated axis home pose in [rad] */
 
     yarp::os::Stamp m_timeStamp; /**< Time stamp. */
 
@@ -242,6 +262,12 @@ class HapticGlove::RobotInterface
      */
     bool isSteadyStateReached(std::vector<double>& reference, std::vector<double>& feedback);
 
+    /**
+     * Compute the actuated axis home pose values
+     * @return true / false in case of success / failure
+     */
+    bool computeActuatedAxisHomeValues();
+
 public:
     /**
      * Configure the robot interface
@@ -313,6 +339,20 @@ public:
      * @return true / false in case of success / failure
      */
     bool getActuatedAxisLimits(yarp::sig::Vector& minLimits, yarp::sig::Vector& maxLimits);
+
+    /**
+     * Get the axis home Values
+     * @param axisHomeValues vector containing the axis homing values in radian
+     * @return true / false in case of success / failure
+     */
+    bool getActuatedAxisHomeValues(std::vector<double>& axisHomeValues);
+
+    /**
+     * Get the axis home Values
+     * @param axisHomeValues vector containing the axis homing values in radian
+     * @return true / false in case of success / failure
+     */
+    bool getActuatedAxisHomeValues(yarp::sig::Vector& axisHomeValues);
 
     /**
      * Get the axis velocity limits
@@ -496,6 +536,18 @@ public:
      * @return the number of actuated joints
      */
     const int getNumberOfActuatedJoints() const;
+
+    /**
+     * Get the number of iCub robot hand fingers
+     * @return the number of icub robot hand fingers
+     */
+    const int getNumberOfRobotFingers() const;
+
+    /**
+     * Get the name of the robot fingers
+     * @param names the names of the robot hand fingers
+     */
+    void getFingerNames(std::vector<std::string>& names) const;
 
     /**
      * Get the name of the actuated joints

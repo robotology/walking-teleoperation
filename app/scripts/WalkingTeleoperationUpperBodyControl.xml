@@ -1,0 +1,30 @@
+<application>
+    <name>TeleoperationUpperBodyControl</name>
+    <description>Teleoperation upper body</description>
+	
+    <var name="generic_node">localhost</var>
+
+<!-- haptic glove wearable data -->
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config RobotStateProvider_iCub3.xml</parameters>
+        <node>${generic_node}</node>
+        <tag>yarprobotinterface</tag>
+    </module>
+	    
+    <module>
+        <name>HumanStateVisualizer</name>
+        <parameters>--from HumanStateVisualizer_iCub3.ini</parameters>
+        <node>${generic_node}</node>
+        <tag>HumanStateVisualizer</tag>
+    </module>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config RobotPositionController_iCub.xml</parameters>
+        <node>${generic_node}</node>
+        <tag>yarprobotinterface</tag>
+    </module>
+  
+	
+</application>

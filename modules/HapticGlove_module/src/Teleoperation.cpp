@@ -46,6 +46,9 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_moveRobot = config.check("enableMoveRobot", yarp::os::Value(1)).asBool();
     yInfo() << m_logPrefix << "move the robot: " << m_moveRobot;
 
+    m_useSkin = config.check("useSkin", yarp::os::Value(1)).asBool();
+    yInfo() << m_logPrefix << "use the robot fingertip skin: " << m_useSkin;
+
     // check if perform calibration phase for geting the user motion range
     m_getHumanMotionRange = config.check("getHumanMotionRange", yarp::os::Value(0)).asBool();
 
@@ -110,15 +113,27 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    if (m_useSkin)
+    {
+        m_robotSkin = std::make_unique<HapticGlove::RobotSkin>();
+        if (!m_robotSkin->configure(config, m_robot, rightHand))
+        {
+            yError() << m_logPrefix << "unable to configure robot skin class.";
+            return false;
+        }
+    }
+
     // get the vector sizes
     const size_t numRobotAllAxis = m_robotController->controlHelper()->getNumberOfAllAxis();
     const size_t numRobotActuatedAxis
         = m_robotController->controlHelper()->getNumberOfActuatedAxis();
     const size_t numRobotActuatedJoints
         = m_robotController->controlHelper()->getNumberOfActuatedJoints();
+    const size_t numRobotFingers = m_robotController->controlHelper()->getNumberOfRobotFingers();
+
     const size_t numHumanHandJoints = m_humanGlove->getNumOfHandJoints();
-    const size_t numHumanForceFeedback = m_humanGlove->getNumOfHandJoints();
-    const size_t numHumanVibrotactileFeedback = m_humanGlove->getNumOfHandJoints();
+    const size_t numHumanForceFeedback = m_humanGlove->getNumOfForceFeedback();
+    const size_t numHumanVibrotactileFeedback = m_humanGlove->getNumOfVibrotactileFeedbacks();
 
     // initialize the vectors
     // robot
@@ -147,6 +162,13 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_data.humanVibrotactileFeedbacks.resize(numHumanVibrotactileFeedback, 0.0);
     m_data.humanForceFeedbacks.resize(numHumanForceFeedback, 0.0);
 
+    // skin
+    m_data.doRobotFingerSkinsWork.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
+    m_data.areFingersSkinInContact.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
+    m_data.robotFingerSkinTotalValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
+
     // set up the glove
     if (!m_humanGlove->setupGlove())
     {
@@ -156,6 +178,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     // logger
     m_enableLogger = config.check("enableLogger", yarp::os::Value(0)).asBool();
+
     if (m_enableLogger)
     {
         m_loggerLeftHand = std::make_unique<Logger>(*this, rightHand);
@@ -195,7 +218,6 @@ bool Teleoperation::getFeedbacks()
     m_robotController->getJointValueFeedbacks(m_data.robotJointFeedbacks);
 
     // get the estimation values
-    double t1 = yarp::os::Time::now();
     m_robotController->getEstimatedMotorsState(m_data.robotAxisValueFeedbacksKf,
                                                m_data.robotAxisVelocityFeedbacksKf,
                                                m_data.robotAxisAccelerationFeedbacksKf,
@@ -204,9 +226,12 @@ bool Teleoperation::getFeedbacks()
                                                m_data.robotAxisVelocityReferencesKf,
                                                m_data.robotAxisAccelerationReferencesKf,
                                                m_data.robotAxisCovReferencesKf);
-    double t2 = yarp::os::Time::now();
-    //    yInfo() << m_logPrefix << "KF time: " << t2 - t1;
 
+    // get tactile sensors data
+    if (m_useSkin)
+    {
+        m_robotSkin->updateTactileFeedbacks();
+    }
     return true;
 }
 
@@ -247,13 +272,48 @@ bool Teleoperation::run()
     }
 
     // compute the haptic feedback
-    if (!m_retargeting->retargetHapticFeedbackFromRobotToHuman(m_data.robotAxisValueReferencesKf,
-                                                               m_data.robotAxisVelocityReferencesKf,
-                                                               m_data.robotAxisValueFeedbacksKf,
-                                                               m_data.robotAxisVelocityFeedbacksKf))
+    if (!m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingKinestheticData(
+            m_data.robotAxisValueReferencesKf,
+            m_data.robotAxisVelocityReferencesKf,
+            m_data.robotAxisValueFeedbacksKf,
+            m_data.robotAxisVelocityFeedbacksKf))
     {
         yWarning() << m_logPrefix
                    << "unable to retarget haptic feedback from the robot to the human.";
+    }
+
+    if (m_useSkin)
+    {
+        // since skins may stop working in the middle of an experiment, we check it continuously
+        m_robotSkin->doTactileSensorsWork(m_data.doRobotFingerSkinsWork);
+
+        // check if the fingers are in contact
+        m_robotSkin->areFingersInContact(m_data.areFingersSkinInContact);
+
+        // get the skin data
+        // to delete
+        m_robotSkin->getVibrotactileAbsoluteFeedback(
+            m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks);
+
+        //        yInfo() << "tactile absolute: " <<
+        //        m_data.robotFingerSkinAbsoluteValueVibrotactileFeedbacks;
+
+        // to delete
+        m_robotSkin->getVibrotactileDerivativeFeedback(
+            m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks);
+        //        yInfo() << "tactile derivative: "
+        //                << m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks;
+
+        m_robotSkin->getVibrotactileTotalFeedback(
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+        //        yInfo() << "tactile total: " <<
+        //        m_data.robotFingerSkinTotalValueVibrotactileFeedbacks;
+
+        // compute haptic feedback with consideration of the skin
+        m_retargeting->retargetHapticFeedbackFromRobotToHumanUsingSkinData(
+            m_data.doRobotFingerSkinsWork,
+            m_data.areFingersSkinInContact,
+            m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
     }
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
@@ -304,6 +364,7 @@ bool Teleoperation::prepare(bool& isPrepared)
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
         yInfo() << m_logPrefix << "data collected to learn robot model.";
+        // robot
         if (!m_robotController->isRobotPrepared())
         {
             if (!m_robotController->trainCouplingMatrix())
@@ -313,6 +374,7 @@ bool Teleoperation::prepare(bool& isPrepared)
                 return false;
             }
         }
+        // human
         if (m_getHumanMotionRange)
         {
             std::vector<double> humanHandJointRangeMin, humanHandJointRangeMax;
@@ -321,13 +383,29 @@ bool Teleoperation::prepare(bool& isPrepared)
             m_retargeting->computeJointAngleRetargetingParams(humanHandJointRangeMin,
                                                               humanHandJointRangeMax);
         }
+        // skin
+        if (m_useSkin)
+        {
+            m_robotSkin->computeCalibrationParamters();
+        }
+
     } else
     {
+
         double time = double(dTime % CouplingConstant) * m_dT * (M_PI / m_calibrationTimePeriod);
+        // robot
         m_robotController->LogDataToCalibrateRobotAxesJointsCoupling(time, axisNumber);
+        // human
+
         if (m_getHumanMotionRange)
         {
             m_humanGlove->findHumanMotionRange();
+        }
+
+        // skin
+        if (m_useSkin)
+        {
+            m_robotSkin->collectSkinDataForCalibration();
         }
     }
 
@@ -342,6 +420,7 @@ bool Teleoperation::prepare(bool& isPrepared)
         yWarning() << m_logPrefix << "at this point estimators are not supposed to be initialized.";
         return false;
     }
+
     if (isPrepared)
     {
         if (!m_robotController->initializeEstimators())
@@ -350,55 +429,77 @@ bool Teleoperation::prepare(bool& isPrepared)
             return false;
         }
     }
+
     return true;
+}
+
+bool Teleoperation::wait()
+{
+    bool ok = true;
+
+    if (!m_humanGlove->stopHapticFeedback())
+    {
+        yWarning() << m_logPrefix << "cannot stop haptic feedback.";
+        ok &= false;
+    }
+
+    return ok;
 }
 
 bool Teleoperation::close()
 {
     // close the logger.
     yInfo() << m_logPrefix << "trying to close.";
+    bool ok = true;
 
     if (m_enableLogger)
     {
         if (!m_loggerLeftHand->closeLogger())
         {
-            yError() << m_logPrefix << "unable to close the logger.";
-            return false;
+            yWarning() << m_logPrefix << "unable to close the logger.";
+            ok &= false;
         }
     }
     if (!m_humanGlove->stopHapticFeedback())
     {
-        yError() << m_logPrefix
-                 << "unable to stop the haptic glove from providing feedback to the user.";
-        return false;
+        yWarning() << m_logPrefix << "cannot stop haptic feedback.";
+        ok &= false;
     }
 
     //  in order to be sure the stop haptic command is sent before closing the module, otherwise the
     //  glove may continue to provide the haptic feedback according to the last sent command.
     std::this_thread::sleep_for(
         std::chrono::milliseconds(50)); // wait for 50 ms to send the stop command.
+    if (m_useSkin)
+    {
+        if (!m_robotSkin->close())
+        {
+            yWarning() << m_logPrefix << "unable to close the skin class.";
+            ok &= false;
+        }
+    }
 
     if (!m_robotController->controlHelper()->close())
     {
-        yError() << m_logPrefix << "unable to close the robot controller.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the robot controller.";
+        ok &= false;
     }
 
     if (!m_humanGlove->close())
     {
-        yError() << m_logPrefix << "unable to close the human and glove control helper.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the human and glove control helper.";
+        ok &= false;
     }
 
     if (!m_retargeting->close())
     {
-        yError() << m_logPrefix << "unable to close the retargeting.";
-        return false;
+        yWarning() << m_logPrefix << "unable to close the retargeting.";
+        ok &= false;
     }
 
-    yInfo() << m_logPrefix << "closed successfully.";
+    yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
 
-    return true;
+    return ok;
 }
 
 void Teleoperation::setEndOfConfigurationTime(const double& time)
