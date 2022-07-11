@@ -18,9 +18,9 @@ void FaceExpressionsRetargeting::sendFaceExpression(const std::string &part, con
     if (emotion != m_currentExpressions[part])
     {
         yarp::os::Bottle cmd, reply;
-        cmd.addVocab(yarp::os::Vocab::encode("set"));
-        cmd.addVocab(yarp::os::Vocab::encode(part));
-        cmd.addVocab(yarp::os::Vocab::encode(emotion));
+        cmd.addVocab32(yarp::os::Vocab32::encode("set"));
+        cmd.addVocab32(yarp::os::Vocab32::encode(part));
+        cmd.addVocab32(yarp::os::Vocab32::encode(emotion));
         m_emotionsOutputPort.write(cmd, reply);
         m_currentExpressions[part] = emotion;
         yInfo() << "[FaceExpressionsRetargeting::sendFaceExpression] Sending" << emotion << "to" << part;

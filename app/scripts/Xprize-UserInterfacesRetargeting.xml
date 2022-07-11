@@ -44,15 +44,6 @@
   </module>
   
   <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config HapticGlove.xml</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run SenseGlove Wearable Device</description>
-    <node>icub-virtualizer</node>
-    <tag>SenseGlove</tag>
-  </module>
-  
-  <module>
     <name>VirtualizerModule</name>
     <parameters>--use_transform_server true</parameters>
     <dependencies>

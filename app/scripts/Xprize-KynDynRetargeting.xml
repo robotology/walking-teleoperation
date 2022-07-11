@@ -47,10 +47,6 @@
      <node>icub-console</node>
    </module>
 
-   <module>
-     <name>HapticGloveModule</name>
-     <node>icub-head</node>
-   </module>
 
   <!-- Connections -->
 
