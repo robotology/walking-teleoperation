@@ -90,6 +90,9 @@ private:
                          (default :: true)*/
     bool m_autostart; /**< If true, it starts automatically without using the RPC*/
 
+    double m_autostartDelay; /*< Delay after the configure before starting.*/
+    double m_autostartConfigureTime; /*< Moment in which we started the preparation.*/
+
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
     yarp::dev::IFrameTransform* m_frameTransformInterface{nullptr}; /**< Frame transform

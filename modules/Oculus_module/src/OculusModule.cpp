@@ -570,9 +570,11 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         = generalOptions.check("autostart")
                      && (generalOptions.find("autostart").isNull()
                          || generalOptions.find("autostart").asBool()); //True if autostart is set but with no value or if the value is true
+    m_autostartDelay = generalOptions.check("autostartDelay", yarp::os::Value(10.0)).asFloat64();
 
     if (m_autostart)
     {
+        m_autostartConfigureTime = yarp::os::Time::now();
         this->preparingModule();
     }
 
@@ -1238,7 +1240,8 @@ bool OculusModule::updateModule()
             // start walking (X button)
             m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
         }
-        if (buttonMapping > 0 || m_autostart)
+
+        if (buttonMapping > 0 || (m_autostart && ((yarp::os::Time::now() - m_autostartConfigureTime) > m_autostartDelay)))
         {
             this->runningModule();
         }
