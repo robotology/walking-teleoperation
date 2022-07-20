@@ -566,6 +566,17 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 
     m_state = OculusFSM::Configured;
 
+    m_autostart
+        = generalOptions.check("autostart")
+                     && (generalOptions.find("autostart").isNull()
+                         || generalOptions.find("autostart").asBool()); //True if autostart is set but with no value or if the value is true
+
+    if (m_autostart)
+    {
+        this->preparingModule();
+    }
+
+
     return true;
 }
 
@@ -1227,7 +1238,7 @@ bool OculusModule::updateModule()
             // start walking (X button)
             m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
         }
-        if (buttonMapping > 0)
+        if (buttonMapping > 0 || m_autostart)
         {
             this->runningModule();
         }

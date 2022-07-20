@@ -88,6 +88,7 @@ private:
     bool m_skipJoypad; /**< If true, avoid connecting to the JoypadControlServer (default: false) */
     bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
                          (default :: true)*/
+    bool m_autostart; /**< If true, it starts automatically without using the RPC*/
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
