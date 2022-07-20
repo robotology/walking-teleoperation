@@ -69,7 +69,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     options.put("remoteControlBoards", remoteControlBoards.get(0));
     options.put("localPortPrefix", "/" + name + "/remoteControlBoard");
     yarp::os::Property& remoteControlBoardsOpts = options.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
-    remoteControlBoardsOpts.put("writeStrict", "on");
 
     m_actuatedDOFs = m_axesList.size();
 
