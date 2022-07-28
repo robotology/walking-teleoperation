@@ -572,6 +572,8 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
                          || generalOptions.find("autostart").asBool()); //True if autostart is set but with no value or if the value is true
     m_autostartDelay = generalOptions.check("autostartDelay", yarp::os::Value(10.0)).asFloat64();
 
+    m_initializationUseFullRotation = generalOptions.check("initializationUseFullRotation", yarp::os::Value(false)).asBool();
+
     if (m_autostart)
     {
         m_autostartConfigureTime = yarp::os::Time::now();
@@ -754,9 +756,16 @@ bool OculusModule::runningModule()
         inverseKinematicsXZY(tempRot, p,r,y);
 
         iDynTree::Transform tempTransform;
-        tempTransform.setRotation(
-                    iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of
-        // the person head around gravity.
+        if (m_initializationUseFullRotation)
+        {
+            tempTransform.setRotation(tempRot);
+        } else
+        {
+
+            tempTransform.setRotation(
+                iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of
+            // the person head around gravity.
+        }
         tempTransform.setPosition(iDynTree::make_span(
                                       getPosition(openXrHeadInitialTransform))); // We remove the initial position between the
         // head and the reference frame.

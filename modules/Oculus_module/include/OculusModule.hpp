@@ -92,6 +92,7 @@ private:
 
     double m_autostartDelay; /*< Delay after the configure before starting.*/
     double m_autostartConfigureTime; /*< Moment in which we started the preparation.*/
+    bool m_initializationUseFullRotation; /*< The initial transform will use the entire rotation instead of just the yaw.*/
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
