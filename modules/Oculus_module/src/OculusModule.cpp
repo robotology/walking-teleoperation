@@ -978,8 +978,8 @@ bool OculusModule::updateModule()
         // get the transformation form the oculus
         if (!getTransforms())
         {
-            yError() << "[OculusModule::updateModule] Unable to get the transform";
-            return false;
+            yError() << "[OculusModule::updateModule] Unable to get the transforms. Skipping iteration.";
+            return true;
         }
 
         if (m_useVirtualizer)
