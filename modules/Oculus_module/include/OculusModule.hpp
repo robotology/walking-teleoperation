@@ -195,6 +195,14 @@ private:
     bool resetCamera(const std::string& cameraPort, const std::string& localPort);
 
     /**
+     * @brief Set a robot camera settings to the automatic mode.
+     * @param cameraPort The remote port to the camera
+     * @param localPort The local port needed for the driver to open
+     * @return true in case of success and false otherwise.
+     */
+    bool setCameraAutoMode(const std::string& cameraPort, const std::string& localPort);
+
+    /**
      * Get all the feedback signal from the interfaces
      * @return true in case of success and false otherwise.
      */
