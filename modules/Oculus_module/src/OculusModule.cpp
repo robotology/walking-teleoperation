@@ -328,6 +328,13 @@ bool OculusModule::setCameraAutoMode(const std::string& cameraPort, const std::s
               return true;
         }
 
+        if (!grabberInterface->setActive(feature, true))
+        {
+            yError() << "[OculusModule::configure] Failed to set AUTO" << featureName << "on"
+                     << cameraPort << ".";
+            return false;
+        }
+
         if (!grabberInterface->setMode(feature, FeatureMode::MODE_AUTO))
         {
             yError() << "[OculusModule::configure] Failed to set AUTO" << featureName << "on" << cameraPort
@@ -343,7 +350,10 @@ bool OculusModule::setCameraAutoMode(const std::string& cameraPort, const std::s
      {cameraFeature_id_t::YARP_FEATURE_BRIGHTNESS, "brightness"},
      {cameraFeature_id_t::YARP_FEATURE_GAIN, "gain"},
      {cameraFeature_id_t::YARP_FEATURE_EXPOSURE, "exposure"},
-     {cameraFeature_id_t::YARP_FEATURE_WHITE_BALANCE, "white balance"}};
+     {cameraFeature_id_t::YARP_FEATURE_WHITE_BALANCE, "white balance"},
+     {cameraFeature_id_t::YARP_FEATURE_SHARPNESS, "sharpness"},
+     {cameraFeature_id_t::YARP_FEATURE_SATURATION, "saturation"},
+    };
 
     for (auto& feat : features)
     {
