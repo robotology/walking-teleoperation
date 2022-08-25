@@ -22,7 +22,7 @@
    <!-- Modules -->
    <module>
     <name>yarprobotinterface</name>
-    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
+    <parameters>--config iFeelSuit.xml --node-list "(1 2 4 5 6 7 8 13 14)" --serial-port-name /dev/ttyACM0</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run iFeelSuit and Multi Haptic driver</description>
     <node>icub-console-gui</node>
