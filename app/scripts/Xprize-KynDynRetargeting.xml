@@ -41,12 +41,21 @@
     </dependencies>
   </module-->
 
-   <module>
-     <name>XsensRetargetingModule</name>
-     <parameters>--from iFeelRetargetingWalking.ini</parameters>
-     <node>icub-console</node>
-   </module>
+  <module>
+    <name>XsensRetargetingModule</name>
+    <parameters>--from iFeelRetargetingWalking.ini</parameters>
+    <node>icub-console</node>
+  </module>
 
+  <module>
+    <name>bash</name>
+    <parameters>launch_ifeel_retargeting.sh</parameters>
+    <node>icub-console-gui</node>
+    <dependencies>
+      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port> 
+      <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
+    </dependencies>
+  </module>
 
   <!-- Connections -->
 
