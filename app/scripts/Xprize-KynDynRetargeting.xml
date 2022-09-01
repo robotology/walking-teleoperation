@@ -113,4 +113,16 @@
     <protocol>fast_tcp</protocol>
   </connection-->
 
+  <connection>
+    <from>/ifeel_walking_retargeting/goal:o</from>
+    <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/state:o</from>
+    <to>/joypadDevice/Oculus/label_2</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
 </application>
