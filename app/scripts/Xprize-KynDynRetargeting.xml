@@ -48,8 +48,8 @@
   </module>
 
   <module>
-    <name>bash</name>
-    <parameters>launch_ifeel_retargeting.sh</parameters>
+      <name>matlab</name>
+      <parameters>-softwareopengl -batch "addpath(genpath(getenv('IFEEL_WALKING_RETARGETING_FOLDER'))); ifeel_walking_retargeting"</parameters>         <!-- parameters -->
     <node>icub-console-gui</node>
     <dependencies>
       <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port> 
