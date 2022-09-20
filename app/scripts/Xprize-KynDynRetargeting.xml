@@ -114,15 +114,34 @@
   </connection-->
 
   <connection>
-    <from>/ifeel_walking_retargeting/goal:o</from>
+    <from>/iFeelSuit/WearableData/data:o</from>
+    <to>/iFeelWalking/iFeelShoes:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/Wearable/OpenXRTransform/data:o</from>
+    <to>/iFeelWalking/trackerTransform:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/goal:o</from>
     <to>/walking-coordinator/goal:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/iFeelWalking/state:o</from>
-    <to>/joypadDevice/Oculus/label_2</to>
+    <from>/iFeelWalking/linearArrow:o</from>
+    <to>/joypadDevice/Oculus/slide_0</to>
     <protocol>fast_tcp</protocol>
   </connection>
+
+  <connection>
+    <from>/iFeelWalking/linearArrow:o</from>
+    <to>/joypadDevice/Oculus/slide_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
 
 </application>
