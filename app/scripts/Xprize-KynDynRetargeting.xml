@@ -42,17 +42,11 @@
   </module-->
 
   <module>
-    <name>XsensRetargetingModule</name>
-    <parameters>--from iFeelRetargetingWalking.ini</parameters>
-    <node>icub-console</node>
-  </module>
-
-  <module>
-      <name>matlab</name>
-      <parameters>-softwareopengl -batch "addpath(genpath(getenv('IFEEL_WALKING_RETARGETING_FOLDER'))); ifeel_walking_retargeting"</parameters>         <!-- parameters -->
+    <name>matlab</name>
+    <parameters>-softwareopengl -batch "addpath(genpath(getenv('IFEEL_WALKING_RETARGETING_FOLDER'))); ifeel_walking_retargeting"</parameters>         <!-- parameters -->
     <node>icub-console-gui</node>
     <dependencies>
-      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port> 
+      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port>
       <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
     </dependencies>
   </module>
@@ -97,13 +91,7 @@
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
-    <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>/iFeelRetargeting/jointPosition:o</from>
-    <to>/walking-coordinator/jointPosition:i</to>
+    <to>/walking-coordinator/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
