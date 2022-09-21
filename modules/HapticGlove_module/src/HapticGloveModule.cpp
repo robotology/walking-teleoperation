@@ -222,7 +222,6 @@ bool HapticGloveModule::updateModule()
         }
     }
     double t2 = yarp::os::Time::now();
-    yInfo() << m_logPrefix << "total computation time: " << t2 - t1;
 
     return true;
 }
