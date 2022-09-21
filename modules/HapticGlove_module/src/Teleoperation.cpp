@@ -359,7 +359,7 @@ bool Teleoperation::prepare(bool& isPrepared)
     int CouplingConstant = (int)(m_calibrationTimePeriod / m_dT);
 
     int axisNumber = int(dTime / CouplingConstant); // both operands needs to be integer
-    yInfo() << m_logPrefix << "time [steps]: " << dTime << ", axis number: " << axisNumber;
+//    yInfo() << m_logPrefix << "time [steps]: " << dTime << ", axis number: " << axisNumber;
 
     if (axisNumber >= m_robotController->controlHelper()->getNumberOfActuatedAxis())
     {
