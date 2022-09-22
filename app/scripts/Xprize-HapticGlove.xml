@@ -25,5 +25,19 @@
         <name>HapticGloveModule</name>
         <node>icub-head</node>
     </module>
+
+
+    <!-- Connections -->
+    <connection>
+        <from>/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
+        <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+    <connection>
+        <from>/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
+        <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
     
 </application>
