@@ -54,28 +54,13 @@
 
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config transformServer_to_iwear.xml</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run transform server Wearable Device</description>
-    <node>icub-console-gui</node>
-    <tag>transformServerWearableDevice</tag>
-    <dependencies>
-      <port timeout="11.0">/transformServer/transforms:o</port>
-    </dependencies>
-    <ensure>
-      <wait when="start">5.0</wait>
-    </ensure>
-  </module>
-
-  <module>
-    <name>yarprobotinterface</name>
     <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run IK HDE Device</description>
     <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port>
+      <port timeout="10.0">/transformServer/transforms:o</port>
       <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
     </dependencies>
   </module>
