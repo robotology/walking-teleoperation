@@ -14,8 +14,8 @@
   <!-- Modules -->
   <module>
     <name>yarpdev</name>
-    <parameters> --from camera/ServerGrabberDualDragon.ini --split false</parameters>
-    <node>icub-head</node>
+    <parameters> --from camera/ServerGrabberDualPylonFHD.ini --split false</parameters>
+    <node>icub-cam-head</node>
   </module>
 
   <module>
