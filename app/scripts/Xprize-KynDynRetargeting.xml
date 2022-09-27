@@ -51,6 +51,12 @@
     </dependencies>
   </module>
 
+  <module>
+    <name>iFeelWalkingRetargetingModule</name>
+    <parameters>--from iFeelWalkingRetargeting.ini</parameters>
+    <node>icub-console-gui</node>
+  </module>
+
   <!-- Connections -->
 
   <connection>
