@@ -352,7 +352,6 @@ bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& 
                                             + wearable::actuator::IHaptic::getPrefix() + fingerName
                                             + "::ForceFeedback";
         wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-        wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
         m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
@@ -384,7 +383,6 @@ bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& v
                                             + "::VibroTactileFeedback";
 
         wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-        wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
         wearableActuatorCommand.duration = 0;
 
         m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
@@ -416,7 +414,6 @@ bool GloveWearableImpl::setPalmVibrotactileValue(const int& value)
     wearableActuatorCommand.info.name = m_wearablePrefix + wearable::actuator::IHaptic::getPrefix()
                                         + m_handLinkName + "::VibroTactileFeedback";
     wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-    wearableActuatorCommand.info.status = wearable::msg::ActuatorStatus::OK;
     wearableActuatorCommand.duration = 0;
 
     m_iWearActuatorPort.write(false);
