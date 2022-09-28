@@ -127,13 +127,13 @@
 
   <connection>
     <from>/iFeelWalking/linearArrow:o</from>
-    <to>/joypadDevice/Oculus/slide_0</to>
+    <to>/headset/slide_0</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iFeelWalking/rotationArrow:o</from>
-    <to>/joypadDevice/Oculus/slide_1</to>
+    <to>/headset/slide_1</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

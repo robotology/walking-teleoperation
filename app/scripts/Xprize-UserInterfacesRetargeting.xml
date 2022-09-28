@@ -28,7 +28,7 @@
     <node>icub-console-gui</node>
     <tag>iFeelSuitMultiHaptic</tag>
   </module>
-  
+
   <module>
     <name>WeightDisplayModule</name>
     <parameters>--from WeightDisplay.ini --period 0.6</parameters>
@@ -42,7 +42,7 @@
     </dependencies>
     <tag>WeightDisplayModule</tag>
   </module>
-  
+
   <module>
     <name>VirtualizerModule</name>
     <parameters>--use_transform_server true</parameters>
@@ -51,7 +51,7 @@
     </dependencies>
     <node>icub-virtualizer</node>
   </module>
-  
+
   <module>
     <name>yarp-openvr-trackers</name>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
@@ -59,7 +59,7 @@
     <node>icub-virtualizer</node>
     <tag>openvr-trackers</tag>
   </module>
-  
+
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config transformServer_to_iwear.xml</parameters>
@@ -87,7 +87,7 @@
       <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
     </dependencies>
   </module>
-  
+
   <module>
     <name>HumanStateVisualizer</name>
     <parameters>--from HumanStateVisualizer_iCub3_openxr_ifeel.ini</parameters>
@@ -112,20 +112,20 @@
       <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
     </dependencies>
   </module>
-  
+
   <!-- Connections -->
-  <connection>
-    <from>/SRanipalModule/emotions:o</from>
-    <to>/icub/face/emotions/in</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-  
-  <connection>
-    <from>/SRanipalModule/VR/rpc:o</from>
-    <to>/joypadDevice/Oculus/rpc</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-  
+  <!-- <connection> -->
+  <!--   <from>/SRanipalModule/emotions:o</from> -->
+  <!--   <to>/icub/face/emotions/in</to> -->
+  <!--   <protocol>fast_tcp</protocol> -->
+  <!-- </connection> -->
+
+  <!-- <connection> -->
+  <!--   <from>/SRanipalModule/VR/rpc:o</from> -->
+  <!--   <to>/headset/rpc</to> -->
+  <!--   <protocol>fast_tcp</protocol> -->
+  <!-- </connection> -->
+
   <connection>
     <from>/WeightRetargeting/output:o</from>
     <to>/iFeelSuit/WearableActuatorsCommand/input:i</to>

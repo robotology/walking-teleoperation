@@ -4,40 +4,39 @@
 
 <application>
 
-    <name>Xprize-HapticGlove</name>
-    <description>Application to run haptic glove module for retargeting.</description>
-    <version>1.0</version>
-    <authors>
-        <author email="ines.sorrentino@iit.it">Ines Sorrentino</author>
-    </authors>
-    
-    <!-- Modules -->
-    <module>
-        <name>yarprobotinterface</name>
-        <parameters>--config HapticGlove.xml</parameters>
-        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-        <description>Run SenseGlove Wearable Device</description>
-        <node>icub-virtualizer</node>
-        <tag>SenseGlove</tag>
-    </module>
-    
-    <module>
-        <name>HapticGloveModule</name>
-        <node>icub-head</node>
-    </module>
+  <name>Xprize-HapticGlove</name>
+  <description>Application to run haptic glove module for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="ines.sorrentino@iit.it">Ines Sorrentino</author>
+  </authors>
 
+  <!-- Modules -->
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config HapticGlove.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run SenseGlove Wearable Device</description>
+    <node>icub-virtualizer</node>
+    <tag>SenseGlove</tag>
+  </module>
 
-    <!-- Connections -->
-    <connection>
-        <from>/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
-        <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
+  <module>
+    <name>HapticGloveModule</name>
+    <node>icub-head</node>
+  </module>
 
-    <connection>
-        <from>/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
-        <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
-        <protocol>fast_tcp</protocol>
-    </connection>
-    
+  <!-- Connections -->
+  <connection>
+    <from>/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
 </application>

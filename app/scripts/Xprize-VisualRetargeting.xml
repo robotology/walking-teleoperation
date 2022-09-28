@@ -14,8 +14,26 @@
   <!-- Modules -->
   <module>
     <name>yarpdev</name>
-    <parameters> --from camera/ServerGrabberDualPylonFHD.ini --split false</parameters>
+    <parameters> --from --from camera/pylonCamera_config_left_fhd.ini</parameters>
     <node>icub-cam-head</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters> --from --from camera/pylonCamera_config_right_fhd.ini</parameters>
+    <node>icub-cam-head</node>
+  </module>
+
+  <module>
+    <name>yarp</name>
+    <parameters>repeat /icub/cam/left/repeated</parameters>
+    <node>icub-head</node>
+  </module>
+
+  <module>
+    <name>yarp</name>
+    <parameters>repeat /icub/cam/right/repeated</parameters>
+    <node>icub-head</node>
   </module>
 
   <module>
@@ -38,20 +56,38 @@
 
   <!-- Connections -->
   <connection>
-    <from>/icub/cam</from>
-    <to>/joypadDevice/Oculus/display:i</to>
+    <from>/icub/cam/left</from>
+    <to>/icub/cam/left/repeated</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/cam/right</from>
+    <to>/icub/cam/right/repeated</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/cam/left/repeated</from>
+    <to>/headset/display/left:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/icub/cam/right/repeated</from>
+    <to>/headset/display/right:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/idyntree-yarp-visualizer/image</from>
-    <to>/joypadDevice/Oculus/gui_0</to>
+    <to>/headset/gui_0</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/depthCamera/rgbImage:o</from>
-    <to>/joypadDevice/Oculus/gui_1</to>
+    <to>/headset/gui_1</to>
     <protocol>mjpeg</protocol>
   </connection>
 
