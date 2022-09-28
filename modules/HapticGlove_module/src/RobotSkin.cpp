@@ -210,8 +210,6 @@ void RobotSkin::updateCalibratedTactileData()
         Eigen::VectorXd oldSkinData
             = CtrlHelper::toEigenVector(finger.previousCalibratedTactileData);
 
-        bool checkUpdated = std::abs((newSkinData - oldSkinData).mean()) > m_tactileUpdateThreshold;
-
         // check if the tactile data is updated, otherwise the rate of change of tactile
         // data will stay zero, and will act as a noise.
         // if not updated, remain as the last data.
