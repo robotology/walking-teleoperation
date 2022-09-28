@@ -45,7 +45,9 @@ struct HapticGlove::FingertipTactileData
     bool firstTime = true;
 
     double contactThresholdValue = 5.0; /// default value
+    double contactThresholdMultiplier = 1.0; /// default value
     double contactDerivativeThresholdValue = 3.0; /// default value
+    double contactDerivativeThresholdMultiplier = 1.0; /// default value
 
     double vibrotactileGain = 1.0; /// default value
     double vibrotactileDerivativeGain = 1.0; /// default value
@@ -113,13 +115,14 @@ struct HapticGlove::FingertipTactileData
 
     double contactThreshold()
     {
-        return contactThresholdValue * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
+        return contactThresholdValue 
+               + contactThresholdMultiplier * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     double contactDerivativeThreshold()
     {
         return contactDerivativeThresholdValue
-               * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
+               + contactDerivativeThresholdMultiplier * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
     }
 
     void printInfo() const
@@ -133,7 +136,10 @@ struct HapticGlove::FingertipTactileData
         std::cout << "min tactile threshold: " << minTactileValue << std::endl;
         std::cout << "no load tactile threshold: " << noLoadValue << std::endl;
         std::cout << "contact threshold: " << contactThresholdValue << std::endl;
+        std::cout << "contact threshold multiplier: " << contactThresholdMultiplier << std::endl;
         std::cout << "contact derivative threshold: " << contactDerivativeThresholdValue
+                  << std::endl;
+        std::cout << "contact derivative threshold multiplier: " << contactDerivativeThresholdMultiplier
                   << std::endl;
         std::cout << "vibrotactile gain: " << vibrotactileGain << std::endl;
         std::cout << "==================" << std::endl;
