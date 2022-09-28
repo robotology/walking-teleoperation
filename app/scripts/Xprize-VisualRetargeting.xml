@@ -14,13 +14,13 @@
   <!-- Modules -->
   <module>
     <name>yarpdev</name>
-    <parameters> --from --from camera/pylonCamera_config_left_fhd.ini</parameters>
+    <parameters> --from camera/pylonCamera_config_left_fhd.ini</parameters>
     <node>icub-cam-head</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters> --from --from camera/pylonCamera_config_right_fhd.ini</parameters>
+    <parameters> --from camera/pylonCamera_config_right_fhd.ini</parameters>
     <node>icub-cam-head</node>
   </module>
 
