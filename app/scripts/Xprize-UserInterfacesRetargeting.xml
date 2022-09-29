@@ -53,14 +53,6 @@
   </module>
 
   <module>
-    <name>yarp-openvr-trackers</name>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run openvr vive trackers</description>
-    <node>icub-virtualizer</node>
-    <tag>openvr-trackers</tag>
-  </module>
-
-  <module>
     <name>yarprobotinterface</name>
     <parameters>--config transformServer_to_iwear.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
