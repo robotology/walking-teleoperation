@@ -359,9 +359,9 @@ void RobotSkin::updateTactileFeedbacks()
 
     this->updateCalibratedTactileData();
 
-    this->computeAreFingersInContact();
-
     this->computeMaxContactStrength();
+
+    this->computeAreFingersInContact();
 
     this->computeVibrotactileFeedback();
 }
@@ -370,10 +370,10 @@ void RobotSkin::computeAreFingersInContact()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        m_areFingersInContact[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
+        m_areFingersInContact[i] = m_fingersContactStrength[i]
                                    > m_fingersTactileData[i].contactThreshold();
-        m_areFingersContactChanges[i] = m_areFingersInContact[i] 
-                                        && (m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
+        m_areFingersContactChanges[i] = m_areFingersInContact[i]
+                                        && (m_fingersContactStrengthDerivate[i]
                                         > m_fingersTactileData[i].contactDerivativeThreshold());
     }
 }
@@ -383,15 +383,12 @@ void RobotSkin::computeMaxContactStrength()
 
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        m_fingersContactStrength[i]
-            = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
-                                        : 0);
+        m_fingersContactStrength[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue();
 
         //        yInfo() << " [before] fingersContactStrengthDerivate: " << i
         //                << m_fingersContactStrengthDerivate[i];
 
-        m_fingersContactStrengthDerivate[i]
-            = (m_areFingersContactChanges[i] ? m_fingersContactStrengthDerivate[i] : 0);
+        m_fingersContactStrengthDerivate[i] = m_fingersTactileData[i].maxTactileFeedbackDerivativeValue();
 
         //        yInfo() << " [after] fingersContactStrengthDerivate: " << i
         //                << m_fingersContactStrengthDerivate[i];
@@ -406,7 +403,7 @@ void RobotSkin::computeVibrotactileFeedback()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        double x = m_fingersTactileData[i].vibrotactileGain * m_fingersContactStrength[i];
+        double x = m_fingersTactileData[i].vibrotactileGain * (m_areFingersInContact[i] ? m_fingersContactStrength[i] : 0);
 
         m_fingersVibrotactileAbsoluteFeedback[i]
             = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(x, m_fbParams[2]) + m_fbParams[3])
@@ -418,7 +415,7 @@ void RobotSkin::computeVibrotactileFeedback()
 
         m_fingersVibrotactileDerivativeFeedback[i]
             = m_fingersTactileData[i].vibrotactileDerivativeGain
-              * std::abs(m_fingersContactStrengthDerivateSmoothed[i]);
+              * (m_areFingersContactChanges[i] ? std::abs(m_fingersContactStrengthDerivateSmoothed[i]) : 0);
 
         // saturate the values between 0 to 100
 
