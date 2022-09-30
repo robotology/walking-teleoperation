@@ -23,6 +23,9 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Searchable.h>
 
+// rpc service
+#include <thrift/RobotSkinService.h>
+
 namespace HapticGlove
 {
 class RobotSkin;
@@ -149,7 +152,7 @@ struct HapticGlove::FingertipTactileData
 /**
  * RobotSkin Class useful to manage the fingertip skin data.
  */
-class HapticGlove::RobotSkin
+class HapticGlove::RobotSkin : RobotSkinService
 {
 private:
     std::string m_logPrefix;
@@ -200,7 +203,12 @@ private:
                                            * absolute and derivative)for providing the vibrotactile
                                            * feedback, the value is between [0, 1]
                                            */
+    // mutex
+    std::mutex m_mutex;
 
+    // RPC port
+    yarp::os::Port m_rpcPort;
+    
     void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
@@ -267,6 +275,34 @@ public:
      * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
      */
     void fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks);
+
+    virtual bool setAbsoluteSkinValuePercentage(const double value) override;
+
+    virtual bool setSkinDerivativeSmoothingGain(const double value) override;
+
+    virtual bool setContactFeedbackGain(const int32_t finger, const double value) override;
+
+    virtual bool setContactFeedbackGainAll(const double value) override;
+
+    virtual bool setDerivativeFeedbackGain(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeFeedbackGainAll(const double value) override;
+
+    virtual bool setContactThreshold(const int32_t finger, const double value) override;
+
+    virtual bool setContactThresholdAll(const double value) override;
+
+    virtual bool setContactThresholdMultiplier(const int32_t finger, const double value) override;
+
+    virtual bool setContactThresholdMultiplierAll(const double value) override;
+
+    virtual bool setDerivativeThreshold(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeThresholdAll(const double value) override;
+
+    virtual bool setDerivativeThresholdMultiplier(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeThresholdMultiplierAll(const double value) override;
 
     bool close();
 };
