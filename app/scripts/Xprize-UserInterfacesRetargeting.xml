@@ -44,15 +44,6 @@
   </module>
 
   <module>
-    <name>VirtualizerModule</name>
-    <parameters>--use_transform_server true</parameters>
-    <dependencies>
-          <port timeout="15.0">/transformServer/transforms:o</port>
-    </dependencies>
-    <node>icub-virtualizer</node>
-  </module>
-
-  <module>
     <name>yarprobotinterface</name>
     <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
