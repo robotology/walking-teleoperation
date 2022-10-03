@@ -28,6 +28,9 @@
 // eigen
 #include <Eigen/Dense>
 
+// rpc service
+#include <thrift/HapticGloveTeleoperationService.h>
+
 namespace HapticGlove
 {
 class Teleoperation;
@@ -156,7 +159,7 @@ struct HapticGlove::Data
 /**
  * Teleoperation is a class for bi-lateral teleoperation of the haptic glove.
  */
-class HapticGlove::Teleoperation
+class HapticGlove::Teleoperation : HapticGloveTeleoperationService
 {
     std::string m_logPrefix; /**< log prefix */
 
@@ -192,6 +195,14 @@ class HapticGlove::Teleoperation
     bool m_enableLogger; /**< log the data (if true) */
     class Logger; /**< forward decleration of the logger class */
     std::unique_ptr<Logger> m_loggerLeftHand; /**< pointer to the logger object. */
+
+    // mutex
+    std::mutex m_mutex;
+
+    // RPC port
+    yarp::os::Port m_rpcPort;
+
+    virtual bool enableMoveRobot(const bool value) override;
 
     /**
      * Get all the feedback signal from the robot controller
