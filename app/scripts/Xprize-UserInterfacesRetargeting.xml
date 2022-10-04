@@ -13,8 +13,8 @@
 
   <!-- Variables -->
   <var name="weight_display_prefix">/WeightDisplay</var>
-  <var name="right_hand_wrench_port">/wholeBodyDynamics/right_arm/cartesianEndEffectorWrench:o</var>
-  <var name="left_hand_wrench_port">/wholeBodyDynamics/left_arm/cartesianEndEffectorWrench:o</var>
+  <var name="right_hand_wrench_port">/wholeBodyDynamics/filteredFT/r_arm_ft_sensor</var>
+  <var name="left_hand_wrench_port">/wholeBodyDynamics/filteredFT/l_arm_ft_sensor</var>
   <var name="openxr_weight_label_id">1</var>
   <var name="openxr_weight_label_port">/headset/label_${openxr_weight_label_id}</var>
 
