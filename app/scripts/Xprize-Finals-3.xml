@@ -71,7 +71,7 @@
     <parameters>--from WeightDisplay.ini --period 0.02</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run weight display application</description>
-    <node>icub-console-gui</node>
+    <node>localhost</node>
     <dependencies>
       <port timeout="11.0">${right_hand_wrench_port}</port>
       <port timeout="11.0">${left_hand_wrench_port}</port>
