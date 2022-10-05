@@ -24,17 +24,17 @@
     <node>icub-cam-head</node>
   </module>
 
-  <module>
-    <name>yarp</name>
-    <parameters>repeat /icub/cam/left/repeated</parameters>
-    <node>icub-head</node>
-  </module>
+  <!-- <module> -->
+  <!--   <name>yarp</name> -->
+  <!--   <parameters>repeat /icub/cam/left/repeated</parameters> -->
+  <!--   <node>icub-head</node> -->
+  <!-- </module> -->
 
-  <module>
-    <name>yarp</name>
-    <parameters>repeat /icub/cam/right/repeated</parameters>
-    <node>icub-head</node>
-  </module>
+  <!-- <module> -->
+  <!--   <name>yarp</name> -->
+  <!--   <parameters>repeat /icub/cam/right/repeated</parameters> -->
+  <!--   <node>icub-head</node> -->
+  <!-- </module> -->
 
   <module>
     <name>yarpdev</name>
@@ -57,24 +57,12 @@
   <!-- Connections -->
   <connection>
     <from>/icub/cam/left</from>
-    <to>/icub/cam/left/repeated</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/cam/right</from>
-    <to>/icub/cam/right/repeated</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/cam/left/repeated</from>
     <to>/headset/display/left:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
-    <from>/icub/cam/right/repeated</from>
+    <from>/icub/cam/right</from>
     <to>/headset/display/right:i</to>
     <protocol>mjpeg</protocol>
   </connection>
