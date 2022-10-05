@@ -100,12 +100,6 @@
   </connection>
 
   <connection>
-    <from>/Wearable/OpenXRTransform/data:o</from>
-    <to>/iFeelWalking/trackerTransform:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
     <from>/iFeelWalking/linearArrow:o</from>
     <to>/headset/slide_0</to>
     <protocol>fast_tcp</protocol>
