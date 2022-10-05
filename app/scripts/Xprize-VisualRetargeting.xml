@@ -14,6 +14,12 @@
   <!-- Modules -->
   <module>
     <name>yarpdev</name>
+    <parameters>--from openXRHeadsetParameters.ini</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
     <parameters> --from camera/pylonCamera_config_left_fhd.ini</parameters>
     <node>icub-cam-head</node>
   </module>
@@ -35,12 +41,6 @@
   <!--   <parameters>repeat /icub/cam/right/repeated</parameters> -->
   <!--   <node>icub-head</node> -->
   <!-- </module> -->
-
-  <module>
-    <name>yarpdev</name>
-    <parameters>--from openXRHeadsetParameters.ini</parameters>
-    <node>icub-virtualizer</node>
-  </module>
 
   <module>
     <name>yarpdev</name>
