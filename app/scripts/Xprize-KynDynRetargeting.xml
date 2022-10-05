@@ -24,9 +24,6 @@
     <name>WalkingModule</name>
     <node>icub-head</node>
     <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
-    <dependencies>
-          <port timeout="15.0">/yarp-robot-logger/exogenous_signals/walking:i</port>
-    </dependencies>
   </module>
 
   <!--module>
