@@ -22,6 +22,13 @@
     <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
   </module>
 
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config launch-yarp-robot-logger.xml</parameters>
+    <node>icub-console</node>
+    <workdir>/home/icub/Desktop/walking_logger</workdir>
+  </module>
+
   <!-- Connections -->
 
   <connection>
