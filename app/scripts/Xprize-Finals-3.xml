@@ -56,7 +56,7 @@
 
   <module>
     <name>SRanipalModule</name>
-    <parameters>--forceEyeCalibration --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
+    <parameters>--skipEyeCalibration --noGaze --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
     <node>icub-virtualizer</node>
   </module>
 
@@ -82,11 +82,6 @@
     <protocol>fast_tcp</protocol>
   </connection>
 
-  <connection>
-    <from>/SRanipalModule/VR/rpc:o</from>
-    <to>/headset/rpc</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
 
   <connection>
     <from>/iFeelSuit/WearableData/data:o</from>
