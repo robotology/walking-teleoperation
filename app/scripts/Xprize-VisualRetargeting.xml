@@ -20,13 +20,13 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters> --from camera/pylonCamera_config_left_fhd.ini</parameters>
+    <parameters> --from camera/pylonCamera_config_left_hd.ini --period 0.04</parameters>
     <node>icub-cam-head</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters> --from camera/pylonCamera_config_right_fhd.ini</parameters>
+    <parameters> --from camera/pylonCamera_config_right_hd.ini --period 0.04</parameters>
     <node>icub-cam-head</node>
   </module>
 
