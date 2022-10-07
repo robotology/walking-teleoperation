@@ -32,6 +32,9 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
                               const bool& rightHand)
 {
     m_logPrefix += rightHand ? "RightHand:: " : "LeftHand:: ";
+    
+    std::string portPrefix = "/";
+    portPrefix += rightHand ? "RightHand" : "LeftHand";
 
     m_robot = name;
 
@@ -189,9 +192,32 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         }
     }
 
+    // Initialize RPC
+    std::string rpcPortName = "/hapticGloveTeleoperation/rpc";
+    if(!m_rpcPort.open(portPrefix + rpcPortName))
+    {
+        yWarning() << m_logPrefix << "Failed to open" << portPrefix + rpcPortName;
+    }
+    else
+    {
+        if (!this->yarp().attachAsServer(m_rpcPort)) {
+            yWarning() << m_logPrefix << "Failed to attach" << portPrefix + rpcPortName << "to the RPC service";
+        }
+    }
+
     // print information:
     yInfo() << m_logPrefix << "enable the logger: " << m_enableLogger;
     yInfo() << m_logPrefix << "configuration is done. ";
+
+    return true;
+}
+
+bool Teleoperation::enableMoveRobot(const bool value)
+{
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    m_moveRobot = value;
 
     return true;
 }
@@ -237,6 +263,8 @@ bool Teleoperation::getFeedbacks()
 
 bool Teleoperation::run()
 {
+
+    std::lock_guard<std::mutex> lock(m_mutex);
 
     // retarget human motion to the robot
     if (!m_humanGlove->getHandJointAngles(m_data.humanJointValues))
@@ -465,6 +493,9 @@ bool Teleoperation::close()
         yWarning() << m_logPrefix << "cannot stop haptic feedback.";
         ok &= false;
     }
+
+    // close RPC port
+    m_rpcPort.close();
 
     //  in order to be sure the stop haptic command is sent before closing the module, otherwise the
     //  glove may continue to provide the haptic feedback according to the last sent command.

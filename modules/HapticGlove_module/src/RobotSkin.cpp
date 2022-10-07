@@ -28,6 +28,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_rightHand = rightHand;
     m_logPrefix = "RobotSkin::";
     m_logPrefix += m_rightHand ? "RightHand:: " : "LeftHand:: ";
+    std::string portPrefix = "/";
+    portPrefix += m_rightHand ? "RightHand" : "LeftHand";
 
     m_samplingTime = config.check("samplingTime", yarp::os::Value(0.01)).asFloat64();
 
@@ -43,7 +45,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         = config.check("tactileWorkingThreshold ", yarp::os::Value(0.0001)).asFloat64();
 
     m_tactileUpdateThreshold
-        = config.check("tactileUpdateThreshold ", yarp::os::Value(0.0001)).asFloat64();
+        = config.check("tactileUpdateThreshold ", yarp::os::Value(-1.0)).asFloat64();
 
     m_noFingers = robotFingerNameList.size();
     m_totalNoTactile = 0;
@@ -140,11 +142,11 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
                      << "from the config file.";
             return false;
         }
-        if (tactileInfo.size() != 6)
+        if (tactileInfo.size() != 8)
         {
             yError() << m_logPrefix << "tactile senor indices for "
                      << fingerdata.fingerName + "_tactile_indices"
-                     << "size should be 5, but it is not.";
+                     << "size should be 8, but it is not.";
             return false;
         }
         bool check = (std::round(tactileInfo[0]) >= 0) && (std::round(tactileInfo[1]) > 0)
@@ -168,9 +170,11 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         fingerdata.noTactileSensors = fingerdata.indexEnd - fingerdata.indexStart + 1;
 
         fingerdata.contactThresholdValue = tactileInfo[2];
-        fingerdata.vibrotactileGain = tactileInfo[3];
-        fingerdata.vibrotactileDerivativeGain = tactileInfo[4];
+        fingerdata.contactThresholdMultiplier = tactileInfo[3];
+        fingerdata.vibrotactileGain = tactileInfo[4];
         fingerdata.contactDerivativeThresholdValue = tactileInfo[5];
+        fingerdata.contactDerivativeThresholdMultiplier = tactileInfo[6];
+        fingerdata.vibrotactileDerivativeGain = tactileInfo[7];
 
         fingerdata.rawTactileData.resize(fingerdata.noTactileSensors);
         fingerdata.tactileData.resize(fingerdata.noTactileSensors, 0.0);
@@ -199,6 +203,19 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     for (const auto& finger : m_fingersTactileData)
         finger.printInfo();
 
+    // Initialize RPC
+    std::string rpcPortName = "/robotSkin/rpc";
+    if(!m_rpcPort.open(portPrefix + rpcPortName))
+    {
+        yWarning() << m_logPrefix << "Failed to open" << portPrefix + rpcPortName;
+    }
+    else
+    {
+        if (!this->yarp().attachAsServer(m_rpcPort)) {
+            yWarning() << m_logPrefix << "Failed to attach" << portPrefix + rpcPortName << "to the RPC service";
+        }
+    }
+
     return true;
 }
 
@@ -206,12 +223,6 @@ void RobotSkin::updateCalibratedTactileData()
 {
     for (auto& finger : m_fingersTactileData)
     {
-        Eigen::VectorXd newSkinData = CtrlHelper::toEigenVector(finger.calibratedTactileData);
-        Eigen::VectorXd oldSkinData
-            = CtrlHelper::toEigenVector(finger.previousCalibratedTactileData);
-
-        bool checkUpdated = std::abs((newSkinData - oldSkinData).mean()) > m_tactileUpdateThreshold;
-
         // check if the tactile data is updated, otherwise the rate of change of tactile
         // data will stay zero, and will act as a noise.
         // if not updated, remain as the last data.
@@ -237,16 +248,10 @@ void RobotSkin::updateCalibratedTactileData()
                     = (finger.calibratedTactileData[i] - finger.previousCalibratedTactileData[i])
                       / m_samplingTime;
 
-                if (tactileDerivative > m_tactileUpdateThreshold)
+                if (std::abs(tactileDerivative) > m_tactileUpdateThreshold)
                 {
-                    tactileDerivative = tactileDerivative - finger.biasTactileSensorDerivative[i];
 
                     finger.tactileDataDerivative[i] = tactileDerivative;
-                    //                    yInfo() << "tactile derivative: " << finger.fingerName
-                    //                    << "index (" << i << ") "
-                    //                            << finger.calibratedTactileData[i]
-                    //                            << finger.previousCalibratedTactileData[i] <<
-                    //                            tactileDerivative;
                 }
             }
             finger.firstTime = false;
@@ -360,13 +365,15 @@ bool RobotSkin::getRawTactileFeedbackFromRobot()
 
 void RobotSkin::updateTactileFeedbacks()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     this->getRawTactileFeedbackFromRobot();
 
     this->updateCalibratedTactileData();
 
-    this->computeAreFingersInContact();
-
     this->computeMaxContactStrength();
+
+    this->computeAreFingersInContact();
 
     this->computeVibrotactileFeedback();
 }
@@ -375,11 +382,11 @@ void RobotSkin::computeAreFingersInContact()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        m_areFingersInContact[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
+        m_areFingersInContact[i] = m_fingersContactStrength[i]
                                    > m_fingersTactileData[i].contactThreshold();
-
-        m_areFingersContactChanges[i] = m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
-                                        > m_fingersTactileData[i].contactDerivativeThreshold();
+        m_areFingersContactChanges[i] = m_areFingersInContact[i]
+                                        && (m_fingersContactStrengthDerivate[i]
+                                        > m_fingersTactileData[i].contactDerivativeThreshold());
     }
 }
 
@@ -388,27 +395,9 @@ void RobotSkin::computeMaxContactStrength()
 
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        m_fingersContactStrength[i]
-            = (m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue()
-                                        : 0);
+        m_fingersContactStrength[i] = m_fingersTactileData[i].maxTactileFeedbackAbsoluteValue();
 
-        // check the strength chenages of the tactile feedback
-        m_fingersContactStrengthDerivate[i]
-            = (m_areFingersInContact[i]
-                   ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue()
-                   : 0);
-
-        //        m_fingersContactStrengthDerivate[i]
-        //            = (true ? m_fingersTactileData[i].maxTactileFeedbackDerivativeValue() : 0);
-
-        //        yInfo() << " [before] fingersContactStrengthDerivate: " << i
-        //                << m_fingersContactStrengthDerivate[i];
-
-        m_fingersContactStrengthDerivate[i]
-            = (m_areFingersContactChanges[i] ? m_fingersContactStrengthDerivate[i] : 0);
-
-        //        yInfo() << " [after] fingersContactStrengthDerivate: " << i
-        //                << m_fingersContactStrengthDerivate[i];
+        m_fingersContactStrengthDerivate[i] = m_fingersTactileData[i].maxTactileFeedbackDerivativeValue();
 
         m_fingersContactStrengthDerivateSmoothed[i]
             = m_smoothingGainDerivative * m_fingersContactStrengthDerivate[i]
@@ -420,19 +409,19 @@ void RobotSkin::computeVibrotactileFeedback()
 {
     for (size_t i = 0; i < m_noFingers; i++)
     {
-        double x = m_fingersTactileData[i].vibrotactileGain * m_fingersContactStrength[i];
+        double vibrotactileFeedback = m_fingersTactileData[i].vibrotactileGain * (m_areFingersInContact[i] ? m_fingersContactStrength[i] : 0);
 
         m_fingersVibrotactileAbsoluteFeedback[i]
-            = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(x, m_fbParams[2]) + m_fbParams[3])
-              + m_fbParams[4] * std::pow(x, m_fbParams[5]);
+            = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(vibrotactileFeedback, m_fbParams[2]) + m_fbParams[3])
+              + m_fbParams[4] * std::pow(vibrotactileFeedback, m_fbParams[5]);
 
-        //        m_fingersVibrotactileDerivativeFeedback[i]
-        //            = m_fingersTactileData[i].vibrotactileDerivativeGain
-        //              * m_fingersContactStrengthDerivate[i];
-
-        m_fingersVibrotactileDerivativeFeedback[i]
+        double vibrotactileDerivativeFeedback
             = m_fingersTactileData[i].vibrotactileDerivativeGain
-              * std::abs(m_fingersContactStrengthDerivateSmoothed[i]);
+              * (m_areFingersContactChanges[i] ? std::abs(m_fingersContactStrengthDerivateSmoothed[i]): 0);
+        
+        m_fingersVibrotactileDerivativeFeedback[i]
+            = m_fbParams[0] * std::log(m_fbParams[1] * std::pow(vibrotactileDerivativeFeedback, m_fbParams[2]) + m_fbParams[3])
+              + m_fbParams[4] * std::pow(vibrotactileDerivativeFeedback, m_fbParams[5]);
 
         // saturate the values between 0 to 100
 
@@ -564,6 +553,8 @@ bool RobotSkin::close()
     }
     m_tactileSensorInterface = nullptr;
 
+    m_rpcPort.close();
+
     yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
 
     return ok;
@@ -577,4 +568,224 @@ const yarp::sig::Vector& RobotSkin::fingerRawTactileFeedbacks() const
 void RobotSkin::fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks)
 {
     fingertipTactileFeedbacks = m_fingertipRawTactileFeedbacksStdVector;
+}
+
+bool RobotSkin::setAbsoluteSkinValuePercentage(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0 || value > 1.0 )
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setAbsoluteSkinValuePercentage with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+
+    m_absoluteSkinValuePercentage = value;
+    return true;
+}
+
+bool RobotSkin::setSkinDerivativeSmoothingGain(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0 || value > 1.0 )
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setSkinDerivativeSmoothingGain with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+
+    m_smoothingGainDerivative = value;
+    return true;
+}
+
+bool RobotSkin::setContactFeedbackGain(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setContactFeedbackGain with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setContactFeedbackGain with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].vibrotactileGain = value;
+    return true;
+}
+
+bool RobotSkin::setContactFeedbackGainAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setContactFeedbackGainAll with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].vibrotactileGain = value;
+    }
+    
+    return true;
+}
+
+bool RobotSkin::setDerivativeFeedbackGain(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setDerivativeFeedbackGain with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setDerivativeFeedbackGain with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].vibrotactileDerivativeGain = value;
+    return true;
+}
+
+bool RobotSkin::setDerivativeFeedbackGainAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if(value<0.0)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setDerivativeFeedbackGainAll with unfeasible value " 
+                   << value << "!";
+        return false;
+    }
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].vibrotactileDerivativeGain = value;
+    }
+
+    return true;
+}
+
+bool RobotSkin::setContactThreshold(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setContactThreshold with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].contactThresholdValue = value;
+    return true;
+}
+
+bool RobotSkin::setContactThresholdAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].contactThresholdValue = value;
+    }
+
+    return true;
+}
+
+bool RobotSkin::setContactThresholdMultiplier(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setContactThresholdMultiplier with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].contactThresholdMultiplier = value;
+    return true;
+}
+
+bool RobotSkin::setContactThresholdMultiplierAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].contactThresholdMultiplier = value;
+    }
+
+    return true;
+}
+
+bool RobotSkin::setDerivativeThreshold(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setDerivativeThreshold with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].contactDerivativeThresholdValue = value;
+    return true;
+}
+
+bool RobotSkin::setDerivativeThresholdAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].contactDerivativeThresholdValue = value;
+    }
+
+    return true;
+}
+
+bool RobotSkin::setDerivativeThresholdMultiplier(const int32_t finger, const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (finger >= m_noFingers)
+    {
+        yWarning() << m_logPrefix 
+                   << "Requested setDerivativeThresholdMultiplier with invalid finger index " 
+                   << finger << "!";
+        return false;
+    }
+
+    m_fingersTactileData[finger].contactDerivativeThresholdMultiplier = value;
+    return true;
+}
+
+bool RobotSkin::setDerivativeThresholdMultiplierAll(const double value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+
+    for (size_t i = 0; i < m_noFingers; i++)
+    {
+        m_fingersTactileData[i].contactDerivativeThresholdMultiplier = value;
+    }
+
+    return true;
 }
