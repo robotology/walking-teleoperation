@@ -13,10 +13,10 @@
 
   <!-- Variables -->
   <var name="weight_display_prefix">/WeightDisplay</var>
-  <var name="right_hand_wrench_port">/wholeBodyDynamics/filteredFT/r_arm_ft_sensor</var>
-  <var name="left_hand_wrench_port">/wholeBodyDynamics/filteredFT/l_arm_ft_sensor</var>
-  <var name="openxr_weight_label_id">1</var>
-  <var name="openxr_weight_label_port">/headset/label_${openxr_weight_label_id}</var>
+  <var name="right_hand_wrench_port">/walking-coordinator/right_arm_inertial_ft</var>
+  <var name="left_hand_wrench_port">/walking-coordinator/left_arm_inertial_ft</var>
+  <var name="openxr_weight_label_port_left">/headset/label_1</var>
+  <var name="openxr_weight_label_port_right">/headset/label_2</var>
 
   <!-- Modules -->
   <module>
@@ -72,11 +72,6 @@
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run weight display application</description>
     <node>localhost</node>
-    <dependencies>
-      <port timeout="11.0">${right_hand_wrench_port}</port>
-      <port timeout="11.0">${left_hand_wrench_port}</port>
-      <port timeout="11.0">${openxr_weight_label_port}</port>
-    </dependencies>
     <tag>WeightDisplayModule</tag>
   </module>
 
@@ -108,6 +103,30 @@
   <connection>
     <from>/iFeelWalking/rotationArrow:o</from>
     <to>/headset/slide_1</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${right_hand_wrench_port}</from>
+    <to>/WeightDisplay/right_hand_ft:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${left_hand_wrench_port}</from>
+    <to>/WeightDisplay/left_hand_ft:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${weight_display_prefix}/left_hand_weight:o</from>
+    <to>${openxr_weight_label_port_left}</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${weight_display_prefix}/right_hand_weight:o</from>
+    <to>${openxr_weight_label_port_right}</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
