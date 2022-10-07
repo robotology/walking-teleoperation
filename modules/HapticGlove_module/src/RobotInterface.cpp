@@ -161,6 +161,7 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
     m_analogJointsMaxBoundaryDegree.resize(m_noAnalogSensor, 0.0);
     m_analogSensorsRawMinBoundary.resize(m_noAnalogSensor, 0.0);
     m_analogSensorsRawMaxBoundary.resize(m_noAnalogSensor, 0.0);
+    m_analogAxisLimitsRaw.resize(m_noAnalogSensor, 2);
 
     // get the joints limits boundaries
     if (!YarpHelper::getYarpVectorFromSearchable(
@@ -203,6 +204,12 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
             << m_logPrefix
             << "analog joint min/max boundary or analog sensor raw value sizes are not correct.";
         return false;
+    }
+
+    for (int i = 0; i < m_noAnalogSensor; i++)
+    {
+        m_analogAxisLimitsRaw(i, 0) = m_analogSensorsRawMinBoundary(i);
+        m_analogAxisLimitsRaw(i, 1) = m_analogSensorsRawMaxBoundary(i);
     }
 
     m_sensorsRaw2DegreeScaling.resize(m_noAnalogSensor, 0.0);
@@ -895,6 +902,21 @@ const yarp::os::Stamp& RobotInterface::timeStamp() const
 const yarp::sig::Vector& RobotInterface::axisFeedbacks() const
 {
     return m_encoderPositionFeedbackInRadians;
+}
+
+const yarp::sig::Vector& RobotInterface::axisFeedbacksInDeg() const
+{
+    return m_encoderPositionFeedbackInDegrees;
+}
+
+const yarp::sig::Vector& RobotInterface::analogFeedbacksRaw() const
+{
+    return m_analogSensorFeedbackRaw;
+}
+
+const yarp::sig::Matrix& RobotInterface::analogAxisLimitsRaw() const
+{
+    return m_analogAxisLimitsRaw;
 }
 
 void RobotInterface::axisFeedbacks(std::vector<double>& axisFeedbacks)

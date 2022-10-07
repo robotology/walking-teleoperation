@@ -142,6 +142,7 @@ class HapticGlove::RobotInterface
         m_sensorsRaw2DegreeScaling; /**< sacling from raw to Degree of joints with analog readouts*/
 
     yarp::sig::Matrix m_actuatedAxisLimits; /**< the min and max limits of the actuated axis */
+    yarp::sig::Matrix m_analogAxisLimitsRaw; /**< the min and max limits of the analog axis raw */
 
     std::unordered_map<std::string, std::array<double, 2>>
         m_axisCustomMotionRange; /**< the unordered map from the axis name to the custom range of
@@ -380,6 +381,24 @@ public:
      * @return the actuated axis encoder value
      */
     const yarp::sig::Vector& axisFeedbacks() const;
+
+    /**
+     * Get the actuated axis encoder values in degree
+     * @return the actuated axis encoder value
+     */
+    const yarp::sig::Vector& axisFeedbacksInDeg() const;
+
+    /**
+     * Get the analog feedback raw
+     * @return the analog axis encoder value in raw value
+     */
+    const yarp::sig::Vector& analogFeedbacksRaw() const;
+
+    /**
+     * Get the analog limits raw
+     * @return the actuated axis encoder value
+     */
+    const yarp::sig::Matrix& analogAxisLimitsRaw() const;
 
     /**
      * Get the actuated axis encoders value
