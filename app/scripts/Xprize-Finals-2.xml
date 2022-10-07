@@ -1,0 +1,26 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>Xprize-Finals-2</name>
+  <description>Step 2 for the finals.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="riccardo.grieco@iit.it">Riccardo Grieco</author>
+  </authors>
+
+  <application>
+    <name> Xprize-VisualRetargeting </name>
+  </application>
+
+  <application>
+    <name>Xprize-AudioRetargeting</name>
+  </application>
+
+  <application>
+    <name>Face_Expressions</name>
+  </application>
+
+</application>

@@ -1,0 +1,31 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>Xprize-Finals</name>
+  <description>Application to run module related to vision for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="riccardo.grieco@iit.it">Riccardo Grieco</author>
+  </authors>
+
+  <application>
+    <name> Xprize-Finals-1</name>
+  </application>
+
+  <application>
+    <name> Xprize-Finals-2</name>
+  </application>
+
+  <application>
+    <name> Xprize-Finals-3</name>
+  </application>
+
+  <application>
+    <name> Xprize-Finals-4</name>
+  </application>
+
+
+</application>
