@@ -62,6 +62,9 @@ class HapticGlove::GloveControlHelper
     std::vector<double> m_jointRangeMax; /**< Max value for every human hand joint, computed at the
                                             end of the preparation phase*/
 
+    std::vector<double> m_jointRangeMaxDelta;
+    std::vector<double> m_jointRangeMinDelta;
+
     std::unique_ptr<GloveWearableImpl>
         m_pImp; /**< Sense glove wearable interface impelemntation. */
 

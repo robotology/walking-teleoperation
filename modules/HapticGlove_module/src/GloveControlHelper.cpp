@@ -83,6 +83,56 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
     }
     m_jointRangeMin.resize(m_humanJointNameList.size(), 0.0);
     m_jointRangeMax.resize(m_humanJointNameList.size(), 0.0);
+    m_jointRangeMinDelta.resize(m_humanJointNameList.size(), 0.0);
+    m_jointRangeMaxDelta.resize(m_humanJointNameList.size(), 0.0);
+
+    // human motion range minimum delta
+    if (config.check("motion_range_min_delta") && config.find("motion_range_min_delta").isList())
+    {
+        yarp::os::Bottle* jointRangeMinDeltaMap = config.find("motion_range_min_delta").asList();
+        for (size_t i = 0; i < jointRangeMinDeltaMap->size(); i++)
+        {
+            yarp::os::Bottle* jointRangeMinDeltaValue = jointRangeMinDeltaMap->get(i).asList();
+            std::string jointName = jointRangeMinDeltaValue->get(0).asString();
+
+            double deltaMinVal =jointRangeMinDeltaValue->get(1).asFloat64() * M_PI / 180; // [rad]
+
+            auto jointElement
+                = std::find(std::begin(m_humanJointNameList), std::end(m_humanJointNameList), jointName);
+            if (jointElement == std::end(m_humanJointNameList))
+            {
+                yError() << m_logPrefix << "cannot find the joint " << jointName
+                         << "written in `motion_range_min_delta` among the humanFingerNameList.";
+                return false;
+            }
+
+            m_jointRangeMinDelta[std::distance(m_humanJointNameList.begin(), jointElement)] = deltaMinVal;
+        }
+    }
+
+    // human motion range maximum delta
+    if (config.check("motion_range_max_delta") && config.find("motion_range_max_delta").isList())
+    {
+        yarp::os::Bottle* jointRangeMaxDeltaMap = config.find("motion_range_max_delta").asList();
+        for (size_t i = 0; i < jointRangeMaxDeltaMap->size(); i++)
+        {
+            yarp::os::Bottle* jointRangeMaxDeltaValue = jointRangeMaxDeltaMap->get(i).asList();
+            std::string jointName = jointRangeMaxDeltaValue->get(0).asString();
+
+            double deltaMaxVal =jointRangeMaxDeltaValue->get(1).asFloat64() * M_PI / 180; // [rad]
+
+            auto jointElement
+                = std::find(std::begin(m_humanJointNameList), std::end(m_humanJointNameList), jointName);
+            if (jointElement == std::end(m_humanJointNameList))
+            {
+                yError() << m_logPrefix << "cannot find the joint " << jointName
+                         << "written in `motion_range_max_delta` among the humanFingerNameList.";
+                return false;
+            }
+
+            m_jointRangeMaxDelta[std::distance(m_humanJointNameList.begin(), jointElement)] = deltaMaxVal;
+        }
+    }
 
     // wearable device
     m_pImp = std::make_unique<GloveWearableImpl>(
@@ -324,6 +374,14 @@ bool GloveControlHelper::getHumanFingerJointsMotionRange(std::vector<double>& jo
 {
     jointRangeMax = m_jointRangeMax;
     jointRangeMin = m_jointRangeMin;
+
+    // Add deltas on human motion range
+    for (size_t i = 0; i < m_humanJointNameList.size(); i++)
+    {
+        jointRangeMax[i] = jointRangeMax[i] + m_jointRangeMaxDelta[i];
+        jointRangeMin[i] = jointRangeMin[i] + m_jointRangeMinDelta[i];
+    }
+
     yInfo() << m_logPrefix << "human joint names:" << m_humanJointNameList;
     yInfo() << m_logPrefix << "human min joint range:" << m_jointRangeMin;
     yInfo() << m_logPrefix << "human max joint range:" << m_jointRangeMax;
