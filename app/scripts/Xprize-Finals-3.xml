@@ -13,8 +13,6 @@
 
   <!-- Variables -->
   <var name="weight_display_prefix">/WeightDisplay</var>
-  <var name="right_hand_wrench_port">/walking-coordinator/right_arm_inertial_ft</var>
-  <var name="left_hand_wrench_port">/walking-coordinator/left_arm_inertial_ft</var>
   <var name="openxr_weight_label_port_left">/headset/label_1</var>
   <var name="openxr_weight_label_port_right">/headset/label_2</var>
 
@@ -98,18 +96,6 @@
   <connection>
     <from>/iFeelWalking/rotationArrow:o</from>
     <to>/headset/slide_1</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>${right_hand_wrench_port}</from>
-    <to>/WeightDisplay/right_hand_ft:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>${left_hand_wrench_port}</from>
-    <to>/WeightDisplay/left_hand_ft:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
