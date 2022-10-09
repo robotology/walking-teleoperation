@@ -167,13 +167,76 @@ bool Retargeting::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    // get human and robot joint list and find the mapping between them
-    if (!this->semanticMapFromRobotTHuman(
-            m_humanJointNames, m_robotActuatedJointNames, m_robotToHumanJointIndicesMap))
+    // check if a semantic map or robot_to_human_map configuration paramter should be used instead
+    if (config.check("useSemanticMap") && config.find("useSemanticMap").isBool())
     {
-        yError() << m_logPrefix
-                 << "unable to find the map from robot actuated joints to the human joints";
-        return false;
+        m_useSemanticMap = config.find("useSemanticMap").asBool();
+    }
+    
+    if (!m_useSemanticMap)
+    {
+        if (!m_robotToHumanJointIndicesMap.empty())
+        {
+            m_robotToHumanJointIndicesMap.clear();
+        }
+
+        // get human and robot joint list and find the mapping between them
+        if (config.check("robot_to_human_map") && config.find("robot_to_human_map").isList())
+        {
+            yarp::os::Bottle* robotToHumanMap = config.find("robot_to_human_map").asList();
+
+            if (robotToHumanMap->size() != m_robotActuatedJointNames.size())
+            {
+                yError() << m_logPrefix << "number of robot joint in robot_to_human_map" << robotToHumanMap->size()
+                                        << "does not correspond to actuated robot joints" << m_robotActuatedJointNames.size(); 
+                return false;
+            }
+
+            for (size_t i = 0; i < robotToHumanMap->size(); i++)
+            {
+                yarp::os::Bottle* robotToHumanMapValue = robotToHumanMap->get(i).asList();
+                std::string robotJoint = robotToHumanMapValue->get(0).asString();
+                std::string humanJoint = robotToHumanMapValue->get(1).asString();
+
+                auto indexHuman = std::find(std::begin(m_humanJointNames), std::end(m_humanJointNames), humanJoint);
+                if (indexHuman == std::end(m_humanJointNames))
+                {
+                    yError() << m_logPrefix << "in robot_to_human_map found non-exising human joint " 
+                             << humanJoint;
+                    return false;
+                }
+
+                auto indexRobot = std::find(std::begin(m_robotActuatedJointNames), std::end(m_robotActuatedJointNames), robotJoint);
+                if (indexRobot == std::end(m_robotActuatedJointNames))
+                {
+                    yError() << m_logPrefix << "in robot_to_human_map found non-exising robot joint " 
+                             << robotJoint;
+                    return false;
+                }
+
+                size_t indexHumanJoint = indexHuman - m_humanJointNames.begin();
+                size_t indexRobotJoint = indexRobot - m_robotActuatedJointNames.begin();
+                m_robotToHumanJointIndicesMap.insert(std::pair<size_t, size_t>(indexRobotJoint, indexHumanJoint));
+            }
+
+            // TODO check that all the robot joints are preent
+        }
+        else
+        {
+            yError() << m_logPrefix
+                    << "robot_to_human_map not found or not valid";
+            return false;
+        }
+    }
+    else {
+        if (!this->getSemanticMapFromRobotToHuman(
+                m_humanJointNames, m_robotActuatedJointNames, m_robotToHumanJointIndicesMap))
+        {
+            yError() << m_logPrefix
+                    << "unable to find the semantic map from robot actuated joints to the human joints";
+            return false;
+        }
+        yInfo() << m_logPrefix << "a semantic map is used to define the map from robot actuated joints to the human joints";
     }
 
     // find the human finger names
@@ -475,7 +538,7 @@ bool Retargeting::getAxisError(std::vector<double>& axisValueErrors,
     return true;
 }
 
-bool Retargeting::semanticMapFromRobotTHuman(const std::vector<std::string>& humanJointNames,
+bool Retargeting::getSemanticMapFromRobotToHuman(const std::vector<std::string>& humanJointNames,
                                              const std::vector<std::string>& robotJointNames,
                                              std::map<size_t, size_t>& robotToHumanMap)
 {
