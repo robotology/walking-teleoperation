@@ -89,13 +89,13 @@
 
   <connection>
     <from>${right_hand_wrench_port}</from>
-    <to>${weight_display_prefix}/right_hand:i</to>
+    <to>${weight_display_prefix}/right_hand_ft:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>${left_hand_wrench_port}</from>
-    <to>${weight_display_prefix}/left_hand:i</to>
+    <to>${weight_display_prefix}/left_hand_ft:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

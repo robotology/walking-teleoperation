@@ -43,15 +43,9 @@
   <!-- </module> -->
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--from sensors/RealSense_conf.ini</parameters>
-    <node>icub-head</node>
-  </module>
-
-  <module>
      <name>idyntree-yarp-visualizer</name>
      <parameters>--OUTPUT_STREAM::useRGBA true</parameters>
-     <node>icub-console-gui</node>
+     <node>localhost</node>
   </module>
 
   <!-- Connections -->
@@ -64,18 +58,6 @@
   <connection>
     <from>/icub/cam/right</from>
     <to>/headset/display/right:i</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/idyntree-yarp-visualizer/image</from>
-    <to>/headset/gui_0</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>/depthCamera/rgbImage:o</from>
-    <to>/headset/gui_1</to>
     <protocol>mjpeg</protocol>
   </connection>
 

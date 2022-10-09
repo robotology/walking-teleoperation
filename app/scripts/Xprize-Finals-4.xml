@@ -11,6 +11,13 @@
     <author email="riccardo.grieco@iit.it">Riccardo Grieco</author>
   </authors>
 
+  <!-- Variables -->
+  <var name="weight_display_prefix">/WeightDisplay</var>
+  <var name="right_hand_wrench_port">/walking-coordinator/right_arm_inertial_ft</var>
+  <var name="left_hand_wrench_port">/walking-coordinator/left_arm_inertial_ft</var>
+  <var name="openxr_weight_label_id">1</var>
+  <var name="openxr_weight_label_port">/headset/label_${openxr_weight_label_id}</var>
+
   <module>
     <name>HapticGloveModule</name>
     <node>icub-head</node>
@@ -52,6 +59,30 @@
   <connection>
     <from>/iFeelWalking/goal:o</from>
     <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${right_hand_wrench_port}</from>
+    <to>${weight_display_prefix}/right_hand_ft:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${left_hand_wrench_port}</from>
+    <to>${weight_display_prefix}/left_hand_ft:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${left_hand_wrench_port}</from>
+    <to>/WeightRetargeting/force_ports/left_arm:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${right_hand_wrench_port}</from>
+    <to>/WeightRetargeting/force_ports/right_arm:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

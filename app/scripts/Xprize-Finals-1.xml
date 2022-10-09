@@ -15,7 +15,7 @@
 
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config iFeelSuit.xml --node-list "(1 2 4 5 6 7 8)" --serial-port-name /dev/ttyACM0</parameters>
+    <parameters>--config iFeelSuit.xml --node-list "(1 2 4 5 6 7 8 13 14)" --serial-port-name /dev/ttyACM0</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run iFeelSuit and Multi Haptic driver</description>
     <node>localhost</node>
@@ -27,5 +27,22 @@
     <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
     <node>icub-virtualizer</node>
   </module>
+
+  <module>
+    <name>WeightRetargetingModule</name>
+    <parameters>--from WeightRetargeting_iCub3_force.ini</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run weight retargeting application</description>
+    <node>localhost</node>
+    <tag>WeightRetargetingModule</tag>
+  </module>
+
+  <!-- Connections -->
+
+  <connection>
+    <from>/WeightRetargeting/output:o</from>
+    <to>/iFeelSuit/WearableActuatorsCommand/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
 
 </application>
