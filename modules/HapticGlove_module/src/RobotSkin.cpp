@@ -41,14 +41,12 @@ bool RobotSkin::parseMatrix(const yarp::os::Searchable& rf,
         {
             return false;
         }
-        yarp::os::Bottle *innerList = innerValue.asList();
-        if (!innerList || innerList->size() != 3)
-        {
-            return false;
-        }
+        yarp::os::Bottle *innerList = innerValue.asList();	
+	std::cerr << "-------------->" << innerList->size() << std::endl;
+	
         for (int column = 0; column < innerList->size(); ++column)
         {
-            matrix(row, column) =  innerList->get(column).asInt32();
+	  matrix(row, column) =  int(innerList->get(column).asFloat64());
         }
     }
 
@@ -100,7 +98,14 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     if (!m_rightHand)
     {
         m_skinMapping.resize(48,3);
-        this->parseMatrix(config, "palm_skin_mapping", m_skinMapping);
+	
+        if(!this->parseMatrix(config, "palm_skin_mapping", m_skinMapping))
+	  {
+	    yError() << m_logPrefix << "unable to find palm_skin_mapping.";
+	    return false;
+	  }
+	std::cerr << m_skinMapping << std::endl;
+
         m_skinMatrix.resize(9,11);
         m_skinMatrix.setZero();
     }

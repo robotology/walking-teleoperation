@@ -404,6 +404,7 @@ bool Teleoperation::run()
             }
             else
             {
+	      std::cerr << "no rocks" << std::endl;
                 m_humanGlove->setPalmVibrotactileFeedbackReference(124);
             }
         }

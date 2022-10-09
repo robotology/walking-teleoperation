@@ -412,11 +412,11 @@ bool GloveWearableImpl::setPalmVibrotactileValue(const int& value)
 
     wearableActuatorCommand.value = value;
     wearableActuatorCommand.info.name = m_wearablePrefix + wearable::actuator::IHaptic::getPrefix()
-                                        + m_handLinkName + "::VibroTactileFeedback";
+                                        + m_handLinkName + "::palmThumper";
     wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
     wearableActuatorCommand.duration = 0;
 
-    m_iWearActuatorPort.write(false);
+    m_iWearActuatorPort.write(true);
     return true;
 }
 
