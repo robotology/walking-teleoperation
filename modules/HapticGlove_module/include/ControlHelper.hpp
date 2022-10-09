@@ -37,6 +37,8 @@ Eigen::Map<Eigen::VectorXd> toEigenVector(std::vector<double>& vec);
 
 Eigen::Map<Eigen::VectorXd> toEigenVector(yarp::sig::Vector& vec);
 
+Eigen::Map<const Eigen::VectorXd> toEigenVector(const yarp::sig::Vector& vec);
+
 void toStdVector(Eigen::VectorXd& vecEigen, std::vector<double>& vecStd);
 
 void toStdVector(yarp::sig::Vector& vecYarp, std::vector<double>& vecStd);

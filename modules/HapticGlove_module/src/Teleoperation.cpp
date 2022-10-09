@@ -6,8 +6,11 @@
  * @date 2021
  */
 
+#include "fdeep/model.hpp"
+#include <Eigen/src/Core/Matrix.h>
 #include <Logger.hpp>
 #include <Teleoperation.hpp>
+#include <memory>
 
 #define _USE_MATH_DEFINES // for C++
 // std
@@ -70,6 +73,23 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
         yError() << m_logPrefix << "unable to initialize the glove control helper.";
         return false;
     }
+
+    if (!rightHand)
+    {
+        const std::string netModelName
+            = config.check("net_model_name", yarp::os::Value("")).asString();
+
+        if (netModelName != "")
+        {
+            const std::string pathToModel
+                = yarp::os::ResourceFinder::getResourceFinderSingleton().findFileByName(
+                    netModelName);
+            m_palmSkinNetwork = std::make_unique<fdeep::model>(fdeep::load_model(pathToModel));
+            m_palmSkinNetworkLoaded = true;
+        }
+    }
+
+    m_moveRobot = config.check("model", yarp::os::Value(1)).asBool();
 
     // initialize the retaregting object
     std::vector<std::string> robotActuatedJointNameList;
@@ -264,6 +284,7 @@ bool Teleoperation::getFeedbacks()
 bool Teleoperation::run()
 {
 
+
     std::lock_guard<std::mutex> lock(m_mutex);
 
     // retarget human motion to the robot
@@ -342,6 +363,45 @@ bool Teleoperation::run()
             m_data.doRobotFingerSkinsWork,
             m_data.areFingersSkinInContact,
             m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        // create fdeep::tensor with its own memory
+        if (m_palmSkinNetworkLoaded)
+        {
+            if (m_robotSkin->isPalmSkinActive(m_robotSkin->fingerRawTactileFeedbacks()))
+            {
+                const Eigen::MatrixXf& matrix
+                    = m_robotSkin->getPalmSkinMatrix(m_robotSkin->fingerRawTactileFeedbacks());
+
+                const int tensor_channels = 1;
+                const int tensor_rows = matrix.rows();
+                const int tensor_cols = matrix.cols();
+                fdeep::tensor_shape tensor_shape(tensor_rows, tensor_cols, tensor_channels);
+                fdeep::tensor t(tensor_shape, 0.0f);
+
+                // copy the values into tensor
+                for (int y = 0; y < tensor_rows; ++y)
+                {
+                    for (int x = 0; x < tensor_cols; ++x)
+                    {
+                        for (int c = 0; c < tensor_channels; ++c)
+                        {
+                            t.set(fdeep::tensor_pos(y, x, c), matrix(y, x));
+                        }
+                    }
+                }
+
+                const auto result = m_palmSkinNetwork->predict({t});
+
+                const std::vector<float> vec = result[0].to_vector();
+                if (vec[0] > 0.5)
+                {
+                    std::cerr << "rocks rough" << std::endl;
+                } else
+                {
+                    std::cerr << "rocks plain" << std::endl;
+                }
+            }
+        }
     }
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
