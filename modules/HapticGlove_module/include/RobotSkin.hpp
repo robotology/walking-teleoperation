@@ -210,7 +210,13 @@ private:
 
     // RPC port
     yarp::os::Port m_rpcPort;
-    
+
+    Eigen::MatrixXi m_skinMapping;
+
+    bool parseMatrix(const yarp::os::Searchable& rf,
+                     const std::string& key,
+                     Eigen::Ref<Eigen::MatrixXi> matrix);
+
     void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
@@ -220,6 +226,8 @@ private:
     void computeAreFingersInContact();
 
     bool getRawTactileFeedbackFromRobot();
+
+    Eigen::MatrixXf m_skinMatrix;
 
 public:
     RobotSkin();
@@ -307,6 +315,10 @@ public:
     virtual bool setDerivativeThresholdMultiplierAll(const double value) override;
 
     bool close();
+
+    const Eigen::MatrixXf& getPalmSkinMatrix(const yarp::sig::Vector& rawData);
+
+    bool isPalmSkinActive(const yarp::sig::Vector& rawData);
 };
 
 #endif // ROBOT_SKIN_HPP

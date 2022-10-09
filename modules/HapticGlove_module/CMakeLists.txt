@@ -5,6 +5,24 @@
 # set target name
 set(EXE_TARGET_NAME HapticGloveModule)
 
+if(WALKINGTELEOPERATION_USES_SYSTEM_frugally_deep)
+  find_package(frugally-deep 0.15.19 REQUIRED)
+else()
+  include(FetchContent)
+
+  FetchContent_Declare(
+    functional_plus
+    GIT_REPOSITORY https://github.com/Dobiasd/FunctionalPlus.git
+    GIT_TAG master
+    )
+
+  FetchContent_Declare(
+    frugally_deep
+    GIT_REPOSITORY https://github.com/Dobiasd/frugally-deep.git
+    GIT_TAG master
+    )
+  FetchContent_MakeAvailable(functional_plus frugally_deep)
+endif()
 
 OPTION(EIGEN_RUNTIME_NO_MALLOC "If ON, it can assert in case of runtime allocation" OFF)
 
@@ -14,7 +32,7 @@ IF(EIGEN_RUNTIME_NO_MALLOC)
 ENDIF(EIGEN_RUNTIME_NO_MALLOC)
 
 yarp_add_idl(HAPTIC_GLOVE_SERVICES thrift/RobotSkinService.thrift 
-                                   thrift/HapticGloveTeleoperationService.thrift)
+  thrift/HapticGloveTeleoperationService.thrift)
 
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC
@@ -63,18 +81,18 @@ target_include_directories(${EXE_TARGET_NAME} PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(${EXE_TARGET_NAME}_LINKED_LIBS
-    ${YARP_LIBRARIES}
-    ${iDynTree_LIBRARIES}
-    Eigen3::Eigen
-    ctrlLib
-    UtilityLibrary
-    IWear::IWear
-    WearableActuators::WearableActuators
-    )
-if(ENABLE_LOGGER)
-list(APPEND ${EXE_TARGET_NAME}_LINKED_LIBS  matlogger2::matlogger2 )
-endif()
+  ${YARP_LIBRARIES}
+  ${iDynTree_LIBRARIES}
+  Eigen3::Eigen
+  ctrlLib
+  UtilityLibrary
+  IWear::IWear
+  WearableActuators::WearableActuators
+  frugally-deep::fdeep)
 
+if(ENABLE_LOGGER)
+  list(APPEND ${EXE_TARGET_NAME}_LINKED_LIBS  matlogger2::matlogger2)
+endif()
 
 target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC ${${EXE_TARGET_NAME}_LINKED_LIBS} )
 

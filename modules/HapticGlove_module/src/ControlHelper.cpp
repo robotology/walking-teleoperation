@@ -13,6 +13,11 @@ Eigen::Map<Eigen::VectorXd> CtrlHelper::toEigenVector(yarp::sig::Vector& vec)
     return Eigen::Map<Eigen::VectorXd>(vec.data(), vec.size());
 }
 
+Eigen::Map<const Eigen::VectorXd> CtrlHelper::toEigenVector(const yarp::sig::Vector& vec)
+{
+    return Eigen::Map<const Eigen::VectorXd>(vec.data(), vec.size());
+}
+
 void CtrlHelper::toStdVector(Eigen::VectorXd& vecEigen, std::vector<double>& vecStd)
 {
     if (vecStd.size() != vecEigen.size())

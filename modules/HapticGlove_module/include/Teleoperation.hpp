@@ -31,6 +31,8 @@
 // rpc service
 #include <thrift/HapticGloveTeleoperationService.h>
 
+#include <fdeep/fdeep.hpp>
+
 namespace HapticGlove
 {
 class Teleoperation;
@@ -189,6 +191,9 @@ class HapticGlove::Teleoperation : HapticGloveTeleoperationService
 
     std::unique_ptr<RobotSkin> m_robotSkin; /**< pointer to the robot skin object. */
 
+    std::unique_ptr<fdeep::model> m_palmSkinNetwork; /**< skin network. */
+    bool m_palmSkinNetworkLoaded{false};
+
     double m_calibrationTimePeriod; /**< calibration time period [sec] */
 
     // Enable at the end
@@ -228,8 +233,7 @@ public:
      * @param rightHand if true the right hand is used
      * @return true/false in case of success/failure
      */
-    bool
-    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
+    bool configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
 
     /**
      * Close the teleoperation class.
