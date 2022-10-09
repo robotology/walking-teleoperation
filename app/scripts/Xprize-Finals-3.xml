@@ -15,7 +15,6 @@
   <var name="weight_display_prefix">/WeightDisplay</var>
   <var name="openxr_weight_label_port_left">/headset/label_1</var>
   <var name="openxr_weight_label_port_right">/headset/label_2</var>
-  <var name="openxr_weight_label_port_total">/headset/label_3</var>
 
   <!-- Modules -->
   <module>
@@ -81,6 +80,7 @@
     <protocol>fast_tcp</protocol>
   </connection>
 
+
   <connection>
     <from>/iFeelSuit/WearableData/data:o</from>
     <to>/iFeelWalking/iFeelShoes:i</to>
@@ -108,12 +108,6 @@
   <connection>
     <from>${weight_display_prefix}/right_hand_weight:o</from>
     <to>${openxr_weight_label_port_right}</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>${weight_display_prefix}/total_weight:o</from>
-    <to>${openxr_weight_label_port_total}</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
