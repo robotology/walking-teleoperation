@@ -7,6 +7,7 @@
  */
 
 // std
+#include <Eigen/Dense>
 #include <math.h>
 
 // teleoperation
@@ -20,6 +21,39 @@
 using namespace HapticGlove;
 
 RobotSkin::RobotSkin(){};
+
+bool RobotSkin::parseMatrix(const yarp::os::Searchable& rf,
+                            const std::string& key,
+                            Eigen::Ref<Eigen::MatrixXi> matrix)
+{
+    yarp::os::Value ini = rf.find(key);
+    if (ini.isNull() || !ini.isList())
+    {
+        return false;
+    }
+
+    yarp::os::Bottle *outerList = ini.asList();
+
+    for (int row = 0; row < outerList->size(); ++row)
+    {
+        yarp::os::Value& innerValue = outerList->get(row);
+        if (innerValue.isNull() || !innerValue.isList())
+        {
+            return false;
+        }
+        yarp::os::Bottle *innerList = innerValue.asList();
+        if (!innerList || innerList->size() != 3)
+        {
+            return false;
+        }
+        for (int column = 0; column < innerList->size(); ++column)
+        {
+            matrix(row, column) =  innerList->get(column).asInt32();
+        }
+    }
+
+    return true;
+}
 
 bool RobotSkin::configure(const yarp::os::Searchable& config,
                           const std::string& name,
@@ -62,6 +96,14 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_fingersContactStrength.resize(m_noFingers, 0.0);
     m_fingersContactStrengthDerivate.resize(m_noFingers, 0.0);
     m_fingersContactStrengthDerivateSmoothed.resize(m_noFingers, 0.0);
+
+    if (!m_rightHand)
+    {
+        m_skinMapping.resize(48,3);
+        this->parseMatrix(config, "palm_skin_mapping", m_skinMapping);
+        m_skinMatrix.resize(9,11);
+        m_skinMatrix.setZero();
+    }
 
     // raw tactile sensors
     size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
@@ -813,4 +855,23 @@ bool RobotSkin::setDerivativeThresholdMultiplierAll(const double value)
     }
 
     return true;
+}
+
+const Eigen::MatrixXf& RobotSkin::getPalmSkinMatrix(const yarp::sig::Vector& rawData)
+{
+    for (int i = 0; i < m_skinMapping.rows(); i++)
+    {
+        int row = m_skinMapping(i, 1);
+        int col = m_skinMapping(i, 2);
+        int indexRawData = m_skinMapping(i, 0) + 96;
+        m_skinMapping(row, col) = rawData(indexRawData) / 255.0;
+    }
+
+    return m_skinMatrix;
+}
+
+bool RobotSkin::isPalmSkinActive(const yarp::sig::Vector& rawData)
+{
+    double norm = CtrlHelper::toEigenVector(rawData).segment<48>(96).norm();
+    return norm <= 1630;
 }

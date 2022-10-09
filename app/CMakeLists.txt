@@ -25,5 +25,10 @@ foreach (dir ${subdirs})
   yarp_install(FILES ${scripts} DESTINATION ${YARP_ROBOTS_INSTALL_DIR}/${dir})
 endforeach ()
 
+foreach (dir ${subdirs})
+  file(GLOB scripts robots/${dir}/*.json)
+  yarp_install(FILES ${scripts} DESTINATION ${YARP_ROBOTS_INSTALL_DIR}/${dir})
+endforeach ()
+
 file(GLOB scripts scripts/*.xml)
 yarp_install(FILES ${scripts} DESTINATION ${YARP_APPLICATIONS_INSTALL_DIR})
