@@ -390,15 +390,20 @@ bool Teleoperation::run()
                 }
 
                 const auto result = m_palmSkinNetwork->predict({t});
-
                 const std::vector<float> vec = result[0].to_vector();
                 if (vec[0] > 0.5)
                 {
+                    m_humanGlove->setPalmVibrotactileFeedbackReference(6);
                     std::cerr << "rocks rough" << std::endl;
                 } else
                 {
+                    m_humanGlove->setPalmVibrotactileFeedbackReference(8);
                     std::cerr << "rocks plain" << std::endl;
                 }
+            }
+            else
+            {
+                m_humanGlove->setPalmVibrotactileFeedbackReference(124);
             }
         }
     }
