@@ -101,6 +101,7 @@ class HapticGlove::Retargeting
     std::map<size_t, std::vector<size_t>>
         m_fingerAxesMap; /**< a map showing for each finger which axis of robot is relevant*/
 
+    bool m_useSemanticMap = false; /**< a flag that defines if the robot to human joint map is done using semantic map*/
     // methods
 
     /**
@@ -153,9 +154,9 @@ class HapticGlove::Retargeting
      * the human joints
      * @return true/false in case of success/failure
      */
-    bool semanticMapFromRobotTHuman(const std::vector<std::string>& humanJointNames,
-                                    const std::vector<std::string>& robotJointNames,
-                                    std::map<size_t, size_t>& robotToHumanMap);
+    bool getSemanticMapFromRobotToHuman(const std::vector<std::string>& humanJointNames,
+                                        const std::vector<std::string>& robotJointNames,
+                                        std::map<size_t, size_t>& robotToHumanMap);
 
 public:
     /**
