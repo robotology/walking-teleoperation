@@ -10,8 +10,8 @@
   <authors>
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
-  
-    <module>
+
+  <module>
     <name>AudioRecorderWrapper</name>
     <parameters>--subdevice portaudioRecorder --name /icub/microphone --min_samples_over_network 100 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
     <deployer>yarpdev</deployer>
@@ -41,18 +41,16 @@
 
 
   <!-- Connections -->
-  
-    <connection>
+  <connection>
     <from>/icub-virtualizer/microphone/audio:o</from>
     <to>/icub/speakers/audio:i</to>
-    <protocol>fast_tcp</protocol>
+    <protocol>udp</protocol>
   </connection>
 
   <connection>
     <from>/icub/microphone/audio:o</from>
     <to>/icub-virtualizer/speakers/audio:i</to>
-    <protocol>fast_tcp</protocol>
+    <protocol>udp</protocol>
   </connection>
-
 
 </application>

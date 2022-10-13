@@ -23,6 +23,9 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Searchable.h>
 
+// rpc service
+#include <thrift/RobotSkinService.h>
+
 namespace HapticGlove
 {
 class RobotSkin;
@@ -45,7 +48,9 @@ struct HapticGlove::FingertipTactileData
     bool firstTime = true;
 
     double contactThresholdValue = 5.0; /// default value
+    double contactThresholdMultiplier = 1.0; /// default value
     double contactDerivativeThresholdValue = 3.0; /// default value
+    double contactDerivativeThresholdMultiplier = 1.0; /// default value
 
     double vibrotactileGain = 1.0; /// default value
     double vibrotactileDerivativeGain = 1.0; /// default value
@@ -113,13 +118,14 @@ struct HapticGlove::FingertipTactileData
 
     double contactThreshold()
     {
-        return contactThresholdValue * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
+        return contactThresholdValue 
+               + contactThresholdMultiplier * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     double contactDerivativeThreshold()
     {
         return contactDerivativeThresholdValue
-               * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
+               + contactDerivativeThresholdMultiplier * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
     }
 
     void printInfo() const
@@ -133,7 +139,10 @@ struct HapticGlove::FingertipTactileData
         std::cout << "min tactile threshold: " << minTactileValue << std::endl;
         std::cout << "no load tactile threshold: " << noLoadValue << std::endl;
         std::cout << "contact threshold: " << contactThresholdValue << std::endl;
+        std::cout << "contact threshold multiplier: " << contactThresholdMultiplier << std::endl;
         std::cout << "contact derivative threshold: " << contactDerivativeThresholdValue
+                  << std::endl;
+        std::cout << "contact derivative threshold multiplier: " << contactDerivativeThresholdMultiplier
                   << std::endl;
         std::cout << "vibrotactile gain: " << vibrotactileGain << std::endl;
         std::cout << "==================" << std::endl;
@@ -143,7 +152,7 @@ struct HapticGlove::FingertipTactileData
 /**
  * RobotSkin Class useful to manage the fingertip skin data.
  */
-class HapticGlove::RobotSkin
+class HapticGlove::RobotSkin : RobotSkinService
 {
 private:
     std::string m_logPrefix;
@@ -194,7 +203,12 @@ private:
                                            * absolute and derivative)for providing the vibrotactile
                                            * feedback, the value is between [0, 1]
                                            */
+    // mutex
+    std::mutex m_mutex;
 
+    // RPC port
+    yarp::os::Port m_rpcPort;
+    
     void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
@@ -261,6 +275,34 @@ public:
      * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
      */
     void fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks);
+
+    virtual bool setAbsoluteSkinValuePercentage(const double value) override;
+
+    virtual bool setSkinDerivativeSmoothingGain(const double value) override;
+
+    virtual bool setContactFeedbackGain(const int32_t finger, const double value) override;
+
+    virtual bool setContactFeedbackGainAll(const double value) override;
+
+    virtual bool setDerivativeFeedbackGain(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeFeedbackGainAll(const double value) override;
+
+    virtual bool setContactThreshold(const int32_t finger, const double value) override;
+
+    virtual bool setContactThresholdAll(const double value) override;
+
+    virtual bool setContactThresholdMultiplier(const int32_t finger, const double value) override;
+
+    virtual bool setContactThresholdMultiplierAll(const double value) override;
+
+    virtual bool setDerivativeThreshold(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeThresholdAll(const double value) override;
+
+    virtual bool setDerivativeThresholdMultiplier(const int32_t finger, const double value) override;
+
+    virtual bool setDerivativeThresholdMultiplierAll(const double value) override;
 
     bool close();
 };

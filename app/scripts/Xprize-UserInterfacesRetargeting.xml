@@ -13,22 +13,22 @@
 
   <!-- Variables -->
   <var name="weight_display_prefix">/WeightDisplay</var>
-  <var name="right_hand_wrench_port">/wholeBodyDynamics/right_arm/cartesianEndEffectorWrench:o</var>
-  <var name="left_hand_wrench_port">/wholeBodyDynamics/left_arm/cartesianEndEffectorWrench:o</var>
+  <var name="right_hand_wrench_port">/wholeBodyDynamics/filteredFT/r_arm_ft_sensor</var>
+  <var name="left_hand_wrench_port">/wholeBodyDynamics/filteredFT/l_arm_ft_sensor</var>
   <var name="openxr_weight_label_id">1</var>
-  <var name="openxr_weight_label_port">/joypadDevice/Oculus/label_${openxr_weight_label_id}</var>
+  <var name="openxr_weight_label_port">/headset/label_${openxr_weight_label_id}</var>
 
 
    <!-- Modules -->
    <module>
     <name>yarprobotinterface</name>
-    <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
+    <parameters>--config iFeelSuit.xml --node-list "(1 2 4 5 6 7 8 13 14)" --serial-port-name /dev/ttyACM0</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
     <description>Run iFeelSuit and Multi Haptic driver</description>
     <node>icub-console-gui</node>
     <tag>iFeelSuitMultiHaptic</tag>
   </module>
-  
+
   <module>
     <name>WeightDisplayModule</name>
     <parameters>--from WeightDisplay.ini --period 0.6</parameters>
@@ -42,38 +42,6 @@
     </dependencies>
     <tag>WeightDisplayModule</tag>
   </module>
-  
-  <module>
-    <name>VirtualizerModule</name>
-    <parameters>--use_transform_server true</parameters>
-    <dependencies>
-          <port timeout="15.0">/transformServer/transforms:o</port>
-    </dependencies>
-    <node>icub-virtualizer</node>
-  </module>
-  
-  <module>
-    <name>yarp-openvr-trackers</name>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run openvr vive trackers</description>
-    <node>icub-virtualizer</node>
-    <tag>openvr-trackers</tag>
-  </module>
-  
-  <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config transformServer_to_iwear.xml</parameters>
-    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
-    <description>Run transform server Wearable Device</description>
-    <node>icub-console-gui</node>
-    <tag>transformServerWearableDevice</tag>
-    <dependencies>
-      <port timeout="11.0">/transformServer/transforms:o</port>
-    </dependencies>
-    <ensure>
-      <wait when="start">5.0</wait>
-    </ensure>
-  </module>
 
   <module>
     <name>yarprobotinterface</name>
@@ -83,11 +51,11 @@
     <node>icub-console-gui</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port>
+      <port timeout="10.0">/transformServer/transforms:o</port>
       <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
     </dependencies>
   </module>
-  
+
   <module>
     <name>HumanStateVisualizer</name>
     <parameters>--from HumanStateVisualizer_iCub3_openxr_ifeel.ini</parameters>
@@ -112,20 +80,7 @@
       <port timeout="11.0">/iFeelSuit/WearableActuatorsCommand/input:i</port>
     </dependencies>
   </module>
-  
-  <!-- Connections -->
-  <connection>
-    <from>/SRanipalModule/emotions:o</from>
-    <to>/icub/face/emotions/in</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-  
-  <connection>
-    <from>/SRanipalModule/VR/rpc:o</from>
-    <to>/joypadDevice/Oculus/rpc</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-  
+
   <connection>
     <from>/WeightRetargeting/output:o</from>
     <to>/iFeelSuit/WearableActuatorsCommand/input:i</to>
@@ -134,13 +89,13 @@
 
   <connection>
     <from>${right_hand_wrench_port}</from>
-    <to>${weight_display_prefix}/right_hand:i</to>
+    <to>${weight_display_prefix}/right_hand_ft:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>${left_hand_wrench_port}</from>
-    <to>${weight_display_prefix}/left_hand:i</to>
+    <to>${weight_display_prefix}/left_hand_ft:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

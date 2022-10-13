@@ -1,0 +1,114 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>Xprize-Finals-3</name>
+  <description>Step 3 for the finals.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="riccardo.grieco@iit.it">Riccardo Grieco</author>
+  </authors>
+
+  <!-- Variables -->
+  <var name="weight_display_prefix">/WeightDisplay</var>
+  <var name="openxr_weight_label_port_left">/headset/label_1</var>
+  <var name="openxr_weight_label_port_right">/headset/label_2</var>
+
+  <!-- Modules -->
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config HapticGlove.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run SenseGlove Wearable Device</description>
+    <node>icub-virtualizer</node>
+    <tag>SenseGlove</tag>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="10.0">/transformServer/transforms:o</port>
+      <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>HumanStateVisualizer</name>
+    <parameters>--from HumanStateVisualizer_iCub3_openxr_ifeel.ini</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="15.0">/iCub/RobotStateWrapper/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsWrapper/state:o</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>SRanipalModule</name>
+    <parameters>--skipEyeCalibration --noGaze --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>iFeelWalkingRetargetingModule</name>
+    <parameters>--from iFeelWalkingRetargeting.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  <module>
+    <name>WeightDisplayModule</name>
+    <parameters>--from WeightDisplay.ini --period 0.02</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run weight display application</description>
+    <node>localhost</node>
+    <tag>WeightDisplayModule</tag>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/SRanipalModule/emotions:o</from>
+    <to>/icub/face/emotions/in</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+
+  <connection>
+    <from>/iFeelSuit/WearableData/data:o</from>
+    <to>/iFeelWalking/iFeelShoes:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/linearArrow:o</from>
+    <to>/headset/slide_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/rotationArrow:o</from>
+    <to>/headset/slide_1</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${weight_display_prefix}/left_hand_weight:o</from>
+    <to>${openxr_weight_label_port_left}</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>${weight_display_prefix}/right_hand_weight:o</from>
+    <to>${openxr_weight_label_port_right}</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>

@@ -24,9 +24,6 @@
     <name>WalkingModule</name>
     <node>icub-head</node>
     <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
-    <dependencies>
-          <port timeout="15.0">/yarp-robot-logger/exogenous_signals/walking:i</port>
-    </dependencies>
   </module>
 
   <!--module>
@@ -41,12 +38,11 @@
     </dependencies>
   </module-->
 
-   <module>
-     <name>XsensRetargetingModule</name>
-     <parameters>--from iFeelRetargetingWalking.ini</parameters>
-     <node>icub-console</node>
-   </module>
-
+  <module>
+    <name>iFeelWalkingRetargetingModule</name>
+    <parameters>--from iFeelWalkingRetargeting.ini</parameters>
+    <node>icub-console-gui</node>
+  </module>
 
   <!-- Connections -->
 
@@ -88,13 +84,7 @@
 
   <connection>
     <from>/iCub/RobotStateWrapper/state:o</from>
-    <to>/iFeelRetargeting/HumanStateWrapper/state:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-
-  <connection>
-    <from>/iFeelRetargeting/jointPosition:o</from>
-    <to>/walking-coordinator/jointPosition:i</to>
+    <to>/walking-coordinator/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
@@ -103,5 +93,36 @@
     <to>/walking-coordinator/CoM:i</to>
     <protocol>fast_tcp</protocol>
   </connection-->
+
+  <connection>
+    <from>/iFeelSuit/WearableData/data:o</from>
+    <to>/iFeelWalking/iFeelShoes:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/Wearable/OpenXRTransform/data:o</from>
+    <to>/iFeelWalking/trackerTransform:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/goal:o</from>
+    <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/linearArrow:o</from>
+    <to>/headset/slide_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/rotationArrow:o</from>
+    <to>/headset/slide_1</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
 
 </application>

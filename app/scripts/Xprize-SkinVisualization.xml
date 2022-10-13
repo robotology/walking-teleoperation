@@ -14,8 +14,8 @@
   <var name="left_arm_config">--from left_arm.ini</var>
   <var name="right_arm_config">--from right_arm.ini</var>
 
-   <!-- Modules -->  
-  
+  <!-- Modules -->
+
   <module>
     <name>iCubSkinGui</name>
     <parameters>--from left_hand.ini</parameters>
@@ -29,25 +29,25 @@
   </module>
 
   <!--module>
-    <name>iCubSkinGui</name>
-    <parameters>${left_arm_config}</parameters>
-    <node>localhost</node>
-  </module>
+      <name>iCubSkinGui</name>
+      <parameters>${left_arm_config}</parameters>
+      <node>localhost</node>
+      </module>
 
-  <module>
-    <name>iCubSkinGui</name>
-    <parameters>${left_arm_config}</parameters>
-    <node>localhost</node>
-  </module-->
+<module>
+<name>iCubSkinGui</name>
+<parameters>${left_arm_config}</parameters>
+<node>localhost</node>
+</module-->
 
-  
+
   <!-- Connections -->
   <connection>
     <from>/icub/skin/left_hand</from>
     <to>/skinGui/left_hand:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
-  
+
   <connection>
     <from>/icub/skin/right_hand</from>
     <to>/skinGui/right_hand:i</to>
@@ -55,15 +55,15 @@
   </connection>
 
   <!--connection>
-    <from>/icub/skin/left_arm</from>
-    <to>/skinGui/left_arm:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
-  
-  <connection>
-    <from>/icub/skin/right_arm</from>
-    <to>/skinGui/right_arm:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection-->
-  
+      <from>/icub/skin/left_arm</from>
+      <to>/skinGui/left_arm:i</to>
+      <protocol>fast_tcp</protocol>
+      </connection>
+
+      <connection>
+      <from>/icub/skin/right_arm</from>
+      <to>/skinGui/right_arm:i</to>
+      <protocol>fast_tcp</protocol>
+      </connection-->
+
 </application>

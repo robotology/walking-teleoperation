@@ -14,63 +14,51 @@
   <!-- Modules -->
   <module>
     <name>yarpdev</name>
-    <parameters> --from camera/ServerGrabberDualDragon.ini --split true</parameters>
-    <node>icub-head</node>
-  </module>
-
-  <module>
-    <name>camCalib</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>
-    <node>icub-console</node>
-  </module>
-
-  <module>
-    <name>camCalib</name>
-    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters>
-    <node>icub-console</node>
-  </module>
-
-  <module>
-    <name>yarpdev</name>
     <parameters>--from openXRHeadsetParameters.ini</parameters>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
+    <name>yarpdev</name>
+    <parameters>--from camera/pylonCamera_config_left.ini --period 0.033</parameters>
+    <node>icub-cam-head</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--from camera/pylonCamera_config_right.ini --period 0.033</parameters>
+    <node>icub-cam-head</node>
+  </module>
+
+  <!-- <module> -->
+  <!--   <name>yarp</name> -->
+  <!--   <parameters>repeat /icub/cam/left/repeated</parameters> -->
+  <!--   <node>icub-head</node> -->
+  <!-- </module> -->
+
+  <!-- <module> -->
+  <!--   <name>yarp</name> -->
+  <!--   <parameters>repeat /icub/cam/right/repeated</parameters> -->
+  <!--   <node>icub-head</node> -->
+  <!-- </module> -->
+
+  <module>
      <name>idyntree-yarp-visualizer</name>
      <parameters>--OUTPUT_STREAM::useRGBA true</parameters>
-     <node>icub-console-gui</node>
+     <node>localhost</node>
   </module>
 
   <!-- Connections -->
   <connection>
     <from>/icub/cam/left</from>
-    <to>/icub/camcalib/left/in</to>
+    <to>/headset/display/left:i</to>
     <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/icub/cam/right</from>
-    <to>/icub/camcalib/right/in</to>
+    <to>/headset/display/right:i</to>
     <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/camcalib/left/out</from>
-    <to>/joypadDevice/Oculus/display/left:i</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/icub/camcalib/right/out</from>
-    <to>/joypadDevice/Oculus/display/right:i</to>
-    <protocol>mjpeg</protocol>
-  </connection>
-
-  <connection>
-    <from>/idyntree-yarp-visualizer/image</from>
-    <to>/joypadDevice/Oculus/gui_0</to>
-    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>

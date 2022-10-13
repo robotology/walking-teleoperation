@@ -11,12 +11,12 @@
     <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
-   <!-- Modules -->
-   <module>
-     <name>SRanipalModule</name>
-     <parameters>--forceEyeCalibration --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
-     <node>icub-virtualizer</node>
-   </module>
+  <!-- Modules -->
+  <module>
+    <name>SRanipalModule</name>
+    <parameters>--forceEyeCalibration --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --eyeOpenPrecision 1.8 --eyeMaxVergence 0.0 --gazeDeadzoneMinActivationTime 0.2</parameters>
+    <node>icub-virtualizer</node>
+  </module>
 
   <!-- Connections -->
   <connection>
@@ -24,10 +24,10 @@
     <to>/icub/face/emotions/in</to>
     <protocol>fast_tcp</protocol>
   </connection>
-  
+
   <connection>
     <from>/SRanipalModule/VR/rpc:o</from>
-    <to>/joypadDevice/Oculus/rpc</to>
+    <to>/headset/rpc</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

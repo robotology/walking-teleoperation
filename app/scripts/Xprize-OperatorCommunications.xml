@@ -10,8 +10,8 @@
   <authors>
     <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
   </authors>
-  
-    <module>
+
+  <module>
     <name>AudioRecorderWrapper</name>
     <parameters>--subdevice portaudioRecorder --name /icub-console/operator_microphone --min_samples_over_network 100 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
     <deployer>yarpdev</deployer>
@@ -24,7 +24,7 @@
     <deployer>yarpdev</deployer>
     <node>icub-virtualizer</node>
   </module>
-  
+
   <module>
     <name>AudioPlayerWrapper</name>
     <parameters>--subdevice portaudioPlayer --name /icub-console-gui/speakers --playback_network_buffer_size 0.05 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
@@ -33,8 +33,8 @@
   </module>
 
   <!-- Connections -->
-  
-    <connection>
+
+  <connection>
     <from>/icub-console/operator_microphone/audio:o</from>
     <to>/icub-virtualizer/speakers_operator/audio:i</to>
     <protocol>fast_tcp</protocol>
