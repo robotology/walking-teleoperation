@@ -190,10 +190,29 @@ private:
         m_fingertipRawTactileFeedbacksStdVector; /**< fingertip raw tactile feedbacks, `0`
                                         means high pressure, `255` means low pressure */
 
+    yarp::sig::Vector
+        m_calibratedTactileFeedbacksYarpVector; /**<  calibrated
+                                                        tactile feedbacks, `255` means high
+                                                        pressure, `0` means low pressure */
+    std::vector<double> m_calibratedTactileFeedbacksStdVector; /**<  calibrated
+                                                        tactile feedbacks, `255` means high
+                                                        pressure, `0` means low pressure */
+
     yarp::dev::PolyDriver m_tactileSensorDevice; /**< Analog device for the skin. */
 
     yarp::dev::IAnalogSensor* m_tactileSensorInterface{
         nullptr}; /**< skin ananlog sensor interface */
+
+    yarp::dev::PolyDriver m_tactileCalibratedSensorDevice; /**< Analog device for the skin. */
+
+    yarp::dev::IAnalogSensor* m_tactileCalibratedSensorInterface{
+        nullptr}; /**< skin ananlog sensor interface */
+
+    bool m_useCalibratedSkinForPalm{false};
+    int m_palmSkinIndexOffset{96};
+    int m_numberOfPalmSkinTaxels{48};
+    int m_palmSkinActivationNormRaw{1630};
+    int m_palmSkinActivationNormCalibrated{15};
 
     std::vector<double>
         m_fbParams; /**< # absolute vibrotactile feedback nonlinear function parameters; reference
@@ -226,6 +245,8 @@ private:
     void computeAreFingersInContact();
 
     bool getRawTactileFeedbackFromRobot();
+
+    bool getCalibratedTactileFeedbackFromRobot();
 
     Eigen::MatrixXf m_skinMatrix;
 
@@ -280,6 +301,9 @@ public:
      */
     const yarp::sig::Vector& fingerRawTactileFeedbacks() const;
 
+
+    const yarp::sig::Vector& fingerCalibratedTactileFeedbacks() const;
+
     /**
      * Get the fingertip calibrated tactile feedbacks
      * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
@@ -318,7 +342,13 @@ public:
 
     const Eigen::MatrixXf& getPalmSkinMatrix(const yarp::sig::Vector& rawData);
 
-    bool isPalmSkinActive(const yarp::sig::Vector& rawData);
+    bool isPalmRawSkinActive() const;
+
+    bool isPalmCalibratedSkinActive() const;
+
+    bool isPalmSkinActive() const;
+
+    bool getUseCalibratedSkinForPalm() const;
 };
 
 #endif // ROBOT_SKIN_HPP
