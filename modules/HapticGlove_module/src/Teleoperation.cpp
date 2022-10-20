@@ -11,6 +11,7 @@
 #include <Logger.hpp>
 #include <Teleoperation.hpp>
 #include <memory>
+#include <yarp/sig/Vector.h>
 
 // std
 #include <cmath>
@@ -364,10 +365,15 @@ bool Teleoperation::run()
         // create fdeep::tensor with its own memory
         if (m_palmSkinNetworkLoaded)
         {
-            if (m_robotSkin->isPalmSkinActive(m_robotSkin->fingerRawTactileFeedbacks()))
+            if (m_robotSkin->isPalmSkinActive())
             {
+                const yarp::sig::Vector& skinData
+                    = m_robotSkin->getUseCalibratedSkinForPalm()
+                          ? m_robotSkin->fingerCalibratedTactileFeedbacks()
+                          : m_robotSkin->fingerRawTactileFeedbacks();
+
                 const Eigen::MatrixXf& matrix
-                    = m_robotSkin->getPalmSkinMatrix(m_robotSkin->fingerRawTactileFeedbacks());
+                    = m_robotSkin->getPalmSkinMatrix(skinData);
 
                 const int tensor_channels = 1;
                 const int tensor_rows = matrix.rows();
@@ -398,10 +404,9 @@ bool Teleoperation::run()
                     m_humanGlove->setPalmVibrotactileFeedbackReference(118);
                     std::cerr << "rocks plain" << std::endl;
                 }
-            }
-            else
+            } else
             {
-              std::cerr << "no rocks" << std::endl;
+                std::cerr << "no rocks" << std::endl;
                 m_humanGlove->setPalmVibrotactileFeedbackReference(124);
             }
         }
