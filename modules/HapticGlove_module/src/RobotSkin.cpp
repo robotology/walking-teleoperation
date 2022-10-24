@@ -867,7 +867,7 @@ const Eigen::MatrixXf& RobotSkin::getPalmSkinMatrix(const yarp::sig::Vector& raw
         int row = m_skinMapping(i, 1);
         int col = m_skinMapping(i, 2);
         int indexRawData = m_skinMapping(i, 0) + 96;
-        m_skinMapping(row, col) = rawData(indexRawData) / 255.0;
+        m_skinMatrix(row, col) = rawData(indexRawData) / 255.0;
     }
 
     return m_skinMatrix;
