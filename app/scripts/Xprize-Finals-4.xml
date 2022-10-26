@@ -19,12 +19,6 @@
   <var name="openxr_weight_label_port">/headset/label_${openxr_weight_label_id}</var>
 
   <module>
-    <name>skinManager</name>
-    <node>icub-head</node>
-    <parameters>--from skinManAll.ini --context skinGui</parameters>
-  </module>
-
-  <module>
     <name>HapticGloveModule</name>
     <node>icub-head</node>
     <dependencies>
