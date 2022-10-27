@@ -13,7 +13,7 @@
   <module>
     <name>skinManager</name>
     <node>icub-head</node>
-    <parameters>--from skinManAll.ini --context skinGui</parameters>
+    <parameters>--context skinManager --find skinCompensation.ini</parameters>
   </module>
 
 </application>
