@@ -13,6 +13,7 @@
 #include <EyelidsRetargeting.hpp>
 #include <FaceExpressionsRetargeting.hpp>
 #include <GazeRetargeting.hpp>
+#include <VRInterface.hpp>
 #include <yarp/os/BufferedPort.h> /** Needed to open the input port. **/
 #include <yarp/os/RFModule.h> /** We inherit from this. **/
 #include <yarp/sig/Image.h> /** To send the lip image. **/
@@ -20,6 +21,7 @@
 #include <mutex> /** For mutex and lock_guard. **/
 #include <string> /** For string. **/
 #include <unordered_map>
+#include <memory>
 
 class SRanipalModule : public yarp::os::RFModule
 {
@@ -28,6 +30,8 @@ class SRanipalModule : public yarp::os::RFModule
     EyelidsRetargeting m_eyelidsRetargeting;
     FaceExpressionsRetargeting m_faceExpressions;
     GazeRetargeting m_gazeRetargeting;
+
+    std::shared_ptr<VRInterface> m_VRInterface{nullptr};
 
     bool m_useEyebrows;
     bool m_useLip;

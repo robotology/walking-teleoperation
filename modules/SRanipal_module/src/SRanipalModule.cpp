@@ -47,9 +47,18 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     if (m_useEyebrows || m_useEyelids || m_useGaze)
     {
 
+        m_VRInterface = std::make_shared<VRInterface>();
+
+        if (!m_VRInterface->configure(rf))
+        {
+            yError() << "[SRanipalModule::configure] Failed to configure VR interface.";
+            return false;
+        }
+
+
         if (m_useGaze)
         {
-            if (!m_gazeRetargeting.configure(rf))
+            if (!m_gazeRetargeting.configure(rf, m_VRInterface))
             {
                 yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
                 return false;
@@ -206,6 +215,11 @@ bool SRanipalModule::close()
     m_eyelidsRetargeting.close();
     m_gazeRetargeting.close();
     m_faceExpressions.close();
+    if (m_VRInterface)
+    {
+        m_VRInterface->close();
+        m_VRInterface = nullptr;
+    }
     m_lipImagePort.close();
     yInfo() << "Closing";
     return true;
