@@ -352,4 +352,5 @@ void GazeRetargeting::close()
     m_eyesMode = nullptr;
     m_eyesEnc = nullptr;
     m_configured = false;
+    m_VRInterface = nullptr;
 }

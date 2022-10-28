@@ -234,6 +234,50 @@ bool VRInterface::computeDesiredRobotEyeVelocities(const iDynTree::Axis &operato
     return true;
 }
 
+bool VRInterface::setGUIEnabled(int index, bool enabled)
+{
+    if (!m_isActive)
+    {
+        yInfo() << "[VRInterface::setGUIEnabled] The VR interface is not active yet.";
+        return false;
+    }
+
+    yarp::os::Bottle cmd, reply;
+    cmd.addString("setGUIEnabled");
+    cmd.addInt32(index);
+    cmd.add(yarp::os::Value(enabled));
+    bool okWrite = m_VRDeviceRPCOutputPort.write(cmd, reply);
+    yDebug() << "[VRInterface::setGUIEnabled] Sent the following command to RPC:"
+             << cmd.toString();
+
+    if (!okWrite || reply.size() == 0)
+    {
+        yDebug()
+            << "[VRInterface::setGUIEnabled] Failed to get an answer. (okWrite ="
+            << okWrite << "reply.size()" << reply.size();
+        return false;
+    }
+
+    yDebug() << "[VRInterface::setGUIEnabled] Received answer:" << reply.toString();
+
+    yarp::os::Value value = reply.get(0);
+
+    if (value.isVocab32())
+    {
+        return yarp::os::Vocab32::decode(value.asVocab32()).find("ok") != std::string::npos;
+    }
+    else if (value.isBool())
+    {
+        return value.asBool();
+    }
+    else if (value.isString())
+    {
+        return value.asString().find("ok") != std::string::npos;
+    }
+
+    return false;
+}
+
 bool VRInterface::isActive()
 {
     if (m_isActive)
@@ -342,7 +386,7 @@ bool VRInterface::isActive()
 
     m_isActive = true;
 
-    yInfo() << "[VRInterface::isActive] Gaze retargeting ready!";
+    yInfo() << "[VRInterface::isActive] VRInterface ready!";
 
     return true;;
 }

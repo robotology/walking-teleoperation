@@ -72,6 +72,7 @@ For these reasons, this functionality is available only when using the [``yarp-d
 
 #### Ports to connect
 - ``/SRanipalModule/VR/rpc:o`` (**note**, the name of the port may change according to the ``name`` and ``VRDeviceRPCOutputPortName`` input parameters) to ``/OpenXrHeadset/rpc`` (**note**, the name of the port may change according to the configuration of the ``yarp-device-openxrheadset`` device).
+This port needs to be connected in order to use the ``AdvancedJoypad`` features.
 
 ## Optional parameters
 The following optional parameters can be inserted after calling with module, each of them preceded by a ``--``, e.g. ``--parameterName value``.
@@ -133,6 +134,13 @@ The following optional parameters can be inserted after calling with module, eac
 - ``headControlBoardName``, the name of the robot head control board. This control board should contain the version, vergence and tilt joints. Default ``head``.
 
 - ``VRDeviceRPCOutputPortName``, the suffix of the port used to connect to the ``yarp-device-openxrheadset`` RPC port. Default ``/VR/rpc:o``.
+
+## Advanced joypad
+- ``blinkToDisableGUIs``, the list of GUIs to disable when closing the eyes for a period longer than ``blinkDurationTrigger``. Example of usage ``--blinkToDisableGUIs "(0, 1)"``.
+
+- ``blinkDurationTrigger``, minimum time to keep the eyes closed in order to trigger the disabling of GUIs. Default value: 2.0 (the value is in seconds).
+
+- ``blinkTriggerValue``, value to consider the eyes closed. Default value: 0.1.
 
 ## Common issues
 - The ``SRanipal_SDK`` sports an useful example to test the face detection system without running this module. In particular, you can run the ``FaceGym.exe`` application in the ``SDK/02_Unity/FaceGym`` folder.

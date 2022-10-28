@@ -22,6 +22,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     m_useLip = !rf.check("noLip") || (!rf.find("noLip").isNull() && !rf.find("noLip").asBool()); //True if noLip is not set or set to false
     m_useEyelids = !rf.check("noEyelids") || (!rf.find("noEyelids").isNull() && !rf.find("noEyelids").asBool()); //True if noEyelids is not set or set to false
     m_useGaze = !rf.check("noGaze") || (!rf.find("noGaze").isNull() && !rf.find("noGaze").asBool()); // True if noGaze is not set or set to false
+    m_useAdvancedJoypad = m_advancedJoypad.enabled(rf);
 
     double defaultPeriod = 0.1;
 
@@ -44,9 +45,8 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         }
     }
 
-    if (m_useEyebrows || m_useEyelids || m_useGaze)
+    if (m_useGaze || m_useAdvancedJoypad)
     {
-
         m_VRInterface = std::make_shared<VRInterface>();
 
         if (!m_VRInterface->configure(rf))
@@ -54,23 +54,10 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             yError() << "[SRanipalModule::configure] Failed to configure VR interface.";
             return false;
         }
+    }
 
-
-        if (m_useGaze)
-        {
-            if (!m_gazeRetargeting.configure(rf, m_VRInterface))
-            {
-                yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
-                return false;
-            }
-
-            defaultPeriod = 0.01; // Since we use velocity control for the gaze, we use faster loops
-            yInfo() << "[SRanipalModule::configure] Controlling the gaze.";
-        } else
-        {
-            yInfo() << "[SRanipalModule::configure] Skipping gaze control.";
-        }
-
+    if (m_useEyebrows || m_useEyelids || m_useGaze || m_useAdvancedJoypad)
+    {
         if (m_useEyelids)
         {
             if (!m_eyelidsRetargeting.configure(rf))
@@ -88,6 +75,36 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         else
         {
             yInfo() << "[SRanipalModule::configure] Skipping eyelids control.";
+        }
+
+        if (m_useGaze)
+        {
+            if (!m_gazeRetargeting.configure(rf, m_VRInterface))
+            {
+                yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
+            return false;
+            }
+
+            defaultPeriod = 0.01; //Since we use velocity control for the gaze, we use faster loops
+            yInfo() << "[SRanipalModule::configure] Controlling the gaze.";
+        }
+        else
+        {
+            yInfo() << "[SRanipalModule::configure] Skipping gaze control.";
+        }
+
+        if (m_useAdvancedJoypad)
+        {
+            if (!m_advancedJoypad.configure(rf, m_VRInterface))
+            {
+                yError() << "[SRanipalModule::configure] Failed to configure the advanced joypad.";
+                return false;
+            }
+            yInfo() << "[SRanipalModule::configure] Using the advanced joypad.";
+        }
+        else
+        {
+            yInfo() << "[SRanipalModule::configure] Skipping advanced joypad.";
         }
 
         if (!m_sranipalInterface.initializeEyeEngine())
@@ -119,7 +136,7 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
 
     m_period = rf.check("period", yarp::os::Value(defaultPeriod)).asFloat64();
 
-    if (m_useEyebrows || m_useEyelids || m_useGaze) //Run the eye calibration as last thing
+    if (m_useEyebrows || m_useEyelids || m_useGaze || m_useAdvancedJoypad) //Run the eye calibration as last thing
     {
         bool skipEyeCalibration = rf.check("skipEyeCalibration") && (rf.find("skipEyeCalibration").isNull() || rf.find("skipEyeCalibration").asBool());
         bool forceEyeCalibration = rf.check("forceEyeCalibration") && (rf.find("forceEyeCalibration").isNull() || rf.find("forceEyeCalibration").asBool());
@@ -163,7 +180,7 @@ bool SRanipalModule::updateModule()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
-    if ((m_useEyebrows || m_useEyelids || m_useGaze) && m_sranipalInterface.updateEyeData()) {
+    if ((m_useEyebrows || m_useEyelids || m_useGaze || m_useAdvancedJoypad) && m_sranipalInterface.updateEyeData()) {
 
         double eyeWideness{0.0};
         if (m_useEyebrows && m_sranipalInterface.getEyeWideness(eyeWideness))
@@ -172,9 +189,17 @@ bool SRanipalModule::updateModule()
         }
 
         double eye_openness;
-        if (m_useEyelids && m_sranipalInterface.getEyeOpenness(eye_openness))
+        if ((m_useEyelids || m_useAdvancedJoypad) && m_sranipalInterface.getEyeOpenness(eye_openness))
         {
-            m_eyelidsRetargeting.setDesiredEyeOpennes(eye_openness);
+            if (m_useEyelids)
+            {
+                m_eyelidsRetargeting.setDesiredEyeOpennes(eye_openness);
+            }
+
+            if (m_useAdvancedJoypad)
+            {
+                m_advancedJoypad.setEyeOpenness(eye_openness);
+            }
         }
 
         iDynTree::Axis leftGaze, rightGaze;
@@ -192,6 +217,11 @@ bool SRanipalModule::updateModule()
     if (m_useGaze)
     {
         m_gazeRetargeting.update();
+    }
+
+    if (m_useAdvancedJoypad)
+    {
+        m_advancedJoypad.update();
     }
 
     SRanipalInterface::LipExpressions lipExpressions;
@@ -215,6 +245,7 @@ bool SRanipalModule::close()
     m_eyelidsRetargeting.close();
     m_gazeRetargeting.close();
     m_faceExpressions.close();
+    m_advancedJoypad.close();
     if (m_VRInterface)
     {
         m_VRInterface->close();

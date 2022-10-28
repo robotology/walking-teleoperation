@@ -68,6 +68,8 @@ public:
     bool computeDesiredRobotEyeVelocities(const iDynTree::Axis& operatorLeftEyeGaze, const iDynTree::Axis& operatorRightEyeGaze,
                                           double& vergenceSpeedInRadS, double& versionSpeedInRadS, double& tiltSpeedInRadS);
 
+    bool setGUIEnabled(int index, bool enabled);
+
     bool isActive();
 
     void close();
