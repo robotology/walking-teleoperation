@@ -533,9 +533,9 @@ void RobotSkin::computeAreFingersInContact()
         m_areFingersInContact[i] = m_fingersContactStrength[i]
                                    > m_fingersTactileData[i].contactThreshold();
 
-        // Update the timer only if the same taxel is causing the contact
+        // Update the timer when the finger was already in contact
         if (m_areFingersInContact[i] &&
-            m_fingersLastElementInContact[i] == m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement()) {
+            m_fingersLastElementInContact[i] != -1) {
             m_fingersInContactTimer[i] += m_samplingTime;
         }
         else {
@@ -544,7 +544,7 @@ void RobotSkin::computeAreFingersInContact()
         }
 
         // If a taxel is causing the activation for longer then the given time, the sensor bias is increased.
-        if (m_fingersInContactTimer[i] > 2.0) { // TODO: move to a parameter
+        if (m_fingersInContactTimer[i] > 1.0) { // TODO: move to a parameter
             m_fingersTactileData[i].isFingerContactEnabled = false;
         }
 
