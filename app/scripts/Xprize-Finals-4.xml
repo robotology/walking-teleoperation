@@ -21,10 +21,6 @@
   <module>
     <name>HapticGloveModule</name>
     <node>icub-head</node>
-    <dependencies>
-      <port timeout="5.0">/icub/skin/left_hand_calib</port>
-      <port timeout="5.0">/icub/skin/right_hand_calib</port>
-    </dependencies>
   </module>
 
   <module>
