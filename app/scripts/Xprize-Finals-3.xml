@@ -100,6 +100,12 @@
   </connection>
 
   <connection>
+    <from>/iFeelWalking/distanceFromCenter:o</from>
+    <to>/headset/label_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
     <from>${weight_display_prefix}/left_hand_weight:o</from>
     <to>${openxr_weight_label_port_left}</to>
     <protocol>fast_tcp</protocol>
