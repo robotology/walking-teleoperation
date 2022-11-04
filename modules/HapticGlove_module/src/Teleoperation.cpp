@@ -398,16 +398,15 @@ bool Teleoperation::run()
                 const std::vector<float> vec = result[0].to_vector();
                 if (vec[0] > 0.5)
                 {
-                    m_humanGlove->setPalmVibrotactileFeedbackReference(8);
-                    std::cerr << "rocks rough" << std::endl;
+                    m_humanGlove->setPalmVibrotactileFeedbackReference(7);
+                    std::cerr << "rock rough" << std::endl;
                 } else
                 {
                     m_humanGlove->setPalmVibrotactileFeedbackReference(118);
-                    std::cerr << "rocks plain" << std::endl;
+                    std::cerr << "rock plain" << std::endl;
                 }
             } else
             {
-                std::cerr << "no rocks" << std::endl;
                 m_humanGlove->setPalmVibrotactileFeedbackReference(124);
             }
         }

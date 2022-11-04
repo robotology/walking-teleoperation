@@ -203,11 +203,13 @@ private:
     yarp::dev::IAnalogSensor* m_tactileSensorInterface{
         nullptr}; /**< skin ananlog sensor interface */
 
-    yarp::dev::PolyDriver m_tactileCalibratedSensorDevice; /**< Analog device for the skin. */
+    // yarp::dev::PolyDriver m_tactileCalibratedSensorDevice; /**< Analog device for the skin. */
 
-    yarp::dev::IAnalogSensor* m_tactileCalibratedSensorInterface{
-        nullptr}; /**< skin ananlog sensor interface */
-
+    // yarp::dev::IAnalogSensor* m_tactileCalibratedSensorInterface{
+    //     nullptr}; /**< skin ananlog sensor interface */
+    yarp::os::BufferedPort<yarp::sig::Vector> m_tactileCalibratedSensorPort;
+    bool m_isTactileCalibrateConnected{false};
+  
     bool m_useCalibratedSkinForPalm{false};
     int m_palmSkinIndexOffset{96};
     int m_numberOfPalmSkinTaxels{48};
