@@ -334,6 +334,7 @@ bool GloveWearableImpl::getFingertipPoseValues(Eigen::MatrixXd& values)
 
 bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& values)
 {
+    return true;
     if (values.size() != m_numForceFeedback)
     {
         yError() << m_logPrefix
@@ -362,6 +363,7 @@ bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& 
 
 bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& values)
 {
+    return true;
     if (values.size() != m_numVibrotactileFeedback)
     {
         yError()
