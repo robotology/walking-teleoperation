@@ -62,10 +62,10 @@ bool RobotController::configure(const yarp::os::Searchable& config,
 
     if (m_axesJointsCoupled)
     {
-        m_A.resize(m_numActuatedJoints, m_numActuatedAxis);
-        m_Bias.resize(m_numActuatedJoints, 1);
+        m_A = Eigen::MatrixXd::Identity(m_numActuatedAxis, m_numActuatedAxis);
+        m_Bias = Eigen::MatrixXd::Zero(m_numActuatedJoints, 1);
 
-        if (!m_doCalibration)
+        if (false && !m_doCalibration)
         {
             if (m_numActuatedAxis != m_numAllAxis && m_numActuatedJoints != m_numAllJoints)
             {
@@ -77,8 +77,7 @@ bool RobotController::configure(const yarp::os::Searchable& config,
                 return false;
             }
             std::vector<double> A_vector, Bias_vector;
-            A_vector.resize(m_numActuatedJoints * m_numActuatedAxis);
-            Bias_vector.resize(m_numActuatedJoints);
+            
             if (!YarpHelper::getVectorFromSearchable(config, "CouplingMatrix", A_vector))
             {
                 yError() << m_logPrefix
@@ -117,11 +116,6 @@ bool RobotController::configure(const yarp::os::Searchable& config,
                 m_Bias(i) = Bias_vector[i];
             }
         }
-    } else
-    {
-        // if not coupled., the mapping between the motors and joints are identity matrix
-        m_A = Eigen::MatrixXd::Identity(m_numActuatedAxis, m_numActuatedAxis);
-        m_Bias = Eigen::MatrixXd::Zero(m_numActuatedJoints, 1);
     }
 
     // get control  gains from configuration files
