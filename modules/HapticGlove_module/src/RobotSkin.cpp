@@ -130,6 +130,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         return false;
     }
 
+    
     const bool connectToCalibratedSkin
         = config.check("connect_to_calibrated_skin", yarp::os::Value(0)).asBool();
 
@@ -145,27 +146,39 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
 
         yarp::os::Property optionsCalibratedTactileDevice;
 
-        optionsCalibratedTactileDevice.put("robot", robot.c_str());
-        optionsCalibratedTactileDevice.put("device", "analogsensorclient");
-        optionsCalibratedTactileDevice.put(
-            "local", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in");
-        optionsCalibratedTactileDevice.put(
-            "remote", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard);
-
-        if (!m_tactileCalibratedSensorDevice.open(optionsCalibratedTactileDevice))
-        {
+	std::string portName = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in";
+	std::string remotePortName = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard;
+	
+        // optionsCalibratedTactileDevice.put("robot", robot.c_str());
+        // optionsCalibratedTactileDevice.put("device", "analogsensorclient");
+        // optionsCalibratedTactileDevice.put(
+        //     "local", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in");
+        // optionsCalibratedTactileDevice.put(
+        //     "remote", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard);
+	
+	if(!m_tactileCalibratedSensorPort.open(portName))
+	  {
             yError() << m_logPrefix
                      << "could not open analogSensorClient object for the calibrated robot skin.";
             return false;
-        }
+	  }
 
-        if (!m_tactileCalibratedSensorDevice.view(m_tactileCalibratedSensorInterface)
-            || !m_tactileCalibratedSensorInterface)
-        {
+	if(!yarp::os::Network::connect(remotePortName, portName))
+	  {
             yError() << m_logPrefix
-                     << "cannot obtain IAnalogSensor interface for the calibrated robot skin";
+                     << "could not open analogSensorClient object for the calibrated robot skin.";
             return false;
-        }
+	  }
+
+	m_isTactileCalibrateConnected = true;
+	
+        // if (!m_tactileCalibratedSensorDevice.view(m_tactileCalibratedSensorInterface)
+        //     || !m_tactileCalibratedSensorInterface)
+        // {
+        //     yError() << m_logPrefix
+        //              << "cannot obtain IAnalogSensor interface for the calibrated robot skin";
+        //     return false;
+        // }
     }
 
     if (!m_rightHand)
@@ -495,16 +508,15 @@ bool RobotSkin::getRawTactileFeedbackFromRobot()
 
 bool RobotSkin::getCalibratedTactileFeedbackFromRobot()
 {
-    if (m_tactileCalibratedSensorInterface != nullptr)
+    if (m_isTactileCalibrateConnected)
     {
-        if (!(m_tactileCalibratedSensorInterface->read(m_calibratedTactileFeedbacksYarpVector)
-              == yarp::dev::IAnalogSensor::AS_OK))
-        {
-            yWarning() << m_logPrefix << "Unable to get calibrated tactile sensor data.";
-        }
-
+      yarp::sig::Vector* tmp = m_tactileCalibratedSensorPort.read(false);
+      if (tmp != nullptr)
+	{
+	  m_calibratedTactileFeedbacksYarpVector = *tmp;
         CtrlHelper::toStdVector(m_calibratedTactileFeedbacksYarpVector,
                                 m_calibratedTactileFeedbacksStdVector);
+	}
     }
     return true;
 }
@@ -724,17 +736,18 @@ bool RobotSkin::close()
     }
     m_tactileSensorInterface = nullptr;
 
-    if (m_tactileCalibratedSensorDevice.isValid())
-    {
-        if (!m_tactileCalibratedSensorDevice.close())
-        {
-            yWarning() << m_logPrefix
-                       << "Unable to close the tactile sensor analogsensorclient device.";
-            ok &= false;
-        }
-        m_tactileCalibratedSensorInterface = nullptr;
-    }
+    // if (m_tactileCalibratedSensorDevice.isValid())
+    // {
+    //     if (!m_tactileCalibratedSensorDevice.close())
+    //     {
+    //         yWarning() << m_logPrefix
+    //                    << "Unable to close the tactile sensor analogsensorclient device.";
+    //         ok &= false;
+    //     }
+    //     m_tactileCalibratedSensorInterface = nullptr;
+    // }
 
+    m_tactileCalibratedSensorPort.close();
     m_rpcPort.close();
 
     yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
