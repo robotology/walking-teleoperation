@@ -20,13 +20,13 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--from camera/pylonCamera_config_left_hd.ini --period 0.05 --width 1280 --height 952</parameters>
+    <parameters>--from camera/pylonCamera_config_left.ini --period 0.1 --width 800 --height 600</parameters>
     <node>icub-cam-head</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters>--from camera/pylonCamera_config_right_hd.ini --period 0.05 --width 1280 --height 952</parameters>
+    <parameters>--from camera/pylonCamera_config_right.ini --period 0.1 --width 800 --height 600</parameters>
     <node>icub-cam-head</node>
   </module>
 
