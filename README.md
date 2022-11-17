@@ -108,3 +108,8 @@ at your option.
 
 
 **To get the updated information about the dependencies branches and how to run, please check the wiki page of this repository.**
+
+## Mantainers
+
+* Stefano Dafarra ([@S-Dafarra](https://github.com/S-Dafarra))
+* Giulio Romualdi ([@GiulioRomualdi](https://github.com/GiulioRomualdi))
