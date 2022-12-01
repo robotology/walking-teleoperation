@@ -1,0 +1,19 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Giulio Romualdi <giulio.romualdi@iit.it> -->
+
+<application>
+  <name>Xprize-SkinUtils</name>
+  <description>SkinUtils for the finals.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
+  </authors>
+
+  <module>
+    <name>skinManager</name>
+    <node>icub-head</node>
+    <parameters>--context skinManager --from skinCompensation.ini</parameters>
+  </module>
+
+</application>
