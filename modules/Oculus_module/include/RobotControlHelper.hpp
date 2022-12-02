@@ -21,7 +21,7 @@
 #include <yarp/dev/IPositionDirect.h>
 #include <yarp/dev/IVelocityControl.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/PreciselyTimed.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/sig/Vector.h>
 
