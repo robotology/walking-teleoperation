@@ -157,9 +157,9 @@ bool FaceExpressionsRetargetingModule::updateModule()
             m_state="neu";
 
         yarp::os::Bottle cmd, reply;
-        cmd.addVocab(yarp::os::Vocab::encode("set"));
-        cmd.addVocab(yarp::os::Vocab::encode("mou"));
-        cmd.addVocab(yarp::os::Vocab::encode(m_state));
+        cmd.addVocab32(yarp::os::Vocab32::encode("set"));
+        cmd.addVocab32(yarp::os::Vocab32::encode("mou"));
+        cmd.addVocab32(yarp::os::Vocab32::encode(m_state));
         m_emotionsOutputPort.write(cmd,reply);
 
     }
