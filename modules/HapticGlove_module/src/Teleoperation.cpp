@@ -9,7 +9,6 @@
 #include <Logger.hpp>
 #include <Teleoperation.hpp>
 
-#define _USE_MATH_DEFINES // for C++
 // std
 #include <cmath>
 // yarp
@@ -32,7 +31,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
                               const bool& rightHand)
 {
     m_logPrefix += rightHand ? "RightHand:: " : "LeftHand:: ";
-    
+
     std::string portPrefix = "/";
     portPrefix += rightHand ? "RightHand" : "LeftHand";
 
