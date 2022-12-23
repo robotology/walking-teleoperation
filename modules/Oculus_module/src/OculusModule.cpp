@@ -1085,7 +1085,7 @@ bool OculusModule::updateModule()
         // get the transformation form the oculus
         if (!getTransforms())
         {
-            yError() << "[OculusModule::updateModule] Unable to get the transforms. Skipping iteration.";
+            yWarning() << "[OculusModule::updateModule] Unable to get the transforms. Skipping iteration.";
             return true;
         }
 
