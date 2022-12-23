@@ -34,11 +34,32 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
         yInfo() << "[SRanipalModule::configure] Skipping eyebrows control.";
     }
 
+    if (m_useEyebrows || m_useLip)
+    {
+        if (!m_faceExpressions.configure(rf))
+        {
+            yError()
+                << "[SRanipalModule::configure] Failed to initialize face expression retargeting.";
+            return false;
+        }
+    }
+
     if (m_useEyebrows || m_useEyelids || m_useGaze)
     {
-        if (!m_sranipalInterface.initializeEyeEngine())
+
+        if (m_useGaze)
         {
-            return false;
+            if (!m_gazeRetargeting.configure(rf))
+            {
+                yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
+                return false;
+            }
+
+            defaultPeriod = 0.01; // Since we use velocity control for the gaze, we use faster loops
+            yInfo() << "[SRanipalModule::configure] Controlling the gaze.";
+        } else
+        {
+            yInfo() << "[SRanipalModule::configure] Skipping gaze control.";
         }
 
         if (m_useEyelids)
@@ -60,20 +81,9 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
             yInfo() << "[SRanipalModule::configure] Skipping eyelids control.";
         }
 
-        if (m_useGaze)
+        if (!m_sranipalInterface.initializeEyeEngine())
         {
-            if (!m_gazeRetargeting.configure(rf))
-            {
-                yError() << "[SRanipalModule::configure] Failed to configure the gaze retargeting.";
-                return false;
-            }
-
-            defaultPeriod = 0.01; //Since we use velocity control for the gaze, we use faster loops
-            yInfo() << "[SRanipalModule::configure] Controlling the gaze.";
-        }
-        else
-        {
-            yInfo() << "[SRanipalModule::configure] Skipping gaze control.";
+            return false;
         }
     }
 
@@ -96,15 +106,6 @@ bool SRanipalModule::configure(yarp::os::ResourceFinder &rf)
     else
     {
         yInfo() << "[SRanipalModule::configure] Skipping lip control.";
-    }
-
-    if (m_useEyebrows || m_useLip)
-    {
-        if (!m_faceExpressions.configure(rf))
-        {
-            yError() << "[SRanipalModule::configure] Failed to initialize face expression retargeting.";
-            return false;
-        }
     }
 
     m_period = rf.check("period", yarp::os::Value(defaultPeriod)).asFloat64();

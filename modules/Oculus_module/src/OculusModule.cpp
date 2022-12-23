@@ -288,6 +288,86 @@ bool OculusModule::resetCamera(const std::string& cameraPort, const std::string&
     return true;
 };
 
+bool OculusModule::setCameraAutoMode(const std::string& cameraPort, const std::string& localPort)
+{
+    yarp::dev::PolyDriver grabberDriver;
+
+    yarp::os::Property config;
+    config.put("device", "remote_grabber");
+    config.put("remote", cameraPort);
+    config.put("local", localPort);
+
+    bool opened = grabberDriver.open(config);
+    if (!opened)
+    {
+        yError() << "[OculusModule::configure] Cannot open remote_grabber device on port "
+                 << cameraPort << ".";
+        return false;
+    }
+
+    yarp::dev::IFrameGrabberControls* grabberInterface;
+
+    if (!grabberDriver.view(grabberInterface) || !grabberInterface)
+    {
+        yError() << "[OculusModule::configure] RemoteGrabber does not have "
+                    "IFrameGrabberControls interface.";
+        return false;
+    }
+
+    auto setAuto = [grabberInterface, &cameraPort](cameraFeature_id_t feature, const std::string& featureName) -> bool
+    {
+        bool hasFeature = false;
+        bool hasAuto = false;
+        grabberInterface->hasFeature(feature, &hasFeature);
+        grabberInterface->hasAuto(feature, &hasAuto);
+
+        if (!hasFeature || !hasAuto)
+        {
+            yWarning() << "[OculusModule::configure] Cannot set AUTO to" << featureName << "on" << cameraPort
+                       << ".";
+              return true;
+        }
+
+        if (!grabberInterface->setActive(feature, true))
+        {
+            yError() << "[OculusModule::configure] Failed to set AUTO" << featureName << "on"
+                     << cameraPort << ".";
+            return false;
+        }
+
+        if (!grabberInterface->setMode(feature, FeatureMode::MODE_AUTO))
+        {
+            yError() << "[OculusModule::configure] Failed to set AUTO" << featureName << "on" << cameraPort
+                     << ".";
+            return false;
+        }
+
+        return true;
+    };
+
+    std::initializer_list<std::pair<cameraFeature_id_t, std::string>> features =
+    {{cameraFeature_id_t::YARP_FEATURE_SHUTTER, "shutter"},
+     {cameraFeature_id_t::YARP_FEATURE_BRIGHTNESS, "brightness"},
+     {cameraFeature_id_t::YARP_FEATURE_GAIN, "gain"},
+     {cameraFeature_id_t::YARP_FEATURE_EXPOSURE, "exposure"},
+     {cameraFeature_id_t::YARP_FEATURE_WHITE_BALANCE, "white balance"},
+     {cameraFeature_id_t::YARP_FEATURE_SHARPNESS, "sharpness"},
+     {cameraFeature_id_t::YARP_FEATURE_SATURATION, "saturation"},
+    };
+
+    for (auto& feat : features)
+    {
+        if (!setAuto(feat.first, feat.second))
+        {
+            return false;
+        }
+    }
+
+    grabberDriver.close();
+
+    return true;
+};
+
 bool OculusModule::configureOculus(const yarp::os::Searchable& config)
 {
     if (!configureTranformClient(config))
@@ -531,7 +611,12 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     // Reset the cameras if necessary
     bool resetCameras = generalOptions.check("resetCameras", yarp::os::Value(false)).asBool();
     yInfo() << "[OculusModule::configure] Reset camera: " << resetCameras;
-    if (resetCameras)
+
+    // Reset the cameras if necessary
+    bool setCamerasAutoMode = generalOptions.check("setCamerasAutoMode", yarp::os::Value(false)).asBool();
+    yInfo() << "[OculusModule::configure] Set cameras auto mode: " << setCamerasAutoMode;
+
+    if (resetCameras || setCamerasAutoMode)
     {
 
         std::string leftCameraPort, rightCameraPort;
@@ -550,21 +635,58 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
             return false;
         }
 
-        if (!resetCamera(leftCameraPort, "/walking-teleoperation/camera-reset/left"))
+        if (resetCameras)
         {
-            yError() << "[OculusModule::configure] Failed to reset left camera.";
-            return false;
+            if (!resetCamera(leftCameraPort, "/walking-teleoperation/camera-reset/left"))
+            {
+                yError() << "[OculusModule::configure] Failed to reset left camera.";
+                return false;
+            }
+
+            if (!resetCamera(rightCameraPort, "/walking-teleoperation/camera-reset/right"))
+            {
+                yError() << "[OculusModule::configure] Failed to reset right camera.";
+                return false;
+            }
+
+            yInfo() << "[OculusModule::configure] Cameras have been reset.";
         }
 
-        if (!resetCamera(rightCameraPort, "/walking-teleoperation/camera-reset/right"))
+        if (setCamerasAutoMode)
         {
-            yError() << "[OculusModule::configure] Failed to reset right camera.";
-            return false;
+            if (!setCameraAutoMode(leftCameraPort, "/walking-teleoperation/camera-auto/left"))
+            {
+                yError() << "[OculusModule::configure] Failed to set left camera to AUTO mode.";
+                return false;
+            }
+
+            if (!setCameraAutoMode(rightCameraPort, "/walking-teleoperation/camera-auto/right"))
+            {
+                yError() << "[OculusModule::configure] Failed to set right camera to AUTO mode.";
+                return false;
+            }
+
+            yInfo() << "[OculusModule::configure] Cameras have been set to AUTO.";
         }
-        yInfo() << "[OculusModule::configure] Cameras have been reset.";
+
     }
 
     m_state = OculusFSM::Configured;
+
+    m_autostart
+        = generalOptions.check("autostart")
+                     && (generalOptions.find("autostart").isNull()
+                         || generalOptions.find("autostart").asBool()); //True if autostart is set but with no value or if the value is true
+    m_autostartDelay = generalOptions.check("autostartDelay", yarp::os::Value(10.0)).asFloat64();
+
+    m_initializationUseFullRotation = generalOptions.check("initializationUseFullRotation", yarp::os::Value(false)).asBool();
+
+    if (m_autostart)
+    {
+        m_autostartConfigureTime = yarp::os::Time::now();
+        this->preparingModule();
+    }
+
 
     return true;
 }
@@ -741,9 +863,16 @@ bool OculusModule::runningModule()
         inverseKinematicsXZY(tempRot, p,r,y);
 
         iDynTree::Transform tempTransform;
-        tempTransform.setRotation(
-                    iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of
-        // the person head around gravity.
+        if (m_initializationUseFullRotation)
+        {
+            tempTransform.setRotation(tempRot);
+        } else
+        {
+
+            tempTransform.setRotation(
+                iDynTree::Rotation::RotY(y)); // We remove only the initial rotation of
+            // the person head around gravity.
+        }
         tempTransform.setPosition(iDynTree::make_span(
                                       getPosition(openXrHeadInitialTransform))); // We remove the initial position between the
         // head and the reference frame.
@@ -956,8 +1085,8 @@ bool OculusModule::updateModule()
         // get the transformation form the oculus
         if (!getTransforms())
         {
-            yError() << "[OculusModule::updateModule] Unable to get the transform";
-            return false;
+            yWarning() << "[OculusModule::updateModule] Unable to get the transforms. Skipping iteration.";
+            return true;
         }
 
         if (m_useVirtualizer)
@@ -1227,7 +1356,8 @@ bool OculusModule::updateModule()
             // start walking (X button)
             m_joypadControllerInterface->getButton(m_startWalkingIndex, buttonMapping);
         }
-        if (buttonMapping > 0)
+
+        if (buttonMapping > 0 || (m_autostart && ((yarp::os::Time::now() - m_autostartConfigureTime) > m_autostartDelay)))
         {
             this->runningModule();
         }

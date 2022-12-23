@@ -88,6 +88,11 @@ private:
     bool m_skipJoypad; /**< If true, avoid connecting to the JoypadControlServer (default: false) */
     bool m_moveRobot; /**< the option to give the user the possibility to do not move the robot
                          (default :: true)*/
+    bool m_autostart; /**< If true, it starts automatically without using the RPC*/
+
+    double m_autostartDelay; /*< Delay after the configure before starting.*/
+    double m_autostartConfigureTime; /*< Moment in which we started the preparation.*/
+    bool m_initializationUseFullRotation; /*< The initial transform will use the entire rotation instead of just the yaw.*/
 
     // transform server
     yarp::dev::PolyDriver m_transformClientDevice; /**< Transform client. */
@@ -188,6 +193,14 @@ private:
      * @return true in case of success and false otherwise.
      */
     bool resetCamera(const std::string& cameraPort, const std::string& localPort);
+
+    /**
+     * @brief Set a robot camera settings to the automatic mode.
+     * @param cameraPort The remote port to the camera
+     * @param localPort The local port needed for the driver to open
+     * @return true in case of success and false otherwise.
+     */
+    bool setCameraAutoMode(const std::string& cameraPort, const std::string& localPort);
 
     /**
      * Get all the feedback signal from the interfaces
