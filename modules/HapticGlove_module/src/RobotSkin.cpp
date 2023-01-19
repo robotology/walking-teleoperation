@@ -131,7 +131,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     }
 
     const bool connectToCalibratedSkin
-        = config.check("connect_to_calibrated_skin", yarp::os::Value(0)).asBool();
+        = config.check("connect_to_calibrated_skin", yarp::os::Value(false)).asBool();
 
     if (connectToCalibratedSkin)
     {
