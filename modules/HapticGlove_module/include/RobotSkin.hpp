@@ -118,14 +118,16 @@ struct HapticGlove::FingertipTactileData
 
     double contactThreshold()
     {
-        return contactThresholdValue 
-               + contactThresholdMultiplier * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
+        return contactThresholdValue
+               + contactThresholdMultiplier
+                     * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     double contactDerivativeThreshold()
     {
         return contactDerivativeThresholdValue
-               + contactDerivativeThresholdMultiplier * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
+               + contactDerivativeThresholdMultiplier
+                     * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
     }
 
     void printInfo() const
@@ -203,13 +205,11 @@ private:
     yarp::dev::IAnalogSensor* m_tactileSensorInterface{
         nullptr}; /**< skin ananlog sensor interface */
 
-    // yarp::dev::PolyDriver m_tactileCalibratedSensorDevice; /**< Analog device for the skin. */
-
-    // yarp::dev::IAnalogSensor* m_tactileCalibratedSensorInterface{
-    //     nullptr}; /**< skin ananlog sensor interface */
+    // Differently for the row data the calibrated tactile data are provided by the skinmanager as
+    // vector streamed in a yarp port
     yarp::os::BufferedPort<yarp::sig::Vector> m_tactileCalibratedSensorPort;
     bool m_isTactileCalibrateConnected{false};
-  
+
     bool m_useCalibratedSkinForPalm{false};
     int m_palmSkinIndexOffset{96};
     int m_numberOfPalmSkinTaxels{48};
