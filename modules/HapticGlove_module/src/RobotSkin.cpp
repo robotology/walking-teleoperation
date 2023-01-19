@@ -130,12 +130,12 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    
     const bool connectToCalibratedSkin
         = config.check("connect_to_calibrated_skin", yarp::os::Value(0)).asBool();
 
     if (connectToCalibratedSkin)
     {
+        // the calibrated data are retrieved using a yarp port
         std::string remoteCalibratedSensorBoard;
         if (!YarpHelper::getStringFromSearchable(
                 config, "remote_calibrated_sensor_board", remoteCalibratedSensorBoard))
@@ -144,41 +144,27 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
             return false;
         }
 
-        yarp::os::Property optionsCalibratedTactileDevice;
+        const std::string portName
+            = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in";
+        const std::string remotePortName
+            = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard;
 
-	std::string portName = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in";
-	std::string remotePortName = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard;
-	
-        // optionsCalibratedTactileDevice.put("robot", robot.c_str());
-        // optionsCalibratedTactileDevice.put("device", "analogsensorclient");
-        // optionsCalibratedTactileDevice.put(
-        //     "local", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in");
-        // optionsCalibratedTactileDevice.put(
-        //     "remote", "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard);
-	
-	if(!m_tactileCalibratedSensorPort.open(portName))
-	  {
+        if (!m_tactileCalibratedSensorPort.open(portName))
+        {
             yError() << m_logPrefix
                      << "could not open analogSensorClient object for the calibrated robot skin.";
             return false;
-	  }
+        }
 
-	if(!yarp::os::Network::connect(remotePortName, portName))
-	  {
-            yError() << m_logPrefix
-                     << "could not open analogSensorClient object for the calibrated robot skin.";
+        if (!yarp::os::Network::connect(remotePortName, portName))
+        {
+            yError()
+                << m_logPrefix << "could not connect the " << remotePortName << " to " << portName
+                << ". This is required since you set the connect_to_calibrated_skin flag to true.";
             return false;
-	  }
+        }
 
-	m_isTactileCalibrateConnected = true;
-	
-        // if (!m_tactileCalibratedSensorDevice.view(m_tactileCalibratedSensorInterface)
-        //     || !m_tactileCalibratedSensorInterface)
-        // {
-        //     yError() << m_logPrefix
-        //              << "cannot obtain IAnalogSensor interface for the calibrated robot skin";
-        //     return false;
-        // }
+        m_isTactileCalibrateConnected = true;
     }
 
     if (!m_rightHand)
@@ -512,11 +498,11 @@ bool RobotSkin::getCalibratedTactileFeedbackFromRobot()
     {
       yarp::sig::Vector* tmp = m_tactileCalibratedSensorPort.read(false);
       if (tmp != nullptr)
-	{
-	  m_calibratedTactileFeedbacksYarpVector = *tmp;
+        {
+          m_calibratedTactileFeedbacksYarpVector = *tmp;
         CtrlHelper::toStdVector(m_calibratedTactileFeedbacksYarpVector,
                                 m_calibratedTactileFeedbacksStdVector);
-	}
+        }
     }
     return true;
 }
@@ -736,18 +722,12 @@ bool RobotSkin::close()
     }
     m_tactileSensorInterface = nullptr;
 
-    // if (m_tactileCalibratedSensorDevice.isValid())
-    // {
-    //     if (!m_tactileCalibratedSensorDevice.close())
-    //     {
-    //         yWarning() << m_logPrefix
-    //                    << "Unable to close the tactile sensor analogsensorclient device.";
-    //         ok &= false;
-    //     }
-    //     m_tactileCalibratedSensorInterface = nullptr;
-    // }
+    // close the port
+    if (!m_tactileCalibratedSensorPort.isClosed())
+    {
+        m_tactileCalibratedSensorPort.close();
+    }
 
-    m_tactileCalibratedSensorPort.close();
     m_rpcPort.close();
 
     yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";

@@ -399,11 +399,9 @@ bool Teleoperation::run()
                 if (vec[0] > 0.5)
                 {
                     m_humanGlove->setPalmVibrotactileFeedbackReference(7);
-                    std::cerr << "rock rough" << std::endl;
                 } else
                 {
                     m_humanGlove->setPalmVibrotactileFeedbackReference(118);
-                    std::cerr << "rock plain" << std::endl;
                 }
             } else
             {
