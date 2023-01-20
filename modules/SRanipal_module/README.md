@@ -138,7 +138,7 @@ The following optional parameters can be inserted after calling with module, eac
 ## Advanced joypad
 - ``blinkToDisableGUIs``, the list of GUIs to disable when closing the eyes for a period longer than ``blinkDurationTrigger``. Example of usage ``--blinkToDisableGUIs "(0, 1)"``.
 
-- ``blinkDurationTrigger``, minimum time to keep the eyes closed in order to trigger the disabling of GUIs. Default value: 2.0 (the value is in seconds).
+- ``blinkDurationTrigger``, minimum time to keep the eyes closed in order to trigger the disabling of GUIs. Default value: 1.0 (the value is in seconds).
 
 - ``blinkTriggerValue``, value to consider the eyes closed. Default value: 0.1.
 

@@ -53,8 +53,8 @@ bool AdvancedJoypad::configure(const yarp::os::ResourceFinder &rf, std::shared_p
         m_guisToDisable.push_back(guisToDisableList->get(i).asInt32());
     }
 
-    m_blinkDurationTrigger = rf.check("blinkDurationTrigger", yarp::os::Value(2.0)).asFloat64();
-    m_blinkDurationTrigger = rf.check("blinkTriggerValue", yarp::os::Value(0.1)).asFloat64();
+    m_blinkDurationTrigger = rf.check("blinkDurationTrigger", yarp::os::Value(1.0)).asFloat64();
+    m_blinkTriggerValue = rf.check("blinkTriggerValue", yarp::os::Value(0.1)).asFloat64();
 
     m_configured = true;
 
@@ -104,6 +104,7 @@ bool AdvancedJoypad::update()
 
         if (yarp::os::Time::now() - m_closeInitialTime > m_blinkDurationTrigger)
         {
+            yInfo() << "Toggling GUIs!";
             m_eyesAreAlreadyClosed = true;
             m_closeInitialTime = -1.0;
 
@@ -114,7 +115,7 @@ bool AdvancedJoypad::update()
             }
         }
     }
-    else
+    else if (!eyesAreClosed)
     {
         m_eyesAreAlreadyClosed = false;
         m_closeInitialTime = -1.0;
@@ -126,6 +127,11 @@ bool AdvancedJoypad::update()
 
 void AdvancedJoypad::close()
 {
+    m_guisEnabled = true;
+    for (int gui : m_guisToDisable)
+    {
+        m_VRInterface->setGUIEnabled(gui, m_guisEnabled);
+    }
     m_configured = false;
     m_VRInterface = nullptr;
 }
