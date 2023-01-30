@@ -73,29 +73,10 @@ motion_range_min_delta  (   ( "r_thumb_oppose" ,  30) )
 
 motorsJointsCoupled      1
 
-# motion retargetin
-robot_to_human_map              ( ("r_thumb_oppose",    "r_thumb_oppose")
-                                  ("r_thumb_proximal",  "r_thumb_proximal")
-                                  ("r_thumb_distal",    "r_thumb_distal" )
-                                  ("r_thumb_middle",    "r_thumb_middle" )
-                                  ("r_index_proximal",  "r_index_proximal")
-                                  ("r_index_distal",    "r_index_distal")
-                                  ("r_index_middle",    "r_index_middle")
-                                  ("r_middle_proximal", "r_index_proximal")
-                                  ("r_middle_distal",   "r_index_distal")
-                                  ("r_middle_middle",   "r_index_middle")
-                                  ("r_ring_proximal", "r_ring_proximal")
-                                  ("r_ring_distal",   "r_ring_distal")
-                                  ("r_ring_middle",   "r_ring_middle")
-                                  ("r_pinky_proximal", "r_pinky_proximal")
-                                  ("r_pinky_distal",   "r_pinky_distal")
-                                  ("r_pinky_middle",   "r_pinky_middle") )
-
-
 # haptic feedback retargeting from the robot axis groups to the human finger
 r_thumb_finger                  ( "r_thumb_oppose",   "r_thumb_proximal", "r_thumb_distal"  )
 r_index_finger                  ( "r_hand_finger", "r_index_proximal", "r_index-distal"  )
-r_middle_finger                 ( "r_middle_proximal", "r_middle_distal"  )
+r_middle_finger                 ( "r_middle_proximal", "r_middle_distal", robots/iCubGenova09/rightFingersHapticRetargetingParams.ini "r_index-distal"  )
 r_ring_finger                   ( "r_pinky" )
 r_little_finger                 ( "r_pinky" )
 
@@ -145,7 +126,7 @@ analog_sensors_raw_max_boundary ( 25.0  0.0   37.0    15.0  24.0  12.0     0.0  
 # in case each joint does not have independant motor to actuate, they are coupled
 axesJointsCoupled     1
 
-doCalibration           0
+doCalibration           1
 
 #robot controller exponential filter gain
 exponentialFilterGain           0.9
@@ -195,9 +176,6 @@ r_index_finger_tactile_info          ( 0                       11               
 r_middle_finger_tactile_info         ( 12                      23                    0.14                1.0                    200.0                   0.5                    3.0                   40.0)
 r_ring_finger_tactile_info           ( 24                      35                    0.14                1.0                    200.0                   0.5                    3.0                   40.0)
 r_little_finger_tactile_info         ( 36                      47                    0.14                1.0                    200.0                   0.5                    3.0                   40.0)
-
-
-
 
 # absolute vibrotactile feedback nonlinear function parameters
 # 15.0 * std::log(2 * std::pow(x, 0.7) + 1) + 0.5 * std::pow(x, 1.1);

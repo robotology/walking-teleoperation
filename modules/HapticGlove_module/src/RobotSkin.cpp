@@ -7,6 +7,7 @@
  */
 
 // std
+#include <Eigen/Dense>
 #include <math.h>
 
 // teleoperation
@@ -20,6 +21,36 @@
 using namespace HapticGlove;
 
 RobotSkin::RobotSkin(){};
+
+bool RobotSkin::parseMatrix(const yarp::os::Searchable& rf,
+                            const std::string& key,
+                            Eigen::Ref<Eigen::MatrixXi> matrix)
+{
+    yarp::os::Value ini = rf.find(key);
+    if (ini.isNull() || !ini.isList())
+    {
+        return false;
+    }
+
+    yarp::os::Bottle *outerList = ini.asList();
+
+    for (int row = 0; row < outerList->size(); ++row)
+    {
+        yarp::os::Value& innerValue = outerList->get(row);
+        if (innerValue.isNull() || !innerValue.isList())
+        {
+            return false;
+        }
+        yarp::os::Bottle *innerList = innerValue.asList();
+
+        for (int column = 0; column < innerList->size(); ++column)
+        {
+          matrix(row, column) =  int(innerList->get(column).asFloat64());
+        }
+    }
+
+    return true;
+}
 
 bool RobotSkin::configure(const yarp::os::Searchable& config,
                           const std::string& name,
@@ -51,6 +82,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_totalNoTactile = 0;
 
     m_areFingersInContact.resize(m_noFingers, false);
+    m_fingersInContactTimer.resize(m_noFingers, 0.0);
+    m_fingersLastElementInContact.resize(m_noFingers, 0.0);
     m_areFingersContactChanges.resize(m_noFingers, false);
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
@@ -65,6 +98,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     size_t noTactileSensors = config.check("noTactileSensors", yarp::os::Value(192)).asInt64();
     m_fingertipRawTactileFeedbacksYarpVector.resize(noTactileSensors);
     m_fingertipRawTactileFeedbacksStdVector.resize(noTactileSensors);
+    m_calibratedTactileFeedbacksYarpVector.resize(noTactileSensors);
+    m_calibratedTactileFeedbacksStdVector.resize(noTactileSensors);
 
     // open the iAnalogsensor YARP device for robot skin
     std::string robot = config.check("robot", yarp::os::Value("icub")).asString();
@@ -94,6 +129,100 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
         yError() << m_logPrefix << "cannot obtain IAnalogSensor interface for the robot skin";
         return false;
     }
+
+    const bool connectToCalibratedSkin
+        = config.check("connect_to_calibrated_skin", yarp::os::Value(false)).asBool();
+
+    if (connectToCalibratedSkin)
+    {
+        // the calibrated data are retrieved using a yarp port
+        std::string remoteCalibratedSensorBoard;
+        if (!YarpHelper::getStringFromSearchable(
+                config, "remote_calibrated_sensor_board", remoteCalibratedSensorBoard))
+        {
+            yError() << m_logPrefix << "unable to find remote_sensor_boards into config file.";
+            return false;
+        }
+
+        const std::string portName
+            = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard + "/in";
+        const std::string remotePortName
+            = "/" + robot + "/skin" + "/" + remoteCalibratedSensorBoard;
+
+        if (!m_tactileCalibratedSensorPort.open(portName))
+        {
+            yError() << m_logPrefix
+                     << "could not open analogSensorClient object for the calibrated robot skin.";
+            return false;
+        }
+
+        if (!yarp::os::Network::connect(remotePortName, portName))
+        {
+            yError()
+                << m_logPrefix << "could not connect the " << remotePortName << " to " << portName
+                << ". This is required since you set the connect_to_calibrated_skin flag to true.";
+            return false;
+        }
+
+        m_isTactileCalibrateConnected = true;
+    }
+
+    if (!m_rightHand)
+    {
+        m_useCalibratedSkinForPalm
+            = config.check("use_calibrated_skin_for_palm", yarp::os::Value(0)).asBool();
+
+        if (!connectToCalibratedSkin && m_useCalibratedSkinForPalm)
+        {
+            yError()
+                << m_logPrefix
+                << "cannot use the calibrated skin from the palm if module is not connected to "
+                   "the calibrated skin.";
+            return false;
+        }
+
+        if (!YarpHelper::getIntFromSearchable(
+                config, "palm_skin_index_offset", m_palmSkinIndexOffset))
+        {
+            yError() << m_logPrefix << "unable to find palm_skin_index_offset into config file.";
+            return false;
+        }
+
+        if (!YarpHelper::getIntFromSearchable(
+                config, "number_of_palm_skin_taxels", m_numberOfPalmSkinTaxels))
+        {
+            yError() << m_logPrefix << "unable to find number_of_palm_skin_taxels into config file.";
+            return false;
+        }
+
+        if (!YarpHelper::getIntFromSearchable(
+                config, "palm_skin_activation_norm_raw", m_palmSkinActivationNormRaw))
+        {
+            yError() << m_logPrefix
+                     << "unable to find palm_skin_activation_norm_raw into config file.";
+            return false;
+        }
+
+        if (!YarpHelper::getIntFromSearchable(
+                config, "palm_skin_activation_norm_calibrated", m_palmSkinActivationNormCalibrated))
+        {
+            yError() << m_logPrefix
+                     << "unable to find palm_skin_activation_norm_calibrated into config file.";
+            return false;
+        }
+
+        m_skinMapping.resize(m_numberOfPalmSkinTaxels, 3);
+
+        if (!this->parseMatrix(config, "palm_skin_mapping", m_skinMapping))
+        {
+            yError() << m_logPrefix << "unable to find palm_skin_mapping.";
+            return false;
+        }
+
+        m_skinMatrix.resize(9,11);
+        m_skinMatrix.setZero();
+    }
+
 
     // get the paramters for the nonlinear mapping of the vibrotactile feedback
     if (!YarpHelper::getVectorFromSearchable(
@@ -363,11 +492,28 @@ bool RobotSkin::getRawTactileFeedbackFromRobot()
     return true;
 }
 
+bool RobotSkin::getCalibratedTactileFeedbackFromRobot()
+{
+    if (m_isTactileCalibrateConnected)
+    {
+      yarp::sig::Vector* tmp = m_tactileCalibratedSensorPort.read(false);
+      if (tmp != nullptr)
+        {
+          m_calibratedTactileFeedbacksYarpVector = *tmp;
+        CtrlHelper::toStdVector(m_calibratedTactileFeedbacksYarpVector,
+                                m_calibratedTactileFeedbacksStdVector);
+        }
+    }
+    return true;
+}
+
 void RobotSkin::updateTactileFeedbacks()
 {
     std::lock_guard<std::mutex> lock(m_mutex);
 
     this->getRawTactileFeedbackFromRobot();
+
+    this->getCalibratedTactileFeedbackFromRobot();
 
     this->updateCalibratedTactileData();
 
@@ -384,6 +530,29 @@ void RobotSkin::computeAreFingersInContact()
     {
         m_areFingersInContact[i] = m_fingersContactStrength[i]
                                    > m_fingersTactileData[i].contactThreshold();
+
+        // Update the timer when the finger was already in contact
+        if (m_areFingersInContact[i] &&
+            m_fingersLastElementInContact[i] != -1) {
+            m_fingersInContactTimer[i] += m_samplingTime;
+        }
+        else {
+            m_fingersInContactTimer[i] = 0.0;
+            m_fingersTactileData[i].isFingerContactEnabled = true;
+        }
+
+        // If a taxel is causing the activation for longer then the given time, the sensor bias is increased.
+        if (m_fingersInContactTimer[i] > 1.0) { // TODO: move to a parameter
+            m_fingersTactileData[i].isFingerContactEnabled = false;
+        }
+
+        // Update last finger in contact element fi contact is detected
+        m_fingersLastElementInContact[i] = m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement() : -1;
+
+        // Check if the finger has been diabled by the timer
+        m_areFingersInContact[i] = m_areFingersInContact[i] && m_fingersTactileData[i].isFingerContactEnabled;
+
+
         m_areFingersContactChanges[i] = m_areFingersInContact[i]
                                         && (m_fingersContactStrengthDerivate[i]
                                         > m_fingersTactileData[i].contactDerivativeThreshold());
@@ -553,6 +722,12 @@ bool RobotSkin::close()
     }
     m_tactileSensorInterface = nullptr;
 
+    // close the port
+    if (!m_tactileCalibratedSensorPort.isClosed())
+    {
+        m_tactileCalibratedSensorPort.close();
+    }
+
     m_rpcPort.close();
 
     yInfo() << m_logPrefix << "closed" << (ok ? "Successfully" : "badly") << ".";
@@ -563,6 +738,11 @@ bool RobotSkin::close()
 const yarp::sig::Vector& RobotSkin::fingerRawTactileFeedbacks() const
 {
     return m_fingertipRawTactileFeedbacksYarpVector;
+}
+
+const yarp::sig::Vector& RobotSkin::fingerCalibratedTactileFeedbacks() const
+{
+    return m_calibratedTactileFeedbacksYarpVector;
 }
 
 void RobotSkin::fingerRawTactileFeedbacks(std::vector<double>& fingertipTactileFeedbacks)
@@ -788,4 +968,46 @@ bool RobotSkin::setDerivativeThresholdMultiplierAll(const double value)
     }
 
     return true;
+}
+
+const Eigen::MatrixXf& RobotSkin::getPalmSkinMatrix(const yarp::sig::Vector& rawData)
+{
+    for (int i = 0; i < m_skinMapping.rows(); i++)
+    {
+        const int indexRawData = m_skinMapping(i, 0) + m_palmSkinIndexOffset;
+        const int row = m_skinMapping(i, 1);
+        const int col = m_skinMapping(i, 2);
+        m_skinMatrix(row, col) = rawData(indexRawData) / 255.0;
+    }
+    return m_skinMatrix;
+}
+
+bool RobotSkin::isPalmRawSkinActive() const
+{
+    const double norm = CtrlHelper::toEigenVector(m_fingertipRawTactileFeedbacksYarpVector)
+                            .segment(m_palmSkinIndexOffset, m_numberOfPalmSkinTaxels)
+                            .norm();
+    return norm <= m_palmSkinActivationNormRaw;
+}
+
+bool RobotSkin::isPalmCalibratedSkinActive() const
+{
+    const double norm = CtrlHelper::toEigenVector(m_calibratedTactileFeedbacksYarpVector)
+                            .segment(m_palmSkinIndexOffset, m_numberOfPalmSkinTaxels)
+                            .norm();
+    return norm >= m_palmSkinActivationNormCalibrated;
+}
+
+bool RobotSkin::isPalmSkinActive() const
+{
+    if (m_useCalibratedSkinForPalm)
+    {
+        return this->isPalmCalibratedSkinActive();
+    }
+    return this->isPalmRawSkinActive();
+}
+
+bool RobotSkin::getUseCalibratedSkinForPalm() const
+{
+    return m_useCalibratedSkinForPalm;
 }

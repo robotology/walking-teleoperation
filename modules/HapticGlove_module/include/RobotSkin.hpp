@@ -86,7 +86,7 @@ struct HapticGlove::FingertipTactileData
                             - o: number of observations (logged data),
                             - m: number of tactile sensors*/
 
-    bool isFingerInContact = false;
+    bool isFingerContactEnabled = true;
 
     double maxTactileFeedbackAbsoluteValue()
     {
@@ -118,14 +118,16 @@ struct HapticGlove::FingertipTactileData
 
     double contactThreshold()
     {
-        return contactThresholdValue 
-               + contactThresholdMultiplier * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
+        return contactThresholdValue
+               + contactThresholdMultiplier
+                     * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
     double contactDerivativeThreshold()
     {
         return contactDerivativeThresholdValue
-               + contactDerivativeThresholdMultiplier * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
+               + contactDerivativeThresholdMultiplier
+                     * stdTactileSensorDerivative[this->maxTactileFeedbackDerivativeElement()];
     }
 
     void printInfo() const
@@ -165,6 +167,8 @@ private:
 
     std::vector<bool> m_areTactileSensorsWorking;
     std::vector<bool> m_areFingersInContact;
+    std::vector<double> m_fingersInContactTimer;
+    std::vector<int> m_fingersLastElementInContact;
     std::vector<bool> m_areFingersContactChanges;
 
     std::vector<double> m_fingersVibrotactileAbsoluteFeedback;
@@ -188,10 +192,29 @@ private:
         m_fingertipRawTactileFeedbacksStdVector; /**< fingertip raw tactile feedbacks, `0`
                                         means high pressure, `255` means low pressure */
 
+    yarp::sig::Vector
+        m_calibratedTactileFeedbacksYarpVector; /**<  calibrated
+                                                        tactile feedbacks, `255` means high
+                                                        pressure, `0` means low pressure */
+    std::vector<double> m_calibratedTactileFeedbacksStdVector; /**<  calibrated
+                                                        tactile feedbacks, `255` means high
+                                                        pressure, `0` means low pressure */
+
     yarp::dev::PolyDriver m_tactileSensorDevice; /**< Analog device for the skin. */
 
     yarp::dev::IAnalogSensor* m_tactileSensorInterface{
         nullptr}; /**< skin ananlog sensor interface */
+
+    // Differently for the row data the calibrated tactile data are provided by the skinmanager as
+    // vector streamed in a yarp port
+    yarp::os::BufferedPort<yarp::sig::Vector> m_tactileCalibratedSensorPort;
+    bool m_isTactileCalibrateConnected{false};
+
+    bool m_useCalibratedSkinForPalm{false};
+    int m_palmSkinIndexOffset{96};
+    int m_numberOfPalmSkinTaxels{48};
+    int m_palmSkinActivationNormRaw{1630};
+    int m_palmSkinActivationNormCalibrated{15};
 
     std::vector<double>
         m_fbParams; /**< # absolute vibrotactile feedback nonlinear function parameters; reference
@@ -208,7 +231,13 @@ private:
 
     // RPC port
     yarp::os::Port m_rpcPort;
-    
+
+    Eigen::MatrixXi m_skinMapping;
+
+    bool parseMatrix(const yarp::os::Searchable& rf,
+                     const std::string& key,
+                     Eigen::Ref<Eigen::MatrixXi> matrix);
+
     void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
@@ -218,6 +247,10 @@ private:
     void computeAreFingersInContact();
 
     bool getRawTactileFeedbackFromRobot();
+
+    bool getCalibratedTactileFeedbackFromRobot();
+
+    Eigen::MatrixXf m_skinMatrix;
 
 public:
     RobotSkin();
@@ -270,6 +303,9 @@ public:
      */
     const yarp::sig::Vector& fingerRawTactileFeedbacks() const;
 
+
+    const yarp::sig::Vector& fingerCalibratedTactileFeedbacks() const;
+
     /**
      * Get the fingertip calibrated tactile feedbacks
      * @param fingertipTactileFeedbacks the tactile feedbacks of all the links
@@ -305,6 +341,16 @@ public:
     virtual bool setDerivativeThresholdMultiplierAll(const double value) override;
 
     bool close();
+
+    const Eigen::MatrixXf& getPalmSkinMatrix(const yarp::sig::Vector& rawData);
+
+    bool isPalmRawSkinActive() const;
+
+    bool isPalmCalibratedSkinActive() const;
+
+    bool isPalmSkinActive() const;
+
+    bool getUseCalibratedSkinForPalm() const;
 };
 
 #endif // ROBOT_SKIN_HPP
