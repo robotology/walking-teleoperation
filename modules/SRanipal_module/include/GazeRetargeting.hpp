@@ -10,80 +10,20 @@
 #define GAZERETARGETING_HPP
 
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/os/BufferedPort.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Bottle.h>
-#include <yarp/sig/Vector.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IVelocityControl.h>
 #include <yarp/dev/IPositionControl.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IControlMode.h>
 #include <iDynTree/Core/Axis.h>
-#include <iDynTree/Core/Transform.h>
 #include <iDynTree/Core/VectorFixSize.h>
+#include <VRInterface.hpp>
+#include <memory>
 
 class GazeRetargeting
 {
-    class VRInterface
-    {
-        struct EyeControl
-        {
-            yarp::os::BufferedPort<yarp::sig::Vector> imageControlPort;
-            double elevation;
-            double azimuth;
-            iDynTree::Position eyePosition;
-            iDynTree::Position imageRelativePosition;
-
-            void sendAngles();
-
-            iDynTree::Transform currentImageTransform(); //With respect to the headset frame
-
-            bool intersectionInImage(const iDynTree::Axis& operatorGazeInSRanipalFrame, iDynTree::Vector2 &output);
-
-            void close();
-        };
-
-        std::string m_name;
-        bool m_isActive = false;
-        bool m_deadzoneActive = false;
-        double m_deadzoneActivationTime = -1.0;
-        double m_deadzoneMinActivationTimeInS = 0.5;
-        double m_lastActiveCheck{-1.0};
-        double m_velocityGain{0.0};
-        double m_errorDeadzone{0.01};
-        double m_errorDeadzoneActivation{0.1};
-        double m_eyeMovementAccuracyInRad{0.0001};
-        yarp::os::RpcClient m_VRDeviceRPCOutputPort;
-        EyeControl m_leftEye, m_rightEye;
-
-        bool getValueFromRPC(const std::string& query, yarp::os::Value& value);
-
-        bool getValueFromRPC(const std::string& query, bool& value);
-
-        bool getValueFromRPC(const std::string& query, double& value);
-
-        bool getValueFromRPC(const std::string& query, std::string& value);
-
-        iDynTree::Vector2 applyDeadzone(const iDynTree::Vector2& input);
-
-        double applyQuantization(double input, double quantization);
-
-    public:
-
-        bool configure(yarp::os::ResourceFinder& rf);
-
-        void setVRImagesPose(double vergenceInRad, double versionInRad, double tiltInRad);
-
-        bool computeDesiredRobotEyeVelocities(const iDynTree::Axis& operatorLeftEyeGaze, const iDynTree::Axis& operatorRightEyeGaze,
-                                              double& vergenceSpeedInRadS, double& versionSpeedInRadS, double& tiltSpeedInRadS);
-
-        bool isActive();
-
-        void close();
-    };
-
-
     bool m_configured{false};
     yarp::dev::PolyDriver m_eyesDriver;
     yarp::dev::IVelocityControl* m_eyesVel{nullptr};
@@ -99,7 +39,7 @@ class GazeRetargeting
     iDynTree::Axis m_leftGazeOperator, m_rightGazeOperator;
     bool m_gazeSet{false};
 
-    VRInterface m_VRInterface;
+    std::shared_ptr<VRInterface> m_VRInterface;
 
     void setRobotEyeControlMode(int controlMode);
 
@@ -126,7 +66,7 @@ public:
 
     GazeRetargeting& operator=(GazeRetargeting&& other) = delete;
 
-    bool configure(yarp::os::ResourceFinder& rf);
+    bool configure(const yarp::os::ResourceFinder& rf, std::shared_ptr<VRInterface> vrInterface);
 
     void setOperatorEyeGazeAxes(const iDynTree::Axis& leftGaze, const iDynTree::Axis& rightGaze);
 
