@@ -21,6 +21,7 @@
 #include <iDynTree/Core/VectorFixSize.h>
 #include <VRInterface.hpp>
 #include <memory>
+#include <vector>
 
 class GazeRetargeting
 {
@@ -37,7 +38,19 @@ class GazeRetargeting
     std::vector<double> m_encodersInDeg;
     double m_maxEyeSpeedInDegS;
     iDynTree::Axis m_leftGazeOperator, m_rightGazeOperator;
+    std::vector<int> m_eyeAxis;
+    std::vector<int> m_eyeControlModes;
+    std::vector<double> m_eyemaxPositionMoveSpeeds;
+    std::vector<double> m_eyePositionReferences;
+    std::vector<double> m_eyesVelocityReferences;
+    double* m_versionVelocityptr{nullptr};
+    double* m_vergenceVelocityptr{nullptr};
+    double* m_tiltVelocityptr{nullptr};
+    double m_dummy{0.0};
     bool m_gazeSet{false};
+    bool m_useVersion{true};
+    bool m_useVergence{true};
+    bool m_useTilt{true};
 
     std::shared_ptr<VRInterface> m_VRInterface;
 

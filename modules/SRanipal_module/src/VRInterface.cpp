@@ -215,6 +215,21 @@ bool VRInterface::computeDesiredRobotEyeVelocities(const iDynTree::Axis &operato
 
     double leftEyeDistance = iDynTree::toEigen(m_leftEye.imageRelativePosition).norm();
     double rightEyeDistance = iDynTree::toEigen(m_rightEye.imageRelativePosition).norm();
+
+    if (leftEyeDistance < 1e-10)
+    {
+        yError() << "[VRInterface::computeDesiredRobotEyeVelocities] The left image position "
+                    "is too close to the eye.";
+        return false;
+    }
+
+    if (rightEyeDistance < 1e-10)
+    {
+        yError() << "[VRInterface::computeDesiredRobotEyeVelocities] The right image position "
+                    "is too close to the eye.";
+        return false;
+    }
+
     //Compute the desired single eye velocity
     double leftElevationVelocity, rightElevationVelocity, leftAzimuthVelocity, rightAzimuthVelocity;
     leftElevationVelocity = m_velocityGain * leftImageIntersection(1) / leftEyeDistance; //The Y axis is pointing upward. If the operator is intersecting the image above the center, moves the eye up
