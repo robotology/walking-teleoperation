@@ -17,8 +17,8 @@
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--from sensors/RealSense_conf.ini</parameters>
+    <name>yarprobotinterface</name>
+    <parameters>--config realsense2.xml</parameters>
     <node>ergocub-head</node>
   </module>
 
