@@ -51,6 +51,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
     m_totalNoTactile = 0;
 
     m_areFingersInContact.resize(m_noFingers, false);
+    m_fingersInContactTimer.resize(m_noFingers, 0.0);
+    m_fingersLastElementInContact.resize(m_noFingers, 0.0);
     m_areFingersContactChanges.resize(m_noFingers, false);
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
@@ -384,6 +386,29 @@ void RobotSkin::computeAreFingersInContact()
     {
         m_areFingersInContact[i] = m_fingersContactStrength[i]
                                    > m_fingersTactileData[i].contactThreshold();
+
+        // Update the timer only if the same taxel is causing the contact
+        if (m_areFingersInContact[i] &&
+            m_fingersLastElementInContact[i] == m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement()) {
+            m_fingersInContactTimer[i] += m_samplingTime;
+        }
+        else {
+            m_fingersInContactTimer[i] = 0.0;
+            m_fingersTactileData[i].isFingerContactEnabled = true;
+        }
+
+        // If a taxel is causing the activation for longer then the given time, the sensor bias is increased.
+        if (m_fingersInContactTimer[i] > 2.0) { // TODO: move to a parameter
+            m_fingersTactileData[i].isFingerContactEnabled = false;
+        }
+
+        // Update last finger in contact element fi contact is detected
+        m_fingersLastElementInContact[i] = m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement() : -1;
+
+        // Check if the finger has been diabled by the timer
+        m_areFingersInContact[i] = m_areFingersInContact[i] && m_fingersTactileData[i].isFingerContactEnabled;
+
+
         m_areFingersContactChanges[i] = m_areFingersInContact[i]
                                         && (m_fingersContactStrengthDerivate[i]
                                         > m_fingersTactileData[i].contactDerivativeThreshold());
