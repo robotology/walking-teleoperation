@@ -122,6 +122,7 @@ bool RobotController::configure(const yarp::os::Searchable& config,
         // if not coupled., the mapping between the motors and joints are identity matrix
         m_A = Eigen::MatrixXd::Identity(m_numActuatedAxis, m_numActuatedAxis);
         m_Bias = Eigen::MatrixXd::Zero(m_numActuatedJoints, 1);
+        m_controlCoeff = m_A;
     }
 
     // get control  gains from configuration files
@@ -224,7 +225,7 @@ bool RobotController::configure(const yarp::os::Searchable& config,
 
     m_data->jointValueReferencesStd.resize(m_numActuatedJoints, 0.0);
     m_data->jointValueFeedbacksStd.resize(m_numActuatedJoints, 0.0);
-    m_robotPrepared = false;
+    m_robotPrepared = !(m_doCalibration && m_axesJointsCoupled);
     m_estimatorsInitialized = false;
 
     // print info
@@ -380,14 +381,14 @@ bool RobotController::LogDataToCalibrateRobotAxesJointsCoupling(double time, int
 
     if (!m_axesJointsCoupled)
     {
-        yInfo() << m_logPrefix << "axes and joints are not coupled, so returning.";
+        yInfoOnce() << m_logPrefix << "axes and joints are not coupled, so returning.";
         return true;
     }
 
     if (!m_doCalibration)
     {
-        yInfo() << m_logPrefix
-                << "axes and joints are coupled, loading from the configuration file.";
+        yInfoOnce() << m_logPrefix
+                    << "axes and joints are coupled, loading from the configuration file.";
         return true;
     }
 
