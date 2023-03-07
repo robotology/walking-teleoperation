@@ -1,0 +1,80 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>ergoCub-Teleoperation-3</name>
+  <description>Step 3 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <!-- Modules -->
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config HapticGlove.xml</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run SenseGlove Wearable Device</description>
+    <node>icub-virtualizer</node>
+    <tag>SenseGlove</tag>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config RobotStateProvider_ergoCub_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.7</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="10.0">/transformServer/transforms:o</port>
+      <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>HumanStateVisualizer</name>
+    <parameters>--from HumanStateVisualizer_ergoCub_openxr_ifeel.ini</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="15.0">/ergoCub/RobotStateWrapper/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsWrapper/state:o</port>
+    </dependencies>
+  </module>
+
+  <module>
+    <name>iFeelWalkingRetargetingModule</name>
+    <parameters>--from iFeelWalkingRetargeting.ini</parameters>
+    <node>localhost</node>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/iFeelSuit/WearableData/data:o</from>
+    <to>/iFeelWalking/iFeelShoes:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/linearArrow:o</from>
+    <to>/headset/slide_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/rotationArrow:o</from>
+    <to>/headset/slide_1</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/distanceFromCenter:o</from>
+    <to>/headset/label_0</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>

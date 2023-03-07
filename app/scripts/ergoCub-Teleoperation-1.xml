@@ -1,0 +1,30 @@
+<!-- Copyright (C) 2023 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>ergoCub-Teleoperation-1</name>
+  <description>Step 1 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <!-- Modules -->
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config iFeelSuit.xml --node-list "(1 2 4 5 6 7 8)" --serial-port-name /dev/ttyACM0</parameters>
+    <environment>YARP_FORWARD_LOG_ENABLE=1</environment>
+    <description>Run iFeelSuit driver</description>
+    <node>localhost</node>
+    <tag>iFeelSuit</tag>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+</application>

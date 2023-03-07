@@ -105,11 +105,11 @@ The following optional parameters can be inserted after calling with module, eac
 - ``lipImagePortName``, it sets the suffix for the port streaming the lip camera image (stereo camera in grayscale).  Default ``/lipImage:o``.
 
 ### Gaze retargeting
-- ``eyesVersionName``, the name of the version joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint. Default ``eyes_vers``
+- ``eyesVersionName``, the name of the version joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint. Use "none" to avoid using the joint. Default ``eyes_vers``
 
-- ``eyesVergenceName``, the name of the vergence joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint.  Default ``eyes_verg``.
+- ``eyesVergenceName``, the name of the vergence joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint. Use "none" to avoid using the joint. Default ``eyes_verg``.
 
-- ``eyesTiltName``, the name of the tilt joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint.  Default ``eyes_tilt``.
+- ``eyesTiltName``, the name of the tilt joint. Note, it enough for the actual name of the joint to cointain this parameter. In other words, this parameter is a substring of the name of the joint. Use "none" to avoid using the joint. Default ``eyes_tilt``.
 
 - ``eyeMaxVelocity``, the maximum velocity used to move the eyes. Default ``20.0``.
 

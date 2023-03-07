@@ -221,10 +221,13 @@ bool RobotInterface::configure(const yarp::os::Searchable& config,
 
     // Devices
 
-    if (!openAnalogDevices(config, name, robot))
+    if (m_noAnalogSensor != 0)
     {
-        yError() << m_logPrefix << "unable to open and view analog devices and interfaces.";
-        return false;
+        if (!openAnalogDevices(config, name, robot))
+        {
+            yError() << m_logPrefix << "unable to open and view analog devices and interfaces.";
+            return false;
+        }
     }
 
     if (!openRobotDevices(config, name, robot))
@@ -807,11 +810,14 @@ bool RobotInterface::getFeedback()
         m_encoderVelocityFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
 
-    if (!(m_analogSensorInterface->read(m_analogSensorFeedbackRaw)
-          == yarp::dev::IAnalogSensor::AS_OK))
+    if (m_analogSensorInterface != nullptr)
     {
-        yError() << m_logPrefix << "Unable to get analog sensor data.";
-        return false;
+      if (!(m_analogSensorInterface->read(m_analogSensorFeedbackRaw)
+            == yarp::dev::IAnalogSensor::AS_OK))
+        {
+          yError() << m_logPrefix << "Unable to get analog sensor data.";
+          return false;
+        }
     }
 
     if (!computeCalibratedAnalogSesnors())

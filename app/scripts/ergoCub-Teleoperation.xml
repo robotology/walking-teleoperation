@@ -1,0 +1,30 @@
+<!-- Copyright (C) 2023 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>ergoCub-Teleoperation</name>
+  <description>Application to run module related to vision for retargeting.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <application>
+    <name> ergoCub-Teleoperation-1</name>
+  </application>
+
+  <application>
+    <name> ergoCub-Teleoperation-2</name>
+  </application>
+
+  <application>
+    <name> ergoCub-Teleoperation-3</name>
+  </application>
+
+  <application>
+    <name> ergoCub-Teleoperation-4</name>
+  </application>
+
+
+</application>

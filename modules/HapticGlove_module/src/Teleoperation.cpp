@@ -416,6 +416,11 @@ bool Teleoperation::prepare(bool& isPrepared)
             m_robotSkin->computeCalibrationParamters();
         }
 
+        if (m_robotController->isRobotPrepared())
+        {
+           isPrepared = true;
+        }
+
     } else
     {
 
@@ -434,11 +439,6 @@ bool Teleoperation::prepare(bool& isPrepared)
         {
             m_robotSkin->collectSkinDataForCalibration();
         }
-    }
-
-    if (m_robotController->isRobotPrepared())
-    {
-        isPrepared = true;
     }
 
     // initialize the estimator in case it is not initialized

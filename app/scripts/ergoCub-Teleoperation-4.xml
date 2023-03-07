@@ -1,0 +1,70 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>ergoCub-Teleoperation-4</name>
+  <description>Step 4 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <module>
+    <name>SRanipalModule</name>
+    <parameters>--forceEyeCalibration --robot ergocub --noLip --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>HapticGloveModule</name>
+    <node>ergocub-torso</node>
+  </module>
+
+  <module>
+    <name>WalkingModule</name>
+    <node>ergocub-torso</node>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config launch-yarp-robot-logger.xml</parameters>
+    <node>ergocub-laptop</node>
+    <workdir>/home/ergocub/Desktop/walking_logger</workdir>
+  </module>
+
+  <!-- Connections -->
+
+  <connection>
+    <from>/SRanipalModule/VR/rpc:o</from>
+    <to>/headset/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/ergoCub/RobotStateWrapper/state:o</from>
+    <to>/walking-coordinator/humanState:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/iFeelWalking/goal:o</from>
+    <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>

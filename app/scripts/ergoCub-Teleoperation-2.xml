@@ -1,0 +1,32 @@
+<!-- Copyright (C) 2023 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>ergoCub-Teleoperation-2</name>
+  <description>Step 2 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--from openXRHeadsetParameters.ini</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config realsense2.xml</parameters>
+    <node>ergocub-head</node>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/depthCamera/rgbImage:o</from>
+    <to>/headset/display:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+</application>
