@@ -222,9 +222,9 @@ bool EyelidsRetargeting::usingEylidsVelocityControl()
     return m_configured && !(m_useRawEyelids || m_useEyelidsPositionControl);
 }
 
-void EyelidsRetargeting::setDesiredEyeOpennes(double eyeOpennes)
+void EyelidsRetargeting::setDesiredEyeOpennes(double leftEyeOpennes, double rightEyeOpennes)
 {
-    m_desiredEyeOpenness = eyeOpennes;
+    m_desiredEyeOpenness = std::min(leftEyeOpennes, rightEyeOpennes);
 }
 
 bool EyelidsRetargeting::update()

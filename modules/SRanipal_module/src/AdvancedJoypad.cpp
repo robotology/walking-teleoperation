@@ -9,6 +9,7 @@
 #include <AdvancedJoypad.hpp>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
+#include <cmath>
 
 
 bool AdvancedJoypad::configure(const yarp::os::ResourceFinder &rf, std::shared_ptr<VRInterface> vrInterface)
@@ -65,9 +66,9 @@ bool AdvancedJoypad::configure(const yarp::os::ResourceFinder &rf, std::shared_p
     return true;
 }
 
-void AdvancedJoypad::setEyeOpenness(double eyeOpenness)
+void AdvancedJoypad::setEyeOpenness(double leftEyeOpennes, double rightEyeOpennes)
 {
-    m_eyeOpennessValue = eyeOpenness;
+    m_eyeOpennessValue = std::min(leftEyeOpennes, rightEyeOpennes);
 }
 
 bool AdvancedJoypad::update()

@@ -198,7 +198,7 @@ bool SRanipalInterface::updateLipData()
     return okLip;
 }
 
-bool SRanipalInterface::getEyeOpenness(double &openness)
+bool SRanipalInterface::getEyeOpenness(double &left_openness, double &right_openness)
 {
     using namespace ViveSR::anipal::Eye;
     bool eye_openness_validity = m_eyeUpdated &&
@@ -208,11 +208,13 @@ bool SRanipalInterface::getEyeOpenness(double &openness)
                           SingleEyeDataValidity::SINGLE_EYE_DATA_EYE_OPENNESS_VALIDITY) &&
             m_eyeData_v2.no_user; //no user is false if the headset is removed
 
-    openness = 1.0;
+    left_openness = 1.0;
+    right_openness = 1.0;
 
     if (eye_openness_validity)
     {
-        openness = std::min(m_eyeData_v2.verbose_data.left.eye_openness, m_eyeData_v2.verbose_data.right.eye_openness);
+        left_openness = m_eyeData_v2.verbose_data.left.eye_openness;
+        right_openness = m_eyeData_v2.verbose_data.right.eye_openness;
     }
 
     return eye_openness_validity;

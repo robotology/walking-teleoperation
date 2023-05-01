@@ -34,7 +34,7 @@ public:
 
     bool configure(const yarp::os::ResourceFinder& rf, std::shared_ptr<VRInterface> vrInterface);
 
-    void setEyeOpenness(double eyeOpenness);
+    void setEyeOpenness(double leftEyeOpennes, double rightEyeOpennes);
 
     bool update();
 

@@ -188,17 +188,17 @@ bool SRanipalModule::updateModule()
             m_faceExpressions.updateEyebrows(eyeWideness);
         }
 
-        double eye_openness;
-        if ((m_useEyelids || m_useAdvancedJoypad) && m_sranipalInterface.getEyeOpenness(eye_openness))
+        double left_eye_openness, right_eye_openness;
+        if ((m_useEyelids || m_useAdvancedJoypad) && m_sranipalInterface.getEyeOpenness(left_eye_openness, right_eye_openness))
         {
             if (m_useEyelids)
             {
-                m_eyelidsRetargeting.setDesiredEyeOpennes(eye_openness);
+                m_eyelidsRetargeting.setDesiredEyeOpennes(left_eye_openness, right_eye_openness);
             }
 
             if (m_useAdvancedJoypad)
             {
-                m_advancedJoypad.setEyeOpenness(eye_openness);
+                m_advancedJoypad.setEyeOpenness(left_eye_openness, right_eye_openness);
             }
         }
 
