@@ -27,6 +27,19 @@ void FaceExpressionsRetargeting::sendFaceExpression(const std::string &part, con
     }
 }
 
+void FaceExpressionsRetargeting::sendEyeExpression(const std::string &emotion)
+{
+    if (emotion != m_currentEyeExpression)
+    {
+        yarp::os::Bottle cmd, reply;
+        cmd.addString("setEmotion");
+        cmd.addString(emotion);
+        m_eyeExpressionsOutputPort.write(cmd, reply);
+        m_currentEyeExpression = emotion;
+        yInfo() << "[FaceExpressionsRetargeting::sendEyeExpression] Sending" << emotion;
+    }
+}
+
 FaceExpressionsRetargeting::~FaceExpressionsRetargeting()
 {
     close();
@@ -49,8 +62,16 @@ bool FaceExpressionsRetargeting::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    std::string eyeExpressionsPortOut = rf.check("eyeExpressionsOutputPortName", yarp::os::Value("/eyeExpressions:o"), "The name of the output port for the eye expressions.").asString();
+    if (!m_eyeExpressionsOutputPort.open("/" + name + eyeExpressionsPortOut))
+    {
+        yError() << "[SRanipalModule::configure] Failed to open /" + name + eyeExpressionsPortOut + " port.";
+        return false;
+    }
+
     m_lipExpressionThreshold = rf.check("lipExpressionThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
+    m_eyeClosedThreshold = rf.check("eyeClosedThreshold", yarp::os::Value(0.1)).asFloat64();
 
     m_configured = true;
 
@@ -107,8 +128,29 @@ bool FaceExpressionsRetargeting::updateLip(const SRanipalInterface::LipExpressio
     return true;
 }
 
+bool FaceExpressionsRetargeting::updateEyeExpressions(double leftEyeOpennes, double rightEyeOpennes)
+{
+    if (!m_configured)
+    {
+        yError() << "[FaceExpressionsRetargeting::updateEyeExpressions] The face expressions retargeting is not configured.";
+        return false;
+    }
+
+    std::string emotion = "neutral";
+
+    if (std::min(leftEyeOpennes, rightEyeOpennes) < m_eyeClosedThreshold)
+    {
+        emotion = "angry";
+    }
+
+    sendEyeExpression(emotion);
+
+    return true;
+}
+
 void FaceExpressionsRetargeting::close()
 {
     m_emotionsOutputPort.close();
+    m_eyeExpressionsOutputPort.close();
     m_configured = false;
 }

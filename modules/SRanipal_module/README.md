@@ -84,12 +84,13 @@ The following optional parameters can be inserted after calling with module, eac
 - ``noEyelids``, if specified without value (i.e. ``--noEyelids``) or with value ``true`` (i.e. ``--noEyelids true``), the module avoids to control the eyelids. By default it is ``false``.
 - ``noLip``, if specified without value (i.e. ``--noLip``) or with value ``true`` (i.e. ``--noLip true``), the module avoids to use the lip tracking device. By default it is ``false``.
 - ``noGaze``, if specified without value (i.e. ``--noGaze``) or with value ``true`` (i.e. ``--noGaze true``), the module avoids to use the gaze tracking. By default it is ``false``.
+- ``noEyeExpressions``, if specified without value (i.e. ``--noEyeExpressions``) or with value ``true`` (i.e. ``--noEyeExpressions true``), the module avoids to control the eye expressions. By default it is ``false``.
 - ``period``, the update period of the module in seconds. Default ``0.1`` (or ``0.01`` if the eyelids are controlled using velocity control, or the gaze control is active).
 - ``skipEyeCalibration``, if set without value (i.e. ``--skipEyeCalibration``), or with value ``true`` (i.e. ``--skipEyeCalibration true``), it avoids starting the eye calibration procedure on the headset. Default ``false``.
 - ``forceEyeCalibration``, if set without value (i.e. ``--forceEyeCalibration``), or with value ``true`` (i.e. ``--forceEyeCalibration true``), it forces the eye calibration procedure on the headset at startup. Default ``false``.
 
 ### Eyelids retargeting
-- ``eyeOpenPrecision``, it determines the minimum variation of the measured eye openness of the operator (in the range [0, 1]), to command a variation in the robot eyelids. ``eyeOpenPrecision`` needs to be greater than 0. The minimum input value to trigger a motion is equal to 0.5 * ``eyeOpenPrecision``. Hence, if you set ``eyeOpenPrecision`` equal to 1.0, the eyelids will fully close as soon as the operator closes the eyes at half. This can be useful to make the robot eyelids close when the operator close the eyes more than a given threshold. Default ``0.1``.
+- ``eyeOpenPrecision``, it determines the minimum variation of the measured eye openness of the operator, to command a variation in the robot eyelids. ``eyeOpenPrecision`` needs to be greater than 0. The minimum input value to trigger a motion is equal to 0.5 * ``eyeOpenPrecision``. Hence, if you set ``eyeOpenPrecision`` equal to 1.0, the eyelids will fully close as soon as the operator closes the eyes at half. This can be useful to make the robot eyelids close when the operator close the eyes more than a given threshold. Default ``0.1``.
 - ``useEyelidsPositionControl``, if set without value (i.e. ``--useEyelidsPositionControl``), or with value ``true`` (i.e. ``--useEyelidsPositionControl true``), the module will control the eyelids using position control instead of velocity. This has an effect only if ``useRawEyelids`` is not set, or set to ``false``. Default ``false``.
 - ``eyelidsMaxVelocity``, the maximum velocity used when controlling the eyelids. Default ``100`` (``75.0`` if using position control).
 - ``eyelidsVelocityGain``, the gain used when controlling the eyelids velocity. Default ``10.0``.
@@ -100,8 +101,10 @@ The following optional parameters can be inserted after calling with module, eac
 
 ### Face expression retargeting
 - ``emotionsOutputPortName``, suffix used to open the port for communicating with the ``emotionInterface``. Default ``/emotions:o``).
+- ``eyeExpressionsOutputPortName``, suffix used to open the port for communicating with the eye expression module. Default ``/eyeExpressions:o``).
 - ``lipExpressionThreshold``, minimum value for a blend shape weight to trigger an expression on the robot. The ``SRanipal`` SDK provides a set of weights in the range [0, 1] classifying the current operator's expression. This parameters define the minimul value for which an expression is considered active. Default ``0.2``.
 - ``eyeWideSurprisedThreshold``, similar to ``lipExpressionThreshold`` it defines the minimum value for the eyes wideness to command the surprised expression on the robot. Default ``0.2``.
+- ``eyeClosedThreshold``, defines the eye opennes value below which the closed eyes expression is triggered. Default ``0.1``.
 - ``lipImagePortName``, it sets the suffix for the port streaming the lip camera image (stereo camera in grayscale).  Default ``/lipImage:o``.
 
 ### Gaze retargeting

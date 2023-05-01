@@ -39,6 +39,7 @@ class SRanipalModule : public yarp::os::RFModule
     bool m_useLip;
     bool m_useEyelids;
     bool m_useGaze;
+    bool m_useEyeExpressions;
     bool m_useAdvancedJoypad;
 
     double m_period;
