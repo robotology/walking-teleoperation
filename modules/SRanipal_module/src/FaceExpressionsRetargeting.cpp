@@ -136,11 +136,11 @@ bool FaceExpressionsRetargeting::updateEyeExpressions(double leftEyeOpennes, dou
         return false;
     }
 
-    std::string emotion = "neutral";
+    std::string emotion = "alert";
 
     if (std::min(leftEyeOpennes, rightEyeOpennes) < m_eyeClosedThreshold)
     {
-        emotion = "angry";
+        emotion = "neutral";
     }
 
     sendEyeExpression(emotion);
