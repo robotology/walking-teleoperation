@@ -12,6 +12,12 @@
   </authors>
 
   <module>
+    <name>ergoCubEmotions</name>
+    <parameters>--context ergoCubEmotions --from config.ini </parameters>
+    <node>ergocub-head</node>
+  </module>
+
+  <module>
     <name>SRanipalModule</name>
     <parameters>--forceEyeCalibration --robot ergocub --noLip --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt</parameters>
     <node>icub-virtualizer</node>
@@ -40,6 +46,12 @@
   <connection>
     <from>/SRanipalModule/VR/rpc:o</from>
     <to>/headset/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SRanipalModule/eyeExpressions:o</from>
+    <to>/ergoCubEmotions/rpc</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

@@ -65,7 +65,7 @@ public:
 
     bool updateLipData();
 
-    bool getEyeOpenness(double& openness);
+    bool getEyeOpenness(double &left_openness, double &right_openness);
 
     bool getEyeWideness(double& wideness);
 

@@ -61,7 +61,7 @@ public:
 
     bool usingEylidsVelocityControl();
 
-    void setDesiredEyeOpennes(double eyeOpennes);
+    void setDesiredEyeOpennes(double leftEyeOpennes, double rightEyeOpennes);
 
     bool update();
 
