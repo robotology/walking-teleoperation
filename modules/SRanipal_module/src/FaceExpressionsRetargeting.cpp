@@ -73,6 +73,7 @@ bool FaceExpressionsRetargeting::configure(yarp::os::ResourceFinder &rf)
     m_eyeWideSurprisedThreshold = rf.check("eyeWideSurprisedThreshold", yarp::os::Value(0.2)).asFloat64();
     m_eyeClosedThreshold = rf.check("eyeClosedThreshold", yarp::os::Value(0.1)).asFloat64();
 
+    m_isHappy = false;
     m_configured = true;
 
     return true;
@@ -110,6 +111,7 @@ bool FaceExpressionsRetargeting::updateLip(const SRanipalInterface::LipExpressio
     }
 
     std::string mouthExpression = "neu";
+    m_isHappy = false;
     if (lipExpressions.mouthOpen > m_lipExpressionThreshold)
     {
         mouthExpression = "sur";
@@ -117,6 +119,7 @@ bool FaceExpressionsRetargeting::updateLip(const SRanipalInterface::LipExpressio
     else if (lipExpressions.smile > m_lipExpressionThreshold)
     {
         mouthExpression = "hap";
+        m_isHappy = true;
     }
     else if (lipExpressions.sad > m_lipExpressionThreshold)
     {
@@ -124,6 +127,11 @@ bool FaceExpressionsRetargeting::updateLip(const SRanipalInterface::LipExpressio
     }
 
     sendFaceExpression("mou", mouthExpression);
+
+    if (m_isHappy)
+    {
+        sendEyeExpression("happy");
+    }
 
     return true;
 }
@@ -143,7 +151,10 @@ bool FaceExpressionsRetargeting::updateEyeExpressions(double leftEyeOpennes, dou
         emotion = "neutral";
     }
 
-    sendEyeExpression(emotion);
+    if (!m_isHappy)
+    {
+        sendEyeExpression(emotion);
+    }
 
     return true;
 }
