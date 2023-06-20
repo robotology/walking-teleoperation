@@ -115,6 +115,7 @@ bool FaceExpressionsRetargeting::updateLip(const SRanipalInterface::LipExpressio
     if (lipExpressions.mouthOpen > m_lipExpressionThreshold)
     {
         mouthExpression = "sur";
+        m_isHappy = true;
     }
     else if (lipExpressions.smile > m_lipExpressionThreshold)
     {
@@ -144,7 +145,7 @@ bool FaceExpressionsRetargeting::updateEyeExpressions(double leftEyeOpennes, dou
         return false;
     }
 
-    std::string emotion = "alert";
+    std::string emotion = "shy";
 
     if (std::min(leftEyeOpennes, rightEyeOpennes) < m_eyeClosedThreshold)
     {
