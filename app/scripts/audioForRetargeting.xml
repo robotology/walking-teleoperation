@@ -1,60 +1,56 @@
-<!-- Copyright (C) 2020 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
 <!-- All Rights Reserved. -->
-<!-- Author: Giulio Romualdi <giulio.romualdi@iit.it> -->
+<!-- Author: Kourosh Darvish <Kourosh.Darvish@iit.it> -->
 
 <application>
 
-  <name>Audio for Retargeting</name>
-  <description>Audio application.</description>
+  <name>Audio for retargeting</name>
+  <description>An application to run the audio related modules for retargeting.</description>
   <version>1.0</version>
   <authors>
-    <author email="giulio.romualdi@iit.it">Giulio Romualdi</author>
+    <author email="kourosh.darvish@iit.it">Kourosh Darvish</author>
   </authors>
 
-  <!-- Devices -->
-
   <module>
-    <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
-    <node>icub-head</node>
+    <name>AudioRecorderWrapper</name>
+    <parameters>--subdevice portaudioRecorder --name /icub/microphone --min_samples_over_network 150 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
+    <deployer>yarpdev</deployer>
+    <node>ergocub-torso</node>
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters> --device AudioRecorderWrapper --subdevice portaudioRecorder --name /icub-virtualizer/microphone  --min_samples_over_network 4000  --max-samples_over_network 4000  --rate 160000 --samples 16000</parameters>
+    <name>AudioPlayerWrapper</name>
+    <parameters>--subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_size 0.5 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
+    <deployer>yarpdev</deployer>
+    <node>ergocub-head</node>
+  </module>
+
+  <module>
+    <name>AudioRecorderWrapper</name>
+    <parameters>--subdevice portaudioRecorder --name /icub-virtualizer/microphone --min_samples_over_network 150 --max_samples_over_network 1000 --AUDIO_BASE::rate 16000 --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1 --start</parameters>
+    <deployer>yarpdev</deployer>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
-    <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub/speakers --playback_network_buffer_lenght 0.4</parameters>
-    <node>icub-head</node>
-    <dependencies>
-      <port timeout="5.0" request="start" reply="[ok]">/icub-virtualizer/microphone/rpc</port>
-    </dependencies>
+    <name>AudioPlayerWrapper</name>
+    <parameters>--subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_size 0.5 --start --AUDIO_BASE::samples 4000 --AUDIO_BASE::channels 1</parameters>
+    <deployer>yarpdev</deployer>
+    <node>icub-virtualizer</node>
   </module>
 
-  <module>
-    <name>yarpdev</name>
-    <parameters>--device AudioPlayerWrapper --subdevice portaudioPlayer --name /icub-virtualizer/speakers --playback_network_buffer_lenght 0.4</parameters>
-    <node>icub-virtualizer</node>
-    <dependencies>
-      <port timeout="5.0" request="start" reply="[ok]">/icub/microphone/rpc</port>
-    </dependencies>
-  </module>
 
   <!-- Connections -->
   <connection>
     <from>/icub-virtualizer/microphone/audio:o</from>
     <to>/icub/speakers/audio:i</to>
-    <protocol>fast_tcp</protocol>
+    <protocol>udp</protocol>
   </connection>
 
   <connection>
     <from>/icub/microphone/audio:o</from>
     <to>/icub-virtualizer/speakers/audio:i</to>
-    <protocol>fast_tcp</protocol>
+    <protocol>udp</protocol>
   </connection>
-
 
 </application>
