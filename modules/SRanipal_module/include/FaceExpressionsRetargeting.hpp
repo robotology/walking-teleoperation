@@ -26,6 +26,7 @@ class FaceExpressionsRetargeting
     double m_eyeClosedThreshold;
     std::unordered_map<std::string, std::string> m_currentExpressions; /** The key is the part (like "mou" or "leb"), while the value is the current face expression **/
     std::string m_currentEyeExpression;
+    bool m_isHappy;
 
     void sendFaceExpression(const std::string& part, const std::string& emotion);
 
