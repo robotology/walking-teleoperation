@@ -162,7 +162,7 @@ checkandset_dependency(IWear)
 find_package(WearableActuators QUIET)
 checkandset_dependency(WearableActuators)
 
-find_package(BipedalLocomotionFramework QUIET)
+find_package(BipedalLocomotionFramework QUIET COMPONENTS PerceptionInterfaceYarpImplementation ParametersHandlerYarpImplementation)
 checkandset_dependency(BipedalLocomotionFramework)
 
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
