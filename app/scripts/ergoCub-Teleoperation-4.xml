@@ -19,7 +19,7 @@
 
   <module>
     <name>SRanipalModule</name>
-    <parameters>--forceEyeCalibration --robot ergocub --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt</parameters>
+    <parameters>--skipEyeCalibration --robot ergocub --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt</parameters>
     <node>icub-virtualizer</node>
   </module>
 
