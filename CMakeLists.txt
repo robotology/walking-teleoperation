@@ -16,7 +16,11 @@ if(WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
 endif()
 
-
+include(AddInstallRPATHSupport)
+add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"
+                          LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
+                          USE_LINK_PATH)
 
 add_subdirectory(modules)
 add_subdirectory(app)
