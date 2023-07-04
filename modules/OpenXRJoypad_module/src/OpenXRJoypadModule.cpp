@@ -551,7 +551,8 @@ struct OpenXRJoypadModule::Impl
         int xJoypadIndex; /**< Mapping of the axis related to x coordinate */
         int yJoypadIndex; /**< Mapping of the axis related to y coordinate */
         int zJoypadIndex; /**< Mapping of the axis related to z coordinate */
-        std::vector<int> joypadButtonsMap;
+        std::vector<int> joypadLeftButtonsMap;
+        std::vector<int> joypadRightButtonsMap;
 
         int fingersVelocityLeftIndex; /**< Index of the trigger used for squeezing the left hand */
         int fingersVelocityRightIndex; /**< Index of the trigger used for
@@ -893,7 +894,8 @@ struct OpenXRJoypadModule::Impl
             = this->leftAndRightSwapped ? rightYIndex : leftYIndex;
         this->joypadParameters.zJoypadIndex
             = this->leftAndRightSwapped ? leftYIndex : rightYIndex;
-        this->joypadParameters.joypadButtonsMap = this->leftAndRightSwapped ? rightWalkingButtonsMap : leftWalkingButtonsMap;
+        this->joypadParameters.joypadLeftButtonsMap = this->leftAndRightSwapped ? rightWalkingButtonsMap : leftWalkingButtonsMap;
+        this->joypadParameters.joypadRightButtonsMap = this->leftAndRightSwapped ? leftWalkingButtonsMap : rightWalkingButtonsMap;
 
         // if swapped we have to swap all the maps
         if (this->leftAndRightSwapped)
@@ -1198,14 +1200,18 @@ bool OpenXRJoypadModule::updateModule()
         // send commands to the walking
         double x{0.0}, y{0.0}, z{0.0};
 
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadButtonsMap))
+        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadLeftButtonsMap))
         {
             m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
             m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.zJoypadIndex, z);
 
             x = m_pImpl->deadzone(x);
             y = -m_pImpl->deadzone(y);
+        }
+
+        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadRightButtonsMap))
+        {
+            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.zJoypadIndex, z);
             z = -m_pImpl->deadzone(z);
         }
 
