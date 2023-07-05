@@ -1194,8 +1194,8 @@ bool OpenXRJoypadModule::updateModule()
 
     m_pImpl->buttonsState = m_pImpl->getDeviceButtonsState();
 
-    if (m_pImpl->state == Impl::OpenXRFSM::Running)
-    {
+    // if (m_pImpl->state == Impl::OpenXRFSM::Running)
+    // {
 
         // send commands to the walking
         double x{0.0}, y{0.0}, z{0.0};
@@ -1214,6 +1214,7 @@ bool OpenXRJoypadModule::updateModule()
             m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.zJoypadIndex, z);
             z = -m_pImpl->deadzone(z);
         }
+
 
         // send commands to the walking
         yarp::sig::Vector& goal= m_pImpl->robotGoalPort.prepare();
@@ -1268,31 +1269,31 @@ bool OpenXRJoypadModule::updateModule()
             return false;
         }
 
-    } else if (m_pImpl->state == Impl::OpenXRFSM::Configured)
-    {
-        // // check if it is time to prepare or start walking
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
-        {
-            // TODO add a visual feedback for the user
-            yarp::os::Bottle cmd, outcome;
-            cmd.addString("prepareRobot");
-            m_pImpl->rpcWalkingClient.write(cmd, outcome);
-            m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::InPreparation;
-            yInfo() << "[JoypadFingersModule::updateModule] prepare the robot";
-        }
-    } else if (m_pImpl->state == Impl::OpenXRFSM::InPreparation)
-    {
+    // } else if (m_pImpl->state == Impl::OpenXRFSM::Configured)
+    // {
+    //     // // check if it is time to prepare or start walking
+    //     if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
+    //     {
+    //         // TODO add a visual feedback for the user
+    //         yarp::os::Bottle cmd, outcome;
+    //         cmd.addString("prepareRobot");
+    //         m_pImpl->rpcWalkingClient.write(cmd, outcome);
+    //         m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::InPreparation;
+    //         yInfo() << "[JoypadFingersModule::updateModule] prepare the robot";
+    //     }
+    // } else if (m_pImpl->state == Impl::OpenXRFSM::InPreparation)
+    // {
 
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
-        {
-            yarp::os::Bottle cmd, outcome;
-            cmd.addString("startWalking");
-            m_pImpl->rpcWalkingClient.write(cmd, outcome);
+    //     if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
+    //     {
+    //         yarp::os::Bottle cmd, outcome;
+    //         cmd.addString("startWalking");
+    //         m_pImpl->rpcWalkingClient.write(cmd, outcome);
 
-            m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::Running;
-            yInfo() << "[JoypadFingersModule::updateModule] start the robot";
-            yInfo() << "[JoypadFingersModule::updateModule] Running ...";
-        }
-    }
+    //         m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::Running;
+    //         yInfo() << "[JoypadFingersModule::updateModule] start the robot";
+    //         yInfo() << "[JoypadFingersModule::updateModule] Running ...";
+    //     }
+    // }
     return true;
 }
