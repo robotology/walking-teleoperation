@@ -189,7 +189,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     options.put("remoteControlBoards", remoteControlBoards.get(0));
     options.put("localPortPrefix", "/" + name + "/remoteControlBoard");
     yarp::os::Property& remoteControlBoardsOpts = options.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
-    remoteControlBoardsOpts.put("writeStrict", "on");
 
     m_actuatedDOFs = m_axesList.size();
 
@@ -265,7 +264,7 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
     // check if the control interface is ready
     if (!m_controlModeInterface)
     {
-        yError() << "[RobotControlHelper::switchToControlMode] ControlMode I/F not ready.";
+        //yError() << "[RobotControlHelper::switchToControlMode] ControlMode I/F not ready.";
         return false;
     }
 
@@ -309,7 +308,7 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
 {
     if (m_velocityInterface == nullptr)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
+        //yError() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
         return false;
     }
 
@@ -412,8 +411,8 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
-                        "velocity";
+            //yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+            //            "velocity";
             return false;
         }
         break;
@@ -506,8 +505,8 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
     if (m_fingerIntegrator == nullptr)
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize "
-                    "please call configure() method";
+        //yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize "
+        //            "please call configure() method";
         return false;
     }
 
@@ -594,10 +593,11 @@ struct OpenXRJoypadModule::Impl
 
     bool leftAndRightSwapped{false};
     std::vector<int> buttonsState;
+    unsigned int buttonCount = 0;
 
     bool isButtonStateEqualToMask(const std::vector<int>& mask) const
     {
-        return (mask.size() == this->buttonsState.size()
+        return (mask.size() <= this->buttonsState.size()
                 && std::equal(mask.begin(),
                               mask.end(),
                               this->buttonsState.begin(),
@@ -885,7 +885,7 @@ struct OpenXRJoypadModule::Impl
         // [vive_left_trigger, vive_right_trigger, vive_left_trackpad_x, vive_left_trackpad_y,
         // vive_right_trackpad_x, vive_right_trackpad_y]
 
-        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1;
+        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1; //TODO CONF FILE
         this->joypadParameters.fingersVelocityRightIndex = !this->leftAndRightSwapped ? 1 : 0;
 
         this->joypadParameters.xJoypadIndex
@@ -1066,24 +1066,20 @@ struct OpenXRJoypadModule::Impl
         return 0;
     }
 
-    std::vector<int> getDeviceButtonsState()
+    void getDeviceButtonsState()
     {
-        std::vector<int> buttons;
-        unsigned int buttonCount = 0;
-        this->joypadControllerInterface->getButtonCount(buttonCount);
+        if (buttonCount == 0)
+        {
+            this->joypadControllerInterface->getButtonCount(buttonCount);
+            buttonsState.resize(buttonCount);
+        }
 
         float value;
         for (unsigned int i = 0; i < buttonCount; i++)
         {
             this->joypadControllerInterface->getButton(i, value);
-
-            if (value > 0)
-                buttons.push_back(1);
-            else
-                buttons.push_back(0);
+            buttonsState[i] = value > 0 ? 1.0 : 0.0;
         }
-
-        return buttons;
     }
 };
 
@@ -1123,7 +1119,7 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     const yarp::os::Bottle& openXROptions = rf.findGroup(headsetGroup);
     if (!m_pImpl->configureOpenXR(openXROptions, getName()))
     {
-        yError() << "[JoypadFingersModule::configure] Unable to configure the oculus";
+        yError() << "[JoypadFingersModule::configure] Unable to configure the joypad client";
         return false;
     }
 
@@ -1134,7 +1130,6 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_pImpl->leftHandFingers->configure(leftFingersOptions, getName()))
     {
         yError() << "[JoypadFingersModule::configure] Unable to initialize the left fingers retargeting.";
-        return false;
     }
 
     m_pImpl->rightHandFingers = std::make_unique<FingersRetargeting>();
@@ -1143,7 +1138,6 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_pImpl->rightHandFingers->configure(rightFingersOptions, getName()))
     {
         yError() << "[JoypadFingersModule::configure] Unable to initialize the right fingers retargeting.";
-        return false;
     }
 
     // open ports
@@ -1170,6 +1164,8 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
 
     m_pImpl->state = Impl::OpenXRFSM::Configured;
 
+    yInfo() << "Configuring done!";
+
     return true;
 }
 
@@ -1191,11 +1187,27 @@ bool OpenXRJoypadModule::close()
 
 bool OpenXRJoypadModule::updateModule()
 {
-
-    m_pImpl->buttonsState = m_pImpl->getDeviceButtonsState();
-
     // if (m_pImpl->state == Impl::OpenXRFSM::Running)
     // {
+
+        m_pImpl->getDeviceButtonsState();
+    //unsigned int axisCount = 0;
+        //m_pImpl->joypadControllerInterface->getAxisCount(axisCount);
+    //yInfo() << "axis";
+    //    for (size_t i = 0; i < axisCount; ++i)
+    //    {
+    //        double value;
+    //        m_pImpl->joypadControllerInterface->getAxis(i, value);
+    //        yInfo() << i << "++  " << value;
+    //    }
+
+        //yInfo() << "Buttons";
+        //size_t i = 0;
+        //for (auto button : m_pImpl->buttonsState)
+        //    {
+        //        yInfo() << i << "++ " << button;
+        //        i++;
+        //    }
 
         // send commands to the walking
         double x{0.0}, y{0.0}, z{0.0};
@@ -1232,14 +1244,12 @@ bool OpenXRJoypadModule::updateModule()
 
         if (!m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity))
         {
-            yError() << "[JoypadFingersModule::updateModule] Unable to set the left finger velocity.";
-            return false;
+            //yError() << "[JoypadFingersModule::updateModule] Unable to set the left finger velocity.";
         }
 
         if (!m_pImpl->leftHandFingers->move())
         {
-            yError() << "[JoypadFingersModule::updateModule] Unable to move the left finger";
-            return false;
+            //yError() << "[JoypadFingersModule::updateModule] Unable to move the left finger";
         }
 
         const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
@@ -1249,14 +1259,12 @@ bool OpenXRJoypadModule::updateModule()
 
         if (!m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity))
         {
-            yError() << "[JoypadFingersModule::updateModule] Unable to set the right finger velocity.";
-            return false;
+            //yError() << "[JoypadFingersModule::updateModule] Unable to set the right finger velocity.";
         }
 
         if (!m_pImpl->rightHandFingers->move())
         {
-            yError() << "[JoypadFingersModule::updateModule] Unable to move the right finger";
-            return false;
+            //yError() << "[JoypadFingersModule::updateModule] Unable to move the right finger";
         }
 
         // check if it is time to stop walking
