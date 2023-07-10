@@ -97,7 +97,7 @@ public:
      * @param desiredValue desired joint velocity or position (radiant or radiant/s)
      * @return true / false in case of success / failure
      */
-    bool setJointReference(const yarp::sig::Vector& desiredValue);
+    bool setJointReferences(const yarp::sig::Vector& desiredValue);
 
     /**
      * Check if the velocity control is used
@@ -189,7 +189,6 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
     options.put("remoteControlBoards", remoteControlBoards.get(0));
     options.put("localPortPrefix", "/" + name + "/remoteControlBoard");
     yarp::os::Property& remoteControlBoardsOpts = options.addGroup("REMOTE_CONTROLBOARD_OPTIONS");
-    remoteControlBoardsOpts.put("writeStrict", "on");
 
     m_actuatedDOFs = m_axesList.size();
 
@@ -235,7 +234,9 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config,
 
     m_desiredJointValue.resize(m_actuatedDOFs);
     m_positionFeedbackInDegrees.resize(m_actuatedDOFs);
+    m_positionFeedbackInDegrees.zero();
     m_positionFeedbackInRadians.resize(m_actuatedDOFs);
+    m_positionFeedbackInRadians.zero();
 
     // check if the robot is alive
     bool okPosition = false;
@@ -265,7 +266,7 @@ bool RobotControlHelper::switchToControlMode(const int& controlMode)
     // check if the control interface is ready
     if (!m_controlModeInterface)
     {
-        yError() << "[RobotControlHelper::switchToControlMode] ControlMode I/F not ready.";
+        yErrorOnce() << "[RobotControlHelper::switchToControlMode] ControlMode I/F not ready.";
         return false;
     }
 
@@ -283,7 +284,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
 {
     if (m_positionDirectInterface == nullptr)
     {
-        yError()
+        yErrorOnce()
             << "[RobotControlHelper::setDirectPositionReferences] PositionDirect I/F not ready.";
         return false;
     }
@@ -309,7 +310,7 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
 {
     if (m_velocityInterface == nullptr)
     {
-        yError() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
+        yErrorOnce() << "[RobotControlHelper::setVelocityReferences] Velocity I/F not ready.";
         return false;
     }
 
@@ -396,15 +397,15 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
     return true;
 }
 
-bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue)
+bool RobotControlHelper::setJointReferences(const yarp::sig::Vector& desiredValue)
 {
     switch (m_controlMode)
     {
     case VOCAB_CM_POSITION_DIRECT:
         if (!setDirectPositionReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
-                        "position";
+            yErrorOnce() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                            "positions";
             return false;
         }
         break;
@@ -412,8 +413,8 @@ bool RobotControlHelper::setJointReference(const yarp::sig::Vector& desiredValue
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yError() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
-                        "velocity";
+            yErrorOnce() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                            "velocities";
             return false;
         }
         break;
@@ -504,23 +505,32 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 
 bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
-    if (m_fingerIntegrator == nullptr)
+    if (m_desiredJointValue.size() == 0)
     {
-        yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialize "
-                    "please call configure() method";
+        yErrorOnce() << "The FingerRetargeting object has not been properly initialized.";
         return false;
     }
 
     if (m_controlHelper->isVelocityControlUsed())
+    {
         m_desiredJointValue = fingersVelocity * m_fingersScaling;
+    }
     else
+    {
+        if (m_fingerIntegrator == nullptr)
+        {
+            yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialized."
+                        "Please call configure() method";
+            return false;
+        }
         m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
+    }
     return true;
 }
 
 bool FingersRetargeting::move()
 {
-    return m_controlHelper->setJointReference(m_desiredJointValue);
+    return m_controlHelper->setJointReferences(m_desiredJointValue);
 }
 
 auto getPosition(const yarp::sig::Matrix& m)
@@ -560,15 +570,9 @@ struct OpenXRJoypadModule::Impl
     };
     JoypadParameters joypadParameters;
 
-    enum class OpenXRFSM
-    {
-        Configured,
-        Running,
-        InPreparation
-    };
-    OpenXRFSM state; /**< State of the OpenXRFSM */
-
     double dT;
+    bool print_buttons{false};
+    bool print_axes{false};
 
     std::unique_ptr<FingersRetargeting> leftHandFingers; /**< Pointer to the left
                                                               finger retargeting object. */
@@ -594,10 +598,11 @@ struct OpenXRJoypadModule::Impl
 
     bool leftAndRightSwapped{false};
     std::vector<int> buttonsState;
+    unsigned int buttonCount{0};
 
     bool isButtonStateEqualToMask(const std::vector<int>& mask) const
     {
-        return (mask.size() == this->buttonsState.size()
+        return (mask.size() <= this->buttonsState.size()
                 && std::equal(mask.begin(),
                               mask.end(),
                               this->buttonsState.begin(),
@@ -748,9 +753,6 @@ struct OpenXRJoypadModule::Impl
         std::vector<std::vector<int>*> buttonsMap;
         std::vector<std::vector<int>*> stateMachineButtonsMap;
 
-        // set the index of the axis according to the OVRheadset yarp device
-        //  The order of the buttons are here: https://github.com/ami-iit/yarp-device-openxrheadset/blob/b560d603bba8e50415be839d0e22b51219abbda8/src/devices/openxrheadset/OpenXrInterface.cpp#L651-L661
-
         if (!YarpHelper::getIntVectorFromSearchable(config, //
                                                     "start_walking_buttons_map",
                                                     this->joypadParameters.startWalkingButtonsMap))
@@ -874,18 +876,14 @@ struct OpenXRJoypadModule::Impl
             this->joypadParameters.startWalkingButtonsMap.size());
         for (int i = 0; i < this->joypadParameters.startWalkingButtonsMap.size(); i++)
         {
-            this->joypadParameters.stopWalkingButtonsMap[i]
+            this->joypadParameters.stopWalkingButtonsMap[i]                 //TODO CONF FILE
                 = (this->joypadParameters.startWalkingButtonsMap[i] > 0
                    || this->joypadParameters.prepareWalkingButtonsMap[i] > 0)
                       ? 1
                       : 0;
         }
 
-        // in the vive (yarp) we have the following axis
-        // [vive_left_trigger, vive_right_trigger, vive_left_trackpad_x, vive_left_trackpad_y,
-        // vive_right_trackpad_x, vive_right_trackpad_y]
-
-        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1;
+        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1; //TODO CONF FILE
         this->joypadParameters.fingersVelocityRightIndex = !this->leftAndRightSwapped ? 1 : 0;
 
         this->joypadParameters.xJoypadIndex
@@ -1066,24 +1064,20 @@ struct OpenXRJoypadModule::Impl
         return 0;
     }
 
-    std::vector<int> getDeviceButtonsState()
+    void getDeviceButtonsState()
     {
-        std::vector<int> buttons;
-        unsigned int buttonCount = 0;
-        this->joypadControllerInterface->getButtonCount(buttonCount);
+        if (buttonCount == 0)
+        {
+            this->joypadControllerInterface->getButtonCount(buttonCount);
+            buttonsState.resize(buttonCount);
+        }
 
         float value;
         for (unsigned int i = 0; i < buttonCount; i++)
         {
             this->joypadControllerInterface->getButton(i, value);
-
-            if (value > 0)
-                buttons.push_back(1);
-            else
-                buttons.push_back(0);
+            buttonsState[i] = value > 0 ? 1.0 : 0.0;
         }
-
-        return buttons;
     }
 };
 
@@ -1109,6 +1103,9 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     m_pImpl->dT = generalOptions.check("samplingTime", yarp::os::Value(0.1)).asFloat64();
     yInfo() << "[JoypadFingersModule::configure] sampling time: " << m_pImpl->dT;
 
+    m_pImpl->print_buttons = rf.check("print_buttons", yarp::os::Value(false)).asBool();
+    m_pImpl->print_axes = rf.check("print_axes", yarp::os::Value(false)).asBool();
+
     // set the module name
     std::string name;
     if (!YarpHelper::getStringFromSearchable(rf, "name", name))
@@ -1123,7 +1120,7 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     const yarp::os::Bottle& openXROptions = rf.findGroup(headsetGroup);
     if (!m_pImpl->configureOpenXR(openXROptions, getName()))
     {
-        yError() << "[JoypadFingersModule::configure] Unable to configure the oculus";
+        yError() << "[JoypadFingersModule::configure] Unable to configure the joypad client";
         return false;
     }
 
@@ -1134,7 +1131,6 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_pImpl->leftHandFingers->configure(leftFingersOptions, getName()))
     {
         yError() << "[JoypadFingersModule::configure] Unable to initialize the left fingers retargeting.";
-        return false;
     }
 
     m_pImpl->rightHandFingers = std::make_unique<FingersRetargeting>();
@@ -1143,7 +1139,6 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     if (!m_pImpl->rightHandFingers->configure(rightFingersOptions, getName()))
     {
         yError() << "[JoypadFingersModule::configure] Unable to initialize the right fingers retargeting.";
-        return false;
     }
 
     // open ports
@@ -1167,8 +1162,7 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     }
     m_pImpl->robotGoalPort.open("/" + getName() + portName);
 
-
-    m_pImpl->state = Impl::OpenXRFSM::Configured;
+    yInfo() << "Configuring done!";
 
     return true;
 }
@@ -1191,108 +1185,95 @@ bool OpenXRJoypadModule::close()
 
 bool OpenXRJoypadModule::updateModule()
 {
+    m_pImpl->getDeviceButtonsState();
 
-    m_pImpl->buttonsState = m_pImpl->getDeviceButtonsState();
-
-    if (m_pImpl->state == Impl::OpenXRFSM::Running)
+    if (m_pImpl->print_axes)
     {
-
-        // send commands to the walking
-        double x{0.0}, y{0.0}, z{0.0};
-
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadLeftButtonsMap))
+        unsigned int axisCount = 0;
+        m_pImpl->joypadControllerInterface->getAxisCount(axisCount);
+        for (size_t i = 0; i < axisCount; ++i)
         {
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
-
-            x = m_pImpl->deadzone(x);
-            y = -m_pImpl->deadzone(y);
-        }
-
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadRightButtonsMap))
-        {
-            m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.zJoypadIndex, z);
-            z = -m_pImpl->deadzone(z);
-        }
-
-        // send commands to the walking
-        yarp::sig::Vector& goal= m_pImpl->robotGoalPort.prepare();
-        goal.clear();
-        goal.push_back(x);
-        goal.push_back(y);
-        goal.push_back(z);
-        m_pImpl->robotGoalPort.write();
-
-        // left fingers
-        const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
-            m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
-            m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
-            m_pImpl->joypadParameters.fingersVelocityLeftIndex);
-
-        if (!m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity))
-        {
-            yError() << "[JoypadFingersModule::updateModule] Unable to set the left finger velocity.";
-            return false;
-        }
-
-        if (!m_pImpl->leftHandFingers->move())
-        {
-            yError() << "[JoypadFingersModule::updateModule] Unable to move the left finger";
-            return false;
-        }
-
-        const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
-            m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
-            m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
-            m_pImpl->joypadParameters.fingersVelocityRightIndex);
-
-        if (!m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity))
-        {
-            yError() << "[JoypadFingersModule::updateModule] Unable to set the right finger velocity.";
-            return false;
-        }
-
-        if (!m_pImpl->rightHandFingers->move())
-        {
-            yError() << "[JoypadFingersModule::updateModule] Unable to move the right finger";
-            return false;
-        }
-
-        // check if it is time to stop walking
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
-        {
-            yarp::os::Bottle cmd, outcome;
-            cmd.addString("stopWalking");
-            m_pImpl->rpcWalkingClient.write(cmd, outcome);
-            yInfo() << "[JoypadFingersModule::updateModule] stop";
-            return false;
-        }
-
-    } else if (m_pImpl->state == Impl::OpenXRFSM::Configured)
-    {
-        // // check if it is time to prepare or start walking
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
-        {
-            // TODO add a visual feedback for the user
-            yarp::os::Bottle cmd, outcome;
-            cmd.addString("prepareRobot");
-            m_pImpl->rpcWalkingClient.write(cmd, outcome);
-            m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::InPreparation;
-            yInfo() << "[JoypadFingersModule::updateModule] prepare the robot";
-        }
-    } else if (m_pImpl->state == Impl::OpenXRFSM::InPreparation)
-    {
-
-        if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
-        {
-            yarp::os::Bottle cmd, outcome;
-            cmd.addString("startWalking");
-            m_pImpl->rpcWalkingClient.write(cmd, outcome);
-
-            m_pImpl->state = OpenXRJoypadModule::Impl::OpenXRFSM::Running;
-            yInfo() << "[JoypadFingersModule::updateModule] start the robot";
-            yInfo() << "[JoypadFingersModule::updateModule] Running ...";
+            double value;
+            m_pImpl->joypadControllerInterface->getAxis(i, value);
+            yInfo() << "Axis [" << i << "]: " << value;
         }
     }
+
+    if (m_pImpl->print_buttons)
+    {
+        for (size_t i = 0 ; i < m_pImpl->buttonsState.size(); ++i)
+        {
+            yInfo() << "Button [" << i << "]: " << m_pImpl->buttonsState[i];
+        }
+    }
+
+    // send commands to the walking
+    double x{0.0}, y{0.0}, z{0.0};
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadLeftButtonsMap))
+    {
+        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.xJoypadIndex, x);
+        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.yJoypadIndex, y);
+
+        x = m_pImpl->deadzone(x);
+        y = -m_pImpl->deadzone(y); //TODO: get - from conf file
+    }
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.joypadRightButtonsMap))
+    {
+        m_pImpl->joypadControllerInterface->getAxis(m_pImpl->joypadParameters.zJoypadIndex, z);
+        z = -m_pImpl->deadzone(z);
+    }
+
+    // send commands to the walking
+    yarp::sig::Vector& goal= m_pImpl->robotGoalPort.prepare();
+    goal.clear();
+    goal.push_back(x);
+    goal.push_back(y);
+    goal.push_back(z);
+    m_pImpl->robotGoalPort.write();
+
+    // left fingers
+    const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
+                m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
+                m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
+                m_pImpl->joypadParameters.fingersVelocityLeftIndex);
+
+    m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity);
+    m_pImpl->leftHandFingers->move();
+
+    const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
+                m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
+                m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
+                m_pImpl->joypadParameters.fingersVelocityRightIndex);
+
+    m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity);
+    m_pImpl->rightHandFingers->move();
+
+    // check if it is time to stop walking
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
+    {
+        yarp::os::Bottle cmd, outcome;
+        cmd.addString("stopWalking");
+        m_pImpl->rpcWalkingClient.write(cmd, outcome);
+        yInfo() << "[OpenXRJoypadModule::updateModule] Sent stopWalking.";
+        return false;
+    } else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
+    {
+        // TODO add a visual feedback for the user
+        yarp::os::Bottle cmd, outcome;
+        cmd.addString("prepareRobot");
+        m_pImpl->rpcWalkingClient.write(cmd, outcome);
+        yInfo() << "[JoypadFingersModule::updateModule] Sent prepareRobot";
+    }
+    else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
+    {
+        yarp::os::Bottle cmd, outcome;
+        cmd.addString("startWalking");
+        m_pImpl->rpcWalkingClient.write(cmd, outcome);
+
+        yInfo() << "[JoypadFingersModule::updateModule] Sent startWalking";
+    }
+
     return true;
 }
