@@ -998,20 +998,23 @@ struct OpenXRJoypadModule::Impl
 
     bool configureOpenXR(const yarp::os::Searchable& config, const std::string& name)
     {
-        if (!this->configureTranformClient(config, name))
+        if (config.check("check_hands_inverted", yarp::os::Value(false)).asBool())
         {
-            yError() << "[JoypadFingersModule::configureOpenXR] Unable to configure the transform client.";
-            return false;
-        }
+            if (!this->configureTranformClient(config, name))
+            {
+                yError() << "[JoypadFingersModule::configureOpenXR] Unable to configure the transform client.";
+                return false;
+            }
 
-        // Once the vive is stared the left and right joypad are chosen. Since the joypad are
-        // exactly the same. We should consider in the application which is the left and the right
-        // joypad
-        if (!this->setLeftAndRightSwappedFlag())
-        {
-            yError() << "[JoypadFingersModule::configureOpenXR] Unable to set the flag related "
-                        "to the swap of the left and right joypad.";
-            return false;
+            // Once the vive is stared the left and right joypad are chosen. Since the joypad are
+            // exactly the same. We should consider in the application which is the left and the right
+            // joypad
+            if (!this->setLeftAndRightSwappedFlag())
+            {
+                yError() << "[JoypadFingersModule::configureOpenXR] Unable to set the flag related "
+                            "to the swap of the left and right joypad.";
+                return false;
+            }
         }
 
         if (!this->configureJoypad(config, name))
