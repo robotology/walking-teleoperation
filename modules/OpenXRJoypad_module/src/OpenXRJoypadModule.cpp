@@ -574,6 +574,9 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> startWalkingButtonsMap;
         std::vector<int> prepareWalkingButtonsMap;
         std::vector<int> stopWalkingButtonsMap;
+        size_t startWalkingActiveButtons;
+        size_t prepareWalkingActiveButtons;
+        size_t stopWalkingActiveButtons;
         std::vector<int> walkingCommandReleaseButtonMap;
         std::vector<int> leftFingersSqueezeButtonsMap;
         std::vector<int> leftFingersReleaseButtonsMap;
@@ -640,6 +643,7 @@ struct OpenXRJoypadModule::Impl
     unsigned int axisCount{0};
     unsigned int sticksCount{0};
     std::string walkingCommand;
+    size_t activeButtons{0};
 
     bool isButtonStateEqualToMask(const std::vector<int>& mask) const
     {
@@ -929,6 +933,24 @@ struct OpenXRJoypadModule::Impl
             this->joypadParameters.stopWalkingButtonsMap = stopWalkingButtonsSwappedMap;
             this->joypadParameters.prepareWalkingButtonsMap = prepareWalkingButtonsSwappedMap;
         }
+
+        auto countActiveButtons = [](const std::vector<int>& input) -> size_t
+        {
+            size_t output = 0;
+            for (auto b : input)
+            {
+                if (b > 0)
+                {
+                    output++;
+                }
+            }
+            return output;
+        };
+
+        this->joypadParameters.startWalkingActiveButtons = countActiveButtons(this->joypadParameters.startWalkingButtonsMap);
+        this->joypadParameters.stopWalkingActiveButtons = countActiveButtons(this->joypadParameters.stopWalkingButtonsMap);
+        this->joypadParameters.prepareWalkingActiveButtons = countActiveButtons(this->joypadParameters.prepareWalkingButtonsMap);
+
 
         return true;
     }
@@ -1304,18 +1326,31 @@ bool OpenXRJoypadModule::updateModule()
         m_pImpl->rpcWalkingClient.write(cmd, outcome);
         yInfo() << "[OpenXRJoypadModule::updateModule] Sent" << m_pImpl->walkingCommand;
         m_pImpl->walkingCommand = "";
+        m_pImpl->activeButtons = 0;
     }
 
-    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
+    // The activeButtons logic is to make sure that the command with more buttons is privileged.
+    // This is to make easy to trigger commands that require combinations of buttons
+    // that would trigger other commands if not released all at the same time
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap) &&
+            (m_pImpl->joypadParameters.stopWalkingActiveButtons > m_pImpl->activeButtons))
     {
+        m_pImpl->activeButtons = m_pImpl->joypadParameters.stopWalkingActiveButtons;
         m_pImpl->walkingCommand = "stopWalking";
     }
-    else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap) &&
+            (m_pImpl->joypadParameters.prepareWalkingActiveButtons > m_pImpl->activeButtons))
     {
+        m_pImpl->activeButtons = m_pImpl->joypadParameters.prepareWalkingActiveButtons;
         m_pImpl->walkingCommand = "prepareRobot";
     }
-    else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap) &&
+            (m_pImpl->joypadParameters.startWalkingActiveButtons > m_pImpl->activeButtons))
     {
+        m_pImpl->activeButtons = m_pImpl->joypadParameters.startWalkingActiveButtons;
         m_pImpl->walkingCommand = "startWalking";
     }
 
