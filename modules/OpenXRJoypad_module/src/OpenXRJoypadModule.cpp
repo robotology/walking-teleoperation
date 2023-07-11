@@ -450,7 +450,7 @@ public:
      * @param name name of the robot
      * @return true in case of success and false otherwise.
      */
-    virtual bool configure(const yarp::os::Searchable& config, const std::string& name);
+    bool configure(const yarp::os::Searchable& config, const std::string& name);
 
     /**
      * Set the fingers velocities
@@ -463,7 +463,7 @@ public:
      * Move the robot part
      * @return true in case of success and false otherwise.
      */
-    virtual bool move();
+    bool move();
 
 };
 
@@ -582,9 +582,9 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> joypadLeftButtonsMap;
         std::vector<int> joypadRightButtonsMap;
 
-        int fingersVelocityLeftIndex; /**< Index of the trigger used for squeezing the left hand */
-        int fingersVelocityRightIndex; /**< Index of the trigger used for
-                                           squeezing the right hand */
+        InputAxis leftFingersVelocityInput; /**< Index of the trigger used for squeezing the left hand */
+        InputAxis rightFingersVelocityInput; /**< Index of the trigger used for
+                                                  squeezing the right hand */
     };
     JoypadParameters joypadParameters;
 
@@ -843,11 +843,20 @@ struct OpenXRJoypadModule::Impl
             return false;
         }
 
-        std::unordered_map<std::string, JoypadParameters::InputAxis> codes = {{"left_x_code", JoypadParameters::InputAxis()},
-                                                                              {"left_y_code", JoypadParameters::InputAxis()},
-                                                                              {"right_x_code", JoypadParameters::InputAxis()},
-                                                                              {"right_y_code", JoypadParameters::InputAxis()}};
+        const std::string leftXCode  = "left_x_code";
+        const std::string leftYCode  = "left_y_code";
+        const std::string rightXCode = "right_x_code";
+        const std::string rightYCode = "right_y_code";
+        const std::string leftFingersVelocityCode = "left_fingers_velocity_code";
+        const std::string rightFingersVelocityCode = "right_fingers_velocity_code";
 
+
+        std::unordered_map<std::string, JoypadParameters::InputAxis> codes = {{leftXCode,  JoypadParameters::InputAxis()},
+                                                                              {leftYCode,  JoypadParameters::InputAxis()},
+                                                                              {rightXCode, JoypadParameters::InputAxis()},
+                                                                              {rightYCode, JoypadParameters::InputAxis()},
+                                                                              {leftFingersVelocityCode, JoypadParameters::InputAxis()},
+                                                                              {rightFingersVelocityCode, JoypadParameters::InputAxis()}};
 
         for (auto& c : codes)
         {
@@ -944,15 +953,15 @@ struct OpenXRJoypadModule::Impl
                       : 0;
         }
 
-        this->joypadParameters.fingersVelocityLeftIndex = !this->leftAndRightSwapped ? 0 : 1; //TODO CONF FILE
-        this->joypadParameters.fingersVelocityRightIndex = !this->leftAndRightSwapped ? 1 : 0;
+        this->joypadParameters.leftFingersVelocityInput  = !this->leftAndRightSwapped ? codes[leftFingersVelocityCode]  : codes[rightFingersVelocityCode];
+        this->joypadParameters.rightFingersVelocityInput = !this->leftAndRightSwapped ? codes[rightFingersVelocityCode] : codes[leftFingersVelocityCode];
 
         this->joypadParameters.xInput
-            = this->leftAndRightSwapped ? codes["right_x_code"] : codes["left_x_code"];
+            = this->leftAndRightSwapped ? codes[rightXCode] : codes[leftXCode];
         this->joypadParameters.yInput
-            = this->leftAndRightSwapped ? codes["right_y_code"] : codes["left_y_code"];
+            = this->leftAndRightSwapped ? codes[rightYCode] : codes[leftYCode];
         this->joypadParameters.zInput
-            = this->leftAndRightSwapped ? codes["left_y_code"] : codes["right_y_code"];
+            = this->leftAndRightSwapped ? codes[leftYCode] : codes[rightYCode];
         this->joypadParameters.joypadLeftButtonsMap = this->leftAndRightSwapped ? rightWalkingButtonsMap : leftWalkingButtonsMap;
         this->joypadParameters.joypadRightButtonsMap = this->leftAndRightSwapped ? leftWalkingButtonsMap : rightWalkingButtonsMap;
 
@@ -1102,15 +1111,29 @@ struct OpenXRJoypadModule::Impl
         }
     }
 
+    double getInputValue(JoypadParameters::InputAxis& input)
+    {
+        double value{0.0};
+        switch (input.mode)
+        {
+        case JoypadParameters::InputMode::Axis:
+            joypadControllerInterface->getAxis(input.index, value);
+            value = input.sign * deadzone(value);
+            return value;
+        case JoypadParameters::InputMode::Stick:
+            joypadControllerInterface->getStick(input.index, input.buffer, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
+            value = input.sign * deadzone(input.buffer[input.dof]);
+            return value;
+        default:
+            return value;
+        }
+    }
+
     double evaluateDesiredFingersVelocity(const std::vector<int>& fingersSqueezeButtonsMask,
                                           const std::vector<int>& fingersReleaseButtonsMask,
-                                          int fingersVelocityIndex)
+                                          JoypadParameters::InputAxis& fingersVelocityCode)
     {
-        double fingersVelocity;
-        this->joypadControllerInterface->getAxis(fingersVelocityIndex, fingersVelocity);
-
-        if (fingersVelocity == 0)
-            return 0;
+        double fingersVelocity = getInputValue(fingersVelocityCode);
 
         if (this->isButtonStateEqualToMask(fingersSqueezeButtonsMask))
         {
@@ -1131,24 +1154,6 @@ struct OpenXRJoypadModule::Impl
         {
             this->joypadControllerInterface->getButton(i, value);
             buttonsState[i] = value > 0 ? 1.0 : 0.0;
-        }
-    }
-
-    double getInputValue(JoypadParameters::InputAxis& input)
-    {
-        double value{0.0};
-        switch (input.mode)
-        {
-        case JoypadParameters::InputMode::Axis:
-            joypadControllerInterface->getAxis(input.index, value);
-            value = input.sign * deadzone(value);
-            return value;
-        case JoypadParameters::InputMode::Stick:
-            joypadControllerInterface->getStick(input.index, input.buffer, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
-            value = input.sign * deadzone(input.buffer[input.dof]);
-            return value;
-        default:
-            return value;
         }
     }
 };
@@ -1319,7 +1324,7 @@ bool OpenXRJoypadModule::updateModule()
     const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
                 m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
                 m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
-                m_pImpl->joypadParameters.fingersVelocityLeftIndex);
+                m_pImpl->joypadParameters.leftFingersVelocityInput);
 
     m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity);
     m_pImpl->leftHandFingers->move();
@@ -1327,7 +1332,7 @@ bool OpenXRJoypadModule::updateModule()
     const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
                 m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
                 m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
-                m_pImpl->joypadParameters.fingersVelocityRightIndex);
+                m_pImpl->joypadParameters.rightFingersVelocityInput);
 
     m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity);
     m_pImpl->rightHandFingers->move();
