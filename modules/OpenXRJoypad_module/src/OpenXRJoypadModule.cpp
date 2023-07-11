@@ -9,7 +9,7 @@
 #include <iterator>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
+#include <vector>
 #include <string>
 #include <sstream>
 
@@ -861,20 +861,13 @@ struct OpenXRJoypadModule::Impl
             return false;
         }
 
-        const std::string leftXCode  = "left_x_code";
-        const std::string leftYCode  = "left_y_code";
-        const std::string rightXCode = "right_x_code";
-        const std::string rightYCode = "right_y_code";
-        const std::string leftFingersVelocityCode = "left_fingers_velocity_code";
-        const std::string rightFingersVelocityCode = "right_fingers_velocity_code";
-
-
-        std::unordered_map<std::string, JoypadParameters::InputAxis> codes = {{leftXCode,  JoypadParameters::InputAxis()},
-                                                                              {leftYCode,  JoypadParameters::InputAxis()},
-                                                                              {rightXCode, JoypadParameters::InputAxis()},
-                                                                              {rightYCode, JoypadParameters::InputAxis()},
-                                                                              {leftFingersVelocityCode, JoypadParameters::InputAxis()},
-                                                                              {rightFingersVelocityCode, JoypadParameters::InputAxis()}};
+        JoypadParameters::InputAxis rightXCode;
+        std::vector<std::pair<std::string, JoypadParameters::InputAxis&>> codes = {{"left_x_code",  this->joypadParameters.xInput},
+                                                                                   {"left_y_code",  this->joypadParameters.yInput},
+                                                                                   {"right_x_code", rightXCode},
+                                                                                   {"right_y_code", this->joypadParameters.zInput},
+                                                                                   {"left_fingers_velocity_code", this->joypadParameters.leftFingersVelocityInput},
+                                                                                   {"right_fingers_velocity_code", this->joypadParameters.rightFingersVelocityInput}};
 
         for (auto& c : codes)
         {
@@ -885,24 +878,22 @@ struct OpenXRJoypadModule::Impl
             }
         }
 
-        std::vector<int> leftWalkingButtonsMap;
-        std::vector<int> rightWalkingButtonsMap;
         std::vector<int> prepareWalkingButtonsSwappedMap;
         std::vector<int> stopWalkingButtonsSwappedMap;
         std::vector<int> startWalkingButtonsSwappedMap;
 
-        std::unordered_map<std::string, std::vector<int>&> buttonsMaps = {{"start_walking_buttons_map",           this->joypadParameters.startWalkingButtonsMap},
-                                                                          {"stop_walking_buttons_map",            this->joypadParameters.stopWalkingButtonsMap},
-                                                                          {"prepare_walking_buttons_map",         this->joypadParameters.prepareWalkingButtonsMap},
-                                                                          {"start_walking_buttons_map_swapped",   startWalkingButtonsSwappedMap},
-                                                                          {"stop_walking_buttons_swapped_map",    stopWalkingButtonsSwappedMap},
-                                                                          {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
-                                                                          {"left_fingers_squeeze_buttons_map",    this->joypadParameters.leftFingersSqueezeButtonsMap},
-                                                                          {"left_fingers_release_buttons_map",    this->joypadParameters.leftFingersReleaseButtonsMap},
-                                                                          {"right_fingers_squeeze_buttons_map",   this->joypadParameters.rightFingersSqueezeButtonsMap},
-                                                                          {"right_fingers_release_buttons_map",   this->joypadParameters.rightFingersReleaseButtonsMap},
-                                                                          {"left_walking_buttons_map",            leftWalkingButtonsMap},
-                                                                          {"right_walking_buttons_map",           rightWalkingButtonsMap}};
+        std::vector<std::pair<std::string, std::vector<int>&>> buttonsMaps = {{"start_walking_buttons_map",           this->joypadParameters.startWalkingButtonsMap},
+                                                                              {"stop_walking_buttons_map",            this->joypadParameters.stopWalkingButtonsMap},
+                                                                              {"prepare_walking_buttons_map",         this->joypadParameters.prepareWalkingButtonsMap},
+                                                                              {"start_walking_buttons_map_swapped",   startWalkingButtonsSwappedMap},
+                                                                              {"stop_walking_buttons_swapped_map",    stopWalkingButtonsSwappedMap},
+                                                                              {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
+                                                                              {"left_fingers_squeeze_buttons_map",    this->joypadParameters.leftFingersSqueezeButtonsMap},
+                                                                              {"left_fingers_release_buttons_map",    this->joypadParameters.leftFingersReleaseButtonsMap},
+                                                                              {"right_fingers_squeeze_buttons_map",   this->joypadParameters.rightFingersSqueezeButtonsMap},
+                                                                              {"right_fingers_release_buttons_map",   this->joypadParameters.rightFingersReleaseButtonsMap},
+                                                                              {"left_walking_buttons_map",            this->joypadParameters.joypadLeftButtonsMap},
+                                                                              {"right_walking_buttons_map",           this->joypadParameters.joypadRightButtonsMap}};
 
         for (auto& b : buttonsMaps)
         {
@@ -913,25 +904,26 @@ struct OpenXRJoypadModule::Impl
             }
         }
 
-        this->joypadParameters.leftFingersVelocityInput  = !this->leftAndRightSwapped ? codes[leftFingersVelocityCode]  : codes[rightFingersVelocityCode];
-        this->joypadParameters.rightFingersVelocityInput = !this->leftAndRightSwapped ? codes[rightFingersVelocityCode] : codes[leftFingersVelocityCode];
-
-        this->joypadParameters.xInput
-            = this->leftAndRightSwapped ? codes[rightXCode] : codes[leftXCode];
-        this->joypadParameters.yInput
-            = this->leftAndRightSwapped ? codes[rightYCode] : codes[leftYCode];
-        this->joypadParameters.zInput
-            = this->leftAndRightSwapped ? codes[leftYCode] : codes[rightYCode];
-        this->joypadParameters.joypadLeftButtonsMap = this->leftAndRightSwapped ? rightWalkingButtonsMap : leftWalkingButtonsMap;
-        this->joypadParameters.joypadRightButtonsMap = this->leftAndRightSwapped ? leftWalkingButtonsMap : rightWalkingButtonsMap;
-
         // if swapped we have to swap all the maps
         if (this->leftAndRightSwapped)
         {
             std::swap(this->joypadParameters.rightFingersReleaseButtonsMap,
                       this->joypadParameters.leftFingersReleaseButtonsMap);
+
             std::swap(this->joypadParameters.rightFingersSqueezeButtonsMap,
                       this->joypadParameters.leftFingersSqueezeButtonsMap);
+
+            std::swap(this->joypadParameters.rightFingersVelocityInput,
+                      this->joypadParameters.leftFingersVelocityInput);
+
+            std::swap(this->joypadParameters.joypadRightButtonsMap,
+                      this->joypadParameters.joypadLeftButtonsMap);
+
+            std::swap(this->joypadParameters.yInput,
+                      this->joypadParameters.zInput);
+
+            this->joypadParameters.xInput = rightXCode;
+
             this->joypadParameters.startWalkingButtonsMap = startWalkingButtonsSwappedMap;
             this->joypadParameters.stopWalkingButtonsMap = stopWalkingButtonsSwappedMap;
             this->joypadParameters.prepareWalkingButtonsMap = prepareWalkingButtonsSwappedMap;
