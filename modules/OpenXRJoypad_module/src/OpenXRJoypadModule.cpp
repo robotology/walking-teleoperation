@@ -574,6 +574,7 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> startWalkingButtonsMap;
         std::vector<int> prepareWalkingButtonsMap;
         std::vector<int> stopWalkingButtonsMap;
+        std::vector<int> walkingCommandReleaseButtonMap;
         std::vector<int> leftFingersSqueezeButtonsMap;
         std::vector<int> leftFingersReleaseButtonsMap;
         std::vector<int> rightFingersSqueezeButtonsMap;
@@ -638,6 +639,7 @@ struct OpenXRJoypadModule::Impl
     unsigned int buttonCount{0};
     unsigned int axisCount{0};
     unsigned int sticksCount{0};
+    std::string walkingCommand;
 
     bool isButtonStateEqualToMask(const std::vector<int>& mask) const
     {
@@ -886,6 +888,7 @@ struct OpenXRJoypadModule::Impl
                                                                               {"start_walking_buttons_map_swapped",   startWalkingButtonsSwappedMap},
                                                                               {"stop_walking_buttons_swapped_map",    stopWalkingButtonsSwappedMap},
                                                                               {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
+                                                                              {"walking_command_release_buttons_map", this->joypadParameters.walkingCommandReleaseButtonMap},
                                                                               {"left_fingers_squeeze_buttons_map",    this->joypadParameters.leftFingersSqueezeButtonsMap},
                                                                               {"left_fingers_release_buttons_map",    this->joypadParameters.leftFingersReleaseButtonsMap},
                                                                               {"right_fingers_squeeze_buttons_map",   this->joypadParameters.rightFingersSqueezeButtonsMap},
@@ -1294,27 +1297,26 @@ bool OpenXRJoypadModule::updateModule()
     m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity);
     m_pImpl->rightHandFingers->move();
 
-    // check if it is time to stop walking
-    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
+    if (!m_pImpl->walkingCommand.empty() && m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.walkingCommandReleaseButtonMap))
     {
         yarp::os::Bottle cmd, outcome;
-        cmd.addString("stopWalking");
+        cmd.addString(m_pImpl->walkingCommand);
         m_pImpl->rpcWalkingClient.write(cmd, outcome);
-        yInfo() << "[OpenXRJoypadModule::updateModule] Sent stopWalking.";
+        yInfo() << "[OpenXRJoypadModule::updateModule] Sent" << m_pImpl->walkingCommand;
+        m_pImpl->walkingCommand = "";
+    }
+
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap))
+    {
+        m_pImpl->walkingCommand = "stopWalking";
     }
     else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
     {
-        yarp::os::Bottle cmd, outcome;
-        cmd.addString("prepareRobot");
-        m_pImpl->rpcWalkingClient.write(cmd, outcome);
-        yInfo() << "[JoypadFingersModule::updateModule] Sent prepareRobot";
+        m_pImpl->walkingCommand = "prepareRobot";
     }
     else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap))
     {
-        yarp::os::Bottle cmd, outcome;
-        cmd.addString("startWalking");
-        m_pImpl->rpcWalkingClient.write(cmd, outcome);
-        yInfo() << "[JoypadFingersModule::updateModule] Sent startWalking";
+        m_pImpl->walkingCommand = "startWalking";
     }
 
     return true;
