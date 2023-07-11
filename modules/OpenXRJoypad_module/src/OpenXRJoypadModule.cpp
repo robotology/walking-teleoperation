@@ -795,8 +795,6 @@ struct OpenXRJoypadModule::Impl
             output.buffer.zero();
             yInfo() << "Selected stick index" << stick << "(dof" << dof << ") for" << tag << "(sign" << sign << ").";
 
-            std::cout << "Stick " << stick << " DOF " << dof << " ";
-
         }
         else
         {
@@ -1059,7 +1057,8 @@ struct OpenXRJoypadModule::Impl
                        / (this->joypadParameters.fullscale - this->joypadParameters.deadzone);
             else
                 return 0.0;
-        } else
+        }
+        else
         {
             if (input < -this->joypadParameters.deadzone)
                 return (input + this->joypadParameters.deadzone)
@@ -1302,7 +1301,6 @@ bool OpenXRJoypadModule::updateModule()
         cmd.addString("stopWalking");
         m_pImpl->rpcWalkingClient.write(cmd, outcome);
         yInfo() << "[OpenXRJoypadModule::updateModule] Sent stopWalking.";
-        return false;
     }
     else if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap))
     {
