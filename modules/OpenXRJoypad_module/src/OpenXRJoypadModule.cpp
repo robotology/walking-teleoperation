@@ -967,7 +967,7 @@ struct OpenXRJoypadModule::Impl
         {
             if (++counter == maxAttempt)
             {
-                yError() << "[JoypadFingersModule::setLeftAndRightJoypad] Unable to read the "
+                yError() << "[JoypadFingersModule::setLeftAndRightSwappedFlag] Unable to read the "
                             "transform client.";
                 return false;
             }
@@ -1001,7 +1001,7 @@ struct OpenXRJoypadModule::Impl
 
         if (expectedLeftXCoordinate * expectedRightXCoordinate > 0)
         {
-            yError() << "[JoypadFingersModule::setLeftAndRightJoypad] One joypad should be on the left "
+            yError() << "[JoypadFingersModule::setLeftAndRightSwappedFlag] One joypad should be on the left "
                         "and the other one on the right";
             return false;
         }
@@ -1010,6 +1010,11 @@ struct OpenXRJoypadModule::Impl
         // been swapped. It is not a big deal the following flag is here for handling this case
         // solve your headache
         this->leftAndRightSwapped = expectedLeftXCoordinate > 0;
+
+        if (this->leftAndRightSwapped)
+        {
+            yInfo() << "[JoypadFingersModule::setLeftAndRightSwappedFlag] The hands are swapped!";
+        }
 
         return true;
 
