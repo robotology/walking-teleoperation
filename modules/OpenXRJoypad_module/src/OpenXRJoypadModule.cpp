@@ -1249,7 +1249,7 @@ bool OpenXRJoypadModule::updateModule()
             std::stringstream vector_string;
             for (size_t j = 0; j < dofs.size(); ++j)
             {
-                vector_string << "(dof " << j << ") " << dofs[j];
+                vector_string << "(dof " << j << ") " << dofs[j] << " ";
             }
             yInfo() << "Stick [" << i << "]:" << vector_string.str();
         }
