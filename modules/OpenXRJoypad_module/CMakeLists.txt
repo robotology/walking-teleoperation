@@ -22,12 +22,12 @@ add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}
 target_include_directories( ${EXE_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
-  target_link_libraries(${EXE_TARGET_NAME} PRIVATE
-    ${YARP_LIBRARIES}
-    ${iDynTree_LIBRARIES}
-    ctrlLib
-    UtilityLibrary
-    Eigen3::Eigen
-    )
+target_link_libraries(${EXE_TARGET_NAME} PRIVATE
+${YARP_LIBRARIES}
+${iDynTree_LIBRARIES}
+ctrlLib
+UtilityLibrary
+Eigen3::Eigen
+)
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)
