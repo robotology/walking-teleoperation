@@ -442,6 +442,7 @@ private:
     std::unique_ptr<iCub::ctrl::Integrator> m_fingerIntegrator{nullptr}; /**< Velocity integrator */
     std::unique_ptr<RobotControlHelper> m_controlHelper; /**< Controller helper */
     yarp::sig::Vector m_desiredJointValue; /** Desired joint value in radiant or radiant/s  */
+    bool m_enabled{true}; /**< Flag to enable/disable the control of the fingers. */
 
 public:
     /**
@@ -469,6 +470,13 @@ public:
 
 bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
 {
+    m_enabled = config.check("enabled", yarp::os::Value(true)).asBool();
+
+    if (!m_enabled)
+    {
+        return true;
+    }
+
     m_controlHelper = std::make_unique<RobotControlHelper>();
     if (!m_controlHelper->configure(config, name))
     {
@@ -508,6 +516,11 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
 
 bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 {
+    if (!m_enabled)
+    {
+        return true;
+    }
+
     if (m_desiredJointValue.size() == 0)
     {
         yErrorOnce() << "The FingerRetargeting object has not been properly initialized.";
@@ -533,6 +546,11 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
 
 bool FingersRetargeting::move()
 {
+    if (!m_enabled)
+    {
+        return true;
+    }
+
     return m_controlHelper->setJointReferences(m_desiredJointValue);
 }
 
