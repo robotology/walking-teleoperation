@@ -885,90 +885,32 @@ struct OpenXRJoypadModule::Impl
             }
         }
 
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "start_walking_buttons_map",
-                                                    this->joypadParameters.startWalkingButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "start_walking_buttons_map";
-            return false;
-        }
-
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "prepare_walking_buttons_map",
-                                                    this->joypadParameters.prepareWalkingButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "prepare_walking_buttons_map";
-            return false;
-        }
-
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "left_fingers_squeeze_buttons_map",
-                                                    this->joypadParameters.leftFingersSqueezeButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "left_fingers_squeeze_buttons_map";
-            return false;
-        }
-
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "left_fingers_release_buttons_map",
-                                                    this->joypadParameters.leftFingersReleaseButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "left_fingers_release_buttons_map";
-            return false;
-        }
-
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "right_fingers_squeeze_buttons_map",
-                                                    this->joypadParameters.rightFingersSqueezeButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "right_fingers_squeeze_buttons_map";
-            return false;
-        }
-
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "right_fingers_release_buttons_map",
-                                                    this->joypadParameters.rightFingersReleaseButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "right_fingers_release_buttons_map";
-            return false;
-        }
-
         std::vector<int> leftWalkingButtonsMap;
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "left_walking_buttons_map",
-                                                    leftWalkingButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "left_walking_buttons_map";
-            return false;
-        }
-
         std::vector<int> rightWalkingButtonsMap;
-        if (!YarpHelper::getIntVectorFromSearchable(config, //
-                                                    "right_walking_buttons_map",
-                                                    rightWalkingButtonsMap))
-        {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
-                        "right_walking_buttons_map";
-            return false;
-        }
+        std::vector<int> prepareWalkingButtonsSwappedMap;
+        std::vector<int> stopWalkingButtonsSwappedMap;
+        std::vector<int> startWalkingButtonsSwappedMap;
 
-        // the stop button mask is the end of the prepare and start mask
-        this->joypadParameters.stopWalkingButtonsMap.resize(
-            this->joypadParameters.startWalkingButtonsMap.size());
-        for (int i = 0; i < this->joypadParameters.startWalkingButtonsMap.size(); i++)
+        std::unordered_map<std::string, std::vector<int>&> buttonsMaps = {{"start_walking_buttons_map",           this->joypadParameters.startWalkingButtonsMap},
+                                                                          {"stop_walking_buttons_map",            this->joypadParameters.stopWalkingButtonsMap},
+                                                                          {"prepare_walking_buttons_map",         this->joypadParameters.prepareWalkingButtonsMap},
+                                                                          {"start_walking_buttons_map_swapped",   startWalkingButtonsSwappedMap},
+                                                                          {"stop_walking_buttons_swapped_map",    stopWalkingButtonsSwappedMap},
+                                                                          {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
+                                                                          {"left_fingers_squeeze_buttons_map",    this->joypadParameters.leftFingersSqueezeButtonsMap},
+                                                                          {"left_fingers_release_buttons_map",    this->joypadParameters.leftFingersReleaseButtonsMap},
+                                                                          {"right_fingers_squeeze_buttons_map",   this->joypadParameters.rightFingersSqueezeButtonsMap},
+                                                                          {"right_fingers_release_buttons_map",   this->joypadParameters.rightFingersReleaseButtonsMap},
+                                                                          {"left_walking_buttons_map",            leftWalkingButtonsMap},
+                                                                          {"right_walking_buttons_map",           rightWalkingButtonsMap}};
+
+        for (auto& b : buttonsMaps)
         {
-            this->joypadParameters.stopWalkingButtonsMap[i]                 //TODO CONF FILE
-                = (this->joypadParameters.startWalkingButtonsMap[i] > 0
-                   || this->joypadParameters.prepareWalkingButtonsMap[i] > 0)
-                      ? 1
-                      : 0;
+            if (!YarpHelper::getIntVectorFromSearchable(config, b.first, b.second))
+            {
+                yError() << "[JoypadFingersModule::configureJoypad] Unable to parse parameter" << b.first;
+                return false;
+            }
         }
 
         this->joypadParameters.leftFingersVelocityInput  = !this->leftAndRightSwapped ? codes[leftFingersVelocityCode]  : codes[rightFingersVelocityCode];
@@ -990,8 +932,9 @@ struct OpenXRJoypadModule::Impl
                       this->joypadParameters.leftFingersReleaseButtonsMap);
             std::swap(this->joypadParameters.rightFingersSqueezeButtonsMap,
                       this->joypadParameters.leftFingersSqueezeButtonsMap);
-            std::swap(this->joypadParameters.startWalkingButtonsMap,
-                      this->joypadParameters.prepareWalkingButtonsMap);
+            this->joypadParameters.startWalkingButtonsMap = startWalkingButtonsSwappedMap;
+            this->joypadParameters.stopWalkingButtonsMap = stopWalkingButtonsSwappedMap;
+            this->joypadParameters.prepareWalkingButtonsMap = prepareWalkingButtonsSwappedMap;
         }
 
         return true;
