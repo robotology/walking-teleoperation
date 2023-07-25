@@ -1,0 +1,34 @@
+<!-- Copyright (C) 2023 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+
+<application>
+
+  <name>OpenXRJoypad</name>
+  <description>Application to run the OpenXRJoypad module.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+   <!-- Modules -->
+   <module>
+     <name>OpenXRJoypadModule</name>
+     <parameters></parameters>
+     <node>localhost</node>
+   </module>
+   
+  <!-- Connections -->
+  <connection>
+    <from>/openXRJoypad/walkingRpc</from>
+    <to>/walking-coordinator/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/openXRJoypad/walkingGoal</from>
+    <to>/walking-coordinator/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>
