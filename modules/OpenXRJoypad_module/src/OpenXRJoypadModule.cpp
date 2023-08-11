@@ -1,36 +1,32 @@
-/**
- * @file JoypadFingersModule.cpp
- * @copyright 2023 iCub Facility - Istituto Italiano di Tecnologia
- *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- * @date 2021
- */
+// SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+// SPDX-License-Identifier: BSD-3-Clause
 
 #include <functional>
 #include <iterator>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <tuple>
 #include <vector>
-#include <string>
-#include <sstream>
 
 // YARP
 #include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IControlLimits.h>
+#include <yarp/dev/IControlMode.h>
+#include <yarp/dev/IEncodersTimed.h>
+#include <yarp/dev/IFrameTransform.h>
 #include <yarp/dev/IJoypadController.h>
+#include <yarp/dev/IPositionControl.h>
+#include <yarp/dev/IPositionDirect.h>
+#include <yarp/dev/IPreciselyTimed.h>
+#include <yarp/dev/IVelocityControl.h>
+#include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
+#include <yarp/os/RpcClient.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Matrix.h>
-#include <yarp/os/RpcClient.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/IFrameTransform.h>
-#include <yarp/dev/IPreciselyTimed.h>
-#include <yarp/dev/IEncodersTimed.h>
-#include <yarp/dev/IPositionControl.h>
-#include <yarp/dev/IPositionDirect.h>
-#include <yarp/dev/IVelocityControl.h>
-#include <yarp/dev/IControlMode.h>
-#include <yarp/dev/IControlLimits.h>
 
 #include <iDynTree/Core/EigenHelpers.h>
 #include <iDynTree/yarp/YARPConversions.h>
@@ -139,8 +135,7 @@ public:
     void close();
 };
 
-bool RobotControlHelper::configure(const yarp::os::Searchable& config,
-                                   const std::string& name)
+bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std::string& name)
 {
 
     // robot name: used to connect to the robot
@@ -346,7 +341,6 @@ bool RobotControlHelper::getFeedback()
     return true;
 }
 
-
 const yarp::sig::Vector& RobotControlHelper::jointEncoders() const
 {
     return m_positionFeedbackInRadians;
@@ -387,11 +381,10 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
             limits(i, 0) = m_positionFeedbackInRadians(i);
             limits(i, 1) = m_positionFeedbackInRadians(i);
             yWarning()
-                    << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
-                       << " joint limits. The current joint value is used as lower and upper limits.";
+                << "[RobotControlHelper::getLimits] Unable get " << m_axesList[i]
+                << " joint limits. The current joint value is used as lower and upper limits.";
 
-        }
-        else
+        } else
         {
             limits(i, 0) = iDynTree::deg2rad(minLimitInDegree);
             limits(i, 1) = iDynTree::deg2rad(maxLimitInDegree);
@@ -407,8 +400,9 @@ bool RobotControlHelper::setJointReferences(const yarp::sig::Vector& desiredValu
     case VOCAB_CM_POSITION_DIRECT:
         if (!setDirectPositionReferences(desiredValue))
         {
-            yErrorOnce() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
-                            "positions";
+            yErrorOnce()
+                << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                   "positions";
             return false;
         }
         break;
@@ -416,8 +410,9 @@ bool RobotControlHelper::setJointReferences(const yarp::sig::Vector& desiredValu
     case VOCAB_CM_VELOCITY:
         if (!setVelocityReferences(desiredValue))
         {
-            yErrorOnce() << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
-                            "velocities";
+            yErrorOnce()
+                << "[RobotControlHelper::setJointReference] Unable to set the desired joint "
+                   "velocities";
             return false;
         }
         break;
@@ -465,7 +460,6 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool move();
-
 };
 
 bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std::string& name)
@@ -530,13 +524,13 @@ bool FingersRetargeting::setFingersVelocity(const double& fingersVelocity)
     if (m_controlHelper->isVelocityControlUsed())
     {
         m_desiredJointValue = fingersVelocity * m_fingersScaling;
-    }
-    else
+    } else
     {
         if (m_fingerIntegrator == nullptr)
         {
-            yError() << "[FingersRetargeting::setFingersVelocity] The integrator is not initialized."
-                        "Please call configure() method";
+            yError()
+                << "[FingersRetargeting::setFingersVelocity] The integrator is not initialized."
+                   "Please call configure() method";
             return false;
         }
         m_desiredJointValue = m_fingerIntegrator->integrate(fingersVelocity * m_fingersScaling);
@@ -560,7 +554,6 @@ auto getPosition(const yarp::sig::Matrix& m)
         .topRightCorner<3, 1>();
 }
 
-
 struct OpenXRJoypadModule::Impl
 {
     struct JoypadParameters
@@ -583,7 +576,8 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> rightFingersSqueezeButtonsMap;
         std::vector<int> rightFingersReleaseButtonsMap;
 
-        enum class InputMode{
+        enum class InputMode
+        {
             Axis,
             Stick
         };
@@ -604,7 +598,8 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> joypadLeftButtonsMap;
         std::vector<int> joypadRightButtonsMap;
 
-        InputAxis leftFingersVelocityInput; /**< Index of the trigger used for squeezing the left hand */
+        InputAxis
+            leftFingersVelocityInput; /**< Index of the trigger used for squeezing the left hand */
         InputAxis rightFingersVelocityInput; /**< Index of the trigger used for
                                                   squeezing the right hand */
     };
@@ -622,8 +617,8 @@ struct OpenXRJoypadModule::Impl
 
     yarp::os::RpcClient rpcWalkingClient; /**< Rpc client used for sending command to the walking
                                                controller */
-    yarp::os::BufferedPort<yarp::sig::Vector> robotGoalPort; /**< Port used to specify the desired goal position. */
-
+    yarp::os::BufferedPort<yarp::sig::Vector>
+        robotGoalPort; /**< Port used to specify the desired goal position. */
 
     // transform server
     yarp::dev::PolyDriver transformClientDevice; /**< Transform client. */
@@ -658,11 +653,12 @@ struct OpenXRJoypadModule::Impl
                               }));
     }
 
-
     bool configureTranformClient(const yarp::os::Searchable& config,
                                  const std::string& applicationName)
     {
-       std::string transformServerRemote = config.check("transform_server_remote", yarp::os::Value("/transformServer")).asString();
+        std::string transformServerRemote
+            = config.check("transform_server_remote", yarp::os::Value("/transformServer"))
+                  .asString();
         yarp::os::Property options;
         options.put("device", "transformClient");
         options.put("remote", transformServerRemote);
@@ -679,7 +675,8 @@ struct OpenXRJoypadModule::Impl
         if (!this->transformClientDevice.view(this->frameTransformInterface)
             || this->frameTransformInterface == nullptr)
         {
-            yError() << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
+            yError()
+                << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
             return false;
         }
 
@@ -695,7 +692,8 @@ struct OpenXRJoypadModule::Impl
                                                  "left_hand_frame_name",
                                                  this->leftHandFrameName))
         {
-            yError() << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
+            yError()
+                << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
             return false;
         }
 
@@ -703,15 +701,17 @@ struct OpenXRJoypadModule::Impl
                                                  "right_hand_frame_name",
                                                  this->rightHandFrameName))
         {
-            yError() << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
+            yError()
+                << "[JoypadFingersModule::configureTranformClient] Cannot obtain Transform client.";
             return false;
         }
 
         return true;
     }
 
-
-    bool getIndexCode(const yarp::os::Searchable& config, const std::string& tag, JoypadParameters::InputAxis& output)
+    bool getIndexCode(const yarp::os::Searchable& config,
+                      const std::string& tag,
+                      JoypadParameters::InputAxis& output)
     {
         std::string code;
         if (!YarpHelper::getStringFromSearchable(config, //
@@ -724,10 +724,12 @@ struct OpenXRJoypadModule::Impl
 
         if (code.size() < 2)
         {
-            yError() << "[JoypadFingersModule::configureJoypad] The code of" << tag << "is too short. "
-                                                                               "The first two characters are supposed "
-                                                                               "to be either \"A\" or \"S\", and the second character"
-                                                                               "either \"+\" or \"-\". Input:" << code;
+            yError() << "[JoypadFingersModule::configureJoypad] The code of" << tag
+                     << "is too short. "
+                        "The first two characters are supposed "
+                        "to be either \"A\" or \"S\", and the second character"
+                        "either \"+\" or \"-\". Input:"
+                     << code;
             return false;
         }
 
@@ -737,15 +739,15 @@ struct OpenXRJoypadModule::Impl
         if (sign == '+')
         {
             output.sign = +1.0;
-        }
-        else if (sign == '-')
+        } else if (sign == '-')
         {
             output.sign = -1.0;
-        }
-        else
+        } else
         {
-            yError() << "[JoypadFingersModule::configureJoypad] The second character of" << tag << "is supposed to be"
-                                                                               "either \"+\" or \"-\". Input:" << code;
+            yError() << "[JoypadFingersModule::configureJoypad] The second character of" << tag
+                     << "is supposed to be"
+                        "either \"+\" or \"-\". Input:"
+                     << code;
             return false;
         }
 
@@ -755,19 +757,21 @@ struct OpenXRJoypadModule::Impl
 
             if (axis >= axisCount)
             {
-                yError() << "[JoypadFingersModule::configureJoypad] The selected axis for" << tag << "is out of bounds. Axis:" << axis << "Available:" << axisCount;
+                yError() << "[JoypadFingersModule::configureJoypad] The selected axis for" << tag
+                         << "is out of bounds. Axis:" << axis << "Available:" << axisCount;
                 return false;
             }
 
             output.index = axis;
             output.mode = JoypadParameters::InputMode::Axis;
             yInfo() << "Selected axis index" << axis << "for" << tag << "(sign" << sign << ").";
-        }
-        else if (type == 'S')
+        } else if (type == 'S')
         {
             size_t dotIndex = code.find('.');
-            if (dotIndex == std::string::npos) {
-                yError() << "The code for" << tag << "selects a stick, but no dot is found. Input:" << code;
+            if (dotIndex == std::string::npos)
+            {
+                yError() << "The code for" << tag
+                         << "selects a stick, but no dot is found. Input:" << code;
                 return false;
             }
 
@@ -776,7 +780,8 @@ struct OpenXRJoypadModule::Impl
 
             if (stick >= sticksCount)
             {
-                yError() << "[JoypadFingersModule::configureJoypad] The selected stick for" << tag << "is out of bounds. Stick:" << stick << "Available:" << sticksCount;
+                yError() << "[JoypadFingersModule::configureJoypad] The selected stick for" << tag
+                         << "is out of bounds. Stick:" << stick << "Available:" << sticksCount;
                 return false;
             }
 
@@ -784,13 +789,17 @@ struct OpenXRJoypadModule::Impl
 
             if (!joypadControllerInterface->getStickDoF(stick, maxDofs))
             {
-                yError() << "[JoypadFingersModule::configureJoypad] Could not get the number of DOFs for stick:" << stick;
+                yError() << "[JoypadFingersModule::configureJoypad] Could not get the number of "
+                            "DOFs for stick:"
+                         << stick;
                 return false;
             }
 
             if (dof >= maxDofs)
             {
-                yError() << "[JoypadFingersModule::configureJoypad] The selected dof stick for" << tag << "is out of bounds. Stick:" << stick << "dof:" << dof << "Available:" << maxDofs;
+                yError() << "[JoypadFingersModule::configureJoypad] The selected dof stick for"
+                         << tag << "is out of bounds. Stick:" << stick << "dof:" << dof
+                         << "Available:" << maxDofs;
                 return false;
             }
 
@@ -799,19 +808,20 @@ struct OpenXRJoypadModule::Impl
             output.mode = JoypadParameters::InputMode::Stick;
             output.buffer.reserve(maxDofs);
             output.buffer.zero();
-            yInfo() << "Selected stick index" << stick << "(dof" << dof << ") for" << tag << "(sign" << sign << ").";
+            yInfo() << "Selected stick index" << stick << "(dof" << dof << ") for" << tag << "(sign"
+                    << sign << ").";
 
-        }
-        else
+        } else
         {
-            yError() << "[JoypadFingersModule::configureJoypad] The first character of" << tag << "is supposed "
-                                                                               "to be either \"A\" or \"S\". Input" << code;
+            yError() << "[JoypadFingersModule::configureJoypad] The first character of" << tag
+                     << "is supposed "
+                        "to be either \"A\" or \"S\". Input"
+                     << code;
             return false;
         }
 
         return true;
     };
-
 
     bool configureJoypad(const yarp::os::Searchable& config, const std::string& name)
     {
@@ -820,7 +830,8 @@ struct OpenXRJoypadModule::Impl
                                                  "joypad_device_remote", //
                                                  joypadDeviceRemote))
         {
-            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter joypad_device_remote";
+            yError() << "[JoypadFingersModule::configureJoypad] Unable to find parameter "
+                        "joypad_device_remote";
             return false;
         }
 
@@ -866,18 +877,20 @@ struct OpenXRJoypadModule::Impl
         }
 
         JoypadParameters::InputAxis rightXCode;
-        std::vector<std::pair<std::string, JoypadParameters::InputAxis&>> codes = {{"left_x_code",  this->joypadParameters.xInput},
-                                                                                   {"left_y_code",  this->joypadParameters.yInput},
-                                                                                   {"right_x_code", rightXCode},
-                                                                                   {"right_y_code", this->joypadParameters.zInput},
-                                                                                   {"left_fingers_velocity_code", this->joypadParameters.leftFingersVelocityInput},
-                                                                                   {"right_fingers_velocity_code", this->joypadParameters.rightFingersVelocityInput}};
+        std::vector<std::pair<std::string, JoypadParameters::InputAxis&>> codes
+            = {{"left_x_code", this->joypadParameters.xInput},
+               {"left_y_code", this->joypadParameters.yInput},
+               {"right_x_code", rightXCode},
+               {"right_y_code", this->joypadParameters.zInput},
+               {"left_fingers_velocity_code", this->joypadParameters.leftFingersVelocityInput},
+               {"right_fingers_velocity_code", this->joypadParameters.rightFingersVelocityInput}};
 
         for (auto& c : codes)
         {
             if (!getIndexCode(config, c.first, c.second))
             {
-                yError() << "[JoypadFingersModule::configureJoypad] Unable to parse parameter" << c.first;
+                yError() << "[JoypadFingersModule::configureJoypad] Unable to parse parameter"
+                         << c.first;
                 return false;
             }
         }
@@ -886,25 +899,32 @@ struct OpenXRJoypadModule::Impl
         std::vector<int> stopWalkingButtonsSwappedMap;
         std::vector<int> startWalkingButtonsSwappedMap;
 
-        std::vector<std::pair<std::string, std::vector<int>&>> buttonsMaps = {{"start_walking_buttons_map",           this->joypadParameters.startWalkingButtonsMap},
-                                                                              {"stop_walking_buttons_map",            this->joypadParameters.stopWalkingButtonsMap},
-                                                                              {"prepare_walking_buttons_map",         this->joypadParameters.prepareWalkingButtonsMap},
-                                                                              {"start_walking_buttons_map_swapped",   startWalkingButtonsSwappedMap},
-                                                                              {"stop_walking_buttons_swapped_map",    stopWalkingButtonsSwappedMap},
-                                                                              {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
-                                                                              {"walking_command_release_buttons_map", this->joypadParameters.walkingCommandReleaseButtonMap},
-                                                                              {"left_fingers_squeeze_buttons_map",    this->joypadParameters.leftFingersSqueezeButtonsMap},
-                                                                              {"left_fingers_release_buttons_map",    this->joypadParameters.leftFingersReleaseButtonsMap},
-                                                                              {"right_fingers_squeeze_buttons_map",   this->joypadParameters.rightFingersSqueezeButtonsMap},
-                                                                              {"right_fingers_release_buttons_map",   this->joypadParameters.rightFingersReleaseButtonsMap},
-                                                                              {"left_walking_buttons_map",            this->joypadParameters.joypadLeftButtonsMap},
-                                                                              {"right_walking_buttons_map",           this->joypadParameters.joypadRightButtonsMap}};
+        std::vector<std::pair<std::string, std::vector<int>&>> buttonsMaps
+            = {{"start_walking_buttons_map", this->joypadParameters.startWalkingButtonsMap},
+               {"stop_walking_buttons_map", this->joypadParameters.stopWalkingButtonsMap},
+               {"prepare_walking_buttons_map", this->joypadParameters.prepareWalkingButtonsMap},
+               {"start_walking_buttons_map_swapped", startWalkingButtonsSwappedMap},
+               {"stop_walking_buttons_swapped_map", stopWalkingButtonsSwappedMap},
+               {"prepare_walking_buttons_swapped_map", prepareWalkingButtonsSwappedMap},
+               {"walking_command_release_buttons_map",
+                this->joypadParameters.walkingCommandReleaseButtonMap},
+               {"left_fingers_squeeze_buttons_map",
+                this->joypadParameters.leftFingersSqueezeButtonsMap},
+               {"left_fingers_release_buttons_map",
+                this->joypadParameters.leftFingersReleaseButtonsMap},
+               {"right_fingers_squeeze_buttons_map",
+                this->joypadParameters.rightFingersSqueezeButtonsMap},
+               {"right_fingers_release_buttons_map",
+                this->joypadParameters.rightFingersReleaseButtonsMap},
+               {"left_walking_buttons_map", this->joypadParameters.joypadLeftButtonsMap},
+               {"right_walking_buttons_map", this->joypadParameters.joypadRightButtonsMap}};
 
         for (auto& b : buttonsMaps)
         {
             if (!YarpHelper::getIntVectorFromSearchable(config, b.first, b.second))
             {
-                yError() << "[JoypadFingersModule::configureJoypad] Unable to parse parameter" << b.first;
+                yError() << "[JoypadFingersModule::configureJoypad] Unable to parse parameter"
+                         << b.first;
                 return false;
             }
         }
@@ -924,8 +944,7 @@ struct OpenXRJoypadModule::Impl
             std::swap(this->joypadParameters.joypadRightButtonsMap,
                       this->joypadParameters.joypadLeftButtonsMap);
 
-            std::swap(this->joypadParameters.yInput,
-                      this->joypadParameters.zInput);
+            std::swap(this->joypadParameters.yInput, this->joypadParameters.zInput);
 
             this->joypadParameters.xInput = rightXCode;
 
@@ -934,8 +953,7 @@ struct OpenXRJoypadModule::Impl
             this->joypadParameters.prepareWalkingButtonsMap = prepareWalkingButtonsSwappedMap;
         }
 
-        auto countActiveButtons = [](const std::vector<int>& input) -> size_t
-        {
+        auto countActiveButtons = [](const std::vector<int>& input) -> size_t {
             size_t output = 0;
             for (auto b : input)
             {
@@ -947,10 +965,12 @@ struct OpenXRJoypadModule::Impl
             return output;
         };
 
-        this->joypadParameters.startWalkingActiveButtons = countActiveButtons(this->joypadParameters.startWalkingButtonsMap);
-        this->joypadParameters.stopWalkingActiveButtons = countActiveButtons(this->joypadParameters.stopWalkingButtonsMap);
-        this->joypadParameters.prepareWalkingActiveButtons = countActiveButtons(this->joypadParameters.prepareWalkingButtonsMap);
-
+        this->joypadParameters.startWalkingActiveButtons
+            = countActiveButtons(this->joypadParameters.startWalkingButtonsMap);
+        this->joypadParameters.stopWalkingActiveButtons
+            = countActiveButtons(this->joypadParameters.stopWalkingButtonsMap);
+        this->joypadParameters.prepareWalkingActiveButtons
+            = countActiveButtons(this->joypadParameters.prepareWalkingButtonsMap);
 
         return true;
     }
@@ -966,14 +986,15 @@ struct OpenXRJoypadModule::Impl
             ok = ok && this->frameTransformInterface->frameExists(this->leftHandFrameName);
             ok = ok && this->frameTransformInterface->frameExists(this->rightHandFrameName);
 
+            ok = ok
+                 && this->frameTransformInterface->getTransform(this->rightHandFrameName, //
+                                                                this->headFrameName,
+                                                                headOpenXR_T_rightHandOpenXR);
 
-            ok = ok && this->frameTransformInterface->getTransform(this->rightHandFrameName, //
-                                                                   this->headFrameName,
-                                                                   headOpenXR_T_rightHandOpenXR);
-
-            ok = ok && this->frameTransformInterface->getTransform(this->leftHandFrameName, //
-                                                                   this->headFrameName,
-                                                                   headOpenXR_T_leftHandOpenXR);
+            ok = ok
+                 && this->frameTransformInterface->getTransform(this->leftHandFrameName, //
+                                                                this->headFrameName,
+                                                                headOpenXR_T_leftHandOpenXR);
 
             return ok;
         };
@@ -986,7 +1007,8 @@ struct OpenXRJoypadModule::Impl
         // try to read the transform
         std::size_t counter = 0;
         constexpr unsigned int maxAttempt = 1000;
-        while (!readTransforms(headOpenXR_T_expectedLeftHandOpenXR, headOpenXR_T_expectedRightHandOpenXR))
+        while (!readTransforms(headOpenXR_T_expectedLeftHandOpenXR,
+                               headOpenXR_T_expectedRightHandOpenXR))
         {
             if (++counter == maxAttempt)
             {
@@ -999,8 +1021,7 @@ struct OpenXRJoypadModule::Impl
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
-        auto getPosition = [](const yarp::sig::Matrix& m)
-        {
+        auto getPosition = [](const yarp::sig::Matrix& m) {
             return Eigen::Map<const Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(m.data())
                 .topRightCorner<3, 1>();
         };
@@ -1020,11 +1041,13 @@ struct OpenXRJoypadModule::Impl
         //       |
         //       v   z
         const double expectedLeftXCoordinate = getPosition(headOpenXR_T_expectedLeftHandOpenXR)(0);
-        const double expectedRightXCoordinate = getPosition(headOpenXR_T_expectedRightHandOpenXR)(0);
+        const double expectedRightXCoordinate
+            = getPosition(headOpenXR_T_expectedRightHandOpenXR)(0);
 
         if (expectedLeftXCoordinate * expectedRightXCoordinate > 0)
         {
-            yError() << "[JoypadFingersModule::setLeftAndRightSwappedFlag] One joypad should be on the left "
+            yError() << "[JoypadFingersModule::setLeftAndRightSwappedFlag] One joypad should be on "
+                        "the left "
                         "and the other one on the right";
             return false;
         }
@@ -1040,7 +1063,6 @@ struct OpenXRJoypadModule::Impl
         }
 
         return true;
-
     }
 
     bool configureOpenXR(const yarp::os::Searchable& config, const std::string& name)
@@ -1049,13 +1071,14 @@ struct OpenXRJoypadModule::Impl
         {
             if (!this->configureTranformClient(config, name))
             {
-                yError() << "[JoypadFingersModule::configureOpenXR] Unable to configure the transform client.";
+                yError() << "[JoypadFingersModule::configureOpenXR] Unable to configure the "
+                            "transform client.";
                 return false;
             }
 
             // Once the vive is stared the left and right joypad are chosen. Since the joypad are
-            // exactly the same. We should consider in the application which is the left and the right
-            // joypad
+            // exactly the same. We should consider in the application which is the left and the
+            // right joypad
             if (!this->setLeftAndRightSwappedFlag())
             {
                 yError() << "[JoypadFingersModule::configureOpenXR] Unable to set the flag related "
@@ -1066,7 +1089,8 @@ struct OpenXRJoypadModule::Impl
 
         if (!this->configureJoypad(config, name))
         {
-            yError() << "[JoypadFingersModule::configureOpenXR] Unable to configure the joypad client.";
+            yError()
+                << "[JoypadFingersModule::configureOpenXR] Unable to configure the joypad client.";
             return false;
         }
 
@@ -1082,8 +1106,7 @@ struct OpenXRJoypadModule::Impl
                        / (this->joypadParameters.fullscale - this->joypadParameters.deadzone);
             else
                 return 0.0;
-        }
-        else
+        } else
         {
             if (input < -this->joypadParameters.deadzone)
                 return (input + this->joypadParameters.deadzone)
@@ -1103,7 +1126,8 @@ struct OpenXRJoypadModule::Impl
             value = input.sign * deadzone(value);
             return value;
         case JoypadParameters::InputMode::Stick:
-            joypadControllerInterface->getStick(input.index, input.buffer, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
+            joypadControllerInterface->getStick(
+                input.index, input.buffer, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
             value = input.sign * deadzone(input.buffer[input.dof]);
             return value;
         default:
@@ -1144,8 +1168,6 @@ OpenXRJoypadModule::OpenXRJoypadModule()
     : m_pImpl{new Impl()} {};
 
 OpenXRJoypadModule::~OpenXRJoypadModule(){};
-
-
 
 bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
 {
@@ -1190,7 +1212,8 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     leftFingersOptions.append(generalOptions);
     if (!m_pImpl->leftHandFingers->configure(leftFingersOptions, getName()))
     {
-        yError() << "[JoypadFingersModule::configure] Unable to initialize the left fingers retargeting.";
+        yError() << "[JoypadFingersModule::configure] Unable to initialize the left fingers "
+                    "retargeting.";
     }
 
     m_pImpl->rightHandFingers = std::make_unique<FingersRetargeting>();
@@ -1198,7 +1221,8 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
     rightFingersOptions.append(generalOptions);
     if (!m_pImpl->rightHandFingers->configure(rightFingersOptions, getName()))
     {
-        yError() << "[JoypadFingersModule::configure] Unable to initialize the right fingers retargeting.";
+        yError() << "[JoypadFingersModule::configure] Unable to initialize the right fingers "
+                    "retargeting.";
     }
 
     // open ports
@@ -1215,7 +1239,7 @@ bool OpenXRJoypadModule::configure(yarp::os::ResourceFinder& rf)
         return false;
     }
 
-    if(!YarpHelper::getStringFromSearchable(rf, "robotGoalOutputPort_name", portName))
+    if (!YarpHelper::getStringFromSearchable(rf, "robotGoalOutputPort_name", portName))
     {
         yError() << "[JoypadFingersModule::configure] Unable to get a string from searchable";
         return false;
@@ -1242,7 +1266,6 @@ bool OpenXRJoypadModule::close()
     return true;
 }
 
-
 bool OpenXRJoypadModule::updateModule()
 {
     m_pImpl->getDeviceButtonsState();
@@ -1259,7 +1282,7 @@ bool OpenXRJoypadModule::updateModule()
 
     if (m_pImpl->print_buttons)
     {
-        for (size_t i = 0 ; i < m_pImpl->buttonsState.size(); ++i)
+        for (size_t i = 0; i < m_pImpl->buttonsState.size(); ++i)
         {
             yInfo() << "Button [" << i << "]:" << m_pImpl->buttonsState[i];
         }
@@ -1270,7 +1293,8 @@ bool OpenXRJoypadModule::updateModule()
         for (size_t i = 0; i < m_pImpl->sticksCount; ++i)
         {
             yarp::sig::Vector dofs;
-            m_pImpl->joypadControllerInterface->getStick(i, dofs, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
+            m_pImpl->joypadControllerInterface->getStick(
+                i, dofs, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
             std::stringstream vector_string;
             for (size_t j = 0; j < dofs.size(); ++j)
             {
@@ -1295,7 +1319,7 @@ bool OpenXRJoypadModule::updateModule()
     }
 
     // send commands to the walking
-    yarp::sig::Vector& goal= m_pImpl->robotGoalPort.prepare();
+    yarp::sig::Vector& goal = m_pImpl->robotGoalPort.prepare();
     goal.clear();
     goal.push_back(x);
     goal.push_back(y);
@@ -1304,22 +1328,24 @@ bool OpenXRJoypadModule::updateModule()
 
     // left fingers
     const double leftFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
-                m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
-                m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
-                m_pImpl->joypadParameters.leftFingersVelocityInput);
+        m_pImpl->joypadParameters.leftFingersSqueezeButtonsMap,
+        m_pImpl->joypadParameters.leftFingersReleaseButtonsMap,
+        m_pImpl->joypadParameters.leftFingersVelocityInput);
 
     m_pImpl->leftHandFingers->setFingersVelocity(leftFingersVelocity);
     m_pImpl->leftHandFingers->move();
 
     const double rightFingersVelocity = m_pImpl->evaluateDesiredFingersVelocity(
-                m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
-                m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
-                m_pImpl->joypadParameters.rightFingersVelocityInput);
+        m_pImpl->joypadParameters.rightFingersSqueezeButtonsMap,
+        m_pImpl->joypadParameters.rightFingersReleaseButtonsMap,
+        m_pImpl->joypadParameters.rightFingersVelocityInput);
 
     m_pImpl->rightHandFingers->setFingersVelocity(rightFingersVelocity);
     m_pImpl->rightHandFingers->move();
 
-    if (!m_pImpl->walkingCommand.empty() && m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.walkingCommandReleaseButtonMap))
+    if (!m_pImpl->walkingCommand.empty()
+        && m_pImpl->isButtonStateEqualToMask(
+            m_pImpl->joypadParameters.walkingCommandReleaseButtonMap))
     {
         yarp::os::Bottle cmd, outcome;
         cmd.addString(m_pImpl->walkingCommand);
@@ -1333,22 +1359,22 @@ bool OpenXRJoypadModule::updateModule()
     // This is to make easy to trigger commands that require combinations of buttons
     // that would trigger other commands if not released all at the same time
 
-    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap) &&
-            (m_pImpl->joypadParameters.stopWalkingActiveButtons > m_pImpl->activeButtons))
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.stopWalkingButtonsMap)
+        && (m_pImpl->joypadParameters.stopWalkingActiveButtons > m_pImpl->activeButtons))
     {
         m_pImpl->activeButtons = m_pImpl->joypadParameters.stopWalkingActiveButtons;
         m_pImpl->walkingCommand = "stopWalking";
     }
 
-    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap) &&
-            (m_pImpl->joypadParameters.prepareWalkingActiveButtons > m_pImpl->activeButtons))
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.prepareWalkingButtonsMap)
+        && (m_pImpl->joypadParameters.prepareWalkingActiveButtons > m_pImpl->activeButtons))
     {
         m_pImpl->activeButtons = m_pImpl->joypadParameters.prepareWalkingActiveButtons;
         m_pImpl->walkingCommand = "prepareRobot";
     }
 
-    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap) &&
-            (m_pImpl->joypadParameters.startWalkingActiveButtons > m_pImpl->activeButtons))
+    if (m_pImpl->isButtonStateEqualToMask(m_pImpl->joypadParameters.startWalkingButtonsMap)
+        && (m_pImpl->joypadParameters.startWalkingActiveButtons > m_pImpl->activeButtons))
     {
         m_pImpl->activeButtons = m_pImpl->joypadParameters.startWalkingActiveButtons;
         m_pImpl->walkingCommand = "startWalking";
