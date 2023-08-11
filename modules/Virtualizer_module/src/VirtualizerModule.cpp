@@ -1,11 +1,5 @@
-/**
- * @file VirtualizerModule.cpp
- * @authors  Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
- *           Giulio Romualdi <giulio.romualdi@iit.it>
- * @copyright 2018 iCub Facility - Istituto Italiano di Tecnologia
- *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- * @date 2018
- */
+// SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+// SPDX-License-Identifier: BSD-3-Clause
 
 #define _USE_MATH_DEFINES
 #include <cmath>

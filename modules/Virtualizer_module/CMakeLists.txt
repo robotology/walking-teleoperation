@@ -1,9 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
-# Authors: Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
-#          Giulio Romualdi <giulio.romualdi@iit.it>
-#
-# set target name
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(EXE_TARGET_NAME VirtualizerModule)
 

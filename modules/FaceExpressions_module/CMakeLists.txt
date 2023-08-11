@@ -1,5 +1,5 @@
-# Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(EXE_TARGET_NAME FaceExpressionsRetargetingModule)
 

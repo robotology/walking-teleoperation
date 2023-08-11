@@ -1,5 +1,5 @@
-# Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 if (NOT WIN32)
     message(FATAL_ERROR "The SRanipalModule is available only on Windows")

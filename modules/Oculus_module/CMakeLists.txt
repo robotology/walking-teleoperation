@@ -1,6 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
-# Authors: Giulio Romualdi <giulio.romualdi@iit.it>
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # set target name
 set(EXE_TARGET_NAME OculusRetargetingModule)

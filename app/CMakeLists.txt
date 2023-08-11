@@ -1,7 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
-# Authors: Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
-#          Giulio Romualdi <giulio.romualdi@iit.it>
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # List the subdirectory
 # http://stackoverflow.com/questions/7787823/cmake-how-to-get-the-name-of-all-subdirectories-of-a-directory
