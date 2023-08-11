@@ -1,8 +1,5 @@
-# Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
-# All rights reserved.
-#
-# This software may be modified and distributed under the terms of the
-# BSD-3-Clause license. See the accompanying LICENSE file for details.
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # This module checks if all the dependencies are installed and if the
 # dependencies to build some parts of WALKING_TELEOPERATION are satisfied.

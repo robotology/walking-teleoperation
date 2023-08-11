@@ -1,4 +1,5 @@
-# Copyright 2021 Istituto Italiano di Tecnologia (IIT)
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(SRanipal_SDK_DIR $ENV{SRanipal_SDK_DIR} CACHE PATH "Path to the SRanipal C SDK (i.e. the 01_C folder).")
 

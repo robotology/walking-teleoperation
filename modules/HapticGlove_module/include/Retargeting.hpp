@@ -1,10 +1,5 @@
-/**
- * @file Retargeting.hpp
- * @authors  Kourosh Darvish <kourosh.darvish@iit.it>
- * @copyright 2021 Artificial and Mechanical Intelligence - Istituto Italiano di Tecnologia
- *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- * @date 2021
- */
+// SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+// SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef RETARGETING_HPP
 #define RETARGETING_HPP

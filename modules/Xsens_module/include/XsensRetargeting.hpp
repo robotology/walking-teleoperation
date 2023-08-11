@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+// SPDX-License-Identifier: BSD-3-Clause
+
 #ifndef XSENSRETARGETING_H
 #define XSENSRETARGETING_H
 

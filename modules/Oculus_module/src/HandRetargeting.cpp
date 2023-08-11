@@ -1,11 +1,5 @@
-/**
- * @file HandRetargeting.cpp
- * @authors Giulio Romualdi <giulio.romualdi@iit.it>
- *          Mohamed Babiker Mohamed Elobaid <mohamed.elobaid@iit.it>
- * @copyright 2018 iCub Facility - Istituto Italiano di Tecnologia
- *            Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
- * @date 2018
- */
+// SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+// SPDX-License-Identifier: BSD-3-Clause
 
 // iDynTree
 #include <iDynTree/Core/EigenHelpers.h>

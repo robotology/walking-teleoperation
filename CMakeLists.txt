@@ -1,6 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
-# Authors: Giulio Romualdi <giulio.romualdi@iit.it>
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_CXX_STANDARD 14)

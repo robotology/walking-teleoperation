@@ -1,6 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)
-# All Rights Reserved.
-# Authors: Giulio Romualdi <giulio.romualdi@iit.it>
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(Utils)
 add_subdirectory(Oculus_module)

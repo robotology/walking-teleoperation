@@ -1,10 +1,5 @@
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia
-#
-# Licensed under either the GNU Lesser General Public License v3.0 :
-# https://www.gnu.org/licenses/lgpl-3.0.html
-# or the GNU Lesser General Public License v2.1 :
-# https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
-# at your option.
+# SPDX-FileCopyrightText: Fondazione Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 # Targets to run and check source code with clang-format
 # Inspired from https://gitlab.cern.ch/unige-fei4tel/proteus/commit/8d906a45801c03832531e243f41f5f5a83177de0
