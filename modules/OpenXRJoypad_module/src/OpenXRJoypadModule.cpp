@@ -662,13 +662,9 @@ struct OpenXRJoypadModule::Impl
     bool configureTranformClient(const yarp::os::Searchable& config,
                                  const std::string& applicationName)
     {
-        std::string transformServerRemote
-            = config.check("transform_server_remote", yarp::os::Value("/transformServer"))
-                  .asString();
         yarp::os::Property options;
-        options.put("device", "transformClient");
-        options.put("remote", transformServerRemote);
-        options.put("local", "/" + applicationName + "/transformClient");
+        options.put("device", config.check("transform_server_device", yarp::os::Value("frameTransformClient")).asString());
+        options.put("filexml_option",  config.check("transform_server_file", yarp::os::Value("ftc_yarp_only.xml")).asString());
 
         if (!this->transformClientDevice.open(options))
         {
