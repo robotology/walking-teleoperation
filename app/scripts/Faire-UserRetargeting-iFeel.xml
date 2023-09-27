@@ -12,7 +12,7 @@
   </authors>
 
   <!-- Modules -->
-  
+
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config iFeelSuitMultiHapticNoHands.xml</parameters>
@@ -21,7 +21,7 @@
     <node>icub-console</node>
     <tag>iFeelSuitMultiHapticNoHands</tag>
   </module>
-  
+
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config transformServer_to_iwear.xml</parameters>
@@ -30,13 +30,13 @@
     <node>icub-console</node>
     <tag>transformServerWearableDevice</tag>
     <dependencies>
-      <port timeout="11.0">/transformServer/transforms:o</port>
+      <port timeout="11.0">/frameTransformServer/frameTransformGet_nws_yarp/tf:o</port>
     </dependencies>
     <ensure>
       <wait when="start">5.0</wait>
     </ensure>
   </module>
-  
+
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config RobotStateProvider_iCub3_openxr_ifeel.xml --xy_scale 0.7 --z_scale 0.6</parameters>
@@ -48,7 +48,7 @@
       <port timeout="15.0">/Wearable/OpenXRTransform/data:o</port>
     </dependencies>
   </module>
-  
+
   <module>
     <name>HumanStateVisualizer</name>
     <parameters>--from HumanStateVisualizer_iCub3_openxr.ini</parameters>
