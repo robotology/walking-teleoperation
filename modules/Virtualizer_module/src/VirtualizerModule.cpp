@@ -140,13 +140,6 @@ bool VirtualizerModule::configureRingVelocity(const yarp::os::Bottle &ringVeloci
 
 bool VirtualizerModule::configureTransformServer(const yarp::os::Bottle &tfGroup)
 {
-    std::string tfRemote;
-    if (!YarpHelper::getStringFromSearchable(tfGroup, "remote", tfRemote))
-    {
-        yError() << "Failed while reading tf_remote parameter.";
-        return false;
-    }
-
     if (!YarpHelper::getStringFromSearchable(tfGroup, "root_frame_name", m_tfRootFrame))
     {
         yError() << "Failed while reading root_frame_name parameter.";
@@ -161,9 +154,8 @@ bool VirtualizerModule::configureTransformServer(const yarp::os::Bottle &tfGroup
 
     //opening tf client
     yarp::os::Property tfClientCfg;
-    tfClientCfg.put("device", "transformClient");
-    tfClientCfg.put("local",  "/" + getName() + "/tf");
-    tfClientCfg.put("remote", tfRemote);
+    tfClientCfg.put("device", tfGroup.check("transform_server_device", yarp::os::Value("frameTransformClient")).asString());
+    tfClientCfg.put("filexml_option",  tfGroup.check("transform_server_file", yarp::os::Value("ftc_yarp_only.xml")).asString());
 
     if (!m_tfDriver.open(tfClientCfg))
     {
