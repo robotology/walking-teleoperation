@@ -156,6 +156,12 @@ bool VirtualizerModule::configureTransformServer(const yarp::os::Bottle &tfGroup
     yarp::os::Property tfClientCfg;
     tfClientCfg.put("device", tfGroup.check("transform_server_device", yarp::os::Value("frameTransformClient")).asString());
     tfClientCfg.put("filexml_option",  tfGroup.check("transform_server_file", yarp::os::Value("ftc_yarp_only.xml")).asString());
+    tfClientCfg.put("ft_client_prefix", tfGroup.check("transform_server_local", yarp::os::Value(getName() + "/tf")).asString());
+    if (tfGroup.check("transform_server_remote"))
+    {
+        tfClientCfg.put("ft_server_prefix", tfGroup.find("transform_server_remote").asString());
+    }
+    tfClientCfg.put("local_rpc", getName() + "/tf/local_rpc");
 
     if (!m_tfDriver.open(tfClientCfg))
     {
