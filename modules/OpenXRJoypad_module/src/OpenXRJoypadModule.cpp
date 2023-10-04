@@ -670,7 +670,7 @@ struct OpenXRJoypadModule::Impl
         {
             options.put("ft_server_prefix", config.find("transform_server_remote").asString());
         }
-        options.put("local_rpc", applicationName + "/tf/local_rpc");
+        options.put("local_rpc", "/" + applicationName + "/tf/local_rpc");
 
         if (!this->transformClientDevice.open(options))
         {

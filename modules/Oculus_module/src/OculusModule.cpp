@@ -68,7 +68,7 @@ bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
     {
         options.put("ft_server_prefix", config.find("transform_server_remote").asString());
     }
-    options.put("local_rpc", getName() + "/tf/local_rpc");
+    options.put("local_rpc", "/" + getName() + "/tf/local_rpc");
 
     if (!m_transformClientDevice.open(options))
     {

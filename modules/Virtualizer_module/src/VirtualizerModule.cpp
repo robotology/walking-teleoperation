@@ -161,7 +161,7 @@ bool VirtualizerModule::configureTransformServer(const yarp::os::Bottle &tfGroup
     {
         tfClientCfg.put("ft_server_prefix", tfGroup.find("transform_server_remote").asString());
     }
-    tfClientCfg.put("local_rpc", getName() + "/tf/local_rpc");
+    tfClientCfg.put("local_rpc", "/" + getName() + "/tf/local_rpc");
 
     if (!m_tfDriver.open(tfClientCfg))
     {
