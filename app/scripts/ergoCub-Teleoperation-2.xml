@@ -21,12 +21,26 @@
     <parameters>--config realsense2.xml</parameters>
     <node>ergocub-head</node>
   </module>
+  
+  <module>
+    <name>ObjectDistance</name>
+    <dependencies>
+      <port timeout="15.0">/depthCamera/depthImage:o</port>
+    </dependencies>
+    <node>ergocub000-lap</node>
+  </module>
 
   <!-- Connections -->
   <connection>
     <from>/depthCamera/rgbImage:o</from>
     <to>/headset/display:i</to>
     <protocol>mjpeg</protocol>
+  </connection>
+  
+  <connection>
+    <from>/ObjectDistanceModule/distance:o</from>
+    <to>/headset/distance_label</to>
+    <protocol>fast_tcp</protocol>
   </connection>
 
 </application>
