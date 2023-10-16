@@ -27,10 +27,6 @@
     <description>Run IK HDE Device</description>
     <node>localhost</node>
     <tag>RobotStateProvider</tag>
-    <dependencies>
-      <port timeout="10.0">/transformServer/transforms:o</port>
-      <port timeout="15.0">/iFeelSuit/WearableData/data:o</port>
-    </dependencies>
   </module>
 
   <module>
