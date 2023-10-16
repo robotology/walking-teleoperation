@@ -296,7 +296,9 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
 
     // convert radiant to degree
     for (int i = 0; i < m_actuatedDOFs; i++)
+    {
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
+    }
 
     // set desired position
     m_positionDirectInterface->setPositions(m_desiredJointValue.data());
@@ -321,7 +323,9 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
 
     // convert radiant/s  to degree/s
     for (int i = 0; i < m_actuatedDOFs; i++)
+    {
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
+    }
 
     // since the velocity interface use a minimum jerk trajectory a very high acceleration is set in
     // order to use it as velocity "direct" interface
