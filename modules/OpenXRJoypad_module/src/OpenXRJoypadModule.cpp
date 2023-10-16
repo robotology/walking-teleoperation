@@ -56,6 +56,7 @@ class RobotControlHelper
     yarp::sig::Vector m_desiredJointValue; /**< Desired joint value [deg or deg/s]. */
     yarp::sig::Vector m_positionFeedbackInDegrees; /**< Joint position [deg]. */
     yarp::sig::Vector m_positionFeedbackInRadians; /**< Joint position [rad]. */
+    yarp::sig::Vector m_desiredAcceleration; /**< Desired acceleration for velocity control. */
 
     yarp::conf::vocab32_t m_controlMode; /**< Used control mode. */
 
@@ -235,6 +236,8 @@ bool RobotControlHelper::configure(const yarp::os::Searchable& config, const std
     m_positionFeedbackInDegrees.zero();
     m_positionFeedbackInRadians.resize(m_actuatedDOFs);
     m_positionFeedbackInRadians.zero();
+    m_desiredAcceleration.resize(m_actuatedDOFs);
+    m_desiredAcceleration = std::numeric_limits<double>::max();
 
     // check if the robot is alive
     bool okPosition = false;
@@ -329,8 +332,7 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
 
     // since the velocity interface use a minimum jerk trajectory a very high acceleration is set in
     // order to use it as velocity "direct" interface
-    yarp::sig::Vector dummy(m_actuatedDOFs, std::numeric_limits<double>::max());
-    m_velocityInterface->setRefAccelerations(dummy.data());
+    m_velocityInterface->setRefAccelerations(m_desiredAcceleration.data());
     m_velocityInterface->velocityMove(m_desiredJointValue.data());
     return true;
 }
