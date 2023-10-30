@@ -37,8 +37,8 @@
     <node>localhost</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="15.0">/ergoCub/RobotStateWrapper/state:o</port>
-      <port timeout="15.0">/HDE/WearableTargetsWrapper/state:o</port>
+      <port timeout="15.0">/ergoCub/RobotStateServer/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsServer/state:o</port>
     </dependencies>
   </module>
 
