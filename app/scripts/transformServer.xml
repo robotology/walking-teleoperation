@@ -14,7 +14,7 @@
   <!-- Transform Server -->
   <module>
     <name>yarpdev</name>
-    <parameters>--device transformServer --ROS::enable_ros_publisher 0 --ROS::enable_ros_subscriber 0</parameters>
+    <parameters>--device frameTransformServer --filexml_option fts_yarp_only.xml</parameters>
     <node>icub-virtualizer</node>
   </module>
 

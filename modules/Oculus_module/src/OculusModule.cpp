@@ -61,9 +61,14 @@ OculusModule::~OculusModule(){};
 bool OculusModule::configureTranformClient(const yarp::os::Searchable& config)
 {
     yarp::os::Property options;
-    options.put("device", "transformClient");
-    options.put("remote", "/transformServer");
-    options.put("local", "/" + getName() + "/transformClient");
+    options.put("device", config.check("transform_server_device", yarp::os::Value("frameTransformClient")).asString());
+    options.put("filexml_option",  config.check("transform_server_file", yarp::os::Value("ftc_yarp_only.xml")).asString());
+    options.put("ft_client_prefix", config.check("transform_server_local", yarp::os::Value(getName() + "/tf")).asString());
+    if (config.check("transform_server_remote"))
+    {
+        options.put("ft_server_prefix", config.find("transform_server_remote").asString());
+    }
+    options.put("local_rpc", "/" + getName() + "/tf/local_rpc");
 
     if (!m_transformClientDevice.open(options))
     {
