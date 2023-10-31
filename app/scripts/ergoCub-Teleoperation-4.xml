@@ -68,7 +68,7 @@
   </connection>
 
   <connection>
-    <from>/ergoCub/RobotStateWrapper/state:o</from>
+    <from>/ergoCub/RobotStateServer/state:o</from>
     <to>/walking-coordinator/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>

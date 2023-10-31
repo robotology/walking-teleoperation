@@ -190,7 +190,7 @@
   </connection>
   
   	<connection>
-        <from>/iCub/RobotStateWrapper/state:o</from>
+        <from>/iCub/RobotStateServer/state:o</from>
         <to>/icub_dump/robotState</to>
         <protocol>udp</protocol>
   </connection>

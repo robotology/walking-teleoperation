@@ -57,8 +57,8 @@
     <node>icub-console</node>
     <tag>RobotStateProvider</tag>
     <dependencies>
-      <port timeout="15.0">/iCub/RobotStateWrapper/state:o</port>
-      <port timeout="15.0">/HDE/WearableTargetsWrapper/state:o</port>
+      <port timeout="15.0">/iCub/RobotStateServer/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsServer/state:o</port>
     </dependencies>
   </module>
 
