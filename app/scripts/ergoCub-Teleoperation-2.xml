@@ -29,4 +29,10 @@
     <protocol>mjpeg</protocol>
   </connection>
 
+  <connection>
+    <from>/object-distance/augmented_reality:o</from>
+    <to>/headset/augmentedReality</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
 </application>
