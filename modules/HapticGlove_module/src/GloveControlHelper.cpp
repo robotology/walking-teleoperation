@@ -32,6 +32,7 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     m_desiredVibrotactileValues.resize(m_numVibrotactileFeedback, 0);
     m_desiredForceValues.resize(m_numForceFeedback, 0);
+    m_desiredHapticValues.resize(m_numForceFeedback + m_numVibrotactileFeedback, 0);
 
     m_JointsValues.resize(m_numHandJoints, 0.0);
 
@@ -201,6 +202,30 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
 
     return m_pImp->setFingertipVibrotactileValues(m_desiredVibrotactileValues);
 }
+
+bool GloveControlHelper::setFingertipHapticFeedbackReferences()
+{
+    // if (desiredValue.size() != m_numHapticFeedback)
+    // {
+    //     yError() << m_logPrefix
+    //              << "the size of the input "
+    //                 "desired vecotr ["
+    //              << desiredValue.size() << "] and the number of haptic feedbacks [ "
+    //              << m_numHapticFeedback << " ]are not equal.";
+    //     return false;
+    // }
+
+    for (size_t i = 0; i < m_numForceFeedback; i++)
+    {
+        m_desiredHapticValues[i] = m_desiredForceValues[i];
+    }
+    for (size_t i = 0; i < m_numVibrotactileFeedback; i++)
+    {
+        m_desiredHapticValues[i + m_numForceFeedback] = m_desiredVibrotactileValues[i];
+    }
+
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredHapticValues);
+}
 bool GloveControlHelper::stopPalmVibrotactileFeedback()
 {
     return m_pImp->setPalmVibrotactileValue(to_underlying(
@@ -220,6 +245,12 @@ bool GloveControlHelper::stopForceFeedback()
     return m_pImp->setFingertipForceFeedbackValues(m_desiredForceValues);
 }
 
+bool GloveControlHelper::stopHapticsFeedback()
+{
+    std::fill(m_desiredHapticValues.begin(), m_desiredHapticValues.end(), 0.0);
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredHapticValues);
+}
+
 bool GloveControlHelper::stopHapticFeedback()
 {
 
@@ -237,6 +268,11 @@ bool GloveControlHelper::stopHapticFeedback()
     {
         yError() << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the palm "
                     "vibrotactile feedback";
+        return false;
+    }
+    if (!stopHapticsFeedback())
+    {
+        yError() << m_logPrefix << "Cannot turn off the fingertip haptics feedback";
         return false;
     }
     return true;
