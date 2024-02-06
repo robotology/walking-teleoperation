@@ -15,6 +15,12 @@
     <parameters>--from openXRHeadsetParameters.ini</parameters>
     <node>icub-virtualizer</node>
   </module>
+  
+  <module>
+    <name>yarp</name>
+    <parameters>repeat /depthCamera/repeated/rgbImage:o </parameters>
+    <node>ergocub001-lap</node>
+  </module>
 
   <module>
     <name>yarprobotinterface</name>
@@ -25,14 +31,20 @@
   <!-- Connections -->
   <connection>
     <from>/depthCamera/rgbImage:o</from>
-    <to>/headset/display:i</to>
+    <to>/depthCamera/repeated/rgbImage:o</to>
     <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/depthCamera/repeated/rgbImage:o</from>
+    <to>/headset/display:i</to>
+    <protocol>udp+send.portmonitor+file.image_compression_ffmpeg+recv.portmonitor+file.image_compression_ffmpeg+type.dll+custom_enc.hevc_nvenc+custom_dec.hevc_cuvid+pixel_format.23+cq.31+delay.0+tune.ull</protocol>
   </connection>
 
   <connection>
     <from>/object-distance/augmented_reality:o</from>
     <to>/headset/augmentedReality</to>
-    <protocol>mjpeg</protocol>
+    <protocol>udp+send.portmonitor+file.image_compression_ffmpeg+recv.portmonitor+file.image_compression_ffmpeg+type.dll+custom_enc.hevc_nvenc+custom_dec.hevc_cuvid+pixel_format.23+cq.31+delay.0+tune.ull</protocol>
   </connection>
 
 </application>
