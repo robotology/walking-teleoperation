@@ -205,15 +205,6 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
 
 bool GloveControlHelper::setFingertipHapticFeedbackReferences()
 {
-    // if (desiredValue.size() != m_numHapticFeedback)
-    // {
-    //     yError() << m_logPrefix
-    //              << "the size of the input "
-    //                 "desired vecotr ["
-    //              << desiredValue.size() << "] and the number of haptic feedbacks [ "
-    //              << m_numHapticFeedback << " ]are not equal.";
-    //     return false;
-    // }
 
     for (size_t i = 0; i < m_numForceFeedback; i++)
     {
@@ -226,6 +217,7 @@ bool GloveControlHelper::setFingertipHapticFeedbackReferences()
 
     return m_pImp->setFingertipHapticFeedbackValues(m_desiredHapticValues);
 }
+
 bool GloveControlHelper::stopPalmVibrotactileFeedback()
 {
     return m_pImp->setPalmVibrotactileValue(to_underlying(
@@ -397,6 +389,7 @@ bool GloveControlHelper::findHumanMotionRange()
 
     std::vector<double> desiredValue(m_numVibrotactileFeedback, 35);
     this->setFingertipVibrotactileFeedbackReferences(desiredValue);
+    this->setFingertipHapticFeedbackReferences();
     return true;
 }
 
