@@ -44,5 +44,4 @@ build/
 TAGS
 compile_commands.json
 CMakeLists.txt.user
-.vscode/c_cpp_properties.json
-.vscode/settings.json
+.vscode/

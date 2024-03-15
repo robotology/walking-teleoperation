@@ -179,7 +179,7 @@ bool GloveControlHelper::setFingertipForceFeedbackReferences(
                               / m_maxForceFeedback);
     }
 
-    return m_pImp->setFingertipForceFeedbackValues(m_desiredForceValues);
+    return true;
 }
 
 bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
@@ -200,22 +200,12 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
             = (int)std::round(std::max(0.0, std::min(desiredValue[i], 100.0)));
     }
 
-    return m_pImp->setFingertipVibrotactileValues(m_desiredVibrotactileValues);
+    return true;
 }
 
 bool GloveControlHelper::setFingertipHapticFeedbackReferences()
 {
-
-    for (size_t i = 0; i < m_numForceFeedback; i++)
-    {
-        m_desiredHapticValues[i] = m_desiredForceValues[i];
-    }
-    for (size_t i = 0; i < m_numVibrotactileFeedback; i++)
-    {
-        m_desiredHapticValues[i + m_numForceFeedback] = m_desiredVibrotactileValues[i];
-    }
-
-    return m_pImp->setFingertipHapticFeedbackValues(m_desiredHapticValues);
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredForceValues, m_desiredVibrotactileValues);
 }
 
 bool GloveControlHelper::stopPalmVibrotactileFeedback()
@@ -228,19 +218,19 @@ bool GloveControlHelper::stopPalmVibrotactileFeedback()
 bool GloveControlHelper::stopVibrotactileFeedback()
 {
     std::fill(m_desiredVibrotactileValues.begin(), m_desiredVibrotactileValues.end(), 0.0);
-    return m_pImp->setFingertipVibrotactileValues(m_desiredVibrotactileValues);
+    return true;
 }
 
 bool GloveControlHelper::stopForceFeedback()
 {
     std::fill(m_desiredForceValues.begin(), m_desiredForceValues.end(), 0.0);
-    return m_pImp->setFingertipForceFeedbackValues(m_desiredForceValues);
+    return true;
 }
 
-bool GloveControlHelper::stopHapticsFeedback()
+bool GloveControlHelper::stopAllHapticFeedback()
 {
     std::fill(m_desiredHapticValues.begin(), m_desiredHapticValues.end(), 0.0);
-    return m_pImp->setFingertipHapticFeedbackValues(m_desiredHapticValues);
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredForceValues, m_desiredVibrotactileValues);
 }
 
 bool GloveControlHelper::stopHapticFeedback()
@@ -262,7 +252,7 @@ bool GloveControlHelper::stopHapticFeedback()
                     "vibrotactile feedback";
         return false;
     }
-    if (!stopHapticsFeedback())
+    if (!stopAllHapticFeedback())
     {
         yError() << m_logPrefix << "Cannot turn off the fingertip haptics feedback";
         return false;

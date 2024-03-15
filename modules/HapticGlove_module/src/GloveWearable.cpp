@@ -328,19 +328,9 @@ bool GloveWearableImpl::getFingertipPoseValues(Eigen::MatrixXd& values)
     return true;
 }
 
-bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& values)
+bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues)
 {
-    return true;
-}
-
-bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& values)
-{
-    return true;
-}
-
-bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>& values)
-{
-    if (values.size() != m_numHapticFeedback)
+    if (forceValues.size() + vibroValues.size() != m_numHapticFeedback)
     {
         yError() << m_logPrefix
                  << "size of the haptic feedback vector is not equal to the size of the default "
@@ -348,14 +338,16 @@ bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>&
     }
     wearable::msg::WearableActuatorCommand& wearableActuatorCommand
         = m_iWearActuatorPort.prepare();
-    wearableActuatorCommand.forceValue.resize(m_numForceFeedback, 0);
-    wearableActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback, 0);
-    wearableActuatorCommand.duration.resize(m_numForceFeedback + m_numVibrotactileFeedback, 0);
+    wearableActuatorCommand.forceValue.resize(m_numForceFeedback);
+    wearableActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback);
 
-    for (size_t i = 0; i < values.size() / 2; i++)
+    for (size_t i = 0; i < forceValues.size(); i++)
     {
-        wearableActuatorCommand.forceValue[i] = values[i];
-        wearableActuatorCommand.vibroTactileValue[i] = values[i + m_numForceFeedback];
+        wearableActuatorCommand.forceValue[i] = forceValues[i];
+    }
+    for (size_t i = 0; i < vibroValues.size(); i++)
+    {
+        wearableActuatorCommand.vibroTactileValue[i] = vibroValues[i];
     }
 
         wearableActuatorCommand.info.name = m_wearablePrefix

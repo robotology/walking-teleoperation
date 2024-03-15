@@ -177,7 +177,7 @@ public:
      * pinky, range: [0, 100]
      * @return true/false in case of success/failure
      */
-    bool setFingertipHapticFeedbackValues(const std::vector<int>& values);
+    bool setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues);
 
     /**
      * set the force feedback actuator values associated with all the human hand fingertips

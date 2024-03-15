@@ -126,7 +126,7 @@ public:
      * stop the haptics feedback (force feedback, fingertip vibrotactile feedback) to the user
      * @return  true/false in case of success/failure
      */
-    bool stopHapticsFeedback();
+    bool stopAllHapticFeedback();
 
     /**
      * stop the haptic feedback (force feedback, fingertip vibrotactile feedback, palm vibrotactile
