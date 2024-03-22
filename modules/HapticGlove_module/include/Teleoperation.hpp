@@ -92,6 +92,9 @@ struct HapticGlove::Data
     Eigen::MatrixXd humanFingertipPoses; /// <summary> human fingertip poses (size: number of hand
                                          /// fingertips (i.e., 5) x 7)
     std::vector<double>
+        humanHapticFeedbacks; /// <summary> haptic feedback vector to the human fingertips
+
+    std::vector<double>
         humanForceFeedbacks; /// <summary> force feedback vector to the human fingertips
 
     std::vector<double> humanVibrotactileFeedbacks; /// <summary> vibrotactile feedback
