@@ -72,6 +72,8 @@ class HapticGlove::GloveWearableImpl
 private:
     std::string m_logPrefix;
 
+    const size_t m_numHapticFeedback; /**< Number of the motors to produce haptic feedback to the
+                         human*/
     const size_t m_numForceFeedback; /**< Number of the motors to produce force feedback to the
                          human*/
     const size_t m_numVibrotactileFeedback; /**< Number of the vibrotactile to produce vibrotactile
@@ -168,6 +170,14 @@ public:
      * @return true/false in case of success/failure
      */
     bool getFingertipPoseValues(Eigen::MatrixXd& values);
+
+    /**
+     * set the Haptic feedback values associated with all the human hand fingertips
+     * @param values the vector of force and vibrotactile feedback values to the human fingertips, from thumb to
+     * pinky, range: [0, 100]
+     * @return true/false in case of success/failure
+     */
+    bool setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues);
 
     /**
      * set the force feedback actuator values associated with all the human hand fingertips
