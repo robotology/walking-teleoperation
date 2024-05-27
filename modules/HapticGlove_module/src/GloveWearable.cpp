@@ -17,6 +17,7 @@ GloveWearableImpl::GloveWearableImpl(const size_t& numFingers,
     , m_numForceFeedback(numForceFeedback)
     , m_numVibrotactileFeedback(numVibrotactileFeedback)
     , m_numHandJoints(numHandJoints)
+    , m_numHapticFeedback(numForceFeedback + numVibrotactileFeedback)
 {
     m_logPrefix = "GloveWearableImpl::";
 }
@@ -327,63 +328,34 @@ bool GloveWearableImpl::getFingertipPoseValues(Eigen::MatrixXd& values)
     return true;
 }
 
-bool GloveWearableImpl::setFingertipForceFeedbackValues(const std::vector<int>& values)
+bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues)
 {
-    if (values.size() != m_numForceFeedback)
+    if (forceValues.size() + vibroValues.size() != m_numHapticFeedback)
     {
         yError() << m_logPrefix
-                 << "size of the force feedback vector is not equal to the size of the default "
-                    "force feedback size.";
+                 << "size of the haptic feedback vector is not equal to the size of the default "
+                    "haptic feedback size.";
     }
-    for (size_t i = 0; i < values.size(); i++)
+    wearable::msg::WearableActuatorCommand& wearableActuatorCommand
+        = m_iWearActuatorPort.prepare();
+    wearableActuatorCommand.forceValue.resize(m_numForceFeedback);
+    wearableActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback);
+
+    for (size_t i = 0; i < forceValues.size(); i++)
     {
-        std::string fingerName = m_humanFingerNameList[i];
+        wearableActuatorCommand.forceValue[i] = forceValues[i];
+    }
+    for (size_t i = 0; i < vibroValues.size(); i++)
+    {
+        wearableActuatorCommand.vibroTactileValue[i] = vibroValues[i];
+    }
 
-        wearable::msg::WearableActuatorCommand& wearableActuatorCommand
-            = m_iWearActuatorPort.prepare();
-
-        wearableActuatorCommand.value = values[i];
         wearableActuatorCommand.info.name = m_wearablePrefix
-                                            + wearable::actuator::IHaptic::getPrefix() + fingerName
-                                            + "::ForceFeedback";
+                                            + wearable::actuator::IHaptic::getPrefix() +
+                                            + "HapticFeedback";
         wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-        wearableActuatorCommand.duration = 0;
 
-        m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
-                                         // set to true to avoid the data loss for all actuators
-    }
-    return true;
-}
-
-bool GloveWearableImpl::setFingertipVibrotactileValues(const std::vector<int>& values)
-{
-    if (values.size() != m_numVibrotactileFeedback)
-    {
-        yError()
-            << m_logPrefix
-            << "size of the vibrotactile feedback vector is not equal to the size of the default "
-               "vibrotactile feedback size.";
-    }
-
-    for (size_t i = 0; i < values.size(); i++)
-    {
-        std::string fingerName = m_humanFingerNameList[i];
-
-        wearable::msg::WearableActuatorCommand& wearableActuatorCommand
-            = m_iWearActuatorPort.prepare();
-
-        wearableActuatorCommand.value = values[i];
-        wearableActuatorCommand.info.name = m_wearablePrefix
-                                            + wearable::actuator::IHaptic::getPrefix() + fingerName
-                                            + "::VibroTactileFeedback";
-
-        wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-        wearableActuatorCommand.duration = 0;
-
-        m_iWearActuatorPort.write(true); // writeStrict option for wearable haptic device should be
-                                         // set to true to avoid the data loss for all actuators
-    }
-
+        m_iWearActuatorPort.write();
     return true;
 }
 
@@ -403,15 +375,6 @@ bool GloveWearableImpl::setPalmVibrotactileValue(const int& value)
      * Object_Grasp_30 = 9
      */
 
-    wearable::msg::WearableActuatorCommand& wearableActuatorCommand = m_iWearActuatorPort.prepare();
-
-    wearableActuatorCommand.value = value;
-    wearableActuatorCommand.info.name = m_wearablePrefix + wearable::actuator::IHaptic::getPrefix()
-                                        + m_handLinkName + "::VibroTactileFeedback";
-    wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
-    wearableActuatorCommand.duration = 0;
-
-    m_iWearActuatorPort.write(false);
     return true;
 }
 

@@ -32,6 +32,7 @@ bool GloveControlHelper::configure(const yarp::os::Searchable& config,
 
     m_desiredVibrotactileValues.resize(m_numVibrotactileFeedback, 0);
     m_desiredForceValues.resize(m_numForceFeedback, 0);
+    m_desiredHapticValues.resize(m_numForceFeedback + m_numVibrotactileFeedback, 0);
 
     m_JointsValues.resize(m_numHandJoints, 0.0);
 
@@ -178,7 +179,7 @@ bool GloveControlHelper::setFingertipForceFeedbackReferences(
                               / m_maxForceFeedback);
     }
 
-    return m_pImp->setFingertipForceFeedbackValues(m_desiredForceValues);
+    return true;
 }
 
 bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
@@ -199,8 +200,14 @@ bool GloveControlHelper::setFingertipVibrotactileFeedbackReferences(
             = (int)std::round(std::max(0.0, std::min(desiredValue[i], 100.0)));
     }
 
-    return m_pImp->setFingertipVibrotactileValues(m_desiredVibrotactileValues);
+    return true;
 }
+
+bool GloveControlHelper::setFingertipHapticFeedbackReferences()
+{
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredForceValues, m_desiredVibrotactileValues);
+}
+
 bool GloveControlHelper::stopPalmVibrotactileFeedback()
 {
     return m_pImp->setPalmVibrotactileValue(to_underlying(
@@ -211,13 +218,19 @@ bool GloveControlHelper::stopPalmVibrotactileFeedback()
 bool GloveControlHelper::stopVibrotactileFeedback()
 {
     std::fill(m_desiredVibrotactileValues.begin(), m_desiredVibrotactileValues.end(), 0.0);
-    return m_pImp->setFingertipVibrotactileValues(m_desiredVibrotactileValues);
+    return true;
 }
 
 bool GloveControlHelper::stopForceFeedback()
 {
     std::fill(m_desiredForceValues.begin(), m_desiredForceValues.end(), 0.0);
-    return m_pImp->setFingertipForceFeedbackValues(m_desiredForceValues);
+    return true;
+}
+
+bool GloveControlHelper::stopAllHapticFeedback()
+{
+    std::fill(m_desiredHapticValues.begin(), m_desiredHapticValues.end(), 0.0);
+    return m_pImp->setFingertipHapticFeedbackValues(m_desiredForceValues, m_desiredVibrotactileValues);
 }
 
 bool GloveControlHelper::stopHapticFeedback()
@@ -237,6 +250,11 @@ bool GloveControlHelper::stopHapticFeedback()
     {
         yError() << "[GloveControlHelper::stopHapticFeedback] Cannot turn off the palm "
                     "vibrotactile feedback";
+        return false;
+    }
+    if (!stopAllHapticFeedback())
+    {
+        yError() << m_logPrefix << "Cannot turn off the fingertip haptics feedback";
         return false;
     }
     return true;
@@ -361,6 +379,7 @@ bool GloveControlHelper::findHumanMotionRange()
 
     std::vector<double> desiredValue(m_numVibrotactileFeedback, 35);
     this->setFingertipVibrotactileFeedbackReferences(desiredValue);
+    this->setFingertipHapticFeedbackReferences();
     return true;
 }
 
