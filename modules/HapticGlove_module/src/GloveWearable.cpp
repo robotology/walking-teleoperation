@@ -142,13 +142,13 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
         return false;
     }
 
-    if (!m_iWearActuatorPort.open(portNameOut))
+    if (!m_iWearGloveActuatorPort.open(portNameOut))
     {
         yError() << m_logPrefix << portNameOut << " port already open.";
         return false;
     }
 
-    if (!Network::connect(m_iWearActuatorPort.getName(), portNameIn, "fast_tcp"))
+    if (!Network::connect(m_iWearGloveActuatorPort.getName(), portNameIn, "fast_tcp"))
     {
         yError() << m_logPrefix << "output port: " << portNameOut << "input port: " << portNameIn
                  << " unable to connect the ports.";
@@ -336,26 +336,26 @@ bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>&
                  << "size of the haptic feedback vector is not equal to the size of the default "
                     "haptic feedback size.";
     }
-    wearable::msg::WearableActuatorCommand& wearableActuatorCommand
-        = m_iWearActuatorPort.prepare();
-    wearableActuatorCommand.forceValue.resize(m_numForceFeedback);
-    wearableActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback);
+    wearable::msg::GloveActuatorCommand& gloveActuatorCommand
+        = m_iWearGloveActuatorPort.prepare();
+    gloveActuatorCommand.forceValue.resize(m_numForceFeedback);
+    gloveActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback);
 
     for (size_t i = 0; i < forceValues.size(); i++)
     {
-        wearableActuatorCommand.forceValue[i] = forceValues[i];
+        gloveActuatorCommand.forceValue[i] = forceValues[i];
     }
     for (size_t i = 0; i < vibroValues.size(); i++)
     {
-        wearableActuatorCommand.vibroTactileValue[i] = vibroValues[i];
+        gloveActuatorCommand.vibroTactileValue[i] = vibroValues[i];
     }
 
-        wearableActuatorCommand.info.name = m_wearablePrefix
+        gloveActuatorCommand.info.name = m_wearablePrefix
                                             + wearable::actuator::IHaptic::getPrefix() +
                                             + "HapticFeedback";
-        wearableActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
+        gloveActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
 
-        m_iWearActuatorPort.write();
+        m_iWearGloveActuatorPort.write();
     return true;
 }
 
@@ -384,7 +384,7 @@ bool GloveWearableImpl::close()
     m_iWear = nullptr;
     m_wearableDevice.close();
 
-    m_iWearActuatorPort.close();
+    m_iWearGloveActuatorPort.close();
 
     return true;
 }
