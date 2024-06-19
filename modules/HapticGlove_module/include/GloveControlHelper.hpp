@@ -40,7 +40,6 @@ class HapticGlove::GloveControlHelper
 
     bool m_isRightHand; /**< true if the glove is the right hand*/
 
-    std::vector<int> m_desiredHapticValues; /**< Desired haptic feedback values; range: [0, 100]. */
     std::vector<int> m_desiredForceValues; /**< Desired force feedback values; range: [0, 100]. */
     std::vector<int>
         m_desiredVibrotactileValues; /**< Desired vibrotactile feedback values; range: [0, 100] */
@@ -98,7 +97,7 @@ public:
      * Set the desired haptic feedback reference to the user fingertip
      * @return true/false in case of success/failure
      */
-    bool setFingertipHapticFeedbackReferences();
+    bool sendFingertipHapticFeedbackReferences();
 
     /**
      * Set the desired force feedback reference to the user fingertip
@@ -121,12 +120,6 @@ public:
      * @return true / false in case of success/failure
      */
     bool setPalmVibrotactileFeedbackReference(const int& desiredValue);
-
-    /**
-     * stop the haptics feedback (force feedback, fingertip vibrotactile feedback) to the user
-     * @return  true/false in case of success/failure
-     */
-    bool stopAllHapticFeedback();
 
     /**
      * stop the haptic feedback (force feedback, fingertip vibrotactile feedback, palm vibrotactile

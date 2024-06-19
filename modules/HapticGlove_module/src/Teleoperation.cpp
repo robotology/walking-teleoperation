@@ -354,7 +354,7 @@ bool Teleoperation::run()
         m_robotController->move();
         m_humanGlove->setFingertipForceFeedbackReferences(m_data.humanForceFeedbacks);
         m_humanGlove->setFingertipVibrotactileFeedbackReferences(m_data.humanVibrotactileFeedbacks);
-        m_humanGlove->setFingertipHapticFeedbackReferences();
+        m_humanGlove->sendFingertipHapticFeedbackReferences();
     }
 
     if (m_enableLogger)
