@@ -153,10 +153,10 @@ checkandset_dependency(CybSDK)
 find_package(SRanipalSDK QUIET)
 checkandset_dependency(SRanipalSDK)
 
-find_package(IWear QUIET)
+find_package(IWear 1.9.0 QUIET)
 checkandset_dependency(IWear)
 
-find_package(WearableActuators QUIET)
+find_package(WearableActuators 1.9.0 QUIET)
 checkandset_dependency(WearableActuators)
 
 

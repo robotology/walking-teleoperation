@@ -94,6 +94,12 @@ public:
     bool getHandJointAngles(std::vector<double>& jointAngles);
 
     /**
+     * Set the desired haptic feedback reference to the user fingertip
+     * @return true/false in case of success/failure
+     */
+    bool sendFingertipHapticFeedbackReferences();
+
+    /**
      * Set the desired force feedback reference to the user fingertip
      * @param desiredValue desired force feedback values
      * @return true/false in case of success/failure

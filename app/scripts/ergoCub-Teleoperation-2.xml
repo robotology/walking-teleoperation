@@ -15,7 +15,7 @@
     <parameters>--from openXRHeadsetParameters.ini</parameters>
     <node>icub-virtualizer</node>
   </module>
-  
+
   <module>
     <name>yarp</name>
     <parameters>repeat /depthCamera/repeated/rgbImage:o </parameters>

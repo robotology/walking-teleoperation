@@ -22,8 +22,6 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
 {
     m_state = HapticGloveFSM::Configuring;
 
-    yarp::os::Value* value;
-
     // check if the configuration file is empty
     if (rf.isNull())
     {
