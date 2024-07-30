@@ -66,6 +66,7 @@ bool Estimators::configure(const yarp::os::Searchable& config, const std::string
     }
 
     m_z = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
+    m_n = 3; // joint/motor position, velocity, acceleration
 
     m_x_hat = Eigen::MatrixXd::Zero(no_measurement_kf, 1);
     m_P.resize(no_states_kf * no_states_kf);
