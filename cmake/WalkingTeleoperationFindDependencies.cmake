@@ -130,14 +130,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   DEPENDS ENABLE_RPATH
   USE_LINK_PATH)
 
-# Enable logger
-option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
-if(ENABLE_LOGGER)
-  add_definitions(-DENABLE_LOGGER)
-  find_package(matlogger2 REQUIRED)
-endif(ENABLE_LOGGER)
-
-
 find_package(PkgConfig QUIET)
 if (PkgConfig_FOUND)
     pkg_check_modules(libfvad QUIET IMPORTED_TARGET libfvad)

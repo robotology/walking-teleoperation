@@ -70,10 +70,6 @@ set(${EXE_TARGET_NAME}_LINKED_LIBS
     IWear::IWear
     WearableActuators::WearableActuators
     )
-if(ENABLE_LOGGER)
-list(APPEND ${EXE_TARGET_NAME}_LINKED_LIBS  matlogger2::matlogger2 )
-endif()
-
 
 target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC ${${EXE_TARGET_NAME}_LINKED_LIBS} )
 

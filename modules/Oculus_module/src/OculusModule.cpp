@@ -388,12 +388,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
 
-#ifdef ENABLE_LOGGER
-    yInfo() << "[OculusModule::configure] matlogger2 is eanbled!";
-#else
-    yInfo() << "[OculusModule::configure] matlogger2 is disabled!";
-#endif
-
     // check if the configuration file is empty
     if (rf.isNull())
     {
@@ -415,9 +409,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
         = generalOptions.check("playerOrientationThreshold", yarp::os::Value(0.2)).asFloat64();
     yInfo() << "[OculusModule::configure] player orientation threshold: "
             << m_playerOrientationThreshold;
-
-    // check if log the data
-    m_enableLogger = generalOptions.check("enableLogger", yarp::os::Value(0)).asBool();
 
     // set the module name
     std::string name;
@@ -596,15 +587,6 @@ bool OculusModule::configure(yarp::os::ResourceFinder& rf)
     m_playerOrientationOld = 0;
     m_robotYaw = 0;
 
-    // open the logger only if all the vecotos sizes are clear.
-    if (m_enableLogger)
-    {
-        if (!openLogger())
-        {
-            yError() << "[OculusModule::configure] Unable to open the logger";
-            return false;
-        }
-    }
     m_oculusHeadsetPoseInertial.resize(6, 0.0);
 
     // Reset the cameras if necessary
@@ -698,14 +680,6 @@ double OculusModule::getPeriod()
 bool OculusModule::close()
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-
-#ifdef ENABLE_LOGGER
-    if (m_enableLogger)
-    {
-        m_logger->flush_available_data();
-    }
-#endif
-    // m_logger.reset();
 
     // close devices
     if (!m_useXsens)
@@ -1247,78 +1221,6 @@ bool OculusModule::updateModule()
             yInfo() << "[OculusModule::updateModule] stop";
             return false;
         }
-
-#ifdef ENABLE_LOGGER
-        if (m_enableLogger)
-        {
-            m_logger->add(m_logger_prefix + "_time", yarp::os::Time::now());
-            m_logger->add(m_logger_prefix + "_playerOrientation", m_playerOrientation);
-            if (m_moveRobot)
-            {
-                m_logger->add(m_logger_prefix + "_robotYaw", m_robotYaw);
-            } else
-            {
-                m_logger->add(m_logger_prefix + "_robotYaw", 0.0);
-            }
-
-            std::vector<double> neckAngles;
-            yarp::sig::Vector neckValuesSig;
-            m_head->getNeckJointValues(neckValuesSig);
-            for (unsigned i = 0; i < neckValuesSig.size(); i++)
-            {
-                neckAngles.push_back(neckValuesSig(i));
-            }
-            m_logger->add(m_logger_prefix + "_neckJointValues", neckAngles);
-
-            std::vector<double> lFingers, rFingers;
-            m_leftHandFingers->getFingerValues(lFingers);
-            m_rightHandFingers->getFingerValues(rFingers);
-            if (lFingers.size() > 0)
-            {
-                m_logger->add(m_logger_prefix + "_leftFingerValues", lFingers);
-            }
-            if (rFingers.size() > 0)
-            {
-                m_logger->add(m_logger_prefix + "_rightFingerValues", rFingers);
-            }
-
-            std::vector<double> left_robotHandpose_robotTel, left_humanHandpose_oculusInertial,
-                left_humanHandpose_humanTel;
-            m_leftHand->getHandInfo(left_robotHandpose_robotTel,
-                                    left_humanHandpose_oculusInertial,
-                                    left_humanHandpose_humanTel);
-
-            m_logger->add(m_logger_prefix + "_left_robotHandpose_robotTeleoperation",
-                          left_robotHandpose_robotTel);
-            m_logger->add(m_logger_prefix + "_left_humanHandpose_oculusInertial",
-                          left_humanHandpose_oculusInertial);
-            m_logger->add(m_logger_prefix + "_left_humanHandpose_humanTeleoperation",
-                          left_humanHandpose_humanTel);
-
-            std::vector<double> right_robotHandpose_robotTel, right_humanHandpose_oculusInertial,
-                right_humanHandpose_humanTel;
-            m_rightHand->getHandInfo(right_robotHandpose_robotTel,
-                                     right_humanHandpose_oculusInertial,
-                                     right_humanHandpose_humanTel);
-
-            m_logger->add(m_logger_prefix + "_right_robotHandpose_robotTeleoperation",
-                          right_robotHandpose_robotTel);
-            m_logger->add(m_logger_prefix + "_right_humanHandpose_oculusInertial",
-                          right_humanHandpose_oculusInertial);
-            m_logger->add(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
-                          right_humanHandpose_humanTel);
-
-            m_logger->add(m_logger_prefix + "_oculusHeadset_Inertial",
-                          m_oculusHeadsetPoseInertial); // pose sizein 3D space
-
-            if (!m_useVirtualizer)
-            {
-                m_logger->add(m_logger_prefix + "_loc_joypad_x_y", locCmd);
-            }
-
-            m_logger->flush_available_data();
-        }
-#endif
     } else if (m_state == OculusFSM::Configured)
     {
         // check if it is time to prepare or start walking
@@ -1380,54 +1282,6 @@ double OculusModule::deadzone(const double& input)
         else
             return 0.0;
     }
-}
-
-bool OculusModule::openLogger()
-{
-#ifdef ENABLE_LOGGER
-    std::string currentTime = YarpHelper::getTimeDateMatExtension();
-    std::string fileName = "OculusModule" + currentTime + "log.mat";
-
-    m_logger = XBot::MatLogger2::MakeLogger(fileName);
-    m_appender = XBot::MatAppender::MakeInstance();
-    m_appender->add_logger(m_logger);
-    m_appender->start_flush_thread();
-
-    m_logger->create(m_logger_prefix + "_time", 1);
-    m_logger->create(m_logger_prefix + "_playerOrientation", 1);
-
-    m_logger->create(m_logger_prefix + "_robotYaw", 1);
-
-    m_logger->create(m_logger_prefix + "_neckJointValues", m_head->controlHelper()->getDoFs());
-    m_logger->create(m_logger_prefix + "_leftFingerValues",
-                     m_leftHandFingers->controlHelper()->getDoFs());
-    m_logger->create(m_logger_prefix + "_rightFingerValues",
-                     m_rightHandFingers->controlHelper()->getDoFs());
-
-    m_logger->create(m_logger_prefix + "_left_robotHandpose_robotTeleoperation",
-                     6); // pose sizein 3D space
-    m_logger->create(m_logger_prefix + "_left_humanHandpose_oculusInertial",
-                     6); // pose sizein 3D space
-    m_logger->create(m_logger_prefix + "_left_humanHandpose_humanTeleoperation",
-                     6); // pose sizein 3D space
-
-    m_logger->create(m_logger_prefix + "_right_robotHandpose_robotTeleoperation",
-                     6); // pose sizein 3D space
-    m_logger->create(m_logger_prefix + "_right_humanHandpose_oculusInertial",
-                     6); // pose sizein 3D space
-    m_logger->create(m_logger_prefix + "_right_humanHandpose_humanTeleoperation",
-                     6); // pose sizein 3D space
-    m_logger->create(m_logger_prefix + "_oculusHeadset_Inertial",
-                     6); // pose sizein 3D space
-
-    m_logger->create(m_logger_prefix + "_loc_joypad_x_y",
-                     2); // [x,y] component for robot locomotion
-    yInfo() << "[OculusModule::openLogger] Logging is active.";
-#else
-    yInfo() << "[OculusModule::openLogger] option is not active in CMakeLists.";
-
-#endif
-    return true;
 }
 
 void OculusModule::Impl::initializeNeckJointsSmoother(const unsigned m_actuatedDOFs,
