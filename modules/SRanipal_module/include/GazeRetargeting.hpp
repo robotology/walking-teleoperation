@@ -12,8 +12,8 @@
 #include <yarp/dev/IPositionControl.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IControlMode.h>
-#include <iDynTree/Core/Axis.h>
-#include <iDynTree/Core/VectorFixSize.h>
+#include <iDynTree/Axis.h>
+#include <iDynTree/VectorFixSize.h>
 #include <VRInterface.hpp>
 #include <memory>
 #include <vector>

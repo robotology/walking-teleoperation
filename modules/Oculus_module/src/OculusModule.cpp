@@ -8,9 +8,9 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
 
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/yarp/YARPEigenConversions.h>
+#include <iDynTree/EigenHelpers.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/YARPEigenConversions.h>
 
 #include <OculusModule.hpp>
 #include <Utils.hpp>

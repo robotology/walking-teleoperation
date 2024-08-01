@@ -27,7 +27,7 @@ class RobotControlHelper
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
 
-    int m_actuatedDOFs; /**< Number of the actuated DoF */
+    size_t m_actuatedDOFs; /**< Number of the actuated DoF */
 
     std::vector<std::string>
         m_axesList; /**< Vector containing the name of the controlled joints. */
@@ -142,7 +142,7 @@ public:
      * Get the number of degree of freedom
      * @return the number of actuated DoF
      */
-    int getDoFs();
+    size_t getDoFs();
 
     /**
      * Close the helper

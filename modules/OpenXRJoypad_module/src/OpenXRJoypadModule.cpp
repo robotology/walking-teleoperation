@@ -28,9 +28,9 @@
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Matrix.h>
 
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/yarp/YARPEigenConversions.h>
+#include <iDynTree/EigenHelpers.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/YARPEigenConversions.h>
 
 #include <iCub/ctrl/pids.h>
 
@@ -41,7 +41,7 @@ class RobotControlHelper
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
 
-    int m_actuatedDOFs; /**< Number of the actuated DoF */
+    size_t m_actuatedDOFs; /**< Number of the actuated DoF */
 
     std::vector<std::string>
         m_axesList; /**< Vector containing the name of the controlled joints. */
@@ -128,7 +128,7 @@ public:
      * Get the number of degree of freedom
      * @return the number of actuated DoF
      */
-    int getDoFs();
+    size_t getDoFs();
 
     /**
      * Close the helper
@@ -298,7 +298,7 @@ bool RobotControlHelper::setDirectPositionReferences(const yarp::sig::Vector& de
     }
 
     // convert radiant to degree
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (size_t i = 0; i < m_actuatedDOFs; i++)
     {
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredPosition(i));
     }
@@ -325,7 +325,7 @@ bool RobotControlHelper::setVelocityReferences(const yarp::sig::Vector& desiredV
     }
 
     // convert radiant/s  to degree/s
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (size_t i = 0; i < m_actuatedDOFs; i++)
     {
         m_desiredJointValue(i) = iDynTree::rad2deg(desiredVelocity(i));
     }
@@ -341,7 +341,7 @@ bool RobotControlHelper::getFeedback()
 {
     m_encodersInterface->getEncoders(m_positionFeedbackInDegrees.data());
 
-    for (unsigned j = 0; j < m_actuatedDOFs; ++j)
+    for (size_t j = 0; j < m_actuatedDOFs; ++j)
         m_positionFeedbackInRadians(j) = iDynTree::deg2rad(m_positionFeedbackInDegrees(j));
 
     return true;
@@ -361,7 +361,7 @@ void RobotControlHelper::close()
         yError() << "[RobotControlHelper::close] Unable to close the device.";
 }
 
-int RobotControlHelper::getDoFs()
+size_t RobotControlHelper::getDoFs()
 {
     return m_actuatedDOFs;
 }
@@ -378,10 +378,10 @@ bool RobotControlHelper::getLimits(yarp::sig::Matrix& limits)
     limits.resize(m_actuatedDOFs, 2);
 
     double maxLimitInDegree, minLimitInDegree;
-    for (int i = 0; i < m_actuatedDOFs; i++)
+    for (size_t i = 0; i < m_actuatedDOFs; i++)
     {
         // get position limits
-        if (!m_limitsInterface->getLimits(i, &minLimitInDegree, &maxLimitInDegree))
+        if (!m_limitsInterface->getLimits(static_cast<int>(i), &minLimitInDegree, &maxLimitInDegree))
         {
 
             limits(i, 0) = m_positionFeedbackInRadians(i);
@@ -484,7 +484,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    int fingersJoints = m_controlHelper->getDoFs();
+    size_t fingersJoints = m_controlHelper->getDoFs();
 
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))
@@ -763,7 +763,7 @@ struct OpenXRJoypadModule::Impl
         {
             int axis = std::stoi(code.substr(2));
 
-            if (axis >= axisCount)
+            if (axis >= static_cast<int>(axisCount))
             {
                 yError() << "[JoypadFingersModule::configureJoypad] The selected axis for" << tag
                          << "is out of bounds. Axis:" << axis << "Available:" << axisCount;
@@ -786,7 +786,7 @@ struct OpenXRJoypadModule::Impl
             int stick = std::stoi(code.substr(2, dotIndex - 2));
             int dof = std::stoi(code.substr(dotIndex + 1));
 
-            if (stick >= sticksCount)
+            if (stick >= static_cast<int>(sticksCount))
             {
                 yError() << "[JoypadFingersModule::configureJoypad] The selected stick for" << tag
                          << "is out of bounds. Stick:" << stick << "Available:" << sticksCount;
@@ -803,7 +803,7 @@ struct OpenXRJoypadModule::Impl
                 return false;
             }
 
-            if (dof >= maxDofs)
+            if (dof >= static_cast<int>(maxDofs))
             {
                 yError() << "[JoypadFingersModule::configureJoypad] The selected dof stick for"
                          << tag << "is out of bounds. Stick:" << stick << "dof:" << dof
@@ -1167,7 +1167,7 @@ struct OpenXRJoypadModule::Impl
         for (unsigned int i = 0; i < buttonCount; i++)
         {
             this->joypadControllerInterface->getButton(i, value);
-            buttonsState[i] = value > 0 ? 1.0 : 0.0;
+            buttonsState[i] = value > 0 ? 1 : 0;
         }
     }
 };
@@ -1283,7 +1283,7 @@ bool OpenXRJoypadModule::updateModule()
         for (size_t i = 0; i < m_pImpl->axisCount; ++i)
         {
             double value;
-            m_pImpl->joypadControllerInterface->getAxis(i, value);
+            m_pImpl->joypadControllerInterface->getAxis(static_cast<unsigned int>(i), value);
             yInfo() << "Axis [" << i << "]:" << value;
         }
     }
@@ -1302,7 +1302,7 @@ bool OpenXRJoypadModule::updateModule()
         {
             yarp::sig::Vector dofs;
             m_pImpl->joypadControllerInterface->getStick(
-                i, dofs, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
+                static_cast<unsigned int>(i), dofs, yarp::dev::IJoypadController::JypCtrlcoord_CARTESIAN);
             std::stringstream vector_string;
             for (size_t j = 0; j < dofs.size(); ++j)
             {

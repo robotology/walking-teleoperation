@@ -8,7 +8,7 @@
 
 using namespace HapticGlove;
 
-Estimators::Estimators(const int noMotors)
+Estimators::Estimators(size_t noMotors)
 {
     m_numOfMotors = noMotors;
     m_isInitialized = false;
@@ -114,17 +114,20 @@ bool Estimators::getInfo(Eigen::VectorXd& estimatedValues,
 {
     if (estimatedValues.size() != m_numOfMotors)
     {
-        estimatedValues.resize(m_numOfMotors, 0.0);
+        estimatedValues.resize(m_numOfMotors);
+        estimatedValues.setZero();
     }
 
     if (estimatedVelocities.size() != m_numOfMotors)
     {
-        estimatedValues.resize(m_numOfMotors, 0.0);
+        estimatedVelocities.resize(m_numOfMotors);
+        estimatedVelocities.setZero();
     }
 
     if (estimatedAccelerations.size() != m_numOfMotors)
     {
-        estimatedValues.resize(m_numOfMotors, 0.0);
+        estimatedAccelerations.resize(m_numOfMotors);
+        estimatedAccelerations.setZero();
     }
 
     if (P.rows() != m_numOfMotors && P.cols() == m_n * m_n)

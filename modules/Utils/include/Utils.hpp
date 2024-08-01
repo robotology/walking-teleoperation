@@ -219,8 +219,6 @@ bool checkSizeOfVector(const std::vector<T>& variable,
                        const char* name = "",
                        const std::string& prefix = "");
 
-std::string getTimeDateMatExtension();
-
 } // namespace YarpHelper
 
 #include "Utils.tpp"

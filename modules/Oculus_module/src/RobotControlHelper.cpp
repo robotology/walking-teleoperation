@@ -4,7 +4,7 @@
 #include <limits>
 
 // iDynTree
-#include <iDynTree/Core/Utils.h>
+#include <iDynTree/Utils.h>
 
 #include <RobotControlHelper.hpp>
 #include <Utils.hpp>
@@ -282,7 +282,7 @@ bool RobotControlHelper::getFeedback()
         return false;
     }
 
-    for (unsigned j = 0; j < m_actuatedDOFs; ++j)
+    for (size_t j = 0; j < m_actuatedDOFs; ++j)
         m_positionFeedbackInRadians(j) = iDynTree::deg2rad(m_positionFeedbackInDegrees(j));
 
     return true;
@@ -312,7 +312,7 @@ void RobotControlHelper::close()
         yError() << "[RobotControlHelper::close] Unable to close the device.";
 }
 
-int RobotControlHelper::getDoFs()
+size_t RobotControlHelper::getDoFs()
 {
     return m_actuatedDOFs;
 }

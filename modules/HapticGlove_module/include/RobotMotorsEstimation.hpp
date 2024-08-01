@@ -46,7 +46,7 @@ public:
      * constructor.
      * @param noMotors number of motors or joints
      */
-    Estimators(const int noMotors);
+    Estimators(size_t noMotors);
 
     /**
      * destructor.

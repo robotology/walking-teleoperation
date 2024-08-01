@@ -14,7 +14,7 @@
 #include <iCub/ctrl/minJerkCtrl.h>
 
 // iDynTree
-#include <iDynTree/Core/Rotation.h>
+#include <iDynTree/Rotation.h>
 
 #include <RetargetingController.hpp>
 

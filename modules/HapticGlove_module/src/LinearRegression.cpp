@@ -42,7 +42,7 @@ bool LinearRegression::LearnOneShotMatrix(const CtrlHelper::Eigen_Mat& inputData
 {
 
     tetha.resize(0, 0);
-    for (size_t i = 0; i < ouputData.cols(); i++)
+    for (size_t i = 0; i < static_cast<size_t>(ouputData.cols()); i++)
     {
         CtrlHelper::Eigen_Mat tetha_i;
         LearnOneShot(inputData, ouputData.col(i), tetha_i);

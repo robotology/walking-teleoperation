@@ -6,7 +6,7 @@
 #include <yarp/dev/IAxisInfo.h>
 #include <yarp/dev/IControlLimits.h>
 #include <yarp/os/Vocab.h>
-#include <iDynTree/Core/Utils.h>
+#include <iDynTree/Utils.h>
 #include <yarp/os/Time.h>
 #include <algorithm>
 #include <cmath>

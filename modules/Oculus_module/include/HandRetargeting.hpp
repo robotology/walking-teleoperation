@@ -12,7 +12,7 @@
 #include <yarp/sig/Vector.h>
 
 // iDynTree
-#include <iDynTree/Core/Transform.h>
+#include <iDynTree/Transform.h>
 
 /**
  * HandRetargeing manages the retargeting of the hand.

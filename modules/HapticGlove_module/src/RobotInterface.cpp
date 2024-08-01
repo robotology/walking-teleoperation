@@ -6,7 +6,7 @@
 #include <limits>
 
 // iDynTree
-#include <iDynTree/Core/Utils.h>
+#include <iDynTree/Utils.h>
 
 // teleoperation
 #include <ControlHelper.hpp>
@@ -790,7 +790,7 @@ bool RobotInterface::getFeedback()
         return false;
     }
 
-    for (unsigned j = 0; j < m_noActuatedAxis; ++j)
+    for (size_t j = 0; j < m_noActuatedAxis; ++j)
         m_encoderPositionFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderPositionFeedbackInDegrees(j));
 
@@ -801,7 +801,7 @@ bool RobotInterface::getFeedback()
         return false;
     }
 
-    for (unsigned j = 0; j < m_noActuatedAxis; ++j)
+    for (size_t j = 0; j < m_noActuatedAxis; ++j)
         m_encoderVelocityFeedbackInRadians(j)
             = iDynTree::deg2rad(m_encoderVelocityFeedbackInDegrees(j));
 
@@ -1052,27 +1052,27 @@ bool RobotInterface::close()
     return ok;
 }
 
-const int RobotInterface::getNumberOfActuatedAxis() const
+size_t RobotInterface::getNumberOfActuatedAxis() const
 {
     return m_noActuatedAxis;
 }
 
-const int RobotInterface::getNumberOfAllAxis() const
+size_t RobotInterface::getNumberOfAllAxis() const
 {
     return m_noAllAxis;
 }
 
-const int RobotInterface::getNumberOfAllJoints() const
+size_t RobotInterface::getNumberOfAllJoints() const
 {
     return m_noAllJoints;
 }
 
-const int RobotInterface::getNumberOfActuatedJoints() const
+size_t RobotInterface::getNumberOfActuatedJoints() const
 {
     return m_noActuatedJoints;
 }
 
-const int RobotInterface::getNumberOfRobotFingers() const
+size_t RobotInterface::getNumberOfRobotFingers() const
 {
     return m_noFingers;
 }
