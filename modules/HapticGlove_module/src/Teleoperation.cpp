@@ -66,13 +66,9 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     }
 
     // initialize the retaregting object
-    std::vector<std::string> robotActuatedJointNameList;
-    std::vector<std::string> robotActuatedAxisNameList;
-    std::vector<std::string> humanJointNameList;
-
-    m_robotController->controlHelper()->getActuatedJointNames(robotActuatedJointNameList);
-    m_robotController->controlHelper()->getActuatedAxisNames(robotActuatedAxisNameList);
-    m_humanGlove->getHumanHandJointsNames(humanJointNameList);
+    const std::vector<std::string>& robotActuatedJointNameList = m_robotController->controlHelper()->getActuatedJointNames();
+    const std::vector<std::string>& robotActuatedAxisNameList = m_robotController->controlHelper()->getActuatedAxisNames();
+    const std::vector<std::string>& humanJointNameList = m_humanGlove->getHumanHandJointsNames();
 
     m_retargeting = std::make_unique<HapticGlove::Retargeting>(
         robotActuatedJointNameList, robotActuatedAxisNameList, humanJointNameList);

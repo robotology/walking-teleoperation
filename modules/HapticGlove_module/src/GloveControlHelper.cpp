@@ -318,16 +318,9 @@ bool GloveControlHelper::getHumanHandJointName(const size_t i, std::string& join
     return true;
 }
 
-bool GloveControlHelper::getHumanHandJointsNames(std::vector<std::string>& jointNameList) const
+const std::vector<std::string>& GloveControlHelper::getHumanHandJointsNames() const
 {
-    if (m_humanJointNameList.size() != this->getNumOfHandJoints())
-    {
-        yError() << m_logPrefix
-                 << "The number of human hand joints and joints name list size are different.";
-        return false;
-    }
-    jointNameList = m_humanJointNameList;
-    return true;
+    return m_humanJointNameList;
 }
 
 bool GloveControlHelper::getHumanHandFingerName(const size_t i, std::string& fingerName) const
@@ -342,16 +335,9 @@ bool GloveControlHelper::getHumanHandFingerName(const size_t i, std::string& fin
     return true;
 }
 
-bool GloveControlHelper::getHumanHandFingerNames(std::vector<std::string>& fingerNameList) const
+const std::vector<std::string>& GloveControlHelper::getHumanHandFingerNames() const
 {
-    if (m_humanFingerNameList.size() != this->getNumOfFingers())
-    {
-        yError() << m_logPrefix
-                 << "The number of human hand finger and finger name list size are different.";
-        return false;
-    }
-    fingerNameList = m_humanFingerNameList;
-    return true;
+    return m_humanFingerNameList;
 }
 
 bool GloveControlHelper::findHumanMotionRange()
