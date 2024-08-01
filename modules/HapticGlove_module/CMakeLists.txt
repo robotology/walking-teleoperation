@@ -12,7 +12,7 @@ IF(EIGEN_RUNTIME_NO_MALLOC)
   ADD_DEFINITIONS(-DEIGEN_RUNTIME_NO_MALLOC)
 ENDIF(EIGEN_RUNTIME_NO_MALLOC)
 
-yarp_add_idl(HAPTIC_GLOVE_SERVICES thrift/RobotSkinService.thrift 
+yarp_add_idl(HAPTIC_GLOVE_SERVICES thrift/RobotSkinService.thrift
                                    thrift/HapticGloveTeleoperationService.thrift)
 
 # set cpp files
@@ -69,6 +69,8 @@ set(${EXE_TARGET_NAME}_LINKED_LIBS
     UtilityLibrary
     IWear::IWear
     WearableActuators::WearableActuators
+    BipedalLocomotion::VectorsCollection
+    BipedalLocomotion::ParametersHandlerYarpImplementation
     )
 
 target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC ${${EXE_TARGET_NAME}_LINKED_LIBS} )

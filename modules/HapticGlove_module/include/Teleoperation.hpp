@@ -26,6 +26,13 @@
 // rpc service
 #include <thrift/HapticGloveTeleoperationService.h>
 
+// blf
+#include <BipedalLocomotion/YarpUtilities/VectorsCollectionServer.h>
+
+//std
+#include <vector>
+#include <string>
+
 namespace HapticGlove
 {
 class Teleoperation;
@@ -192,7 +199,7 @@ class HapticGlove::Teleoperation : HapticGloveTeleoperationService
     // Enable at the end
     bool m_enableLogger; /**< log the data (if true) */
     class Logger; /**< forward decleration of the logger class */
-    std::unique_ptr<Logger> m_loggerLeftHand; /**< pointer to the logger object. */
+    std::unique_ptr<Logger> m_logger; /**< pointer to the logger object. */
 
     // mutex
     std::mutex m_mutex;
@@ -224,10 +231,13 @@ public:
      * @param config configuration options
      * @param name name of the robot
      * @param rightHand if true the right hand is used
+     * @param loggerObject the logger object, used by both hands
      * @return true/false in case of success/failure
      */
-    bool
-    configure(const yarp::os::Searchable& config, const std::string& name, const bool& rightHand);
+    bool configure(const yarp::os::Searchable& config,
+                   const std::string& name,
+                   const bool& rightHand,
+                   BipedalLocomotion::YarpUtilities::VectorsCollectionServer& loggerObject);
 
     /**
      * Close the teleoperation class.

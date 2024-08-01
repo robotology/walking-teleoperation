@@ -13,6 +13,10 @@
 // teleoperation
 #include <Teleoperation.hpp>
 
+// BipedalLocomotion
+#include <BipedalLocomotion/YarpUtilities/VectorsCollectionServer.h>
+
+
 /**
  * HapticGloveModule is the main core application of the bilateral teleoperation of the human hand
  * and robot hand . It is goal is to evaluate retrieve the sense glove readouts, send the desired
@@ -44,6 +48,11 @@ private:
 
     std::unique_ptr<HapticGlove::Teleoperation> m_leftHand;
     std::unique_ptr<HapticGlove::Teleoperation> m_rightHand;
+
+    bool m_enableLogger; /**< True if data are saved. */
+
+    BipedalLocomotion::YarpUtilities::VectorsCollectionServer m_vectorsCollectionServer; /**< Logger server. */
+
 
 public:
     /**

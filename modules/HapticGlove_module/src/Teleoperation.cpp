@@ -23,7 +23,8 @@ Teleoperation::~Teleoperation() = default;
 
 bool Teleoperation::configure(const yarp::os::Searchable& config,
                               const std::string& name,
-                              const bool& rightHand)
+                              const bool& rightHand,
+                              BipedalLocomotion::YarpUtilities::VectorsCollectionServer& loggerObject)
 {
     m_logPrefix += rightHand ? "RightHand:: " : "LeftHand:: ";
 
@@ -133,6 +134,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_data.robotAxisReferences.resize(numRobotActuatedAxis, 0.0);
     m_data.robotAxisFeedbacks.resize(numRobotActuatedAxis, 0.0);
     m_data.robotAxisVelocityFeedbacks.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotMotorPidOutputs.resize(numRobotActuatedAxis, 0.0);
 
     m_data.robotJointReferences.resize(numRobotActuatedJoints, 0.0);
     m_data.robotJointFeedbacks.resize(numRobotActuatedJoints, 0.0);
@@ -149,6 +151,8 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_data.robotAxisVelocityReferencesKf.resize(numRobotActuatedAxis, 0.0);
     m_data.robotAxisAccelerationReferencesKf.resize(numRobotActuatedAxis, 0.0);
     m_data.robotAxisCovReferencesKf = Eigen::MatrixXd::Zero(numRobotActuatedAxis, 9);
+    m_data.robotJointsExpectedKf.resize(numRobotActuatedAxis, 0.0);
+    m_data.robotJointsFeedbackKf.resize(numRobotActuatedAxis, 0.0);
 
     // human
     m_data.humanJointValues.resize(numHumanHandJoints, 0.0);
@@ -162,6 +166,17 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
     m_data.robotFingerSkinDerivativeValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
     m_data.robotFingerSkinTotalValueVibrotactileFeedbacks.resize(numRobotFingers, 0.0);
 
+    if (m_useSkin)
+    {
+        //initialize some more data for walking
+        size_t numberRobotTactileFeedbacks = m_robotSkin->getNumOfTactileFeedbacks();
+        m_data.fingertipsSkinData.resize(numberRobotTactileFeedbacks, 0.0);
+        m_data.fingertipsCalibratedTactileFeedback.resize(numberRobotTactileFeedbacks, 0.0);
+        m_data.fingertipsCalibratedDerivativeTactileFeedback.resize(numberRobotTactileFeedbacks, 0.0);
+        m_data.fingercontactStrengthFeedback.resize(numberRobotTactileFeedbacks, 0.0);
+        m_data.fingercontactStrengthDerivativeFeedback.resize(numberRobotTactileFeedbacks, 0.0);
+    }
+
     // set up the glove
     if (!m_humanGlove->setupGlove())
     {
@@ -174,12 +189,14 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 
     if (m_enableLogger)
     {
-        m_loggerLeftHand = std::make_unique<Logger>(*this, rightHand);
-        if (!m_loggerLeftHand->openLogger())
-        {
-            yError() << m_logPrefix << "unable to open the logger.";
-            return false;
-        }
+        LoggerOptions loggerOptions;
+        loggerOptions.isRightHand = rightHand;
+        loggerOptions.dumpSkinData = m_useSkin;
+        loggerOptions.dumpHumanData = config.check("logHumanData", yarp::os::Value(false)).asBool();
+        loggerOptions.dumpKalmanFilterData
+            = config.check("logKalmanFilterData", yarp::os::Value(false)).asBool();
+
+        m_logger = std::make_unique<Logger>(*this, loggerOptions, loggerObject);
     }
 
     // Initialize RPC
@@ -332,6 +349,16 @@ bool Teleoperation::run()
             m_data.doRobotFingerSkinsWork,
             m_data.areFingersSkinInContact,
             m_data.robotFingerSkinTotalValueVibrotactileFeedbacks);
+
+        // get some more data for logging
+        m_robotSkin->getSerializedFingertipsTactileFeedbacks(m_data.fingertipsSkinData);
+        m_robotSkin->getSerializedFingertipsCalibratedTactileFeedbacks(
+            m_data.fingertipsCalibratedTactileFeedback);
+        m_robotSkin->getSerializedFingertipsCalibratedTactileDerivativeFeedbacks(
+            m_data.fingertipsCalibratedDerivativeTactileFeedback);
+        m_robotSkin->getFingertipsContactStrength(m_data.fingercontactStrengthFeedback);
+        m_robotSkin->getFingertipsContactStrengthDerivative(
+            m_data.fingercontactStrengthDerivativeFeedback);
     }
 
     if (!m_retargeting->getForceFeedbackToHuman(m_data.humanForceFeedbacks))
@@ -353,9 +380,14 @@ bool Teleoperation::run()
         m_humanGlove->sendFingertipHapticFeedbackReferences();
     }
 
+    //Get some data needed for logging
+    m_robotController->getMotorPidOutputs(m_data.robotMotorPidOutputs);
+    m_robotController->getEstimatedJointValuesKf(m_data.robotJointsExpectedKf,
+                      m_data.robotJointsFeedbackKf);
+
     if (m_enableLogger)
     {
-        if (!m_loggerLeftHand->logData())
+        if (!m_logger->logData())
         {
             yWarning() << m_logPrefix << "unable to log the data.";
         }
@@ -471,14 +503,6 @@ bool Teleoperation::close()
     yInfo() << m_logPrefix << "trying to close.";
     bool ok = true;
 
-    if (m_enableLogger)
-    {
-        if (!m_loggerLeftHand->closeLogger())
-        {
-            yWarning() << m_logPrefix << "unable to close the logger.";
-            ok &= false;
-        }
-    }
     if (!m_humanGlove->stopHapticFeedback())
     {
         yWarning() << m_logPrefix << "cannot stop haptic feedback.";
