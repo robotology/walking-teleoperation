@@ -259,6 +259,38 @@ public:
      * @param time the time at which the configuration is ended
      */
     void setEndOfConfigurationTime(const double& time);
+
+    /**
+     * Get the names of the robot actuated axis
+     */
+    const std::vector<std::string>& getActuatedAxisNames() const;
+
+    /**
+     * Get the names of the robot actuated joints
+     */
+    const std::vector<std::string>& getActuatedJointNames() const;
+
+    /**
+     * Get the names of the human hand joints
+     */
+    const std::vector<std::string>& getHumanHandJointsNames() const;
+
+    /**
+     * Get the names of the human hand fingers
+     */
+    const std::vector<std::string>& getHumanHandFingerNames() const;
+
+    /**
+     * Get the teleoperation data
+     */
+    const Data& getData() const;
+
+    /**
+     * Get the skin data
+     */
+    const std::vector<FingertipTactileData>& getFingersTactileData() const;
+
+
 };
 
 #endif // TELEOPERATION_HPP

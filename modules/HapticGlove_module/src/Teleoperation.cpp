@@ -528,3 +528,33 @@ void Teleoperation::setEndOfConfigurationTime(const double& time)
 {
     m_timeConfigurationEnd = time;
 }
+
+const std::vector<std::string>& Teleoperation::getActuatedAxisNames() const
+{
+    return m_robotController->controlHelper()->getActuatedAxisNames();
+}
+
+const std::vector<std::string>& Teleoperation::getActuatedJointNames() const
+{
+    return m_robotController->controlHelper()->getActuatedJointNames();
+}
+
+const std::vector<std::string>& HapticGlove::Teleoperation::getHumanHandJointsNames() const
+{
+    return m_humanGlove->getHumanHandJointsNames();
+}
+
+const std::vector<std::string>& HapticGlove::Teleoperation::getHumanHandFingerNames() const
+{
+    return m_humanGlove->getHumanHandFingerNames();
+}
+
+const Data& HapticGlove::Teleoperation::getData() const
+{
+    return m_data;
+}
+
+const std::vector<FingertipTactileData>& HapticGlove::Teleoperation::getFingersTactileData() const
+{
+    return m_robotSkin->getFingersTactileData();
+}
