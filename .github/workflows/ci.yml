@@ -42,7 +42,8 @@ jobs:
         # Compilation related dependencies
         conda install cmake compilers make ninja pkg-config
         # Actual dependencies
-        conda install yarp ycm-cmake-modules icub-main eigen idyntree bipedal-locomotion-framework human-dynamics-estimation wearables
+        conda install yarp ycm-cmake-modules icub-main eigen "idyntree>=10.0.0" human-dynamics-estimation "wearables>=1.9.0"
+        conda install bipedal-locomotion-framework
 
     - name: Linux-only Dependencies [Linux]
       if: contains(matrix.os, 'ubuntu')
