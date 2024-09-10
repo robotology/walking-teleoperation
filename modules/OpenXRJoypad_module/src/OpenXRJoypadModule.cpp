@@ -10,7 +10,6 @@
 #include <vector>
 
 // YARP
-#include <yarp/dev/FrameGrabberInterfaces.h>
 #include <yarp/dev/IControlLimits.h>
 #include <yarp/dev/IControlMode.h>
 #include <yarp/dev/IEncodersTimed.h>
