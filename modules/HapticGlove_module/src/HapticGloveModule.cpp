@@ -11,6 +11,10 @@
 #include <HapticGloveModule.hpp>
 #include <Utils.hpp>
 
+// blf
+#include <BipedalLocomotion/ParametersHandler/IParametersHandler.h>
+#include <BipedalLocomotion/ParametersHandler/YarpImplementation.h>
+
 HapticGloveModule::HapticGloveModule()
 {
     m_logPrefix = "HapticGloveModule:: ";
@@ -50,14 +54,52 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
     yInfo() << m_logPrefix << "use the left hand: " << m_useLeftHand;
     yInfo() << m_logPrefix << "use the right hand: " << m_useRightHand;
 
+    m_enableLogger = generalOptions.check("enableLogger", yarp::os::Value(false)).asBool();
+    yInfo() << m_logPrefix << "enable logger: " << m_enableLogger;
+
+    // initialize the logger
+    if (m_enableLogger)
+    {
+        auto loggerOption
+            = std::make_shared<BipedalLocomotion::ParametersHandler::YarpImplementation>(rf)
+                  ->getGroup("LOGGER")
+                  .lock();
+        if (loggerOption == nullptr)
+        {
+            yError() << "[WalkingModule::configure] Unable to get the group LOGGER.";
+            return false;
+        }
+
+        std::string logPort;
+        if (!loggerOption->getParameter("remote", logPort))
+        {
+            yError() << m_logPrefix  << "Unable to get the remote from the group LOGGER.";
+            return false;
+        }
+
+        // prepend the module name to the port name
+        logPort = "/" + getName() + logPort;
+        loggerOption->setParameter("remote", logPort);
+        if (!m_vectorsCollectionServer.initialize(loggerOption))
+        {
+            yError() << m_logPrefix << "Unable to get the string from searchable.";
+            return false;
+        }
+    }
+
     // initialize the left hand teleoperation
     if (m_useLeftHand)
     {
         yarp::os::Bottle& leftFingersOptions = rf.findGroup("LEFT_FINGERS_RETARGETING");
         leftFingersOptions.append(generalOptions);
+        if (m_enableLogger)
+        {
+            yarp::os::Bottle& loggerOptions = rf.findGroup("LOGGER");
+            leftFingersOptions.append(loggerOptions);
+        }
 
         m_leftHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_leftHand->configure(leftFingersOptions, m_robot, false))
+        if (!m_leftHand->configure(leftFingersOptions, m_robot, false, m_vectorsCollectionServer))
         {
             yError() << m_logPrefix
                      << "unable to initialize the left hand bilateral teleoperation.";
@@ -71,14 +113,27 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         yarp::os::Bottle& rightFingersOptions = rf.findGroup("RIGHT_FINGERS_RETARGETING");
         rightFingersOptions.append(generalOptions);
 
+        if (m_enableLogger)
+        {
+            yarp::os::Bottle& loggerOptions = rf.findGroup("LOGGER");
+            rightFingersOptions.append(loggerOptions);
+        }
+
         m_rightHand = std::make_unique<HapticGlove::Teleoperation>();
-        if (!m_rightHand->configure(rightFingersOptions, m_robot, true))
+        if (!m_rightHand->configure(rightFingersOptions, m_robot, true, m_vectorsCollectionServer))
         {
             yError() << m_logPrefix
                      << "unable to initialize the right hand bilateral teleoperation.";
             return false;
         }
     }
+
+    if (m_enableLogger)
+    {
+        // The two teleoperation objects fill the metadata internally
+        m_vectorsCollectionServer.finalizeMetadata();
+    }
+
     // wainting time after preparation and before running state machine
     m_waitingStartTime = 0;
     m_waitingDurationTime
@@ -136,6 +191,12 @@ bool HapticGloveModule::updateModule()
 
     if (m_state == HapticGloveFSM::Running)
     {
+        if (m_enableLogger)
+        {
+            m_vectorsCollectionServer.prepareData();
+            m_vectorsCollectionServer.clearData();
+        }
+
         if (m_useLeftHand)
         {
             if (!m_leftHand->run())
@@ -151,6 +212,11 @@ bool HapticGloveModule::updateModule()
                 yError() << m_logPrefix << "cannot run the left hand.";
                 return false;
             }
+        }
+
+        if (m_enableLogger)
+        {
+            m_vectorsCollectionServer.sendData();
         }
 
     } else if (m_state == HapticGloveFSM::Configuring)

@@ -130,14 +130,6 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
   DEPENDS ENABLE_RPATH
   USE_LINK_PATH)
 
-# Enable logger
-option(ENABLE_LOGGER "Enable logger using matlogger2" OFF)
-if(ENABLE_LOGGER)
-  add_definitions(-DENABLE_LOGGER)
-  find_package(matlogger2 REQUIRED)
-endif(ENABLE_LOGGER)
-
-
 find_package(PkgConfig QUIET)
 if (PkgConfig_FOUND)
     pkg_check_modules(libfvad QUIET IMPORTED_TARGET libfvad)
@@ -159,9 +151,13 @@ checkandset_dependency(IWear)
 find_package(WearableActuators 1.9.0 QUIET)
 checkandset_dependency(WearableActuators)
 
+find_package(BipedalLocomotionFramework 0.18.0
+  COMPONENTS VectorsCollection ParametersHandlerYarpImplementation QUIET)
+checkandset_dependency(BipedalLocomotionFramework)
 
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)
-WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_HapticGloveModule "Compile Haptic Glove Module?" ON "WALKING_TELEOPERATION_USE_IWear;WALKING_TELEOPERATION_USE_WearableActuators" OFF)
+WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_HapticGloveModule "Compile Haptic Glove Module?" ON
+    "WALKING_TELEOPERATION_USE_IWear;WALKING_TELEOPERATION_USE_WearableActuators;WALKING_TELEOPERATION_USE_BipedalLocomotionFramework" OFF)

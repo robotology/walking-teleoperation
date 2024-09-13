@@ -41,22 +41,12 @@ yarp_add_idl(${EXE_TARGET_NAME}_THRIFT_GEN_FILES ${${EXE_TARGET_NAME}_THRIFT_HDR
 add_executable(${EXE_TARGET_NAME} ${${EXE_TARGET_NAME}_SRC} ${${EXE_TARGET_NAME}_HDR}
     ${${EXE_TARGET_NAME}_THRIFT_GEN_FILES})
 
-if(ENABLE_LOGGER)
-  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
-    ${YARP_LIBRARIES}
-    ${iDynTree_LIBRARIES}
-    ctrlLib
-    UtilityLibrary
-    Eigen3::Eigen
-    matlogger2::matlogger2)
-else(ENABLE_LOGGER)
-  target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
+target_link_libraries(${EXE_TARGET_NAME} LINK_PUBLIC
     ${YARP_LIBRARIES}
     ${iDynTree_LIBRARIES}
     ctrlLib
     UtilityLibrary
     Eigen3::Eigen
 )
-endif()
 
 install(TARGETS ${EXE_TARGET_NAME} DESTINATION bin)

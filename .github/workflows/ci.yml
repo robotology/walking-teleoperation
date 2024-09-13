@@ -17,159 +17,61 @@ jobs:
       matrix:
         build_type: [Release]
         os: [ubuntu-latest, windows-latest, macOS-latest]
+      fail-fast: false
+
 
     steps:
     - uses: actions/checkout@master
 
-    # Print environment variables to simplify development and debugging
-    - name: Environment Variables
-      shell: bash
-      run: env
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        miniforge-variant: Miniforge3
+        miniforge-version: latest
+        channels: conda-forge,robostack-staging,robotology
+        channel-priority: true
 
     # ============
     # DEPENDENCIES
     # ============
 
-    # Remove apt repos that are known to break from time to time 
-    # See https://github.com/actions/virtual-environments/issues/323  
-    - name: Remove broken apt repos [Ubuntu]
-      if: matrix.os == 'ubuntu-latest'
+    - name: Dependencies
+      shell: bash -l {0}
       run: |
-        for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done
+        # Workaround for https://github.com/conda-incubator/setup-miniconda/issues/186
+        conda config --remove channels defaults
+        # Compilation related dependencies
+        conda install cmake compilers make ninja pkg-config
+        # Actual dependencies
+        conda install yarp ycm-cmake-modules icub-main eigen idyntree bipedal-locomotion-framework human-dynamics-estimation wearables
 
-    - name: Dependencies [Windows]
-      if: matrix.os == 'windows-latest'
+    - name: Linux-only Dependencies [Linux]
+      if: contains(matrix.os, 'ubuntu')
+      shell: bash -l {0}
       run: |
-        git clone https://github.com/robotology-dependencies/robotology-vcpkg-binary-ports C:/robotology-vcpkg-binary-ports
-        vcpkg.exe --overlay-ports=C:/robotology-vcpkg-binary-ports install --triplet x64-windows ace libxml2 eigen3 ipopt-binary catch2
+        conda install mesa-libgl-devel-cos7-x86_64
 
-    - name: Dependencies [macOS]
-      if: matrix.os == 'macOS-latest'
+    - name: Windows-only Dependencies [Windows]
+      if: contains(matrix.os, 'windows')
+      shell: bash -l {0}
       run: |
-        brew install ace boost eigen swig qt5 orocos-kdl catch2
+        conda install vs2019_win-64
 
-    - name: Dependencies [Ubuntu]
-      if: matrix.os == 'ubuntu-latest'
+    - name: Windows-workarounds [Windows]
+      if: contains(matrix.os, 'windows')
+      shell: cmd /C CALL {0}
       run: |
-        sudo apt-get update
-        sudo apt-get install git build-essential cmake libace-dev coinor-libipopt-dev  libboost-system-dev libboost-filesystem-dev \
-                             libboost-thread-dev liborocos-kdl-dev libeigen3-dev swig qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev \
-                             libxml2-dev liburdfdom-dev libtinyxml-dev liburdfdom-dev liboctave-dev python3-dev valgrind
+        :: Due to this https://github.com/conda-forge/icub-models-feedstock/issues/18
+        :: pcl is removed as a workaround for https://github.com/ami-iit/bipedal-locomotion-framework/pull/695#issuecomment-1632208836
+        :: pcl can be re-added once we have a ros humble build compatible with PCL 1.13.0
+        :: pybind11 constrained as workaround for https://github.com/conda-forge/pybind11-feedstock/issues/95
+        conda install "pybind11<2.12.0"
+        conda remove icub-models pcl
 
-    - name: Source-based Dependencies [Windows]
-      if: matrix.os == 'windows-latest'
-      shell: bash
+    - name: Print used environment
+      shell: bash -l {0}
       run: |
-        # YCM
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/ycm
-        cd ycm
-        mkdir -p build
-        cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-
-        cmake --build . --config ${{ matrix.build_type }} --target INSTALL
-
-
-        # YARP
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/yarp
-        cd yarp
-        mkdir -p build
-        cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-              -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target INSTALL
-        # Workaround for https://github.com/robotology-dependencies/robotology-vcpkg-binary-ports/issues/3
-        export IPOPT_DIR=${VCPKG_INSTALLATION_ROOT}/installed/x64-windows
-
-        # iDynTree
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/iDynTree
-        cd iDynTree
-        mkdir -p build
-        cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-
-        # icub-main
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/icub-main.git
-        cd icub-main && mkdir -p build && cd build
-        cmake  -A x64 -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-               -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-        
-        # wearables
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/wearables.git
-        cd wearables 
-        mkdir -p build 
-        cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-                     -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                     -DXSENS_MVN_USE_SDK:BOOL=OFF \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-        
-
-    - name: Source-based Dependencies [Ubuntu/macOS]
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
-      shell: bash
-      run: |
-        # YCM
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/ycm
-        cd ycm
-        mkdir -p build
-        cd build
-        cmake -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-
-        # YARP
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/yarp
-        cd yarp
-        mkdir -p build
-        cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-
-        # iDynTree
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/iDynTree
-        cd iDynTree
-        mkdir -p build
-        cd build
-        cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-
-        # icub-main
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/icub-main.git
-        cd icub-main && mkdir -p build && cd build
-        cmake  -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-               -DENABLE_icubmod_cartesiancontrollerserver=ON -DENABLE_icubmod_cartesiancontrollerclient=ON -DENABLE_icubmod_gazecontrollerclient=ON ..
-        cmake --build . --config ${{ matrix.build_type }} --target install 
-
-        # wearables
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/robotology/wearables.git
-        cd wearables 
-        mkdir -p build 
-        cd build
-        cmake        -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-                     -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                     -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
-        cmake --build . --config ${{ matrix.build_type }} --target install
-
-
+        conda list
+        env
     # ===================
     # CMAKE-BASED PROJECT
     # ===================
@@ -177,34 +79,29 @@ jobs:
     - name: Configure [Windows]
       # Use bash also on Windows (otherwise cd, mkdir, ... do not work)
       if: matrix.os == 'windows-latest'
-      shell: bash
+      shell: bash -l {0}
       run: |
         mkdir -p build
         cd build
-        cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
-              -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
+        cmake  -G"Visual Studio 17 2022" \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
 
     - name: Configure [Ubuntu/macOS]
       if: matrix.os == 'ubuntu-latest' || matrix.os == 'macOS-latest'
-      shell: bash
+      shell: bash -l {0}
       run: |
         mkdir -p build
         cd build
-        cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=${GITHUB_WORKSPACE}/install ..
 
     - name: Build
-      shell: bash
+      shell: bash -l {0}
       run: |
         cd build
-        # Attempt of fix for using YARP idl generators (that link ACE) in Windows
-        # See https://github.com/robotology/idyntree/issues/569
-        export PATH=$PATH:${GITHUB_WORKSPACE}/install/bin:${VCPKG_ROBOTOLOGY_ROOT}/installed/x64-windows/bin
         cmake --build . --config ${{ matrix.build_type }}
 
     - name: Install
-      shell: bash
+      shell: bash -l {0}
       run: |
         cd build
         cmake --build . --config ${{ matrix.build_type }} --target install

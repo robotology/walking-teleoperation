@@ -1082,9 +1082,9 @@ void RobotInterface::getFingerNames(std::vector<std::string>& names) const
     names = m_robotFingerNames;
 }
 
-void RobotInterface::getActuatedJointNames(std::vector<std::string>& names) const
+const std::vector<std::string>& RobotInterface::getActuatedJointNames() const
 {
-    names = m_actuatedJointList;
+    return m_actuatedJointList;
 }
 
 void RobotInterface::getAllJointNames(std::vector<std::string>& names) const
@@ -1092,9 +1092,9 @@ void RobotInterface::getAllJointNames(std::vector<std::string>& names) const
     names = m_allJointNames;
 }
 
-void RobotInterface::getActuatedAxisNames(std::vector<std::string>& names) const
+const std::vector<std::string>& RobotInterface::getActuatedAxisNames() const
 {
-    names = m_actuatedAxisNames;
+    return m_actuatedAxisNames;
 }
 
 void RobotInterface::getAllAxisNames(std::vector<std::string>& names) const

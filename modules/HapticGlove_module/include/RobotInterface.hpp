@@ -548,7 +548,7 @@ public:
      * Get the name of the actuated joints
      * @param names the names of the actuated joints
      */
-    void getActuatedJointNames(std::vector<std::string>& names) const;
+    const std::vector<std::string>& getActuatedJointNames() const;
 
     /**
      * Get the name of the all the joints related to the used parts (robot hand)
@@ -560,7 +560,7 @@ public:
      * Get the name of the actuated axes
      * @param names the names of the actuated axes
      */
-    void getActuatedAxisNames(std::vector<std::string>& names) const;
+    const std::vector<std::string>& getActuatedAxisNames() const;
 
     /**
      * Get the name of the all the axes related to the used parts (robot hand)

@@ -113,7 +113,7 @@ struct HapticGlove::FingertipTactileData
 
     double contactThreshold()
     {
-        return contactThresholdValue 
+        return contactThresholdValue
                + contactThresholdMultiplier * stdTactileSensor[this->maxTactileFeedbackAbsoluteElement()];
     }
 
@@ -205,7 +205,7 @@ private:
 
     // RPC port
     yarp::os::Port m_rpcPort;
-    
+
     void updateCalibratedTactileData();
 
     void computeVibrotactileFeedback();
@@ -300,6 +300,8 @@ public:
     virtual bool setDerivativeThresholdMultiplier(const int32_t finger, const double value) override;
 
     virtual bool setDerivativeThresholdMultiplierAll(const double value) override;
+
+    const std::vector<FingertipTactileData>& getFingersTactileData() const;
 
     bool close();
 };

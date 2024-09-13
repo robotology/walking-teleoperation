@@ -122,11 +122,11 @@ bool RobotController::configure(const yarp::os::Searchable& config,
 
     // get control  gains from configuration files
     std::vector<std::string> allAxisNames, actuatedAxisNames;
-    std::vector<std::string> allJointNames, actuatedJointNames;
+    std::vector<std::string> allJointNames;
     m_robotInterface->getAllAxisNames(allAxisNames);
-    m_robotInterface->getAllAxisNames(actuatedAxisNames);
+    m_robotInterface->getAllAxisNames(actuatedAxisNames); //TODO: Bug? Should be getActuatedAxisNames
     m_robotInterface->getAllJointNames(allJointNames);
-    m_robotInterface->getActuatedJointNames(actuatedJointNames);
+    const std::vector<std::string> & actuatedJointNames = m_robotInterface->getActuatedJointNames();
 
     std::vector<double> q, r;
     std::vector<double> qTmp, rTmp;
