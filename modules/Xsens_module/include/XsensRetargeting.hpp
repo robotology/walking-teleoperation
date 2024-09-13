@@ -26,7 +26,7 @@
 #include <chrono>
 #include <yarp/os/Clock.h>
 // iDynTree
-#include <iDynTree/Core/Transform.h>
+#include <iDynTree/Transform.h>
 //#include <RetargetingController.hpp>
 
 class mapJoints

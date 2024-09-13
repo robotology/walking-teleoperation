@@ -117,7 +117,7 @@ find_package(YARP REQUIRED)
 find_package(YCM REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(iDynTree REQUIRED)
+find_package(iDynTree 10.0.0 REQUIRED)
 
 # Enable RPATH
 option(ENABLE_RPATH "Enable RPATH for this library" ON)

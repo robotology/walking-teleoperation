@@ -47,7 +47,7 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
 
     m_areFingersInContact.resize(m_noFingers, false);
     m_fingersInContactTimer.resize(m_noFingers, 0.0);
-    m_fingersLastElementInContact.resize(m_noFingers, 0.0);
+    m_fingersLastElementInContact.resize(m_noFingers, 0);
     m_areFingersContactChanges.resize(m_noFingers, false);
     m_areTactileSensorsWorking.resize(m_noFingers, false);
 
@@ -162,8 +162,8 @@ bool RobotSkin::configure(const yarp::os::Searchable& config,
             return false;
         }
 
-        fingerdata.indexStart = std::round(tactileInfo[0]);
-        fingerdata.indexEnd = std::round(tactileInfo[1]);
+        fingerdata.indexStart = static_cast<size_t>(std::round(tactileInfo[0]));
+        fingerdata.indexEnd = static_cast<size_t>(std::round(tactileInfo[1]));
         fingerdata.noTactileSensors = fingerdata.indexEnd - fingerdata.indexStart + 1;
 
         fingerdata.contactThresholdValue = tactileInfo[2];
@@ -398,7 +398,7 @@ void RobotSkin::computeAreFingersInContact()
         }
 
         // Update last finger in contact element fi contact is detected
-        m_fingersLastElementInContact[i] = m_areFingersInContact[i] ? m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement() : -1;
+        m_fingersLastElementInContact[i] = m_areFingersInContact[i] ? static_cast<int>(m_fingersTactileData[i].maxTactileFeedbackAbsoluteElement()) : -1;
 
         // Check if the finger has been diabled by the timer
         m_areFingersInContact[i] = m_areFingersInContact[i] && m_fingersTactileData[i].isFingerContactEnabled;

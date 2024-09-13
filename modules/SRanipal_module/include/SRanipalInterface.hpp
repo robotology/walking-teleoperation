@@ -10,7 +10,7 @@
 #include <SRanipal_Lip.h>
 #include <SRanipal_Enums.h>
 #include <SRanipal_NotRelease.h>
-#include <iDynTree/Core/Axis.h>
+#include <iDynTree/Axis.h>
 
 class SRanipalInterface
 {

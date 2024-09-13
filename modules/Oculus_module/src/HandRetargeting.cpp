@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 // iDynTree
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/yarp/YARPConfigurationsLoader.h>
-#include <iDynTree/yarp/YARPConversions.h>
+#include <iDynTree/EigenHelpers.h>
+#include <iDynTree/YARPConfigurationsLoader.h>
+#include <iDynTree/YARPConversions.h>
 
 #include <HandRetargeting.hpp>
 #include <Utils.hpp>

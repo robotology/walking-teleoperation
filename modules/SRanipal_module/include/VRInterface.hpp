@@ -8,7 +8,7 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/sig/Vector.h>
-#include <iDynTree/Core/Transform.h>
+#include <iDynTree/Transform.h>
 
 
 class VRInterface

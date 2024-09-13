@@ -6,7 +6,7 @@
 #include <yarp/dev/IAxisInfo.h>
 #include <yarp/dev/IControlLimits.h>
 #include <yarp/os/Vocab.h>
-#include <iDynTree/Core/Utils.h>
+#include <iDynTree/Utils.h>
 #include <yarp/os/Time.h>
 #include <algorithm>
 #include <cmath>
@@ -20,7 +20,7 @@ void GazeRetargeting::setRobotEyeControlMode(int controlMode)
         {
             mode = controlMode;
         }
-        m_eyesMode->setControlModes(m_eyeAxis.size(), m_eyeAxis.data(), m_eyeControlModes.data());
+        m_eyesMode->setControlModes(static_cast<int>(m_eyeAxis.size()), m_eyeAxis.data(), m_eyeControlModes.data());
     }
 }
 
@@ -42,9 +42,9 @@ bool GazeRetargeting::homeRobotEyes()
     double expectedTime = maxError / iDynTree::deg2rad(m_maxEyeSpeedInDegS);
 
 
-    m_eyesPos->setRefSpeeds(m_eyeAxis.size(), m_eyeAxis.data(), m_eyemaxPositionMoveSpeeds.data());
+    m_eyesPos->setRefSpeeds(static_cast<int>(m_eyeAxis.size()), m_eyeAxis.data(), m_eyemaxPositionMoveSpeeds.data());
 
-    if (!m_eyesPos->positionMove(m_eyeAxis.size(), m_eyeAxis.data(), m_eyePositionReferences.data()))
+    if (!m_eyesPos->positionMove(static_cast<int>(m_eyeAxis.size()), m_eyeAxis.data(), m_eyePositionReferences.data()))
     {
         return false;
     }
@@ -81,7 +81,7 @@ bool GazeRetargeting::setDesiredRobotEyeVelocities(double vergenceSpeedInDegS, d
     *m_vergenceVelocityptr = vergenceSpeedInDegS;
     *m_tiltVelocityptr = tiltSpeedInDegS;
 
-    return m_eyesVel->velocityMove(m_eyeAxis.size(), m_eyeAxis.data(), m_eyesVelocityReferences.data());
+    return m_eyesVel->velocityMove(static_cast<int>(m_eyeAxis.size()), m_eyeAxis.data(), m_eyesVelocityReferences.data());
 }
 
 double GazeRetargeting::saturateRobotEyeVelocity(double inputVelocity, double inputPosition, double maxVelocity, double jointLowerBound, double jointUpperBound)
@@ -203,7 +203,7 @@ bool GazeRetargeting::configure(const yarp::os::ResourceFinder &rf, std::shared_
     for (size_t i = 0; i < nAxes; ++i)
     {
         std::string axisName;
-        if (!axisInfo->getAxisName(i, axisName))
+        if (!axisInfo->getAxisName(static_cast<int>(i), axisName))
         {
             yError() << "[GazeRetargeting::configure] Failed to get the axis name of the neck joint with index" << i <<"." ;
             return false;
@@ -211,15 +211,15 @@ bool GazeRetargeting::configure(const yarp::os::ResourceFinder &rf, std::shared_
 
         if (m_useVersion && (axisName.find(eyes_version_name) != std::string::npos))
         {
-            m_eyeVersIndex = i;
+            m_eyeVersIndex = static_cast<int>(i);
         }
         else if (m_useVergence && (axisName.find(eyes_vergence_name) != std::string::npos))
         {
-            m_eyeVergIndex = i;
+            m_eyeVergIndex = static_cast<int>(i);
         }
         else if (m_useTilt && (axisName.find(eyes_tilt_name) != std::string::npos))
         {
-            m_eyeTiltIndex = i;
+            m_eyeTiltIndex = static_cast<int>(i);
         }
     }
 

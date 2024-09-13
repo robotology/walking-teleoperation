@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 // iDynTree
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/yarp/YARPEigenConversions.h>
+#include <iDynTree/EigenHelpers.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/YARPEigenConversions.h>
 
 #include <HeadRetargeting.hpp>
 #include <Utils.hpp>
@@ -140,7 +140,7 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
         yError() << "[HeadRetargeting::configure] Unable to find the head smoothing time";
         return false;
     }
-    unsigned headDoFs = controlHelper()->getDoFs();
+    size_t headDoFs = controlHelper()->getDoFs();
 
     yarp::sig::Vector preparationJointReferenceValues;
     preparationJointReferenceValues.resize(headDoFs);
@@ -154,14 +154,14 @@ bool HeadRetargeting::configure(const yarp::os::Searchable& config, const std::s
     }
 
     m_headTrajectorySmoother
-        = std::make_unique<iCub::ctrl::minJerkTrajGen>(headDoFs, samplingTime, smoothingTime);
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(static_cast<unsigned int>(headDoFs), samplingTime, smoothingTime);
     yarp::sig::Vector buff(headDoFs, 0.0);
     m_headTrajectorySmoother->init(buff);
 
     yarp::sig::Vector neckJointsFbk;
     getNeckJointValues(neckJointsFbk);
     pImpl->initializeNeckJointsSmoother(
-        headDoFs, samplingTime, preparationSmoothingTime, neckJointsFbk);
+        static_cast<unsigned int>(headDoFs), samplingTime, preparationSmoothingTime, neckJointsFbk);
     pImpl->m_preparationJointReferenceValues = preparationJointReferenceValues;
 
     m_playerOrientation = 0;
@@ -213,7 +213,7 @@ void HeadRetargeting::setDesiredHeadOrientationFromOpenXr(const yarp::sig::Matri
     // desiredNeckJoint(0) = neckPitch, the angle around X, with X pointing right
     // desiredNeckJoint(1) = neckRoll, the angle around Z, with Z pointing backward
     // desiredNeckJoint(2) = neckYaw, the angle around Y, with Y pointing up
-    // The kinematic chain from the chest to the neck is composed of the pitch, roll, and yaw angles, in this order. 
+    // The kinematic chain from the chest to the neck is composed of the pitch, roll, and yaw angles, in this order.
     // The neck pitch axis is aligned with the x axis of the reference frame used by openxr, the roll with the z axis,
     // and the yaw with the y axis. Hence, we need to find the Euler angles corresponding to R_x * R_z * R_y.
     inverseKinematicsXZY(

@@ -8,8 +8,8 @@
 #include <VRInterface.hpp>
 #include <cmath>
 #include <Eigen/Dense>
-#include <iDynTree/Core/EigenHelpers.h>
-#include <iDynTree/Core/Axis.h>
+#include <iDynTree/EigenHelpers.h>
+#include <iDynTree/Axis.h>
 
 bool VRInterface::getValueFromRPC(const std::string &query, yarp::os::Value &value)
 {

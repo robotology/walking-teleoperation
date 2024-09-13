@@ -13,7 +13,7 @@ bool FingersRetargeting::configure(const yarp::os::Searchable& config, const std
         return false;
     }
 
-    int fingersJoints = m_controlHelper->getDoFs();
+    size_t fingersJoints = m_controlHelper->getDoFs();
 
     double samplingTime;
     if (!YarpHelper::getDoubleFromSearchable(config, "samplingTime", samplingTime))

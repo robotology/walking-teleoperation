@@ -81,7 +81,7 @@ bool XsensRetargeting::configure(yarp::os::ResourceFinder& rf)
     m_actuatedDOFs = m_robotJointsListNames.size();
 
     m_WBTrajectorySmoother
-        = std::make_unique<iCub::ctrl::minJerkTrajGen>(m_actuatedDOFs, m_dT, smoothingTime);
+        = std::make_unique<iCub::ctrl::minJerkTrajGen>(static_cast<unsigned int>(m_actuatedDOFs), m_dT, smoothingTime);
     yarp::sig::Vector buff(m_actuatedDOFs, 0.0);
 
     m_WBTrajectorySmoother->init(buff);
@@ -170,7 +170,7 @@ bool XsensRetargeting::getJointValues()
         for (unsigned j = 0; j < m_actuatedDOFs; j++)
         {
             // check for the spikes in joint values
-             
+
             if (std::abs(newHumanjointsValues[m_humanToRobotMap[j]] - m_jointValues(j))
                 > m_jointDiffThreshold)
             {
@@ -179,7 +179,7 @@ bool XsensRetargeting::getJointValues()
                            << " ; new data:" << newHumanjointsValues[m_humanToRobotMap[j]];
             }
             m_jointValues(j) = newHumanjointsValues[m_humanToRobotMap[j]];
-            
+
         }
     } else
     {
