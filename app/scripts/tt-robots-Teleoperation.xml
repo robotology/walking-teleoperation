@@ -40,7 +40,7 @@
     </module>
 
     <module>
-        <name>pedals_joypad</name>
+        <name>WalkingJoypadModule</name>
         <parameters>--from pedals.ini</parameters>
         <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
         <description>Run Syntro mobile base controller pedals joypad</description>
@@ -63,7 +63,7 @@
     </connection>
 
     <connection>
-        <from>/pedals/goal:o</from>
+        <from>/joypad/goal:o</from>
         <to>/mobile_base_controller/goal:i</to>
         <protocol>mjpeg</protocol>
     </connection>
