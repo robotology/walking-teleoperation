@@ -26,5 +26,8 @@
     <name> ergoCub-Teleoperation-4</name>
   </application>
 
+  <application>
+    <name> tt-robots-Teleoperation</name>
+  </application>
 
 </application>

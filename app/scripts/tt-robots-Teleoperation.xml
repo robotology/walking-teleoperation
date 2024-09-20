@@ -1,0 +1,71 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+    <name>tt-robots-Teleoperation</name>
+    <description>Application to run module related to vision for retargeting.</description>
+    <version>1.0</version>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config RobotStateProvider_syntro_openxr_ifeel.xml</parameters>
+        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <description>Run IK HDE Device</description>
+        <node>localhost</node>
+        <tag>RobotStateProvider</tag>
+    </module>
+
+    <module>
+        <name>HumanStateVisualizer</name>
+        <parameters>--from syntroSim_ik_visualization.ini</parameters>
+        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+    </module>
+
+    <module>
+        <name>mobile_base_controller</name>
+        <parameters>--from controller.ini</parameters>
+        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <description>Run Syntro mobile base controller</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>gazebo</name>
+        <parameters>-e dart</parameters>
+        <description>Run the syntroSim simulation</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>pedals_joypad</name>
+        <parameters>--from pedals.ini</parameters>
+        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <description>Run Syntro mobile base controller pedals joypad</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>HapticGloveModule</name>
+        <parameters>--from hapticGloveConfig.ini</parameters>
+        <description>Run Syntro fingers retargeting</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <connection>
+        <from>/syntroSim/depthCamera/rgbImage:o</from>
+        <to>/headset/display:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/pedals/goal:o</from>
+        <to>/mobile_base_controller/goal:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+</application>
