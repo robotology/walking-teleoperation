@@ -26,7 +26,8 @@
   <module>
     <name>HapticGloveModule</name>
     <node>ergocub000-torso</node>
-    <parameters>--GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub000 --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0</parameters>
+    <parameters>--name HapticGloveRetargeting000 --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub000 --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData000/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData000/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData000/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData000/HapticGlove/RightHand/Actuators/input:o"
+</parameters>
   </module>
 
   <module>
@@ -52,18 +53,30 @@
 
   <connection>
     <from>/SRanipalModule/eyeExpressions:o</from>
-    <to>/ergoCubEmotions/rpc</to>
+    <to>/ergoCubEmotions-000/rpc</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
+      <from>/WearableData/HapticGlove/LeftHand/data:o</from>
+      <to>/WearableData000/HapticGlove/LeftHand/data:i</to>
+      <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+      <from>/WearableData/HapticGlove/RightHand/data:o</from>
+      <to>/WearableData000/HapticGlove/RightHand/data:i</to>
+      <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData000/HapticGlove/LeftHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
+    <from>/WearableData000/HapticGlove/RightHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
