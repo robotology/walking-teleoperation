@@ -40,11 +40,11 @@
     </module>
 
     <module>
-        <name>pedals_joypad</name>
+        <name>WalkingJoypadModule</name>
         <parameters>--from pedals.ini</parameters>
         <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
         <description>Run Syntro mobile base controller pedals joypad</description>
-        <node>localhost</node>
+        <node>icub-virtualizer</node>
         <tag>SyntroTeleoperation</tag>
     </module>
 
