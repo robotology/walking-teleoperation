@@ -3,7 +3,7 @@
 
 <application>
 
-  <name>ergoCub-Teleoperation</name>
+  <name>ergoCub000-Teleoperation</name>
   <description>Application to run module related to vision for retargeting.</description>
   <version>1.0</version>
   <authors>
@@ -15,15 +15,16 @@
   </application>
 
   <application>
-    <name> ergoCub-Teleoperation-2</name>
+    <name> ergoCub000-Teleoperation-2</name>
   </application>
 
   <application>
-    <name> ergoCub-Teleoperation-3</name>
+    <name> ergoCub000-Teleoperation-3</name>
   </application>
 
   <application>
-    <name> ergoCub-Teleoperation-4</name>
+    <name> ergoCub000-Teleoperation-4</name>
   </application>
+
 
 </application>

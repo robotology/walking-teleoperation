@@ -1,0 +1,49 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>iRonCub teleoperation</name>
+  <description>Steps for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <!-- Modules -->
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config RobotStateProvider_iRonCub_openxr_ifeel.xml</parameters>
+    <environment>YARP_ROBOT_NAME=iCubGenova04</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+  </module>
+
+  <module>
+    <name>HumanStateVisualizer</name>
+    <parameters>--from HumanStateVisualizer_iRonCub_openxr_ifeel.ini</parameters>
+    <environment>YARP_ROBOT_NAME=iCubGenova04</environment>
+    <description>Run IK HDE Device</description>
+    <node>localhost</node>
+    <tag>RobotStateProvider</tag>
+    <dependencies>
+      <port timeout="15.0">/iCub/RobotStateServer/state:o</port>
+      <port timeout="15.0">/HDE/WearableTargetsServer/state:o</port>
+    </dependencies>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/iCub/RobotStateServer/state:o</from>
+    <to>/walking-coordinator-ironCub/humanState:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/icub/cam/left</from>
+    <to>/headset/display:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+</application>
