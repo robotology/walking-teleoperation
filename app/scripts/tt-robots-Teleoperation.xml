@@ -10,7 +10,7 @@
     <module>
         <name>yarprobotinterface</name>
         <parameters>--config RobotStateProvider_syntro_openxr_ifeel.xml</parameters>
-        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
         <description>Run IK HDE Device</description>
         <node>localhost</node>
         <tag>RobotStateProvider</tag>
@@ -18,14 +18,14 @@
 
     <module>
         <name>HumanStateVisualizer</name>
-        <parameters>--from syntroSim_ik_visualization.ini</parameters>
-        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <parameters>--from syntroSim_ik_visualizer.ini</parameters>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
     </module>
 
     <module>
         <name>mobile_base_controller</name>
         <parameters>--from controller.ini</parameters>
-        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
         <description>Run Syntro mobile base controller</description>
         <node>localhost</node>
         <tag>SyntroTeleoperation</tag>
@@ -41,7 +41,7 @@
 
     <module>
         <name>WalkingJoypadModule</name>
-        <parameters>--from pedals.ini</parameters>
+        <parameters>--from pedals.ini --name ttjoypad</parameters>
         <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
         <description>Run Syntro mobile base controller pedals joypad</description>
         <node>icub-virtualizer</node>
@@ -52,6 +52,7 @@
         <name>HapticGloveModule</name>
         <parameters>--from hapticGloveConfig.ini</parameters>
         <description>Run Syntro fingers retargeting</description>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
         <node>localhost</node>
         <tag>SyntroTeleoperation</tag>
     </module>
@@ -63,9 +64,9 @@
     </connection>
 
     <connection>
-        <from>/joypad/goal:o</from>
+        <from>/ttjoypad/goal:o</from>
         <to>/mobile_base_controller/goal:i</to>
-        <protocol>mjpeg</protocol>
+        <protocol>fast_tcp</protocol>
     </connection>
 
 </application>
