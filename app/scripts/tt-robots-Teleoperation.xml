@@ -1,0 +1,72 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+    <name>tt-robots-Teleoperation</name>
+    <description>Application to run module related to vision for retargeting.</description>
+    <version>1.0</version>
+
+    <module>
+        <name>yarprobotinterface</name>
+        <parameters>--config RobotStateProvider_syntro_openxr_ifeel.xml</parameters>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
+        <description>Run IK HDE Device</description>
+        <node>localhost</node>
+        <tag>RobotStateProvider</tag>
+    </module>
+
+    <module>
+        <name>HumanStateVisualizer</name>
+        <parameters>--from syntroSim_ik_visualizer.ini</parameters>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
+    </module>
+
+    <module>
+        <name>mobile_base_controller</name>
+        <parameters>--from controller.ini</parameters>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
+        <description>Run Syntro mobile base controller</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>gazebo</name>
+        <parameters>-e dart</parameters>
+        <description>Run the syntroSim simulation</description>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>WalkingJoypadModule</name>
+        <parameters>--from pedals.ini --name ttjoypad</parameters>
+        <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
+        <description>Run Syntro mobile base controller pedals joypad</description>
+        <node>icub-virtualizer</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <module>
+        <name>HapticGloveModule</name>
+        <parameters>--from hapticGloveConfig.ini</parameters>
+        <description>Run Syntro fingers retargeting</description>
+        <environment>YARP_ROBOT_NAME=syntroGazeboV1</environment>
+        <node>localhost</node>
+        <tag>SyntroTeleoperation</tag>
+    </module>
+
+    <connection>
+        <from>/syntroSim/depthCamera/rgbImage:o</from>
+        <to>/headset/display:i</to>
+        <protocol>mjpeg</protocol>
+    </connection>
+
+    <connection>
+        <from>/ttjoypad/goal:o</from>
+        <to>/mobile_base_controller/goal:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+</application>

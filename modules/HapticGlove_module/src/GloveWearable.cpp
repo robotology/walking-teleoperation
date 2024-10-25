@@ -97,6 +97,11 @@ bool GloveWearableImpl::configure(const yarp::os::Searchable& config,
     }
     options.put("wearableDataPorts", wearableDataPort);
     options.put("carrier", "fast_tcp");
+    yarp::os::Value* wearableDataLocals;
+    if (config.check("wearable_data_locals", wearableDataLocals))
+    {
+        options.put("wearableDataLocals", wearableDataLocals);
+    }
 
     if (!m_wearableDevice.open(options))
     {
