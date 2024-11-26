@@ -1,0 +1,50 @@
+<!-- Copyright (C) 2023 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+
+<application>
+
+  <name>ergoCub001-Teleoperation-2</name>
+  <description>Step 2 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--from openXRHeadsetParameters.ini</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+  
+  <module>
+    <name>yarp</name>
+    <parameters>repeat /depthCamera001/repeated/rgbImage:o </parameters>
+    <node>ergocub001-lap</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config realsense2.xml</parameters>
+    <node>ergocub001-head</node>
+  </module>
+
+  <!-- Connections -->
+  <connection>
+    <from>/depthCamera001/rgbImage:o</from>
+    <to>/depthCamera001/repeated/rgbImage:o</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/depthCamera001/repeated/rgbImage:o</from>
+    <to>/headset/display:i</to>
+    <protocol>fast_tcp+send.portmonitor+file.image_compression_ffmpeg+recv.portmonitor+file.image_compression_ffmpeg+type.dll+custom_enc.hevc_nvenc+custom_dec.hevc_cuvid+pixel_format.23+cq.31+delay.2+tune.ull</protocol>
+  </connection>
+
+  <connection>
+    <from>/object-distance-001/augmented_reality:o</from>
+    <to>/headset/augmentedReality</to>
+    <protocol>fast_tcp+send.portmonitor+file.image_compression_ffmpeg+recv.portmonitor+file.image_compression_ffmpeg+type.dll+custom_enc.hevc_nvenc+custom_dec.hevc_cuvid+pixel_format.23+cq.31+delay.2+tune.ull</protocol>
+  </connection>
+
+</application>

@@ -1,0 +1,102 @@
+<!-- Copyright (C) 2021 Fondazione Istituto Italiano di Tecnologia (IIT) -->
+<!-- All Rights Reserved. -->
+<!-- Author: Riccardo Grieco <riccardo.grieco@iit.it> -->
+
+<application>
+
+  <name>ergoCub001-Teleoperation-4</name>
+  <description>Step 4 for the ergoCub teleoperation.</description>
+  <version>1.0</version>
+  <authors>
+    <author email="stefano.dafarra@iit.it">Stefano Dafarra</author>
+  </authors>
+
+  <module>
+    <name>ergoCubEmotions</name>
+    <parameters>--context ergoCubEmotions --from config.ini --portprefix /ergocub001 </parameters>
+    <node>ergocub001-head</node>
+  </module>
+
+  <module>
+    <name>SRanipalModule</name>
+    <parameters>--skipEyeCalibration --robot ergocub001 --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt --blinkToDisableGUIs "(0)" --headControlBoardName head</parameters>
+    <node>icub-virtualizer</node>
+  </module>
+
+  <module>
+    <name>HapticGloveModule</name>
+    <node>ergocub001-torso</node>
+    <parameters>--name HapticGloveRetargeting001 --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub001 --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData001/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData001/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData001/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData001/HapticGlove/RightHand/Actuators/input:o"
+</parameters>
+  </module>
+
+  <module>
+    <name>WalkingModule</name>
+    <node>ergocub001-torso</node>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config launch-yarp-robot-logger.xml</parameters>
+    <node>ergocub-laptop</node>
+    <workdir>/home/ergocub/Desktop/walking_logger</workdir>
+  </module>
+
+  <!-- Connections -->
+
+  <connection>
+    <from>/SRanipalModule/VR/rpc:o</from>
+    <to>/headset/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SRanipalModule/eyeExpressions:o</from>
+    <to>/ergocub001/ergoCubEmotions/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+      <from>/WearableData/HapticGlove/LeftHand/data:o</from>
+      <to>/WearableData001/HapticGlove/LeftHand/data:i</to>
+      <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+      <from>/WearableData/HapticGlove/RightHand/data:o</from>
+      <to>/WearableData001/HapticGlove/RightHand/data:i</to>
+      <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData001/HapticGlove/LeftHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/WearableData001/HapticGlove/RightHand/Actuators/input:o</from>
+    <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/ergoCub/RobotStateServer/state:o</from>
+    <to>/walking-coordinator-001/humanState:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/iFeelWalking/goal:o</from>
+    <to>/walking-coordinator-001/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/joypad/goal:o</from>
+    <to>/walking-coordinator-001/goal:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+</application>
