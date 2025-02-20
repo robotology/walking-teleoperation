@@ -7,6 +7,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/conf/version.h>
 
 #include <iDynTree/EigenHelpers.h>
 #include <iDynTree/YARPConversions.h>
@@ -16,6 +17,21 @@
 #include <Utils.hpp>
 
 #include <functional>
+
+inline bool OculusModuleFrameExists(yarp::dev::IFrameTransform* frameTransformInterface,
+    const std::string& frameID)
+{
+    bool frameExists = false;
+#if YARP_VERSION_MAJOR == 3 && YARP_VERSION_MINOR < 11
+    frameExists = frameTransformInterface->frameExists(frameID);
+#else
+    bool frameExistsOk = false;
+    bool frameExistsReturnValue = false;
+    frameExistsReturnValue = frameTransformInterface->frameExists(frameID, frameExistsOk);
+    frameExists = frameExistsOk && frameExistsReturnValue;
+#endif
+    return frameExists;
+}
 
 Eigen::Ref<Eigen::Matrix<double, 3, 3, Eigen::RowMajor>> getRotation(yarp::sig::Matrix& m)
 {
@@ -778,7 +794,7 @@ bool OculusModule::runningModule()
 
     if (m_useOpenXr)
     {
-        if (!m_frameTransformInterface->frameExists(m_headFrameName))
+        if (!OculusModuleFrameExists(m_frameTransformInterface,m_headFrameName))
         {
             yError() << "[OculusModule::runningModule] The frame named " << m_headFrameName
                      << " does not exist.";
@@ -900,13 +916,13 @@ bool OculusModule::getTransforms()
     if (!m_useXsens)
     {
         // check if everything is ok
-        if (!m_frameTransformInterface->frameExists(m_rootFrameName))
+        if (!OculusModuleFrameExists(m_frameTransformInterface, m_rootFrameName))
         {
             yError() << "[OculusModule::getTransforms] No " << m_rootFrameName << " frame.";
             return false;
         }
 
-        if (!m_frameTransformInterface->frameExists(m_headFrameName))
+        if (!OculusModuleFrameExists(m_frameTransformInterface, m_headFrameName))
         {
 
             if (m_useOpenXr)
@@ -993,14 +1009,14 @@ bool OculusModule::getTransforms()
     if (!m_useXsens && !m_useIFeel)
     {
 
-        if (!m_frameTransformInterface->frameExists(m_leftHandFrameName))
+        if (!OculusModuleFrameExists(m_frameTransformInterface, m_leftHandFrameName))
         {
 
             yError() << "[OculusModule::getTransforms] No " << m_leftHandFrameName << " frame.";
             return false;
         }
 
-        if (!m_frameTransformInterface->frameExists(m_rightHandFrameName))
+        if (!OculusModuleFrameExists(m_frameTransformInterface,m_rightHandFrameName))
         {
             yError() << "[OculusModule::getTransforms] No " << m_rightHandFrameName << " frame.";
             return false;

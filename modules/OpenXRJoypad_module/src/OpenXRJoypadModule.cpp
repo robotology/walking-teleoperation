@@ -36,6 +36,22 @@
 #include <OpenXRJoypadModule.hpp>
 #include <Utils.hpp>
 
+inline bool OpenXRJoypadModuleFrameExists(yarp::dev::IFrameTransform* frameTransformInterface,
+    const std::string& frameID)
+{
+    bool frameExists = false;
+#if YARP_VERSION_MAJOR == 3 && YARP_VERSION_MINOR < 11
+    frameExists = frameTransformInterface->frameExists(frameID);
+#else
+    bool frameExistsOk = false;
+    bool frameExistsReturnValue = false;
+    frameExistsReturnValue = frameTransformInterface->frameExists(frameID, frameExistsOk);
+    frameExists = frameExistsOk && frameExistsReturnValue;
+#endif
+    return frameExists;
+}
+
+
 class RobotControlHelper
 {
     yarp::dev::PolyDriver m_robotDevice; /**< Main robot device. */
@@ -989,9 +1005,9 @@ struct OpenXRJoypadModule::Impl
                                      yarp::sig::Matrix& headOpenXR_T_rightHandOpenXR) {
             bool ok = true;
 
-            ok = ok && this->frameTransformInterface->frameExists(this->headFrameName);
-            ok = ok && this->frameTransformInterface->frameExists(this->leftHandFrameName);
-            ok = ok && this->frameTransformInterface->frameExists(this->rightHandFrameName);
+            ok = ok && OpenXRJoypadModuleFrameExists(this->frameTransformInterface, this->headFrameName);
+            ok = ok && OpenXRJoypadModuleFrameExists(this->frameTransformInterface, this->leftHandFrameName);
+            ok = ok && OpenXRJoypadModuleFrameExists(this->frameTransformInterface, this->rightHandFrameName);
 
             ok = ok
                  && this->frameTransformInterface->getTransform(this->rightHandFrameName, //
