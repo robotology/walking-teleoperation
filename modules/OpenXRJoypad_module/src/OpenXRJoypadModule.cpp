@@ -26,6 +26,7 @@
 #include <yarp/os/RpcClient.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/sig/Matrix.h>
+#include <yarp/conf/version.h>
 
 #include <iDynTree/EigenHelpers.h>
 #include <iDynTree/YARPConversions.h>
