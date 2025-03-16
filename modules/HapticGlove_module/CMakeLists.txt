@@ -13,7 +13,8 @@ IF(EIGEN_RUNTIME_NO_MALLOC)
 ENDIF(EIGEN_RUNTIME_NO_MALLOC)
 
 yarp_add_idl(HAPTIC_GLOVE_SERVICES thrift/RobotSkinService.thrift
-                                   thrift/HapticGloveTeleoperationService.thrift)
+                                   thrift/HapticGloveTeleoperationService.thrift
+                                   thrift/HapticGloveService.thrift )
 
 # set cpp files
 set(${EXE_TARGET_NAME}_SRC

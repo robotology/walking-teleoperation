@@ -152,6 +152,21 @@ bool HapticGloveModule::configure(yarp::os::ResourceFinder& rf)
         m_rightHand->setEndOfConfigurationTime(timeConfigurationEnd);
     }
 
+    // Initialize RPC
+    std::string portPrefix = "/" + name;
+    std::string rpcPortName = "/rpc";
+    if (!m_rpcPort.open(portPrefix + rpcPortName))
+    {
+        yWarning() << m_logPrefix << "Failed to open" << portPrefix + rpcPortName;
+    } else
+    {
+        if (!this->yarp().attachAsServer(m_rpcPort))
+        {
+            yWarning() << m_logPrefix << "Failed to attach" << portPrefix + rpcPortName
+                       << "to the RPC service";
+        }
+    }
+
     yInfo() << m_logPrefix << "configuration is done. ";
     m_state = HapticGloveFSM::Preparing;
 
@@ -165,7 +180,9 @@ double HapticGloveModule::getPeriod()
 
 bool HapticGloveModule::close()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
     yInfo() << m_logPrefix << "trying to close.";
+    m_rpcPort.close();
     if (m_useLeftHand)
     {
         if (!m_leftHand->close())
@@ -185,8 +202,36 @@ bool HapticGloveModule::close()
     return true;
 }
 
+bool HapticGloveModule::enableMoveRobot(const bool value)
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    bool ok = true;
+
+
+    if (m_useLeftHand)
+    {
+        if (!m_leftHand->enableMoveRobot(value))
+        {
+            yWarning() << m_logPrefix << "unable to enable the move robot for the left hand.";
+            ok &= false;
+        }
+    }
+
+    if (m_useRightHand)
+    {
+        if (!m_rightHand->enableMoveRobot(value))
+        {
+            yWarning() << m_logPrefix << "unable to enable the move robot for the right hand.";
+            ok &= false;
+        }
+    }
+    return ok;
+}
+
 bool HapticGloveModule::updateModule()
 {
+    std::lock_guard<std::mutex> lock(m_mutex);
+
     double t1 = yarp::os::Time::now();
 
     if (m_state == HapticGloveFSM::Running)
