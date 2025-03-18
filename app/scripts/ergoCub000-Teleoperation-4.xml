@@ -13,7 +13,7 @@
 
   <module>
     <name>ergoCubEmotions</name>
-    <parameters>--context ergoCubEmotions --from config.ini </parameters>
+    <parameters>--context ergoCubEmotions --from config.ini --portprefix /ergocub000 </parameters>
     <node>ergocub000-head</node>
   </module>
 
@@ -53,7 +53,7 @@
 
   <connection>
     <from>/SRanipalModule/eyeExpressions:o</from>
-    <to>/ergoCubEmotions-000/rpc</to>
+    <to>/ergocub000/ergoCubEmotions/rpc</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
@@ -86,7 +86,7 @@
     <to>/walking-coordinator-ergocub000/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
-  
+
   <connection>
     <from>/iFeelWalking/goal:o</from>
     <to>/walking-coordinator-ergocub000/goal:i</to>
