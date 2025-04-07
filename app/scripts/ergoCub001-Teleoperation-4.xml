@@ -26,14 +26,13 @@
   <module>
     <name>HapticGloveModule</name>
     <node>ergocub001-torso</node>
-    <parameters>--name HapticGloveRetargeting001 --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub001/ergocub --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData001/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData001/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData001/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData001/HapticGlove/RightHand/Actuators/input:o"
-</parameters>
+    <parameters>--name ergocub001/HapticGloveRetargeting --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub001/ergocub --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/ergocub001/WearableData/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/ergocub001/WearableData/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/ergocub001/WearableData/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/ergocub001/WearableData/HapticGlove/RightHand/Actuators/input:o"</parameters>
   </module>
 
   <module>
     <name>WalkingModule</name>
     <node>ergocub001-torso</node>
-    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini --GENERAL::name walking-coordinator-001 --ROBOT_CONTROL::robot ergocub001/ergocub --FT_SENSORS::left_foot_wrench_output_port_name "(/ergocub001/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o, /ergocub001/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o)" --FT_SENSORS::right_foot_wrench_output_port_name "(/ergocub001/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o, /ergocub001/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o)"</parameters>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini --GENERAL::name ergocub001/walking-coordinator --ROBOT_CONTROL::robot ergocub001/ergocub --FT_SENSORS::left_foot_wrench_output_port_name "(/ergocub001/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o, /ergocub001/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o)" --FT_SENSORS::right_foot_wrench_output_port_name "(/ergocub001/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o, /ergocub001/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o)"</parameters>
   </module>
 
   <module>
@@ -59,43 +58,43 @@
 
   <connection>
       <from>/WearableData/HapticGlove/LeftHand/data:o</from>
-      <to>/WearableData001/HapticGlove/LeftHand/data:i</to>
+      <to>/ergocub001/WearableData/HapticGlove/LeftHand/data:i</to>
       <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
       <from>/WearableData/HapticGlove/RightHand/data:o</from>
-      <to>/WearableData001/HapticGlove/RightHand/data:i</to>
+      <to>/ergocub001/WearableData/HapticGlove/RightHand/data:i</to>
       <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData001/HapticGlove/LeftHand/Actuators/input:o</from>
+    <from>/ergocub001/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData001/HapticGlove/RightHand/Actuators/input:o</from>
+    <from>/ergocub001/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/ergoCub/RobotStateServer/state:o</from>
-    <to>/walking-coordinator-001/humanState:i</to>
+    <to>/ergocub001/walking-coordinator/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/iFeelWalking/goal:o</from>
-    <to>/walking-coordinator-001/goal:i</to>
+    <to>/ergocub001/walking-coordinator/goal:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/joypad/goal:o</from>
-    <to>/walking-coordinator-001/goal:i</to>
+    <to>/ergocub001/walking-coordinator/goal:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
