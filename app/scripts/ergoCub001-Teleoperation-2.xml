@@ -24,7 +24,7 @@
 
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config realsense2.xml --portprefix /ergocub001/depthCamera --name /ergocub001/depthCamera</parameters>
+    <parameters>--config realsense2.xml --portprefix /ergocub001/depthCamera --name /ergocub001/depthCamera --ir_name /ergocub001/depthCamera/ir:o</parameters>
     <node>ergocub001-head</node>
   </module>
 
