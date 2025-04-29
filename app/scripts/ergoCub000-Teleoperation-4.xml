@@ -13,27 +13,26 @@
 
   <module>
     <name>ergoCubEmotions</name>
-    <parameters>--context ergoCubEmotions --from config.ini </parameters>
+    <parameters>--context ergoCubEmotions --from config.ini --portprefix /ergocub000 </parameters>
     <node>ergocub000-head</node>
   </module>
 
   <module>
     <name>SRanipalModule</name>
-    <parameters>--skipEyeCalibration --robot ergocub000 --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt --blinkToDisableGUIs "(0)" --headControlBoardName head</parameters>
+    <parameters>--skipEyeCalibration --robot ergocub000/ergocub --noEyebrows --noEyelids --gazeVelocityGain 2.0 --gazeDeadzone 0.1 --gazeDeadzoneActivationOffset 0.1 --gazeDeadzoneMinActivationTime 0.2 --eyesVersionName none --eyesVergenceName none --eyesTiltName camera_tilt --blinkToDisableGUIs "(0)" --headControlBoardName head</parameters>
     <node>icub-virtualizer</node>
   </module>
 
   <module>
     <name>HapticGloveModule</name>
     <node>ergocub000-torso</node>
-    <parameters>--name HapticGloveRetargeting000 --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub000 --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData000/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData000/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/WearableData000/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/WearableData000/HapticGlove/RightHand/Actuators/input:o"
-</parameters>
+    <parameters>--name ergocub000/HapticGloveRetargeting --GENERAL::getHumanMotionRange 0 --GENERAL::waitingDurationTime 0.0 --GENERAL::robot ergocub000/ergocub --GENERAL::calibrationTimePeriod 0.1 --GENERAL::robotInitializationTime 1.0 --LEFT_FINGERS_RETARGETING::wearable_data_locals "(/ergocub000/WearableData/HapticGlove/LeftHand/data:i)" --LEFT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/ergocub000/WearableData/HapticGlove/LeftHand/Actuators/input:o" --RIGHT_FINGERS_RETARGETING::wearable_data_locals "(/ergocub000/WearableData/HapticGlove/RightHand/data:i)" --RIGHT_FINGERS_RETARGETING::wearable_data_actuator_ports_out "/ergocub000/WearableData/HapticGlove/RightHand/Actuators/input:o"</parameters>
   </module>
 
   <module>
     <name>WalkingModule</name>
     <node>ergocub000-torso</node>
-    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini</parameters>
+    <parameters>--from dcm_walking_iFeel_joint_retargeting.ini --GENERAL::name ergocub000/walking-coordinator --ROBOT_CONTROL::robot ergocub000/ergocub --FT_SENSORS::left_foot_wrench_output_port_name "(/ergocub000/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o, /ergocub000/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o)" --FT_SENSORS::right_foot_wrench_output_port_name "(/ergocub000/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o, /ergocub000/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o)"</parameters>
   </module>
 
   <module>
@@ -53,49 +52,49 @@
 
   <connection>
     <from>/SRanipalModule/eyeExpressions:o</from>
-    <to>/ergoCubEmotions-000/rpc</to>
+    <to>/ergocub000/ergoCubEmotions/rpc</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
       <from>/WearableData/HapticGlove/LeftHand/data:o</from>
-      <to>/WearableData000/HapticGlove/LeftHand/data:i</to>
+      <to>/ergocub000/WearableData/HapticGlove/LeftHand/data:i</to>
       <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
       <from>/WearableData/HapticGlove/RightHand/data:o</from>
-      <to>/WearableData000/HapticGlove/RightHand/data:i</to>
+      <to>/ergocub000/WearableData/HapticGlove/RightHand/data:i</to>
       <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData000/HapticGlove/LeftHand/Actuators/input:o</from>
+    <from>/ergocub000/WearableData/HapticGlove/LeftHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/LeftHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
-    <from>/WearableData000/HapticGlove/RightHand/Actuators/input:o</from>
+    <from>/ergocub000/WearableData/HapticGlove/RightHand/Actuators/input:o</from>
     <to>/WearableData/HapticGlove/RightHand/Actuators/input:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/ergoCub/RobotStateServer/state:o</from>
-    <to>/walking-coordinator-ergocub000/humanState:i</to>
+    <to>/ergocub000/walking-coordinator/humanState:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
-  
+
   <connection>
     <from>/iFeelWalking/goal:o</from>
-    <to>/walking-coordinator-ergocub000/goal:i</to>
+    <to>/ergocub000/walking-coordinator/goal:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 
   <connection>
     <from>/joypad/goal:o</from>
-    <to>/walking-coordinator-ergocub000/goal:i</to>
+    <to>/ergocub000/walking-coordinator/goal:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
 

@@ -207,8 +207,6 @@ class HapticGlove::Teleoperation : HapticGloveTeleoperationService
     // RPC port
     yarp::os::Port m_rpcPort;
 
-    virtual bool enableMoveRobot(const bool value) override;
-
     /**
      * Get all the feedback signal from the robot controller
      * @return true/false in case of success/failure
@@ -269,6 +267,9 @@ public:
      * @param time the time at which the configuration is ended
      */
     void setEndOfConfigurationTime(const double& time);
+
+
+    virtual bool enableMoveRobot(const bool value) override;
 
     /**
      * Get the names of the robot actuated axis

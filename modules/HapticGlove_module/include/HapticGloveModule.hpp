@@ -6,6 +6,7 @@
 
 // std
 #include <memory>
+#include <mutex>
 
 // YARP
 #include <yarp/os/RFModule.h>
@@ -16,6 +17,9 @@
 // BipedalLocomotion
 #include <BipedalLocomotion/YarpUtilities/VectorsCollectionServer.h>
 
+// rpc service
+#include <thrift/HapticGloveService.h>
+
 
 /**
  * HapticGloveModule is the main core application of the bilateral teleoperation of the human hand
@@ -23,7 +27,8 @@
  * axis values to the robot hand, and provide the force feedback and vibrotactile feedback to the
  * human.
  */
-class HapticGloveModule : public yarp::os::RFModule
+class HapticGloveModule : public yarp::os::RFModule,
+                          public HapticGloveService
 {
 private:
     std::string m_logPrefix;
@@ -52,6 +57,11 @@ private:
     bool m_enableLogger; /**< True if data are saved. */
 
     BipedalLocomotion::YarpUtilities::VectorsCollectionServer m_vectorsCollectionServer; /**< Logger server. */
+
+    std::mutex m_mutex; /**< Mutex to protect the data. */
+
+    // RPC port
+    yarp::os::Port m_rpcPort;
 
 
 public:
@@ -89,6 +99,8 @@ public:
      * @return true in case of success and false otherwise.
      */
     bool close() final;
+
+    virtual bool enableMoveRobot(const bool value) override;
 };
 
 #endif // HAPTIC_GLOVE_MODULE_HPP

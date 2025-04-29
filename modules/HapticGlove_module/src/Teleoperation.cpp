@@ -28,7 +28,7 @@ bool Teleoperation::configure(const yarp::os::Searchable& config,
 {
     m_logPrefix += rightHand ? "RightHand:: " : "LeftHand:: ";
 
-    std::string portPrefix = "/";
+    std::string portPrefix = "/" + name + "/";
     portPrefix += rightHand ? "RightHand" : "LeftHand";
 
     m_robot = name;
