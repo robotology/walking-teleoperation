@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 // YARP
-#include <yarp/dev/FrameGrabberInterfaces.h>
+#include <yarp/dev/IFrameGrabberControlsDC1394.h>
+#include <yarp/dev/IFrameGrabberControls.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
