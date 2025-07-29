@@ -13,7 +13,7 @@
   <!-- Modules -->
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config HapticGlove.xml</parameters>
+    <parameters>--config ManusGlove.xml</parameters>
     <environment>YARP_FORWARD_LOG_ENABLE=0</environment>
     <description>Run SenseGlove Wearable Device</description>
     <node>icub-virtualizer</node>
