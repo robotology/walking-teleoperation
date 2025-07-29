@@ -19,7 +19,7 @@
   <module>
     <name>yarp</name>
     <parameters>repeat /depthCamera/repeated/rgbImage:o </parameters>
-    <node>ergocub001-lap</node>
+    <node>ergocub002-lap</node>
   </module>
 
   <module>
