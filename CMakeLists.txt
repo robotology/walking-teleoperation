@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(walking-teleoperation
-  VERSION 1.3.8)
+  VERSION 1.3.9)
 
 # To build shared libraries in Windows, we set CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS to TRUE.
 # See https://cmake.org/cmake/help/v3.4/variable/CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS.html

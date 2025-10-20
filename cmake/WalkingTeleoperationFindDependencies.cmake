@@ -136,9 +136,6 @@ if (PkgConfig_FOUND)
 endif()
 checkandset_dependency(libfvad)
 
-find_package(HumanDynamicsEstimation QUIET)
-checkandset_dependency(HumanDynamicsEstimation)
-
 find_package(CybSDK QUIET)
 checkandset_dependency(CybSDK)
 
@@ -155,7 +152,6 @@ find_package(BipedalLocomotionFramework 0.18.0
   COMPONENTS VectorsCollection ParametersHandlerYarpImplementation QUIET)
 checkandset_dependency(BipedalLocomotionFramework)
 
-WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)

@@ -5,10 +5,6 @@ add_subdirectory(Utils)
 add_subdirectory(Oculus_module)
 add_subdirectory(OpenXRJoypad_module)
 
-if(WALKING_TELEOPERATION_COMPILE_XsensModule)
-  add_subdirectory(Xsens_module)
-endif (WALKING_TELEOPERATION_COMPILE_XsensModule)
-
 if(WALKING_TELEOPERATION_COMPILE_VirtualizerModule)
   add_subdirectory(Virtualizer_module)
 endif()
