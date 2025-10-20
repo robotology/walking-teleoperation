@@ -341,7 +341,7 @@ bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>&
                  << "size of the haptic feedback vector is not equal to the size of the default "
                     "haptic feedback size.";
     }
-    wearable::msg::GloveActuatorCommand& gloveActuatorCommand
+    trintrin::msgs::GloveActuatorCommand& gloveActuatorCommand
         = m_iWearGloveActuatorPort.prepare();
     gloveActuatorCommand.forceValue.resize(m_numForceFeedback);
     gloveActuatorCommand.vibroTactileValue.resize(m_numVibrotactileFeedback);
@@ -358,7 +358,7 @@ bool GloveWearableImpl::setFingertipHapticFeedbackValues(const std::vector<int>&
         gloveActuatorCommand.info.name = m_wearablePrefix
                                             + wearable::actuator::IHaptic::getPrefix() +
                                             + "HapticFeedback";
-        gloveActuatorCommand.info.type = wearable::msg::ActuatorType::HAPTIC;
+        gloveActuatorCommand.info.type = trintrin::msgs::ActuatorType::HAPTIC;
 
         m_iWearGloveActuatorPort.write();
     return true;

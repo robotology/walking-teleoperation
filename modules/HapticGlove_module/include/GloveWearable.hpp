@@ -9,7 +9,7 @@
 #include <vector>
 // wearable
 #include <Wearable/IWear/IWear.h>
-#include <thrift/GloveActuatorCommand.h>
+#include <trintrin/msgs/GloveActuatorCommand.h>
 // YARP
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
@@ -85,7 +85,7 @@ private:
 
     wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
 
-    BufferedPort<wearable::msg::GloveActuatorCommand> m_iWearGloveActuatorPort;
+    BufferedPort<trintrin::msgs::GloveActuatorCommand> m_iWearGloveActuatorPort;
 
     std::string m_handLinkName;
 
