@@ -180,22 +180,6 @@ public:
     bool setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues);
 
     /**
-     * set the force feedback actuator values associated with all the human hand fingertips
-     * @param values the vector of force feedback values to the human fingertips, from thumb to
-     * pinky, range: [0, 100]
-     * @return true/false in case of success/failure
-     */
-    bool setFingertipForceFeedbackValues(const std::vector<int>& values);
-
-    /**
-     * set the vibrotactile feedback actuator values associated with all the human hand fingertips
-     * @param values the vector of vibrotactile feedback values to the human fingertips, from thumb
-     * to pinky, range: [0, 100]
-     * @return true/false in case of success/failure
-     */
-    bool setFingertipVibrotactileValues(const std::vector<int>& values);
-
-    /**
      * set the vibrotactile feedback actuator value associated with the human hand palm
      * @param value the vibrotactile feedback value associated with the human hand palm
      * @return true/false in case of success/failure
