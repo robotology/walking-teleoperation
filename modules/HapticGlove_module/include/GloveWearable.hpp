@@ -9,7 +9,7 @@
 #include <vector>
 // wearable
 #include <Wearable/IWear/IWear.h>
-#include <thrift/GloveActuatorCommand.h>
+#include <trintrin/msgs/GloveActuatorCommand.h>
 // YARP
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
@@ -85,7 +85,7 @@ private:
 
     wearable::IWear* m_iWear{nullptr}; /**< Sense glove wearable interface. */
 
-    BufferedPort<wearable::msg::GloveActuatorCommand> m_iWearGloveActuatorPort;
+    BufferedPort<trintrin::msgs::GloveActuatorCommand> m_iWearGloveActuatorPort;
 
     std::string m_handLinkName;
 
@@ -178,22 +178,6 @@ public:
      * @return true/false in case of success/failure
      */
     bool setFingertipHapticFeedbackValues(const std::vector<int>& forceValues, const std::vector<int>& vibroValues);
-
-    /**
-     * set the force feedback actuator values associated with all the human hand fingertips
-     * @param values the vector of force feedback values to the human fingertips, from thumb to
-     * pinky, range: [0, 100]
-     * @return true/false in case of success/failure
-     */
-    bool setFingertipForceFeedbackValues(const std::vector<int>& values);
-
-    /**
-     * set the vibrotactile feedback actuator values associated with all the human hand fingertips
-     * @param values the vector of vibrotactile feedback values to the human fingertips, from thumb
-     * to pinky, range: [0, 100]
-     * @return true/false in case of success/failure
-     */
-    bool setFingertipVibrotactileValues(const std::vector<int>& values);
 
     /**
      * set the vibrotactile feedback actuator value associated with the human hand palm

@@ -19,7 +19,6 @@ The suite includes:
 * **Oculus_module**: this is the module that implements retargeting of the upper body end_effectors.
 * **Virtualizer_module**: this module allows using the Cyberith virtualizer as a joypad interface for walking commands.
 * **Utils_module**: a module that can be useful to implement some common functionality
-* **Xsens_module**: a module that gets joint values from [human state provider](https://github.com/robotology/human-dynamics-estimation/) and maps them to the [walking controller](https://github.com/robotology/walking-controllers) input
 * **FaceExpressions_module**: a module that detects a human voice from a microphone and commands the robot face expressions to mimic the lips moving.
 * **SRanipal_module**: a module that controls the robot face expressions directly from the operator's expressions thanks to the [VIVE Eye and Facial Tracking SDK](https://developer.vive.com/resources/vive-sense/sdk/vive-eye-and-facial-tracking-sdk/).
 

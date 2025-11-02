@@ -136,28 +136,24 @@ if (PkgConfig_FOUND)
 endif()
 checkandset_dependency(libfvad)
 
-find_package(HumanDynamicsEstimation QUIET)
-checkandset_dependency(HumanDynamicsEstimation)
-
 find_package(CybSDK QUIET)
 checkandset_dependency(CybSDK)
 
 find_package(SRanipalSDK QUIET)
 checkandset_dependency(SRanipalSDK)
 
-find_package(IWear 1.9.0 QUIET)
+find_package(IWear 5.0.0 QUIET)
 checkandset_dependency(IWear)
 
-find_package(WearableActuators 1.9.0 QUIET)
-checkandset_dependency(WearableActuators)
+find_package(trintrin 0.0.1 QUIET)
+checkandset_dependency(trintrin)
 
 find_package(BipedalLocomotionFramework 0.18.0
   COMPONENTS VectorsCollection ParametersHandlerYarpImplementation QUIET)
 checkandset_dependency(BipedalLocomotionFramework)
 
-WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_XsensModule "Compile Xsens Module?" ON WALKING_TELEOPERATION_HAS_HumanDynamicsEstimation OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_VirtualizerModule "Compile Virtualizer Module?" ON WALKING_TELEOPERATION_HAS_CybSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_FaceExpressionsRetargetingModule "Compile Face Expressions Module?" ON WALKING_TELEOPERATION_USE_libfvad OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_SRanipalModule "Compile SRanipal Module?" ON WALKING_TELEOPERATION_USE_SRanipalSDK OFF)
 WALKING_TELEOPERATION_dependent_option(WALKING_TELEOPERATION_COMPILE_HapticGloveModule "Compile Haptic Glove Module?" ON
-    "WALKING_TELEOPERATION_USE_IWear;WALKING_TELEOPERATION_USE_WearableActuators;WALKING_TELEOPERATION_USE_BipedalLocomotionFramework" OFF)
+    "WALKING_TELEOPERATION_USE_IWear;WALKING_TELEOPERATION_USE_trintrin;WALKING_TELEOPERATION_USE_BipedalLocomotionFramework" OFF)

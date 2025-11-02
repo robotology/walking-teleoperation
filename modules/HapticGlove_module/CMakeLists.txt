@@ -69,7 +69,7 @@ set(${EXE_TARGET_NAME}_LINKED_LIBS
     ctrlLib
     UtilityLibrary
     IWear::IWear
-    WearableActuators::WearableActuators
+    trintrin::msgs
     BipedalLocomotion::VectorsCollection
     BipedalLocomotion::ParametersHandlerYarpImplementation
     )
